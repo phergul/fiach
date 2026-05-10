@@ -1,0 +1,51 @@
+@use '@styles' as *;
+
+.game-card {
+  min-width: 0;
+}
+
+.game-card-artwork {
+  position: relative;
+  display: flex;
+  aspect-ratio: $game-artwork-aspect-ratio;
+  align-items: flex-end;
+  padding: $spacing-md;
+  overflow: hidden;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border-subtle;
+  border-radius: $radius-md;
+}
+
+.game-card-artwork-title {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  line-height: $line-height-heading;
+}
+
+.game-card-source {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-sm;
+  display: grid;
+  width: $game-source-icon-size;
+  height: $game-source-icon-size;
+  place-items: center;
+  color: $color-text-primary;
+  background: $color-background;
+  border: $app-border-width solid $color-border;
+  border-radius: 999rem;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+}
+
+.game-card-title {
+  margin: $spacing-sm 0 0;
+  overflow: hidden;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

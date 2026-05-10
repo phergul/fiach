@@ -1,10 +1,5 @@
-import { SectionPlaceholder } from '../components/SectionPlaceholder/SectionPlaceholder';
+import { GameLibrary } from '../components/Games/GameLibrary/GameLibrary';
 
 export const Library = () => {
-  return (
-    <SectionPlaceholder
-      title="Library"
-      description="Select a game to review installed mods and profiles."
-    />
-  );
+  return <GameLibrary />;
 };

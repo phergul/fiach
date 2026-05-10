@@ -212,6 +212,57 @@ func TestSettingsCanBeSetUpdatedAndRead(t *testing.T) {
 	}
 }
 
+func TestListStoredGamesReturnsAvailableGamesOrderedByName(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	insertStoredGame(t, store, "Zoo Game", "/games/zoo", GameSourceSteam, "30", true)
+	insertStoredGame(t, store, "alpha Game", "/games/alpha", GameSourceSteam, "10", true)
+	insertStoredGame(t, store, "Missing Game", "/games/missing", GameSourceSteam, "20", false)
+
+	games, err := store.ListStoredGames(context.Background())
+	if err != nil {
+		t.Fatalf("ListStoredGames() error = %v", err)
+	}
+
+	if len(games) != 2 {
+		t.Fatalf("ListStoredGames() length = %d, want 2: %#v", len(games), games)
+	}
+	if games[0].Name != "alpha Game" || games[1].Name != "Zoo Game" {
+		t.Fatalf("ListStoredGames() names = %q, %q; want alpha Game, Zoo Game", games[0].Name, games[1].Name)
+	}
+	for _, game := range games {
+		if !game.Available {
+			t.Fatalf("ListStoredGames() returned unavailable game: %+v", game)
+		}
+	}
+}
+
+func TestListStoredGamesReturnsEmptyForEmptyDatabase(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	games, err := store.ListStoredGames(context.Background())
+	if err != nil {
+		t.Fatalf("ListStoredGames() error = %v", err)
+	}
+	if len(games) != 0 {
+		t.Fatalf("ListStoredGames() length = %d, want 0", len(games))
+	}
+}
+
 func TestForeignKeyConstraintRejectsMissingParent(t *testing.T) {
 	t.Parallel()
 
@@ -356,6 +407,22 @@ func closeStore(t *testing.T, store *Store) {
 
 	if err := store.Close(); err != nil {
 		t.Fatalf("Close() error = %v", err)
+	}
+}
+
+func insertStoredGame(t *testing.T, store *Store, name string, installPath string, source string, sourceID string, available bool) {
+	t.Helper()
+
+	availableValue := 0
+	if available {
+		availableValue = 1
+	}
+
+	if _, err := store.DB().Exec(`
+		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, name, installPath, source, sourceID, availableValue, "2026-05-10T00:00:00Z"); err != nil {
+		t.Fatalf("insert stored game: %v", err)
 	}
 }
 

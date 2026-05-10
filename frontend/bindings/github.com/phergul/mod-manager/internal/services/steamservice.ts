@@ -24,15 +24,21 @@ export function GetSteamLibraries(): $CancellablePromise<string[]> {
     });
 }
 
+export function GetStoredGames(): $CancellablePromise<storage$0.StoredGame[]> {
+    return $Call.ByID(1872496680).then(($result: any) => {
+        return $$createType4($result);
+    });
+}
+
 export function LocateSteamInstallation(): $CancellablePromise<steam$0.SteamPaths | null> {
     return $Call.ByID(2274155108).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType6($result);
     });
 }
 
 export function ScanAndSaveSteamGames(): $CancellablePromise<storage$0.SteamScanResult> {
     return $Call.ByID(1646298238).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType7($result);
     });
 }
 
@@ -40,6 +46,8 @@ export function ScanAndSaveSteamGames(): $CancellablePromise<storage$0.SteamScan
 const $$createType0 = steam$0.Game.createFrom;
 const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = $Create.Array($Create.Any);
-const $$createType3 = steam$0.SteamPaths.createFrom;
-const $$createType4 = $Create.Nullable($$createType3);
-const $$createType5 = storage$0.SteamScanResult.createFrom;
+const $$createType3 = storage$0.StoredGame.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = steam$0.SteamPaths.createFrom;
+const $$createType6 = $Create.Nullable($$createType5);
+const $$createType7 = storage$0.SteamScanResult.createFrom;

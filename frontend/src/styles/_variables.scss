@@ -1,3 +1,5 @@
+@use 'sass:list';
+
 $color-background: #191724;
 $color-surface: #1f1d2e;
 $color-surface-elevated: #26233a;
@@ -24,6 +26,7 @@ $radius-sm: 0.25rem;
 $radius-md: 0.5rem;
 $radius-lg: 0.75rem;
 
+$font-size-xs: 0.75rem;
 $font-size-sm: 0.875rem;
 $font-size-base: 1rem;
 $font-size-lg: 1.125rem;
@@ -36,9 +39,20 @@ $line-height-heading: 1.2;
 
 $app-min-height: 100vh;
 $app-sidebar-width: 15rem;
-$app-content-max-width: 48rem;
+$app-content-max-width: 76rem;
 $app-border-width: 0.0625rem;
 $app-border: $app-border-width solid $color-border-subtle;
+
+$input-height: 2.5rem;
+$game-grid-min-column-width: 9rem;
+$game-search-min-width: 16rem;
+$game-artwork-aspect-ratio: list.slash(1, 2);
+$game-source-icon-size: 1.5rem;
+$toast-width: 20rem;
+
+$shadow-subtle: 0 0.125rem 0.5rem rgb(0 0 0 / 18%);
+
+$z-index-toast: 20;
 
 $transition-duration-fast: 160ms;
 $transition-easing-standard: ease;

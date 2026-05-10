@@ -15,6 +15,7 @@ defer func() {
 - Every thing should be componentised, pages are only orchestrating, while all logic is in components.
 - Components and their files are name in PascalCase.tsx and each will have a scss file with the same name, for example: `ComponentName.tsx` and `ComponentName.scss`.
 - Each component should be in its own dir. e.g. `frontend/src/components/ComponentName/ComponentName.tsx` and `frontend/src/components/ComponentName/ComponentName.scss`. No prefixing like AppSidebar, just use Sidebar.
+- If componements are related, make a subdir in components (e.g, 'Game' for GameCard, GameList etc).
 - Styling rules:
     - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. `frontend/src/styles/_variables.scss` is where all variables live.
     - Each component should have its own scss file, and styles should be scoped to that component.

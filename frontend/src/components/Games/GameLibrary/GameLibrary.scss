@@ -1,0 +1,90 @@
+@use '@styles' as *;
+
+.game-library {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.game-library-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-lg;
+}
+
+.game-library-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-library-title {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.game-library-count {
+  margin: 0;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-library-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-md;
+}
+
+.game-library-rescan,
+.game-library-state-action {
+  height: $input-height;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  cursor: pointer;
+}
+
+.game-library-rescan:disabled,
+.game-library-state-action:disabled {
+  color: $color-text-muted;
+  cursor: not-allowed;
+}
+
+.game-library-rescan:hover:not(:disabled),
+.game-library-state-action:hover:not(:disabled),
+.game-library-rescan:focus-visible,
+.game-library-state-action:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-library-state {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: $spacing-lg;
+  color: $color-text-subtle;
+  background: $color-surface;
+  border: $app-border-width solid $color-border-subtle;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+}
+
+.game-library-state-title,
+.game-library-state-message {
+  margin: 0;
+}
+
+.game-library-state-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}

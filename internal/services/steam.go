@@ -58,6 +58,20 @@ func (s *SteamService) GetInstalledSteamGames() ([]steam.Game, error) {
 	return games, nil
 }
 
+func (s *SteamService) GetStoredGames() (games []storage.StoredGame, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get stored games: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return nil, errors.New("storage is not configured")
+	}
+
+	return s.store.ListStoredGames(context.Background())
+}
+
 func (s *SteamService) ScanAndSaveSteamGames() (storage.SteamScanResult, error) {
 	var result storage.SteamScanResult
 

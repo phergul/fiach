@@ -1,0 +1,36 @@
+@use '@styles' as *;
+
+.toast {
+  position: fixed;
+  right: $spacing-lg;
+  bottom: $spacing-lg;
+  z-index: $z-index-toast;
+  display: flex;
+  width: $toast-width;
+  max-width: calc(100vw - #{$spacing-xl});
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.toast-message {
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-primary;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-subtle;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.toast-message-success {
+  border-color: $color-success;
+}
+
+.toast-message-error {
+  border-color: $color-danger;
+}
+
+.toast-message-info {
+  border-color: $color-border;
+}

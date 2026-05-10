@@ -1,0 +1,31 @@
+@use '@styles' as *;
+
+.game-search {
+  display: flex;
+  min-width: $game-search-min-width;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-search-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-search-input {
+  height: $input-height;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  outline: none;
+}
+
+.game-search-input::placeholder {
+  color: $color-text-muted;
+}
+
+.game-search-input:focus {
+  border-color: $color-border-strong;
+}

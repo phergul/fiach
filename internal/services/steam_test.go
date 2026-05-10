@@ -239,6 +239,46 @@ func TestSteamServiceScansAndSavesSteamGames(t *testing.T) {
 	}
 }
 
+func TestSteamServiceGetsStoredGames(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	if _, err := store.DB().Exec(`
+		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
+		VALUES (?, ?, ?, ?, 1, ?)
+	`, "Portal", "/games/Portal", storage.GameSourceSteam, "400", "2026-05-10T00:00:00Z"); err != nil {
+		t.Fatalf("insert stored game: %v", err)
+	}
+
+	service := NewSteamService(store)
+	games, err := service.GetStoredGames()
+	if err != nil {
+		t.Fatalf("GetStoredGames() error = %v", err)
+	}
+
+	if len(games) != 1 {
+		t.Fatalf("GetStoredGames() length = %d, want 1", len(games))
+	}
+	if games[0].Name != "Portal" || games[0].InstallPath != "/games/Portal" {
+		t.Fatalf("GetStoredGames() = %+v, want Portal with install path", games[0])
+	}
+}
+
+func TestSteamServiceGetStoredGamesReturnsStorageError(t *testing.T) {
+	t.Parallel()
+
+	service := NewSteamService(nil)
+	_, err := service.GetStoredGames()
+	if err == nil {
+		t.Fatal("GetStoredGames() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "get stored games") {
+		t.Fatalf("GetStoredGames() error = %q, want service context", err.Error())
+	}
+}
+
 func TestSteamServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
 	t.Parallel()
 
