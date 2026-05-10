@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -17,11 +18,16 @@ import (
 )
 
 const (
-	defaultAppName  = "mod-manager"
-	databaseName    = "mod-manager.db"
+	defaultAppName = "mod-manager"
+	databaseName   = "mod-manager.db"
+
 	driverName      = "sqlite3"
 	migrationsDir   = "migrations"
 	filePermissions = 0755
+
+	busyTimeoutMillis = "5000"
+	sqliteJournalMode = "WAL"
+	sqliteForeignKeys = "1"
 )
 
 //go:embed migrations/*.sql
@@ -49,7 +55,7 @@ func Open(ctx context.Context, opts Options) (*Store, error) {
 		return nil, fmt.Errorf("create database directory %q: %w", filepath.Dir(dbPath), err)
 	}
 
-	db, err := sqlx.Open(driverName, dbPath)
+	db, err := sqlx.Open(driverName, dataSourceName(dbPath))
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite database %q: %w", dbPath, err)
 	}
@@ -124,6 +130,19 @@ func databasePath(opts Options) (string, error) {
 	}
 
 	return filepath.Join(dataDir, appName, databaseName), nil
+}
+
+func dataSourceName(dbPath string) string {
+	values := url.Values{}
+	values.Set("_busy_timeout", busyTimeoutMillis)
+	values.Set("_foreign_keys", sqliteForeignKeys)
+	values.Set("_journal_mode", sqliteJournalMode)
+
+	return (&url.URL{
+		Scheme:   "file",
+		Path:     dbPath,
+		RawQuery: values.Encode(),
+	}).String()
 }
 
 func runGoose(db *sql.DB, fn func(*sql.DB, string, ...goose.OptionsFunc) error) error {
