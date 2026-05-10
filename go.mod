@@ -1,4 +1,4 @@
-module changeme
+module github.com/phergul/mod-manager
 
 go 1.25
 

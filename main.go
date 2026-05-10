@@ -15,9 +15,7 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
-		Services: []application.Service{
-			application.NewService(&GreetService{}),
-		},
+		Services:    []application.Service{},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},

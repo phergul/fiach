@@ -1,0 +1,44 @@
+$palette-base: #191724;
+$palette-surface: #1f1d2e;
+$palette-overlay: #26233a;
+$palette-muted: #6e6a86;
+$palette-subtle: #908caa;
+$palette-text: #e0def4;
+$palette-love: #eb6f92;
+$palette-gold: #f6c177;
+$palette-rose: #ebbcba;
+$palette-pine: #31748f;
+$palette-foam: #9ccfd8;
+$palette-iris: #c4a7e7;
+$palette-highlight-low: #21202e;
+$palette-highlight-med: #403d52;
+$palette-highlight-high: #524f67;
+
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+
+$radius-sm: 0.25rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.5rem;
+
+$font-weight-semibold: 600;
+
+$line-height-base: 1.5;
+$line-height-heading: 1.2;
+
+$app-min-height: 100vh;
+$app-sidebar-width: 15rem;
+$app-content-max-width: 48rem;
+$app-border-width: 0.0625rem;
+$app-border: $app-border-width solid $palette-highlight-low;
+
+$transition-duration-fast: 160ms;
+$transition-easing-standard: ease;
