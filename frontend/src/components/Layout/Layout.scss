@@ -1,0 +1,21 @@
+@use '@styles' as *;
+
+.layout {
+  display: flex;
+  min-height: $app-min-height;
+  background: $color-background;
+  color: $color-text-primary;
+}
+
+.layout-main {
+  flex: 1;
+  min-width: 0;
+  padding: $spacing-xl;
+  overflow: auto;
+  background: $color-background;
+}
+
+.layout-main-content {
+  width: 100%;
+  max-width: $app-content-max-width;
+}

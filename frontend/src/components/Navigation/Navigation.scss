@@ -1,0 +1,30 @@
+@use '@styles' as *;
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.navigation-link {
+  display: block;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-subtle;
+  border-radius: $radius-md;
+  text-decoration: none;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    color $transition-duration-fast $transition-easing-standard;
+}
+
+.navigation-link:hover,
+.navigation-link:focus-visible {
+  background: $color-border-subtle;
+  color: $color-text-primary;
+  outline: none;
+}
+
+.navigation-link-active {
+  background: $color-surface-elevated;
+  color: $color-text-primary;
+}

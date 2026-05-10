@@ -1,0 +1,12 @@
+@use '@styles' as *;
+
+.sidebar {
+  display: flex;
+  width: $app-sidebar-width;
+  flex: 0 0 $app-sidebar-width;
+  flex-direction: column;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
+  background: $color-surface;
+  border-right: $app-border;
+}

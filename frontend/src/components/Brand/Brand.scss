@@ -1,0 +1,15 @@
+@use '@styles' as *;
+
+.brand {
+  display: flex;
+  align-items: center;
+  min-height: $spacing-xl;
+}
+
+.brand-title {
+  margin: auto;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}

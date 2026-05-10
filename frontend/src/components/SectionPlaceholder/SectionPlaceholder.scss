@@ -1,0 +1,22 @@
+@use '@styles' as *;
+
+.section-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.section-placeholder-title {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.section-placeholder-description {
+  max-width: $app-content-max-width;
+  margin: 0;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+}

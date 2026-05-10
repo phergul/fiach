@@ -1,36 +1,26 @@
-import './App.scss'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-function App() {
+import { Layout } from './components/Layout/Layout';
+import { Library } from './pages/Library';
+import { Logs } from './pages/Logs';
+import { Profiles } from './pages/Profiles';
+import { Settings } from './pages/Settings';
+
+const App = () => {
   return (
-    <div className="app-layout">
-      <aside className="app-sidebar" aria-label="Primary navigation">
-        <div className="app-sidebar-header">
-          <span className="app-sidebar-title">Mod Manager</span>
-        </div>
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Navigate to="/library" replace />} />
+          <Route path="library" element={<Library />} />
+          <Route path="profiles" element={<Profiles />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="logs" element={<Logs />} />
+          <Route path="*" element={<Navigate to="/library" replace />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
+};
 
-        <nav className="app-sidebar-navigation">
-          <a className="app-sidebar-link app-sidebar-link-active" href="#mods">
-            Mods
-          </a>
-          <a className="app-sidebar-link" href="#profiles">
-            Profiles
-          </a>
-          <a className="app-sidebar-link" href="#settings">
-            Settings
-          </a>
-        </nav>
-      </aside>
-
-      <main className="app-main">
-        <div className="app-main-header">
-          <h1 className="app-main-title">Mods</h1>
-          <p className="app-main-description">
-            Select a game profile to review installed mods.
-          </p>
-        </div>
-      </main>
-    </div>
-  )
-}
-
-export default App
+export default App;
