@@ -5,6 +5,47 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+export class Game {
+    "AppID": string;
+    "Name": string;
+    "InstallDir": string;
+    "LibraryPath": string;
+    "InstallPath": string;
+    "ManifestPath": string;
+
+    /** Creates a new Game instance. */
+    constructor($$source: Partial<Game> = {}) {
+        if (!("AppID" in $$source)) {
+            this["AppID"] = "";
+        }
+        if (!("Name" in $$source)) {
+            this["Name"] = "";
+        }
+        if (!("InstallDir" in $$source)) {
+            this["InstallDir"] = "";
+        }
+        if (!("LibraryPath" in $$source)) {
+            this["LibraryPath"] = "";
+        }
+        if (!("InstallPath" in $$source)) {
+            this["InstallPath"] = "";
+        }
+        if (!("ManifestPath" in $$source)) {
+            this["ManifestPath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Game instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Game {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Game($$parsedSource as Partial<Game>);
+    }
+}
+
 export class SteamPaths {
     "Root": string;
     "SteamApps": string;

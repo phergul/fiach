@@ -117,6 +117,87 @@ func TestSteamServiceReturnsLibraryFolderParseError(t *testing.T) {
 	}
 }
 
+func TestSteamServiceGetsInstalledSteamGames(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	extraLibrary := filepath.Join(t.TempDir(), "SteamLibrary")
+	writeLibraryFoldersVDF(t, steamRoot, `
+"libraryfolders"
+{
+	"0"
+	{
+		"path"		"`+steamRoot+`"
+	}
+	"1"
+	{
+		"path"		"`+extraLibrary+`"
+	}
+}
+`)
+	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
+	writeAppManifest(t, extraLibrary, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	got, err := service.GetInstalledSteamGames()
+	if err != nil {
+		t.Fatalf("GetInstalledSteamGames() error = %v", err)
+	}
+
+	want := []steam.Game{
+		{
+			AppID:        "1",
+			Name:         "Game One",
+			InstallDir:   "GameOne",
+			LibraryPath:  filepath.Clean(steamRoot),
+			InstallPath:  filepath.Join(steamRoot, "steamapps", "common", "GameOne"),
+			ManifestPath: filepath.Join(steamRoot, "steamapps", "appmanifest_1.acf"),
+		},
+		{
+			AppID:        "2",
+			Name:         "Game Two",
+			InstallDir:   "GameTwo",
+			LibraryPath:  filepath.Clean(extraLibrary),
+			InstallPath:  filepath.Join(extraLibrary, "steamapps", "common", "GameTwo"),
+			ManifestPath: filepath.Join(extraLibrary, "steamapps", "appmanifest_2.acf"),
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("GetInstalledSteamGames() = %#v, want %#v", got, want)
+	}
+}
+
+func TestSteamServiceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	writeLibraryFoldersVDF(t, steamRoot, `"libraryfolders"`)
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	_, err := service.GetInstalledSteamGames()
+	if err == nil {
+		t.Fatal("GetInstalledSteamGames() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "get installed Steam games") {
+		t.Fatalf("GetInstalledSteamGames() error = %q, want installed games context", err.Error())
+	}
+	if !strings.Contains(err.Error(), "get Steam libraries") {
+		t.Fatalf("GetInstalledSteamGames() error = %q, want library context", err.Error())
+	}
+}
+
 func openMigratedStore(t *testing.T) *storage.Store {
 	t.Helper()
 
@@ -175,4 +256,26 @@ func writeLibraryFoldersVDF(t *testing.T, root string, content string) {
 	t.Helper()
 
 	writeFile(t, filepath.Join(root, "steamapps", "libraryfolders.vdf"), content)
+}
+
+func writeAppManifest(t *testing.T, libraryPath string, name string, content string) string {
+	t.Helper()
+
+	steamAppsPath := filepath.Join(libraryPath, "steamapps")
+	mkdirAll(t, steamAppsPath)
+
+	path := filepath.Join(steamAppsPath, name)
+	writeFile(t, path, content)
+	return path
+}
+
+func validManifest(appID string, name string, installDir string) string {
+	return `
+"AppState"
+{
+	"appid"		"` + appID + `"
+	"name"		"` + name + `"
+	"installdir"		"` + installDir + `"
+}
+`
 }
