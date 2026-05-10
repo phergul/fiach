@@ -32,6 +32,8 @@ func main() {
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
+		Width:            1920,
+		Height:           1080,
 		URL:              "/",
 	})
 

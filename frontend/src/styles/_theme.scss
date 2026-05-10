@@ -9,10 +9,12 @@
 html,
 body,
 #root {
+  width: 100%;
   min-height: 100%;
 }
 
 body {
+  display: block;
   margin: 0;
   background: $palette-base;
   color: $palette-text;
