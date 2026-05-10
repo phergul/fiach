@@ -9,12 +9,19 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as steam$0 from "../steam/models.js";
 
+export function GetSteamLibraries(): $CancellablePromise<string[]> {
+    return $Call.ByID(749466789).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function LocateSteamInstallation(): $CancellablePromise<steam$0.SteamPaths | null> {
     return $Call.ByID(2274155108).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = steam$0.SteamPaths.createFrom;
-const $$createType1 = $Create.Nullable($$createType0);
+const $$createType0 = $Create.Array($Create.Any);
+const $$createType1 = steam$0.SteamPaths.createFrom;
+const $$createType2 = $Create.Nullable($$createType1);

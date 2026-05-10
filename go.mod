@@ -3,6 +3,7 @@ module github.com/phergul/mod-manager
 go 1.25.7
 
 require (
+	github.com/andygrunwald/vdf v1.1.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/pressly/goose/v3 v3.27.1

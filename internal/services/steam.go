@@ -22,6 +22,29 @@ func NewSteamService(store *storage.Store) *SteamService {
 }
 
 func (s *SteamService) LocateSteamInstallation() (*steam.SteamPaths, error) {
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return nil, err
+	}
+
+	return paths, nil
+}
+
+func (s *SteamService) GetSteamLibraries() ([]string, error) {
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return nil, err
+	}
+
+	libraries, err := steam.ParseLibraryFolders(paths)
+	if err != nil {
+		return nil, fmt.Errorf("get Steam libraries: %w", err)
+	}
+
+	return libraries, nil
+}
+
+func (s *SteamService) locateSteamInstallation() (*steam.SteamPaths, error) {
 	if s == nil || s.store == nil {
 		return nil, errors.New("locate Steam installation: storage is not configured")
 	}

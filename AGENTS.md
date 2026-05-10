@@ -1,3 +1,15 @@
+# Backend
+
+- Any internal exported functions that are used by a service (internal/services) should always prefix errors returned using a defer instead of manually adding to all returns (this is for error tracing). Example:
+```
+defer func() {
+    if err != nil {
+        err = fmt.Errorf("parse Steam library folders: %w", err)
+    }
+}()
+
+```
+
 # Frontend
 
 - Every thing should be componentised, pages are only orchestrating, while all logic is in components.

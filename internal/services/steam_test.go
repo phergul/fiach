@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -54,6 +55,68 @@ func TestSteamServiceReturnsClearNotFoundError(t *testing.T) {
 	}
 }
 
+func TestSteamServiceGetsSteamLibrariesFromManualPath(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	extraLibrary := filepath.Join(t.TempDir(), "SteamLibrary")
+	writeLibraryFoldersVDF(t, steamRoot, `
+"libraryfolders"
+{
+	"0"
+	{
+		"path"		"`+steamRoot+`"
+	}
+	"1"
+	{
+		"path"		"`+extraLibrary+`"
+	}
+}
+`)
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	got, err := service.GetSteamLibraries()
+	if err != nil {
+		t.Fatalf("GetSteamLibraries() error = %v", err)
+	}
+
+	want := []string{filepath.Clean(steamRoot), filepath.Clean(extraLibrary)}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("GetSteamLibraries() = %#v, want %#v", got, want)
+	}
+}
+
+func TestSteamServiceReturnsLibraryFolderParseError(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	writeLibraryFoldersVDF(t, steamRoot, `"libraryfolders"`)
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	_, err := service.GetSteamLibraries()
+	if err == nil {
+		t.Fatal("GetSteamLibraries() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "get Steam libraries") {
+		t.Fatalf("GetSteamLibraries() error = %q, want library context", err.Error())
+	}
+	if !strings.Contains(err.Error(), "parse libraryfolders.vdf") {
+		t.Fatalf("GetSteamLibraries() error = %q, want parse context", err.Error())
+	}
+}
+
 func openMigratedStore(t *testing.T) *storage.Store {
 	t.Helper()
 
@@ -95,10 +158,21 @@ func mkdirAll(t *testing.T, path string) {
 	}
 }
 
-func writeFile(t *testing.T, path string) {
+func writeFile(t *testing.T, path string, content ...string) {
 	t.Helper()
 
-	if err := os.WriteFile(path, []byte("x"), 0o644); err != nil {
+	fileContent := "x"
+	if len(content) > 0 {
+		fileContent = content[0]
+	}
+
+	if err := os.WriteFile(path, []byte(fileContent), 0o644); err != nil {
 		t.Fatalf("WriteFile(%q) error = %v", path, err)
 	}
+}
+
+func writeLibraryFoldersVDF(t *testing.T, root string, content string) {
+	t.Helper()
+
+	writeFile(t, filepath.Join(root, "steamapps", "libraryfolders.vdf"), content)
 }

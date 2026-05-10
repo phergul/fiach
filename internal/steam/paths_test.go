@@ -173,10 +173,15 @@ func mkdirAll(t *testing.T, path string) {
 	}
 }
 
-func writeFile(t *testing.T, path string) {
+func writeFile(t *testing.T, path string, content ...string) {
 	t.Helper()
 
-	if err := os.WriteFile(path, []byte("x"), 0o644); err != nil {
+	fileContent := "x"
+	if len(content) > 0 {
+		fileContent = content[0]
+	}
+
+	if err := os.WriteFile(path, []byte(fileContent), 0o644); err != nil {
 		t.Fatalf("WriteFile(%q) error = %v", path, err)
 	}
 }
