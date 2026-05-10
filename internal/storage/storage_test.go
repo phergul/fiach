@@ -154,6 +154,43 @@ func TestOpenConfiguresSQLiteConnection(t *testing.T) {
 	}
 }
 
+func TestSettingsCanBeSetUpdatedAndRead(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	value, found, err := store.GetSetting(context.Background(), "steam.install_path")
+	if err != nil {
+		t.Fatalf("GetSetting() missing error = %v", err)
+	}
+	if found {
+		t.Fatalf("GetSetting() found = true, want false with value %q", value)
+	}
+
+	if err := store.SetSetting(context.Background(), "steam.install_path", "/steam/one"); err != nil {
+		t.Fatalf("SetSetting() insert error = %v", err)
+	}
+	if err := store.SetSetting(context.Background(), "steam.install_path", "/steam/two"); err != nil {
+		t.Fatalf("SetSetting() update error = %v", err)
+	}
+
+	value, found, err = store.GetSetting(context.Background(), "steam.install_path")
+	if err != nil {
+		t.Fatalf("GetSetting() error = %v", err)
+	}
+	if !found {
+		t.Fatal("GetSetting() found = false, want true")
+	}
+	if value != "/steam/two" {
+		t.Fatalf("GetSetting() value = %q, want updated value", value)
+	}
+}
+
 func TestForeignKeyConstraintRejectsMissingParent(t *testing.T) {
 	t.Parallel()
 

@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"log"
 
+	"github.com/phergul/mod-manager/internal/services"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -29,7 +30,9 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
-		Services:    []application.Service{},
+		Services: []application.Service{
+			application.NewService(services.NewSteamService(store)),
+		},
 		OnShutdown: func() {
 			if err := store.Close(); err != nil {
 				log.Printf("failed to close storage: %v", err)
