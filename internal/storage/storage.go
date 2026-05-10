@@ -140,9 +140,15 @@ func dataSourceName(dbPath string) string {
 	values.Set("_foreign_keys", sqliteForeignKeys)
 	values.Set("_journal_mode", sqliteJournalMode)
 
+	uriPath := dbPath
+	// specifically for Windows, ensure the path starts with a slash to be treated as an absolute path
+	if volume := filepath.VolumeName(dbPath); len(volume) == 2 && volume[1] == ':' {
+		uriPath = "/" + filepath.ToSlash(dbPath)
+	}
+
 	return (&url.URL{
 		Scheme:   "file",
-		Path:     dbPath,
+		Path:     uriPath,
 		RawQuery: values.Encode(),
 	}).String()
 }
