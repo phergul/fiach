@@ -18,7 +18,6 @@ export const GameCard = ({ game }: GameCardProps) => {
   return (
     <article className="game-card">
       <div className="game-card-artwork">
-        <span className="game-card-artwork-title">{game.Name}</span>
         <span className="game-card-source" aria-label={getSourceLabel(game.Source)} title={getSourceLabel(game.Source)}>
           {getSourceInitial(game.Source)}
         </span>
