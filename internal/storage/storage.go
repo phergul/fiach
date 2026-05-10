@@ -108,7 +108,9 @@ func (s *Store) MigrateDown() error {
 		return errors.New("run migrations down: store is not open")
 	}
 
-	if err := runGoose(s.db.DB, goose.Down); err != nil {
+	if err := runGoose(s.db.DB, func(db *sql.DB, dir string, opts ...goose.OptionsFunc) error {
+		return goose.DownTo(db, dir, 0, opts...)
+	}); err != nil {
 		return fmt.Errorf("run migrations down: %w", err)
 	}
 

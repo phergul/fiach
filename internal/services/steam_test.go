@@ -198,6 +198,77 @@ func TestSteamServiceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
 	}
 }
 
+func TestSteamServiceScansAndSavesSteamGames(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	extraLibrary := filepath.Join(t.TempDir(), "SteamLibrary")
+	writeLibraryFoldersVDF(t, steamRoot, `
+"libraryfolders"
+{
+	"0"
+	{
+		"path"		"`+steamRoot+`"
+	}
+	"1"
+	{
+		"path"		"`+extraLibrary+`"
+	}
+}
+`)
+	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
+	writeAppManifest(t, extraLibrary, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	result, err := service.ScanAndSaveSteamGames()
+	if err != nil {
+		t.Fatalf("ScanAndSaveSteamGames() error = %v", err)
+	}
+
+	if result.Inserted != 2 || result.Updated != 0 || result.MarkedUnavailable != 0 {
+		t.Fatalf("result = %+v, want 2 inserted only", result)
+	}
+	if len(result.Games) != 2 {
+		t.Fatalf("Games length = %d, want 2", len(result.Games))
+	}
+}
+
+func TestSteamServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	writeLibraryFoldersVDF(t, steamRoot, `"libraryfolders"`)
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	_, err := service.ScanAndSaveSteamGames()
+	if err == nil {
+		t.Fatal("ScanAndSaveSteamGames() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "scan and save Steam games") {
+		t.Fatalf("ScanAndSaveSteamGames() error = %q, want scan/save context", err.Error())
+	}
+
+	var count int
+	if err := store.DB().Get(&count, "SELECT COUNT(*) FROM games"); err != nil {
+		t.Fatalf("count games: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("game count = %d, want 0", count)
+	}
+}
+
 func openMigratedStore(t *testing.T) *storage.Store {
 	t.Helper()
 

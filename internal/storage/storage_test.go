@@ -66,8 +66,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 1 {
-		t.Fatalf("goose version = %d, want 1", version)
+	if version != 2 {
+		t.Fatalf("goose version = %d, want 2", version)
 	}
 
 	for _, table := range []string{
@@ -81,6 +81,27 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		if !tableExists(t, store, table) {
 			t.Fatalf("expected table %q to exist", table)
 		}
+	}
+}
+
+func TestMigrateUpAddsSteamGameDetectionColumns(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	for _, column := range []string{"source", "source_id", "available", "last_seen_at"} {
+		if !columnExists(t, store, "games", column) {
+			t.Fatalf("expected games.%s column to exist", column)
+		}
+	}
+
+	if !indexExists(t, store, "idx_games_source_source_id") {
+		t.Fatal("expected idx_games_source_source_id to exist")
 	}
 }
 
@@ -314,8 +335,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 1 {
-		t.Fatalf("goose version = %d, want 1", version)
+	if version != 2 {
+		t.Fatalf("goose version = %d, want 2", version)
 	}
 }
 
@@ -349,6 +370,56 @@ func tableExists(t *testing.T, store *Store, table string) bool {
 			AND name = ?
 	`, table); err != nil {
 		t.Fatalf("query table %q existence: %v", table, err)
+	}
+
+	return count == 1
+}
+
+func columnExists(t *testing.T, store *Store, table string, column string) bool {
+	t.Helper()
+
+	rows, err := store.DB().Queryx("PRAGMA table_info(" + table + ")")
+	if err != nil {
+		t.Fatalf("query table %q columns: %v", table, err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			t.Fatalf("close table info rows: %v", err)
+		}
+	}()
+
+	for rows.Next() {
+		var cid int
+		var name string
+		var typ string
+		var notNull int
+		var defaultValue any
+		var pk int
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &defaultValue, &pk); err != nil {
+			t.Fatalf("scan table info: %v", err)
+		}
+		if name == column {
+			return true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate table info: %v", err)
+	}
+
+	return false
+}
+
+func indexExists(t *testing.T, store *Store, index string) bool {
+	t.Helper()
+
+	var count int
+	if err := store.DB().Get(&count, `
+		SELECT COUNT(*)
+		FROM sqlite_master
+		WHERE type = 'index'
+			AND name = ?
+	`, index); err != nil {
+		t.Fatalf("query index %q existence: %v", index, err)
 	}
 
 	return count == 1

@@ -8,6 +8,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as steam$0 from "../steam/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as storage$0 from "../storage/models.js";
 
 export function GetInstalledSteamGames(): $CancellablePromise<steam$0.Game[]> {
     return $Call.ByID(1666003703).then(($result: any) => {
@@ -27,9 +30,16 @@ export function LocateSteamInstallation(): $CancellablePromise<steam$0.SteamPath
     });
 }
 
+export function ScanAndSaveSteamGames(): $CancellablePromise<storage$0.SteamScanResult> {
+    return $Call.ByID(1646298238).then(($result: any) => {
+        return $$createType5($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = steam$0.Game.createFrom;
 const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = $Create.Array($Create.Any);
 const $$createType3 = steam$0.SteamPaths.createFrom;
 const $$createType4 = $Create.Nullable($$createType3);
+const $$createType5 = storage$0.SteamScanResult.createFrom;

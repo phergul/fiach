@@ -58,6 +58,22 @@ func (s *SteamService) GetInstalledSteamGames() ([]steam.Game, error) {
 	return games, nil
 }
 
+func (s *SteamService) ScanAndSaveSteamGames() (storage.SteamScanResult, error) {
+	var result storage.SteamScanResult
+
+	games, err := s.GetInstalledSteamGames()
+	if err != nil {
+		return result, fmt.Errorf("scan and save Steam games: %w", err)
+	}
+
+	result, err = s.store.SaveSteamScan(context.Background(), games)
+	if err != nil {
+		return storage.SteamScanResult{}, fmt.Errorf("scan and save Steam games: %w", err)
+	}
+
+	return result, nil
+}
+
 func (s *SteamService) locateSteamInstallation() (*steam.SteamPaths, error) {
 	if s == nil || s.store == nil {
 		return nil, errors.New("locate Steam installation: storage is not configured")
