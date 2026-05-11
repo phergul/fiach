@@ -34,7 +34,7 @@ export const GameLibrary = () => {
             onClick={refreshGames}
             type="button"
           >
-            {isScanning ? 'Scanning...' : 'Rescan'}
+            Rescan
           </button>
         </div>
       </div>

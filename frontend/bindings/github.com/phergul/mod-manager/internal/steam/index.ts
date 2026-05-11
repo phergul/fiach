@@ -3,5 +3,6 @@
 
 export {
     Game,
+    ImageType,
     SteamPaths
 } from "./models.js";

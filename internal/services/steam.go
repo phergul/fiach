@@ -2,8 +2,12 @@ package services
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/phergul/mod-manager/internal/steam"
 	"github.com/phergul/mod-manager/internal/storage"
@@ -70,6 +74,40 @@ func (s *SteamService) GetStoredGames() (games []storage.StoredGame, err error) 
 	}
 
 	return s.store.ListStoredGames(context.Background())
+}
+
+func (s *SteamService) GetGameImage(appID string, imageType steam.ImageType) (imageData string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get game image: %w", err)
+		}
+	}()
+
+	appID = strings.TrimSpace(appID)
+	if appID == "" {
+		return "", fmt.Errorf("app ID is required")
+	}
+
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return "", err
+	}
+
+	imagePath, err := steam.ResolveGameImagePath(paths.Artwork, appID, imageType)
+	if err != nil {
+		return "", err
+	}
+	if imagePath == "" {
+		return "", nil
+	}
+
+	content, err := os.ReadFile(imagePath)
+	if err != nil {
+		return "", fmt.Errorf("read image: %w", err)
+	}
+
+	mimeType := http.DetectContentType(content)
+	return "data:" + mimeType + ";base64," + base64.StdEncoding.EncodeToString(content), nil
 }
 
 func (s *SteamService) ScanAndSaveSteamGames() (storage.SteamScanResult, error) {

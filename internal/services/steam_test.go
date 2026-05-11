@@ -279,6 +279,54 @@ func TestSteamServiceGetStoredGamesReturnsStorageError(t *testing.T) {
 	}
 }
 
+func TestSteamServiceGetsGameImage(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	imageDir := filepath.Join(steamRoot, "appcache", "librarycache", "400")
+	mkdirAll(t, imageDir)
+	writeFile(t, filepath.Join(imageDir, "library_600x900.png"), "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	imageData, err := service.GetGameImage("400", steam.ImageTypeBanner)
+	if err != nil {
+		t.Fatalf("GetGameImage() error = %v", err)
+	}
+
+	if !strings.HasPrefix(imageData, "data:image/png;base64,") {
+		t.Fatalf("GetGameImage() = %q, want PNG data URL", imageData)
+	}
+}
+
+func TestSteamServiceGetGameImageReturnsEmptyForMissingArtwork(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	service := NewSteamService(store)
+	imageData, err := service.GetGameImage("400", steam.ImageTypeBanner)
+	if err != nil {
+		t.Fatalf("GetGameImage() error = %v", err)
+	}
+
+	if imageData != "" {
+		t.Fatalf("GetGameImage() = %q, want empty string", imageData)
+	}
+}
+
 func TestSteamServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
 	t.Parallel()
 

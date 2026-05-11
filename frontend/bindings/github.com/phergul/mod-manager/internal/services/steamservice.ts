@@ -12,6 +12,10 @@ import * as steam$0 from "../steam/models.js";
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
+export function GetGameImage(appID: string, imageType: steam$0.ImageType): $CancellablePromise<string> {
+    return $Call.ByID(3169267089, appID, imageType);
+}
+
 export function GetInstalledSteamGames(): $CancellablePromise<steam$0.Game[]> {
     return $Call.ByID(1666003703).then(($result: any) => {
         return $$createType1($result);

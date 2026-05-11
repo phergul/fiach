@@ -54,6 +54,8 @@
 .game-library-rescan:disabled,
 .game-library-state-action:disabled {
   color: $color-text-muted;
+  background: $color-surface;
+  border-color: $color-border-subtle;
   cursor: not-allowed;
 }
 

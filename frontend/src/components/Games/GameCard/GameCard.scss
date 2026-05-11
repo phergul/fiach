@@ -33,6 +33,14 @@
   line-height: 1;
 }
 
+.game-card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .game-card-title {
   margin: $spacing-sm 0 0;
   overflow: hidden;

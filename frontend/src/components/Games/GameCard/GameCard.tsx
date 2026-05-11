@@ -1,4 +1,5 @@
 import type { StoredGame } from '../../../../bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { useGameArtwork } from '../../../hooks/useGameArtwork';
 
 import './GameCard.scss';
 
@@ -15,9 +16,14 @@ const getSourceInitial = (source: string) => {
 };
 
 export const GameCard = ({ game }: GameCardProps) => {
+  const artworkSource = useGameArtwork(game.Source === 'steam' ? game.SourceID : '');
+
   return (
     <article className="game-card">
       <div className="game-card-artwork">
+        {artworkSource !== '' && (
+          <img className="game-card-image" src={artworkSource} alt={`${game.Name} artwork`} />
+        )}
         <span className="game-card-source" aria-label={getSourceLabel(game.Source)} title={getSourceLabel(game.Source)}>
           {getSourceInitial(game.Source)}
         </span>
