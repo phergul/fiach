@@ -1,7 +1,6 @@
-import { useGameSearch } from '../../../hooks/useGameSearch';
-import { useStoredGames } from '../../../hooks/useStoredGames';
-import { GameGrid } from '../GameGrid/GameGrid';
-import { GameSearch } from '../GameSearch/GameSearch';
+import { GameGrid } from '@components/Games/GameGrid/GameGrid';
+import { GameSearch } from '@components/Games/GameSearch/GameSearch';
+import { useGameSearch, useStoredGames } from '@hooks';
 
 import './GameLibrary.scss';
 

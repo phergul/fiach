@@ -1,11 +1,8 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { ToastProvider } from './components/Common/Toast/Toast';
-import { Layout } from './components/Layout/Layout';
-import { Library } from './pages/Library';
-import { Logs } from './pages/Logs';
-import { Profiles } from './pages/Profiles';
-import { Settings } from './pages/Settings';
+import { ToastProvider } from '@components/Common/Toast/Toast';
+import { Layout } from '@components/Layout/Layout';
+import { Library, Logs, Profiles, Settings } from '@pages';
 
 const App = () => {
   return (

@@ -1,5 +1,5 @@
-import type { StoredGame } from '../../../../bindings/github.com/phergul/mod-manager/internal/storage/models';
-import { GameCard } from '../GameCard/GameCard';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { GameCard } from '@components/Games/GameCard/GameCard';
 
 import './GameGrid.scss';
 

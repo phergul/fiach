@@ -1,5 +1,5 @@
-import { Brand } from '../Brand/Brand';
-import { Navigation } from '../Navigation/Navigation';
+import { Brand } from '@components/Brand/Brand';
+import { Navigation } from '@components/Navigation/Navigation';
 
 import './Sidebar.scss';
 

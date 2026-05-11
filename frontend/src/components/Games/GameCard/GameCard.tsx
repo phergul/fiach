@@ -1,5 +1,5 @@
-import type { StoredGame } from '../../../../bindings/github.com/phergul/mod-manager/internal/storage/models';
-import { useGameArtwork } from '../../../hooks/useGameArtwork';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { useGameArtwork } from '@hooks';
 
 import './GameCard.scss';
 

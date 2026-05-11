@@ -1,4 +1,4 @@
-import { SectionPlaceholder } from '../components/SectionPlaceholder/SectionPlaceholder';
+import { SectionPlaceholder } from '@components/SectionPlaceholder/SectionPlaceholder';
 
 export const Settings = () => {
   return (

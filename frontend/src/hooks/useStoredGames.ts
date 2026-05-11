@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useToast } from '../components/Common/Toast/Toast';
-import { getErrorMessage } from '../utils/getErrorMessage';
-import {
-  GetStoredGames,
-  ScanAndSaveSteamGames,
-} from '../../bindings/github.com/phergul/mod-manager/internal/services/steamservice';
+import { GetStoredGames, ScanAndSaveSteamGames } from '@bindings/github.com/phergul/mod-manager/internal/services/steamservice';
 import type {
   SteamScanResult,
   StoredGame,
-} from '../../bindings/github.com/phergul/mod-manager/internal/storage/models';
+} from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { useToast } from '@components/Common/Toast/Toast';
+import { getErrorMessage } from '@utils';
 
 let hasRunInitialScan = false;
 let initialScanPromise: Promise<SteamScanResult> | null = null;

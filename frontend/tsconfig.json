@@ -13,6 +13,16 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@app": ["src/App.tsx"],
+      "@bindings/*": ["bindings/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks": ["src/hooks/index.ts"],
+      "@pages": ["src/pages/index.ts"],
+      "@styles": ["src/styles/index.scss"],
+      "@utils": ["src/utils/index.ts"]
+    },
 
     /* Linting */
     "strict": true,
