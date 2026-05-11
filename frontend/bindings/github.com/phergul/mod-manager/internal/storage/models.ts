@@ -5,6 +5,47 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+export class ModProfile {
+    "ID": number;
+    "GameID": number;
+    "Name": string;
+    "IsActive": boolean;
+    "CreatedAt": string;
+    "UpdatedAt": string;
+
+    /** Creates a new ModProfile instance. */
+    constructor($$source: Partial<ModProfile> = {}) {
+        if (!("ID" in $$source)) {
+            this["ID"] = 0;
+        }
+        if (!("GameID" in $$source)) {
+            this["GameID"] = 0;
+        }
+        if (!("Name" in $$source)) {
+            this["Name"] = "";
+        }
+        if (!("IsActive" in $$source)) {
+            this["IsActive"] = false;
+        }
+        if (!("CreatedAt" in $$source)) {
+            this["CreatedAt"] = "";
+        }
+        if (!("UpdatedAt" in $$source)) {
+            this["UpdatedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModProfile instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModProfile {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModProfile($$parsedSource as Partial<ModProfile>);
+    }
+}
+
 export class SteamScanResult {
     "Inserted": number;
     "Updated": number;

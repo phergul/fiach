@@ -2,10 +2,13 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/pressly/goose/v3"
 )
 
 func TestOpenCreatesDatabaseFile(t *testing.T) {
@@ -66,8 +69,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 
 	for _, table := range []string{
@@ -102,6 +105,78 @@ func TestMigrateUpAddsSteamGameDetectionColumns(t *testing.T) {
 
 	if !indexExists(t, store, "idx_games_source_source_id") {
 		t.Fatal("expected idx_games_source_source_id to exist")
+	}
+}
+
+func TestMigrateUpAddsProfileActiveState(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	if !columnExists(t, store, "profiles", "is_active") {
+		t.Fatal("expected profiles.is_active column to exist")
+	}
+
+	if !indexExists(t, store, "idx_profiles_active_game_id") {
+		t.Fatal("expected idx_profiles_active_game_id to exist")
+	}
+}
+
+func TestProfileActiveStateDownMigrationPreservesProfiles(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	result, err := store.DB().Exec(`
+		INSERT INTO games (name, install_path)
+		VALUES (?, ?)
+	`, "Skyrim", "/games/skyrim")
+	if err != nil {
+		t.Fatalf("insert game: %v", err)
+	}
+	gameID, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("game LastInsertId(): %v", err)
+	}
+
+	if _, err := store.DB().Exec(`
+		INSERT INTO profiles (game_id, name, is_active)
+		VALUES (?, ?, 1)
+	`, gameID, "Default"); err != nil {
+		t.Fatalf("insert profile: %v", err)
+	}
+
+	if err := runGoose(store.DB().DB, func(db *sql.DB, dir string, opts ...goose.OptionsFunc) error {
+		return goose.DownTo(db, dir, 2, opts...)
+	}); err != nil {
+		t.Fatalf("goose DownTo(2) error = %v", err)
+	}
+
+	if columnExists(t, store, "profiles", "is_active") {
+		t.Fatal("profiles.is_active exists after down migration, want removed")
+	}
+
+	var count int
+	if err := store.DB().Get(&count, `
+		SELECT COUNT(*)
+		FROM profiles
+		WHERE game_id = ?
+			AND name = ?
+	`, gameID, "Default"); err != nil {
+		t.Fatalf("count preserved profiles: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("preserved profile count = %d, want 1", count)
 	}
 }
 
@@ -386,8 +461,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 }
 

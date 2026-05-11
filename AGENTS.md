@@ -8,6 +8,7 @@ defer func() {
     }
 }()
 ```
+- When both a service and an inner layer wrap errors, the messages should be distinct. Service-level messages should describe the higher-level user operation, while storage/helper-layer messages should describe the lower-level action so errors do not repeat the same prefix twice.
 
 # Frontend
 
