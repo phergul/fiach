@@ -1,5 +1,5 @@
-import { GameGrid } from '@components/Games/GameGrid/GameGrid';
-import { GameSearch } from '@components/Games/GameSearch/GameSearch';
+import { GameGrid } from '@components/Games/Grid/GameGrid/GameGrid';
+import { GameSearch } from '@components/Games/Library/GameSearch/GameSearch';
 import { useGameSearch, useStoredGames } from '@hooks';
 
 import './GameLibrary.scss';

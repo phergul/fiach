@@ -1,4 +1,4 @@
-import { GameLibrary } from '@components/Games/GameLibrary/GameLibrary';
+import { GameLibrary } from '@components/Games/Library/GameLibrary/GameLibrary';
 
 export const Library = () => {
   return <GameLibrary />;

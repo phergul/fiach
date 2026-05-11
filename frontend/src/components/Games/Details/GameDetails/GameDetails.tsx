@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
-import { GameDetailsMetadata } from '@components/Games/GameDetailsMetadata/GameDetailsMetadata';
-import { GameModsSection } from '@components/Games/GameModsSection/GameModsSection';
-import { GameProfilesSection } from '@components/Games/GameProfilesSection/GameProfilesSection';
+import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
+import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
+import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useStoredGames } from '@hooks';
 
 import './GameDetails.scss';

@@ -7,7 +7,6 @@ defer func() {
         err = fmt.Errorf("parse Steam library folders: %w", err)
     }
 }()
-
 ```
 
 # Frontend
