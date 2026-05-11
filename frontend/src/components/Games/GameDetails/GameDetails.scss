@@ -1,60 +1,38 @@
 @use '@styles' as *;
 
-$game-details-backdrop-top-offset: -2rem;
-$game-details-backdrop-height: 24rem;
-$game-details-backdrop-opacity: 0.34;
-$game-details-header-spacing: 0.75rem;
-$game-details-logo-width: 12rem;
+$game-details-toolbar-height: 5rem;
+$game-details-hero-height: 12rem;
+$game-details-hero-image-opacity: 0.42;
+$game-details-title-font-size: 2.5rem;
+$game-details-logo-width: 14rem;
+$game-details-tab-height: 4rem;
+$game-details-mobile-breakpoint: 42rem;
 
 .game-details {
-  position: relative;
   display: flex;
+  min-height: calc($app-min-height - ($spacing-xl * 2));
   flex-direction: column;
-  gap: $spacing-lg;
-  isolation: isolate;
+  margin: -$spacing-xl;
+  background: $color-background;
+  color: $color-text-primary;
 }
 
-.game-details-with-backdrop {
-  padding-top: $spacing-sm;
-}
-
-.game-details-backdrop {
-  position: absolute;
-  z-index: -1;
-  top: $game-details-backdrop-top-offset;
-  right: -$spacing-xl;
-  left: -$spacing-xl;
-  height: $game-details-backdrop-height;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.game-details-backdrop::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  background:
-    linear-gradient(to bottom, rgba($color-background, 0.18) 0%, rgba($color-background, 0.68) 52%, $color-background 100%),
-    linear-gradient(to right, $color-background 0%, rgba($color-background, 0.24) 24%, rgba($color-background, 0.38) 76%, $color-background 100%);
-}
-
-.game-details-backdrop-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  opacity: $game-details-backdrop-opacity;
-  mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 100%);
+.game-details-toolbar {
+  display: flex;
+  min-height: $game-details-toolbar-height;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $spacing-xl;
+  background: $color-background;
+  border-bottom: $app-border;
 }
 
 .game-details-back-link,
 .game-details-state-link {
-  position: relative;
-  z-index: 1;
   width: fit-content;
   color: $color-text-subtle;
-  font-size: $font-size-sm;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
   text-decoration: none;
 }
 
@@ -68,25 +46,54 @@ $game-details-logo-width: 12rem;
 
 .game-details-header {
   position: relative;
-  z-index: 1;
   display: flex;
-  align-items: flex-end;
+  min-height: $game-details-hero-height;
+  align-items: center;
   justify-content: space-between;
-  gap: $spacing-lg;
+  gap: $spacing-xl;
+  padding: $spacing-xl;
+  overflow: hidden;
+  background: $color-background;
+  border-bottom: $app-border;
+}
+
+.game-details-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.game-details-backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(to bottom, rgba($color-background, 0.18) 0%, rgba($color-background, 0.64) 58%, $color-background 100%),
+    linear-gradient(to right, rgba($color-background, 0.44) 0%, rgba($color-background, 0.18) 42%, rgba($color-background, 0.78) 100%);
+}
+
+.game-details-backdrop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: $game-details-hero-image-opacity;
 }
 
 .game-details-heading {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: $game-details-header-spacing;
+  gap: $spacing-md;
 }
 
 .game-details-title {
   margin: 0;
   color: $color-text-primary;
-  font-size: $font-size-xl;
+  font-size: $game-details-title-font-size;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
 }
@@ -103,38 +110,61 @@ $game-details-logo-width: 12rem;
 }
 
 .game-details-install-path-value {
-  width: fit-content;
-  max-width: 100%;
   margin: 0;
-  padding: $spacing-sm $spacing-md;
   overflow-wrap: anywhere;
-  color: $color-text-primary;
-  background: rgba($color-surface, 0.72);
-  border: $app-border-width solid $color-border-subtle;
-  border-radius: $radius-md;
+  color: $color-text-subtle;
   font-size: $font-size-sm;
 }
 
 .game-details-logo {
+  position: relative;
+  z-index: 1;
   width: min($game-details-logo-width, 28vw);
   max-height: 7rem;
+  align-self: center;
   object-fit: contain;
   object-position: center right;
 }
 
+.game-details-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: $color-background;
+  border-bottom: $app-border;
+}
+
+.game-details-tab {
+  height: $game-details-tab-height;
+  color: $color-text-subtle;
+  background: transparent;
+  border: 0;
+  border-bottom: $app-border-width solid transparent;
+  cursor: pointer;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-details-tab:hover,
+.game-details-tab:focus-visible {
+  color: $color-text-primary;
+  outline: none;
+}
+
+.game-details-tab-active {
+  color: $color-text-primary;
+  border-bottom-color: $color-text-primary;
+}
+
 .game-details-state {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: flex-start;
   flex-direction: column;
   gap: $spacing-sm;
   margin: 0;
-  padding: $spacing-lg;
+  padding: $spacing-xl;
   color: $color-text-subtle;
-  background: $color-surface;
-  border: $app-border-width solid $color-border-subtle;
-  border-radius: $radius-md;
+  background: $color-background;
+  border-bottom: $app-border;
   font-size: $font-size-base;
 }
 
@@ -158,9 +188,8 @@ $game-details-logo-width: 12rem;
   height: $input-height;
   padding: 0 $spacing-md;
   color: $color-text-primary;
-  background: $color-surface-elevated;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
+  background: transparent;
+  border: $app-border;
   cursor: pointer;
 }
 
@@ -170,10 +199,26 @@ $game-details-logo-width: 12rem;
   outline: none;
 }
 
-@media (max-width: 42rem) {
+@media (max-width: $game-details-mobile-breakpoint) {
+  .game-details {
+    margin: -$spacing-md;
+  }
+
+  .game-details-toolbar,
+  .game-details-header,
+  .game-details-state {
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+
   .game-details-header {
     align-items: flex-start;
     flex-direction: column-reverse;
+    justify-content: center;
+  }
+
+  .game-details-title {
+    font-size: $font-size-xl;
   }
 
   .game-details-logo {

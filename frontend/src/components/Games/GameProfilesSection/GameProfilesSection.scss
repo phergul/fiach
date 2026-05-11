@@ -1,40 +1,13 @@
 @use '@styles' as *;
 
-$game-details-section-min-height: 7rem;
-
 .game-profiles-section {
-  display: flex;
-  min-height: $game-details-section-min-height;
-  flex-direction: column;
-  gap: $spacing-md;
-  padding: $spacing-lg;
-  background: $color-surface;
-  border: $app-border-width solid $color-border-subtle;
-  border-radius: $radius-md;
+  background: $color-background;
 }
 
-.game-profiles-section-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: $spacing-md;
-}
-
-.game-profiles-section-title,
-.game-profiles-section-count,
 .game-profiles-section-empty {
   margin: 0;
-}
-
-.game-profiles-section-title {
-  color: $color-text-primary;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  line-height: $line-height-heading;
-}
-
-.game-profiles-section-count,
-.game-profiles-section-empty {
+  padding: $spacing-xl;
   color: $color-text-subtle;
-  font-size: $font-size-sm;
+  border-bottom: $app-border;
+  font-size: $font-size-base;
 }

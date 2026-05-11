@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { Link, useParams } from 'react-router-dom';
 
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
@@ -7,6 +9,8 @@ import { GameProfilesSection } from '@components/Games/GameProfilesSection/GameP
 import { useGameArtwork, useStoredGames } from '@hooks';
 
 import './GameDetails.scss';
+
+type GameDetailsTab = 'mods' | 'profiles';
 
 const parseGameID = (gameID: string | undefined) => {
   if (gameID === undefined || gameID.trim() === '') {
@@ -23,6 +27,7 @@ const parseGameID = (gameID: string | undefined) => {
 
 export const GameDetails = () => {
   const { gameId } = useParams();
+  const [activeTab, setActiveTab] = useState<GameDetailsTab>('mods');
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
@@ -43,15 +48,11 @@ export const GameDetails = () => {
       className={heroArtworkSource === '' ? 'game-details' : 'game-details game-details-with-backdrop'}
       aria-label="Game details"
     >
-      {heroArtworkSource !== '' && (
-        <div className="game-details-backdrop" aria-hidden="true">
-          <img className="game-details-backdrop-image" src={heroArtworkSource} alt="" />
-        </div>
-      )}
-
-      <Link className="game-details-back-link" to="/library">
-        Back to library
-      </Link>
+      <div className="game-details-toolbar">
+        <Link className="game-details-back-link" to="/library">
+          Back
+        </Link>
+      </div>
 
       {isWaitingForGame && <p className="game-details-state">Loading game...</p>}
 
@@ -82,6 +83,12 @@ export const GameDetails = () => {
       {game !== undefined && (
         <>
           <div className="game-details-header">
+            {heroArtworkSource !== '' && (
+              <div className="game-details-backdrop" aria-hidden="true">
+                <img className="game-details-backdrop-image" src={heroArtworkSource} alt="" />
+              </div>
+            )}
+
             <div className="game-details-heading">
               <h1 className="game-details-title" id="game-details-title">
                 {game.Name}
@@ -102,8 +109,37 @@ export const GameDetails = () => {
           </div>
 
           <GameDetailsMetadata game={game} />
-          <GameProfilesSection />
-          <GameModsSection />
+
+          <div className="game-details-tabs" role="tablist" aria-label="Game detail sections">
+            <button
+              className={
+                activeTab === 'mods'
+                  ? 'game-details-tab game-details-tab-active'
+                  : 'game-details-tab'
+              }
+              onClick={() => setActiveTab('mods')}
+              role="tab"
+              type="button"
+              aria-selected={activeTab === 'mods'}
+            >
+              Imported mods
+            </button>
+            <button
+              className={
+                activeTab === 'profiles'
+                  ? 'game-details-tab game-details-tab-active'
+                  : 'game-details-tab'
+              }
+              onClick={() => setActiveTab('profiles')}
+              role="tab"
+              type="button"
+              aria-selected={activeTab === 'profiles'}
+            >
+              Profiles
+            </button>
+          </div>
+
+          {activeTab === 'mods' ? <GameModsSection /> : <GameProfilesSection />}
         </>
       )}
     </section>
