@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { useGameArtwork } from '@hooks';
 
@@ -20,15 +22,21 @@ export const GameCard = ({ game }: GameCardProps) => {
 
   return (
     <article className="game-card">
-      <div className="game-card-artwork">
-        {artworkSource !== '' && (
-          <img className="game-card-image" src={artworkSource} alt={`${game.Name} artwork`} />
-        )}
-        <span className="game-card-source" aria-label={getSourceLabel(game.Source)} title={getSourceLabel(game.Source)}>
-          {getSourceInitial(game.Source)}
-        </span>
-      </div>
-      <h2 className="game-card-title">{game.Name}</h2>
+      <Link className="game-card-link" to={`/library/${game.ID}`} aria-label={`View ${game.Name} details`}>
+        <div className="game-card-artwork">
+          {artworkSource !== '' && (
+            <img className="game-card-image" src={artworkSource} alt={`${game.Name} artwork`} />
+          )}
+          <span
+            className="game-card-source"
+            aria-label={getSourceLabel(game.Source)}
+            title={getSourceLabel(game.Source)}
+          >
+            {getSourceInitial(game.Source)}
+          </span>
+        </div>
+        <h2 className="game-card-title">{game.Name}</h2>
+      </Link>
     </article>
   );
 };

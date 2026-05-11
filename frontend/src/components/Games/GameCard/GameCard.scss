@@ -1,7 +1,29 @@
 @use '@styles' as *;
+@use 'sass:list';
+
+$game-artwork-aspect-ratio: list.slash(2, 3);
+$game-source-icon-size: 1.5rem;
 
 .game-card {
   min-width: 0;
+}
+
+.game-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.game-card-link:focus-visible {
+  border-radius: $radius-md;
+  outline: $app-border-width solid $color-border-strong;
+  outline-offset: $spacing-xs;
+}
+
+.game-card-link:hover .game-card-artwork,
+.game-card-link:focus-visible .game-card-artwork {
+  background: $color-surface;
+  border-color: $color-border;
 }
 
 .game-card-artwork {
@@ -14,6 +36,9 @@
   background: $color-surface-elevated;
   border: $app-border-width solid $color-border-subtle;
   border-radius: $radius-md;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
 }
 
 .game-card-source {

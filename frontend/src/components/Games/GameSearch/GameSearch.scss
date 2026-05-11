@@ -1,5 +1,7 @@
 @use '@styles' as *;
 
+$game-search-min-width: 16rem;
+
 .game-search {
   display: flex;
   min-width: $game-search-min-width;

@@ -9,7 +9,9 @@ import (
 type ImageType string
 
 const (
+	ImageTypeLogo   ImageType = "logo"
 	ImageTypeBanner ImageType = "banner"
+	ImageTypeHero   ImageType = "hero"
 )
 
 func ResolveGameImagePath(artworkRoot string, appID string, imageType ImageType) (imagePath string, err error) {
@@ -35,6 +37,13 @@ func ResolveGameImagePath(artworkRoot string, appID string, imageType ImageType)
 	}
 
 	switch imageType {
+	case ImageTypeLogo:
+		return firstExistingFile(
+			filepath.Join(gameArtworkPath, "logo.jpg"),
+			filepath.Join(gameArtworkPath, "logo.png"),
+			filepath.Join(gameArtworkPath, "*", "logo.jpg"),
+			filepath.Join(gameArtworkPath, "*", "logo.png"),
+		), nil
 	case ImageTypeBanner:
 		return firstExistingFile(
 			filepath.Join(gameArtworkPath, "library_600x900.jpg"),
@@ -45,6 +54,13 @@ func ResolveGameImagePath(artworkRoot string, appID string, imageType ImageType)
 			filepath.Join(gameArtworkPath, "library_capsule.png"),
 			filepath.Join(gameArtworkPath, "*", "library_capsule.jpg"),
 			filepath.Join(gameArtworkPath, "*", "library_capsule.png"),
+		), nil
+	case ImageTypeHero:
+		return firstExistingFile(
+			filepath.Join(gameArtworkPath, "library_hero.jpg"),
+			filepath.Join(gameArtworkPath, "library_hero.png"),
+			filepath.Join(gameArtworkPath, "*", "library_hero.jpg"),
+			filepath.Join(gameArtworkPath, "*", "library_hero.png"),
 		), nil
 	default:
 		return "", fmt.Errorf("unsupported image type %q", imageType)

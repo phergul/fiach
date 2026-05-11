@@ -65,6 +65,42 @@ func TestResolveGameImagePathFallsBackToNestedAndCapsuleArtwork(t *testing.T) {
 	}
 }
 
+func TestResolveGameImagePathReturnsHeroArtwork(t *testing.T) {
+	t.Parallel()
+
+	artworkRoot := t.TempDir()
+	appArtwork := filepath.Join(artworkRoot, "25")
+	nestedPath := writeArtworkFile(t, filepath.Join(appArtwork, "custom"), "library_hero.jpg", "nested")
+	directPath := writeArtworkFile(t, appArtwork, "library_hero.png", "direct")
+
+	got, err := ResolveGameImagePath(artworkRoot, "25", ImageTypeHero)
+	if err != nil {
+		t.Fatalf("ResolveGameImagePath() error = %v", err)
+	}
+
+	if got != directPath {
+		t.Fatalf("ResolveGameImagePath() = %q, want direct path %q; nested=%q", got, directPath, nestedPath)
+	}
+}
+
+func TestResolveGameImagePathReturnsLogoArtwork(t *testing.T) {
+	t.Parallel()
+
+	artworkRoot := t.TempDir()
+	appArtwork := filepath.Join(artworkRoot, "27")
+	nestedPath := writeArtworkFile(t, filepath.Join(appArtwork, "custom"), "logo.jpg", "nested")
+	directPath := writeArtworkFile(t, appArtwork, "logo.png", "direct")
+
+	got, err := ResolveGameImagePath(artworkRoot, "27", ImageTypeLogo)
+	if err != nil {
+		t.Fatalf("ResolveGameImagePath() error = %v", err)
+	}
+
+	if got != directPath {
+		t.Fatalf("ResolveGameImagePath() = %q, want direct path %q; nested=%q", got, directPath, nestedPath)
+	}
+}
+
 func TestResolveGameImagePathReturnsEmptyForMissingArtwork(t *testing.T) {
 	t.Parallel()
 

@@ -52,7 +52,9 @@ export enum ImageType {
      */
     $zero = "",
 
+    ImageTypeLogo = "logo",
     ImageTypeBanner = "banner",
+    ImageTypeHero = "hero",
 };
 
 export class SteamPaths {

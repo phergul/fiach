@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { GetGameImage } from '@bindings/github.com/phergul/mod-manager/internal/services/steamservice';
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
 
-export const useGameArtwork = (appID: string) => {
+export const useGameArtwork = (appID: string, imageType = ImageType.ImageTypeBanner) => {
   const [artworkSource, setArtworkSource] = useState('');
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export const useGameArtwork = (appID: string) => {
       setArtworkSource('');
 
       try {
-        const imageData = await GetGameImage(trimmedAppID, ImageType.ImageTypeBanner);
+        const imageData = await GetGameImage(trimmedAppID, imageType);
         if (isMounted) {
           setArtworkSource(imageData);
         }
@@ -35,7 +35,7 @@ export const useGameArtwork = (appID: string) => {
     return () => {
       isMounted = false;
     };
-  }, [appID]);
+  }, [appID, imageType]);
 
   return artworkSource;
 };

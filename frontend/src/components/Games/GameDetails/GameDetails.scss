@@ -1,0 +1,183 @@
+@use '@styles' as *;
+
+$game-details-backdrop-top-offset: -2rem;
+$game-details-backdrop-height: 24rem;
+$game-details-backdrop-opacity: 0.34;
+$game-details-header-spacing: 0.75rem;
+$game-details-logo-width: 12rem;
+
+.game-details {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  isolation: isolate;
+}
+
+.game-details-with-backdrop {
+  padding-top: $spacing-sm;
+}
+
+.game-details-backdrop {
+  position: absolute;
+  z-index: -1;
+  top: $game-details-backdrop-top-offset;
+  right: -$spacing-xl;
+  left: -$spacing-xl;
+  height: $game-details-backdrop-height;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.game-details-backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(to bottom, rgba($color-background, 0.18) 0%, rgba($color-background, 0.68) 52%, $color-background 100%),
+    linear-gradient(to right, $color-background 0%, rgba($color-background, 0.24) 24%, rgba($color-background, 0.38) 76%, $color-background 100%);
+}
+
+.game-details-backdrop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: $game-details-backdrop-opacity;
+  mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 100%);
+}
+
+.game-details-back-link,
+.game-details-state-link {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  text-decoration: none;
+}
+
+.game-details-back-link:hover,
+.game-details-state-link:hover,
+.game-details-back-link:focus-visible,
+.game-details-state-link:focus-visible {
+  color: $color-text-primary;
+  outline: none;
+}
+
+.game-details-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-lg;
+}
+
+.game-details-heading {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: $game-details-header-spacing;
+}
+
+.game-details-title {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.game-details-install-path {
+  display: grid;
+  max-width: $app-content-max-width;
+  gap: $spacing-xs;
+}
+
+.game-details-install-path-label {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-details-install-path-value {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: $spacing-sm $spacing-md;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  background: rgba($color-surface, 0.72);
+  border: $app-border-width solid $color-border-subtle;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+}
+
+.game-details-logo {
+  width: min($game-details-logo-width, 28vw);
+  max-height: 7rem;
+  object-fit: contain;
+  object-position: center right;
+}
+
+.game-details-state {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: $spacing-lg;
+  color: $color-text-subtle;
+  background: $color-surface;
+  border: $app-border-width solid $color-border-subtle;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+}
+
+.game-details-state-title,
+.game-details-state-message {
+  margin: 0;
+}
+
+.game-details-state-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-details-state-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-details-state-action {
+  height: $input-height;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  cursor: pointer;
+}
+
+.game-details-state-action:hover,
+.game-details-state-action:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+@media (max-width: 42rem) {
+  .game-details-header {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+  }
+
+  .game-details-logo {
+    width: min($game-details-logo-width, 60vw);
+    object-position: center left;
+  }
+}

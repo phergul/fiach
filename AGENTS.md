@@ -18,6 +18,7 @@ defer func() {
 - If componements are related, make a subdir in components (e.g, 'Game' for GameCard, GameList etc).
 - Styling rules:
     - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. `frontend/src/styles/_variables.scss` is where all variables live.
+    - Component-specific SCSS variables used only by one component should be defined at the top of that component's SCSS file.
     - Each component should have its own scss file, and styles should be scoped to that component.
     - Don't use arbitrary class names, use localised `component-name-style`
     - Always prefer using local styles over global styles, and avoid using global styles unless necessary.

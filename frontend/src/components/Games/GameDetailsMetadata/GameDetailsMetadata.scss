@@ -1,0 +1,42 @@
+@use '@styles' as *;
+
+$game-details-metadata-min-column-width: 11rem;
+$game-details-metadata-mobile-breakpoint: 42rem;
+
+.game-details-metadata {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax($game-details-metadata-min-column-width, max-content));
+  align-self: flex-start;
+  gap: $spacing-lg;
+  margin: 0;
+  padding: $spacing-md;
+  background: rgba($color-surface, 0.72);
+  border: $app-border-width solid $color-border-subtle;
+  border-radius: $radius-md;
+}
+
+.game-details-metadata-item {
+  min-width: 0;
+}
+
+.game-details-metadata-label {
+  margin: 0 0 $spacing-xs;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-details-metadata-value {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+}
+
+@media (max-width: $game-details-metadata-mobile-breakpoint) {
+  .game-details-metadata {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+}

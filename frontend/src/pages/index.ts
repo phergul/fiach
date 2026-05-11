@@ -1,3 +1,4 @@
+export { GameDetails } from './GameDetails';
 export { Library } from './Library';
 export { Logs } from './Logs';
 export { Profiles } from './Profiles';
