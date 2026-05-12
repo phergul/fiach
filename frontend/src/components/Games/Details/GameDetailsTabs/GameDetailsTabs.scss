@@ -1,0 +1,33 @@
+@use '@styles' as *;
+
+$game-details-tabs-tab-height: 3.25rem;
+
+.game-details-tabs {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: $color-background;
+  border-bottom: $app-border;
+}
+
+.game-details-tabs-tab {
+  height: $game-details-tabs-tab-height;
+  color: $color-text-subtle;
+  background: transparent;
+  border: 0;
+  border-bottom: $app-border-width solid transparent;
+  cursor: pointer;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-details-tabs-tab:hover,
+.game-details-tabs-tab:focus-visible {
+  color: $color-text-primary;
+  outline: none;
+}
+
+.game-details-tabs-tab-active {
+  color: $color-text-primary;
+  border-bottom-color: $color-text-primary;
+}

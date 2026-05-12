@@ -1,0 +1,128 @@
+@use '@styles' as *;
+
+$game-profiles-create-form-control-height: 2.75rem;
+$game-profiles-create-form-toggle-height: 3.25rem;
+$game-profiles-create-form-mobile-breakpoint: 42rem;
+
+.game-profiles-create-form-toggle {
+  display: flex;
+  width: 100%;
+  min-height: $game-profiles-create-form-toggle-height;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: 0 $spacing-xl;
+  color: $color-text-primary;
+  background: $color-background;
+  border: 0;
+  cursor: pointer;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  text-align: left;
+}
+
+.game-profiles-create-form-toggle:hover,
+.game-profiles-create-form-toggle:focus-visible {
+  color: $color-text-primary;
+  background: rgba($color-surface, 0.42);
+  outline: none;
+}
+
+.game-profiles-create-form-toggle-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-profiles-create-form-toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  color: $color-text-subtle;
+  stroke-width: 1.8;
+}
+
+.game-profiles-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl $spacing-lg;
+  background: rgba($color-surface, 0.42);
+  border-top: $app-border;
+}
+
+.game-profiles-create-form-label {
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-create-form-input {
+  width: 100%;
+  height: $game-profiles-create-form-control-height;
+  min-width: 0;
+  padding: 0 $spacing-lg;
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border;
+  outline: none;
+}
+
+.game-profiles-create-form-input::placeholder {
+  color: $color-text-subtle;
+}
+
+.game-profiles-create-form-input:focus-visible {
+  border-color: $color-border-strong;
+}
+
+.game-profiles-create-form-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $spacing-md;
+}
+
+.game-profiles-create-form-button {
+  display: inline-flex;
+  min-height: $input-height;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.game-profiles-create-form-button-primary {
+  background: $color-surface-elevated;
+}
+
+.game-profiles-create-form-button:hover,
+.game-profiles-create-form-button:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-profiles-create-form-button:disabled,
+.game-profiles-create-form-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+@media (max-width: $game-profiles-create-form-mobile-breakpoint) {
+
+  .game-profiles-create-form,
+  .game-profiles-create-form-toggle {
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+
+  .game-profiles-create-form-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

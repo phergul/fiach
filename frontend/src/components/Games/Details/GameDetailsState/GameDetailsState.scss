@@ -1,0 +1,68 @@
+@use '@styles' as *;
+
+$game-details-state-mobile-breakpoint: 42rem;
+
+.game-details-state {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: $spacing-lg $spacing-xl;
+  color: $color-text-subtle;
+  background: $color-background;
+  border-bottom: $app-border;
+  font-size: $font-size-base;
+}
+
+.game-details-state-title,
+.game-details-state-message {
+  margin: 0;
+}
+
+.game-details-state-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-details-state-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-details-state-action {
+  height: $input-height;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border;
+  cursor: pointer;
+}
+
+.game-details-state-action:hover,
+.game-details-state-action:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-details-state-link {
+  width: fit-content;
+  color: $color-text-subtle;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+}
+
+.game-details-state-link:hover,
+.game-details-state-link:focus-visible {
+  color: $color-text-primary;
+  outline: none;
+}
+
+@media (max-width: $game-details-state-mobile-breakpoint) {
+  .game-details-state {
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+}

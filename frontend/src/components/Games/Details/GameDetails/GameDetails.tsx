@@ -3,14 +3,15 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
+import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
+import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
+import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useGameProfiles, useStoredGames } from '@hooks';
 
 import './GameDetails.scss';
-
-type GameDetailsTab = 'mods' | 'profiles';
 
 const parseGameID = (gameID: string | undefined) => {
   if (gameID === undefined || gameID.trim() === '') {
@@ -55,86 +56,36 @@ export const GameDetails = () => {
         </Link>
       </div>
 
-      {isWaitingForGame && <p className="game-details-state">Loading game...</p>}
+      {isWaitingForGame && <GameDetailsState />}
 
       {hasLoadError && (
-        <div className="game-details-state">
-          <p className="game-details-state-title">Could not load game.</p>
-          <p className="game-details-state-message">{loadError}</p>
-          <div className="game-details-state-actions">
-            <button className="game-details-state-action" onClick={retryLoadGames} type="button">
-              Retry
-            </button>
-            <Link className="game-details-state-link" to="/library">
-              Return to library
-            </Link>
-          </div>
-        </div>
+        <GameDetailsState
+          actionLabel="Retry"
+          linkLabel="Return to library"
+          message={loadError}
+          onAction={retryLoadGames}
+          title="Could not load game."
+        />
       )}
 
       {hasNotFound && (
-        <div className="game-details-state">
-          <p className="game-details-state-title">Game not found.</p>
-          <p className="game-details-state-message">
-            This game is not currently available in the library.
-          </p>
-        </div>
+        <GameDetailsState
+          message="This game is not currently available in the library."
+          title="Game not found."
+        />
       )}
 
       {game !== undefined && (
         <>
-          <div className="game-details-header">
-            {heroArtworkSource !== '' && (
-              <div className="game-details-backdrop" aria-hidden="true">
-                <img className="game-details-backdrop-image" src={heroArtworkSource} alt="" />
-              </div>
-            )}
-
-            <div className="game-details-heading">
-              <h1 className="game-details-title" id="game-details-title">
-                {game.Name}
-              </h1>
-            </div>
-
-            {logoArtworkSource !== '' && (
-              <img
-                className="game-details-logo"
-                src={logoArtworkSource}
-                alt={`${game.Name} logo`}
-              />
-            )}
-          </div>
+          <GameDetailsHeader
+            game={game}
+            heroArtworkSource={heroArtworkSource}
+            logoArtworkSource={logoArtworkSource}
+          />
 
           <GameDetailsMetadata game={game} profileCount={profileManager.profiles.length} />
 
-          <div className="game-details-tabs" role="tablist" aria-label="Game detail sections">
-            <button
-              className={
-                activeTab === 'mods'
-                  ? 'game-details-tab game-details-tab-active'
-                  : 'game-details-tab'
-              }
-              onClick={() => setActiveTab('mods')}
-              role="tab"
-              type="button"
-              aria-selected={activeTab === 'mods'}
-            >
-              Mods
-            </button>
-            <button
-              className={
-                activeTab === 'profiles'
-                  ? 'game-details-tab game-details-tab-active'
-                  : 'game-details-tab'
-              }
-              onClick={() => setActiveTab('profiles')}
-              role="tab"
-              type="button"
-              aria-selected={activeTab === 'profiles'}
-            >
-              Profiles
-            </button>
-          </div>
+          <GameDetailsTabs activeTab={activeTab} onActiveTabChange={setActiveTab} />
 
           {activeTab === 'mods' ? (
             <GameModsSection />

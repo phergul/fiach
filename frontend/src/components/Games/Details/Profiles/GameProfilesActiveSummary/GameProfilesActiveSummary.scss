@@ -1,0 +1,74 @@
+@use '@styles' as *;
+
+$game-profiles-active-summary-mobile-breakpoint: 42rem;
+
+.game-profiles-active-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+  background: rgba($color-surface, 0.42);
+  border-bottom: $app-border;
+}
+
+.game-profiles-active-summary-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.game-profiles-active-summary-label {
+  color: $color-text-muted;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-active-summary-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-active-summary-button {
+  display: inline-flex;
+  min-height: $input-height;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.game-profiles-active-summary-button:hover,
+.game-profiles-active-summary-button:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-profiles-active-summary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-profiles-active-summary-button-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  stroke-width: 1.8;
+}
+
+@media (max-width: $game-profiles-active-summary-mobile-breakpoint) {
+  .game-profiles-active-summary {
+    align-items: flex-start;
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+}
