@@ -1,13 +1,232 @@
 @use '@styles' as *;
 
+$game-profiles-section-control-height: 3.5rem;
+$game-profiles-section-icon-size: 1rem;
+$game-profiles-section-mobile-breakpoint: 42rem;
+
 .game-profiles-section {
   background: $color-background;
 }
 
+.game-profiles-section-create,
+.game-profiles-section-active,
+.game-profiles-section-row,
+.game-profiles-section-state,
+.game-profiles-section-empty {
+  border-bottom: $app-border;
+}
+
+.game-profiles-section-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.game-profiles-section-input {
+  width: 100%;
+  height: $game-profiles-section-control-height;
+  min-width: 0;
+  padding: 0 $spacing-lg;
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border;
+  outline: none;
+}
+
+.game-profiles-section-input::placeholder {
+  color: $color-text-subtle;
+}
+
+.game-profiles-section-input:focus-visible {
+  border-color: $color-border-strong;
+}
+
+.game-profiles-section-button,
+.game-profiles-section-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+}
+
+.game-profiles-section-button {
+  min-height: $game-profiles-section-control-height;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  white-space: nowrap;
+}
+
+.game-profiles-section-button-primary {
+  background: $color-surface-elevated;
+}
+
+.game-profiles-section-icon-button {
+  width: $input-height;
+  height: $input-height;
+  flex: 0 0 $input-height;
+}
+
+.game-profiles-section-button:hover,
+.game-profiles-section-button:focus-visible,
+.game-profiles-section-icon-button:hover,
+.game-profiles-section-icon-button:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-profiles-section-button:disabled,
+.game-profiles-section-icon-button:disabled,
+.game-profiles-section-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-profiles-section-icon-button-danger {
+  color: $color-danger;
+}
+
+.game-profiles-section-button-icon,
+.game-profiles-section-icon {
+  width: $game-profiles-section-icon-size;
+  height: $game-profiles-section-icon-size;
+  flex: 0 0 $game-profiles-section-icon-size;
+  stroke-width: 1.8;
+}
+
+.game-profiles-section-state,
 .game-profiles-section-empty {
   margin: 0;
   padding: $spacing-xl;
   color: $color-text-subtle;
-  border-bottom: $app-border;
   font-size: $font-size-base;
+}
+
+.game-profiles-section-state {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.game-profiles-section-state-title,
+.game-profiles-section-state-message {
+  margin: 0;
+}
+
+.game-profiles-section-state-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-section-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.game-profiles-section-active-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-profiles-section-active-label {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-profiles-section-active-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-section-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-profiles-section-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+}
+
+.game-profiles-section-row-active {
+  background: rgba($color-surface-elevated, 0.54);
+}
+
+.game-profiles-section-row-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-profiles-section-row-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-section-row-status {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-profiles-section-row-active .game-profiles-section-row-status {
+  color: $color-success;
+}
+
+.game-profiles-section-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+@media (max-width: $game-profiles-section-mobile-breakpoint) {
+  .game-profiles-section-create,
+  .game-profiles-section-active,
+  .game-profiles-section-row {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+
+  .game-profiles-section-active {
+    align-items: flex-start;
+  }
+
+  .game-profiles-section-row {
+    align-items: stretch;
+  }
+
+  .game-profiles-section-row-main,
+  .game-profiles-section-row-actions {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .game-profiles-section-state,
+  .game-profiles-section-empty {
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
 }

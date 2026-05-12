@@ -139,7 +139,7 @@ export const GameDetails = () => {
             </button>
           </div>
 
-          {activeTab === 'mods' ? <GameModsSection /> : <GameProfilesSection />}
+          {activeTab === 'mods' ? <GameModsSection /> : <GameProfilesSection gameID={game.ID} />}
         </>
       )}
     </section>
