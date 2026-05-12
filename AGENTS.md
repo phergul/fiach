@@ -23,6 +23,7 @@ defer func() {
         - `frontend/src/components/Games/Grid/GameGrid/GameGrid.tsx`
         - `frontend/src/components/Games/Details/GameDetails/GameDetails.tsx`
         - `frontend/src/components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata.tsx`
+- If a component is being too large and complex (return statement with hundreds of lines), it should be broken down into smaller components. These smaller components should be placed in the same folder as the parent component, and named according to their purpose (e.g. `GameProfilesSectionList`, `GameProfilesSectionListItem`).
 - Keep reusable feature components at the nearest shared level.
     - If a component is only used by game details, put it under `Games/Details`.
     - If it is reused across the whole games feature, put it directly under `Games`.

@@ -1,24 +1,27 @@
 @use '@styles' as *;
 
-$game-details-toolbar-height: 5rem;
-$game-details-hero-height: 12rem;
+$game-details-toolbar-height: 3.5rem;
+$game-details-hero-height: 6rem;
 $game-details-hero-image-opacity: 0.42;
-$game-details-title-font-size: 2.5rem;
+$game-details-title-font-size: 2rem;
 $game-details-logo-width: 14rem;
-$game-details-tab-height: 4rem;
+$game-details-tab-height: 3.25rem;
 $game-details-mobile-breakpoint: 42rem;
 
 .game-details {
   display: flex;
-  min-height: calc($app-min-height - ($spacing-xl * 2));
+  height: $app-min-height;
+  min-height: $app-min-height;
   flex-direction: column;
   margin: -$spacing-xl;
+  overflow: hidden;
   background: $color-background;
   color: $color-text-primary;
 }
 
 .game-details-toolbar {
   display: flex;
+  flex: 0 0 auto;
   min-height: $game-details-toolbar-height;
   align-items: center;
   justify-content: space-between;
@@ -47,11 +50,12 @@ $game-details-mobile-breakpoint: 42rem;
 .game-details-header {
   position: relative;
   display: flex;
+  flex: 0 0 auto;
   min-height: $game-details-hero-height;
   align-items: center;
   justify-content: space-between;
   gap: $spacing-xl;
-  padding: $spacing-xl;
+  padding: $spacing-md $spacing-xl;
   overflow: hidden;
   background: $color-background;
   border-bottom: $app-border;
@@ -98,29 +102,11 @@ $game-details-mobile-breakpoint: 42rem;
   line-height: $line-height-heading;
 }
 
-.game-details-install-path {
-  display: grid;
-  max-width: $app-content-max-width;
-  gap: $spacing-xs;
-}
-
-.game-details-install-path-label {
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-}
-
-.game-details-install-path-value {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: $color-text-subtle;
-  font-size: $font-size-sm;
-}
-
 .game-details-logo {
   position: relative;
   z-index: 1;
   width: min($game-details-logo-width, 28vw);
-  max-height: 7rem;
+  max-height: 6rem;
   align-self: center;
   object-fit: contain;
   object-position: center right;
@@ -128,6 +114,7 @@ $game-details-mobile-breakpoint: 42rem;
 
 .game-details-tabs {
   display: grid;
+  flex: 0 0 auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   background: $color-background;
   border-bottom: $app-border;
@@ -161,7 +148,7 @@ $game-details-mobile-breakpoint: 42rem;
   flex-direction: column;
   gap: $spacing-sm;
   margin: 0;
-  padding: $spacing-xl;
+  padding: $spacing-lg $spacing-xl;
   color: $color-text-subtle;
   background: $color-background;
   border-bottom: $app-border;
@@ -201,6 +188,8 @@ $game-details-mobile-breakpoint: 42rem;
 
 @media (max-width: $game-details-mobile-breakpoint) {
   .game-details {
+    height: $app-min-height;
+    min-height: $app-min-height;
     margin: -$spacing-md;
   }
 

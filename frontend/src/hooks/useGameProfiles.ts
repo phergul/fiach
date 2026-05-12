@@ -14,7 +14,7 @@ import { getErrorMessage } from '@utils';
 
 type ProfileAction = 'activate' | 'clear-active' | 'create' | 'delete' | 'rename';
 
-export const useGameProfiles = (gameID: number) => {
+export const useGameProfiles = (gameID: number | null) => {
   const { addToast } = useToast();
   const [profiles, setProfiles] = useState<ModProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +22,13 @@ export const useGameProfiles = (gameID: number) => {
   const [pendingAction, setPendingAction] = useState<ProfileAction | null>(null);
 
   const loadProfiles = useCallback(async () => {
+    if (gameID === null) {
+      setProfiles([]);
+      setIsLoading(false);
+      setLoadError(null);
+      return [];
+    }
+
     setIsLoading(true);
     setLoadError(null);
 
@@ -64,8 +71,13 @@ export const useGameProfiles = (gameID: number) => {
   );
 
   const createProfile = useCallback(
-    (name: string) =>
-      runProfileAction('create', () => CreateProfile(gameID, name), 'Profile created.'),
+    (name: string) => {
+      if (gameID === null) {
+        return Promise.reject(new Error('game is not selected'));
+      }
+
+      return runProfileAction('create', () => CreateProfile(gameID, name), 'Profile created.');
+    },
     [gameID, runProfileAction],
   );
 
@@ -82,22 +94,32 @@ export const useGameProfiles = (gameID: number) => {
   );
 
   const activateProfile = useCallback(
-    (profileID: number) =>
-      runProfileAction(
+    (profileID: number) => {
+      if (gameID === null) {
+        return Promise.reject(new Error('game is not selected'));
+      }
+
+      return runProfileAction(
         'activate',
         () => ActivateProfile(gameID, profileID),
         'Active profile updated.',
-      ),
+      );
+    },
     [gameID, runProfileAction],
   );
 
   const clearActiveProfile = useCallback(
-    () =>
-      runProfileAction(
+    () => {
+      if (gameID === null) {
+        return Promise.reject(new Error('game is not selected'));
+      }
+
+      return runProfileAction(
         'clear-active',
         () => ClearActiveProfile(gameID),
         'Active profile cleared.',
-      ),
+      );
+    },
     [gameID, runProfileAction],
   );
 
@@ -105,6 +127,13 @@ export const useGameProfiles = (gameID: number) => {
     let isMounted = true;
 
     const loadInitialProfiles = async () => {
+      if (gameID === null) {
+        setProfiles([]);
+        setLoadError(null);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setLoadError(null);
 
@@ -145,3 +174,5 @@ export const useGameProfiles = (gameID: number) => {
     renameProfile,
   };
 };
+
+export type UseGameProfilesResult = ReturnType<typeof useGameProfiles>;

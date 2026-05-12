@@ -1,13 +1,13 @@
 @use '@styles' as *;
 
-$game-mods-section-search-height: 3.5rem;
+$game-mods-section-search-height: 2.75rem;
 
 .game-mods-section {
   background: $color-background;
 }
 
 .game-mods-section-search {
-  padding: $spacing-lg $spacing-xl;
+  padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
 }
 
@@ -27,7 +27,7 @@ $game-mods-section-search-height: 3.5rem;
 
 .game-mods-section-empty {
   margin: 0;
-  padding: $spacing-xl;
+  padding: $spacing-lg $spacing-xl;
   color: $color-text-subtle;
   border-bottom: $app-border;
   font-size: $font-size-base;

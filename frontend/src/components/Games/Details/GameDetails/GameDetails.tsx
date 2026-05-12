@@ -6,7 +6,7 @@ import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/ste
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
-import { useGameArtwork, useStoredGames } from '@hooks';
+import { useGameArtwork, useGameProfiles, useStoredGames } from '@hooks';
 
 import './GameDetails.scss';
 
@@ -31,6 +31,7 @@ export const GameDetails = () => {
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
+  const profileManager = useGameProfiles(game?.ID ?? null);
   const heroArtworkSource = useGameArtwork(
     game?.Source === 'steam' ? game.SourceID : '',
     ImageType.ImageTypeHero,
@@ -93,10 +94,6 @@ export const GameDetails = () => {
               <h1 className="game-details-title" id="game-details-title">
                 {game.Name}
               </h1>
-              <div className="game-details-install-path">
-                <span className="game-details-install-path-label">Install path</span>
-                <span className="game-details-install-path-value">{game.InstallPath}</span>
-              </div>
             </div>
 
             {logoArtworkSource !== '' && (
@@ -108,7 +105,7 @@ export const GameDetails = () => {
             )}
           </div>
 
-          <GameDetailsMetadata game={game} />
+          <GameDetailsMetadata game={game} profileCount={profileManager.profiles.length} />
 
           <div className="game-details-tabs" role="tablist" aria-label="Game detail sections">
             <button
@@ -122,7 +119,7 @@ export const GameDetails = () => {
               type="button"
               aria-selected={activeTab === 'mods'}
             >
-              Imported mods
+              Mods
             </button>
             <button
               className={
@@ -139,7 +136,11 @@ export const GameDetails = () => {
             </button>
           </div>
 
-          {activeTab === 'mods' ? <GameModsSection /> : <GameProfilesSection gameID={game.ID} />}
+          {activeTab === 'mods' ? (
+            <GameModsSection />
+          ) : (
+            <GameProfilesSection profileManager={profileManager} />
+          )}
         </>
       )}
     </section>
