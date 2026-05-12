@@ -2,19 +2,33 @@
 
 .navigation {
   display: flex;
+  width: 100%;
+  align-items: stretch;
   flex-direction: column;
   gap: $spacing-xs;
 }
 
 .navigation-link {
-  display: block;
-  padding: $spacing-sm $spacing-md;
+  display: flex;
+  width: 100%;
+  height: $app-sidebar-control-size;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 $app-sidebar-control-icon-offset;
+  overflow: hidden;
   color: $color-text-subtle;
   border-radius: $radius-md;
   text-decoration: none;
+  white-space: nowrap;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover .navigation-link,
+.sidebar-pinned .navigation-link {
+  gap: $spacing-sm;
 }
 
 .navigation-link:hover,
@@ -27,4 +41,25 @@
 .navigation-link-active {
   background: $color-surface-elevated;
   color: $color-text-primary;
+}
+
+.navigation-link-icon {
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  flex: 0 0 $app-sidebar-icon-size;
+}
+
+.navigation-link-label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width $transition-duration-fast $transition-easing-standard,
+    opacity $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover .navigation-link-label,
+.sidebar-pinned .navigation-link-label {
+  max-width: 8rem;
+  opacity: 1;
 }

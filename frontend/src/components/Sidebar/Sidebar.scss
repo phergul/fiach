@@ -2,11 +2,75 @@
 
 .sidebar {
   display: flex;
-  width: $app-sidebar-width;
-  flex: 0 0 $app-sidebar-width;
+  width: $app-sidebar-collapsed-width;
+  flex: 0 0 $app-sidebar-collapsed-width;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
   gap: $spacing-lg;
-  padding: $spacing-lg;
+  padding: $spacing-lg $spacing-sm;
   background: $color-surface;
   border-right: $app-border;
+  transition:
+    width $transition-duration-fast $transition-easing-standard,
+    flex-basis $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover,
+.sidebar-pinned {
+  width: $app-sidebar-width;
+  flex-basis: $app-sidebar-width;
+}
+
+.sidebar-pin-button {
+  display: flex;
+  width: 100%;
+  height: $app-sidebar-control-size;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 $app-sidebar-control-icon-offset;
+  overflow: hidden;
+  color: $color-text-subtle;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    color $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover .sidebar-pin-button,
+.sidebar-pinned .sidebar-pin-button {
+  gap: $spacing-sm;
+}
+
+.sidebar-pin-button:hover {
+  background: $color-border-subtle;
+  color: $color-text-primary;
+}
+
+.sidebar-pin-button-icon {
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  flex: 0 0 $app-sidebar-icon-size;
+}
+
+.sidebar-pin-button-label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width $transition-duration-fast $transition-easing-standard,
+    opacity $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover .sidebar-pin-button-label,
+.sidebar-pinned .sidebar-pin-button-label {
+  max-width: 9rem;
+  opacity: 1;
 }

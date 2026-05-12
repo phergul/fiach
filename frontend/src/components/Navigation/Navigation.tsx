@@ -1,12 +1,13 @@
+import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import './Navigation.scss';
 
 const navigationItems = [
-  { label: 'Library', path: '/library' },
-  { label: 'Profiles', path: '/profiles' },
-  { label: 'Settings', path: '/settings' },
-  { label: 'Logs', path: '/logs' },
+  { Icon: BookOpen, label: 'Library', path: '/library' },
+  { Icon: Users, label: 'Profiles', path: '/profiles' },
+  { Icon: Settings, label: 'Settings', path: '/settings' },
+  { Icon: ScrollText, label: 'Logs', path: '/logs' },
 ];
 
 export const Navigation = () => {
@@ -18,9 +19,11 @@ export const Navigation = () => {
             isActive ? 'navigation-link navigation-link-active' : 'navigation-link'
           }
           key={item.path}
+          title={item.label}
           to={item.path}
         >
-          {item.label}
+          <item.Icon className="navigation-link-icon" aria-hidden="true" />
+          <span className="navigation-link-label">{item.label}</span>
         </NavLink>
       ))}
     </nav>

@@ -38,7 +38,11 @@ $line-height-base: 1.5;
 $line-height-heading: 1.2;
 
 $app-min-height: 100vh;
-$app-sidebar-width: 15rem;
+$app-sidebar-width: 10rem;
+$app-sidebar-collapsed-width: 3.25rem;
+$app-sidebar-control-size: 2.25rem;
+$app-sidebar-icon-size: 1.125rem;
+$app-sidebar-control-icon-offset: 0.5625rem;
 $app-content-max-width: 76rem;
 $app-border-width: 0.0625rem;
 $app-border: $app-border-width solid $color-border-subtle;
