@@ -179,10 +179,10 @@ func (s *Store) ActivateProfile(ctx context.Context, gameID int64, profileID int
 	return profile, nil
 }
 
-func (s *Store) ClearActiveProfile(ctx context.Context, gameID int64) (err error) {
+func (s *Store) DeactivateProfile(ctx context.Context, gameID int64) (err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("clear active profile row: %w", err)
+			err = fmt.Errorf("deactivate active profile row: %w", err)
 		}
 	}()
 

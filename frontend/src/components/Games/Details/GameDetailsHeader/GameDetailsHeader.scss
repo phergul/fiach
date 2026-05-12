@@ -4,7 +4,6 @@ $game-details-header-hero-height: 6rem;
 $game-details-header-hero-image-opacity: 0.42;
 $game-details-header-title-font-size: 2rem;
 $game-details-header-logo-width: 14rem;
-$game-details-header-mobile-breakpoint: 42rem;
 
 .game-details-header {
   position: relative;
@@ -69,23 +68,4 @@ $game-details-header-mobile-breakpoint: 42rem;
   align-self: center;
   object-fit: contain;
   object-position: center right;
-}
-
-@media (max-width: $game-details-header-mobile-breakpoint) {
-  .game-details-header {
-    align-items: flex-start;
-    flex-direction: column-reverse;
-    justify-content: center;
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
-
-  .game-details-header-title {
-    font-size: $font-size-xl;
-  }
-
-  .game-details-header-logo {
-    width: min($game-details-header-logo-width, 60vw);
-    object-position: center left;
-  }
 }

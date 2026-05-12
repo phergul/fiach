@@ -2,7 +2,6 @@
 
 $game-profiles-create-form-control-height: 2.75rem;
 $game-profiles-create-form-toggle-height: 3.25rem;
-$game-profiles-create-form-mobile-breakpoint: 42rem;
 
 .game-profiles-create-form-toggle {
   display: flex;
@@ -15,6 +14,7 @@ $game-profiles-create-form-mobile-breakpoint: 42rem;
   color: $color-text-primary;
   background: $color-background;
   border: 0;
+  border-bottom: $app-border;
   cursor: pointer;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
@@ -49,7 +49,7 @@ $game-profiles-create-form-mobile-breakpoint: 42rem;
   gap: $spacing-md;
   padding: $spacing-md $spacing-xl $spacing-lg;
   background: rgba($color-surface, 0.42);
-  border-top: $app-border;
+  border-bottom: $app-border;
 }
 
 .game-profiles-create-form-label {
@@ -112,17 +112,4 @@ $game-profiles-create-form-mobile-breakpoint: 42rem;
 .game-profiles-create-form-input:disabled {
   cursor: not-allowed;
   opacity: 0.58;
-}
-
-@media (max-width: $game-profiles-create-form-mobile-breakpoint) {
-
-  .game-profiles-create-form,
-  .game-profiles-create-form-toggle {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
-
-  .game-profiles-create-form-actions {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }

@@ -1,0 +1,230 @@
+@use '@styles' as *;
+
+$game-profile-mods-panel-control-height: 2.5rem;
+$game-profile-mods-panel-icon-size: 1rem;
+$game-profile-mods-panel-mobile-breakpoint: 56rem;
+
+.game-profile-mods-panel {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  background: $color-background;
+}
+
+.game-profile-mods-panel-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-mods-panel-title,
+.game-profile-mods-panel-mod-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-profile-mods-panel-name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profile-mods-panel-active {
+  flex: 0 0 auto;
+  color: $color-success;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profile-mods-panel-mod-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profile-mods-panel-count,
+.game-profile-mods-panel-mod-meta {
+  overflow-wrap: anywhere;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-profile-mods-panel-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.game-profile-mods-panel-add-row {
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-mods-panel-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $spacing-sm;
+}
+
+.game-profile-mods-panel-select {
+  width: 100%;
+  height: $game-profile-mods-panel-control-height;
+  min-width: 0;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border;
+  outline: none;
+}
+
+.game-profile-mods-panel-select:focus-visible {
+  border-color: $color-border-strong;
+}
+
+.game-profile-mods-panel-button,
+.game-profile-mods-panel-add-button,
+.game-profile-mods-panel-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+}
+
+.game-profile-mods-panel-button,
+.game-profile-mods-panel-add-button {
+  min-height: $game-profile-mods-panel-control-height;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  white-space: nowrap;
+}
+
+.game-profile-mods-panel-icon-button {
+  width: $game-profile-mods-panel-control-height;
+  height: $game-profile-mods-panel-control-height;
+  flex: 0 0 $game-profile-mods-panel-control-height;
+}
+
+.game-profile-mods-panel-button:hover,
+.game-profile-mods-panel-button:focus-visible,
+.game-profile-mods-panel-add-button:hover,
+.game-profile-mods-panel-add-button:focus-visible,
+.game-profile-mods-panel-icon-button:hover,
+.game-profile-mods-panel-icon-button:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-profile-mods-panel-select:disabled,
+.game-profile-mods-panel-button:disabled,
+.game-profile-mods-panel-add-button:disabled,
+.game-profile-mods-panel-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-profile-mods-panel-icon-button-danger {
+  color: $color-danger;
+}
+
+.game-profile-mods-panel-icon {
+  width: $game-profile-mods-panel-icon-size;
+  height: $game-profile-mods-panel-icon-size;
+  flex: 0 0 $game-profile-mods-panel-icon-size;
+  stroke-width: 1.8;
+}
+
+.game-profile-mods-panel-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.game-profile-mods-panel-empty {
+  margin: 0;
+  padding: $spacing-lg $spacing-xl;
+  color: $color-text-subtle;
+  border-bottom: $app-border;
+}
+
+.game-profile-mods-panel-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-profile-mods-panel-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-mods-panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.game-profile-mods-panel-toggle {
+  display: inline-flex;
+  min-height: $game-profile-mods-panel-control-height;
+  align-items: center;
+  gap: $spacing-sm;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  cursor: pointer;
+}
+
+.game-profile-mods-panel-toggle input {
+  width: $game-profile-mods-panel-icon-size;
+  height: $game-profile-mods-panel-icon-size;
+  margin: 0;
+  accent-color: $color-success;
+}
+
+.game-profile-mods-panel-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+@media (max-width: $game-profile-mods-panel-mobile-breakpoint) {
+
+  .game-profile-mods-panel-header,
+  .game-profile-mods-panel-list-item {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+
+  .game-profile-mods-panel-add-row,
+  .game-profile-mods-panel-empty {
+    padding-right: $spacing-md;
+    padding-left: $spacing-md;
+  }
+
+  .game-profile-mods-panel-header-actions,
+  .game-profile-mods-panel-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

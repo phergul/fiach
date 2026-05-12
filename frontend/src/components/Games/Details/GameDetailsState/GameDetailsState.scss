@@ -1,7 +1,5 @@
 @use '@styles' as *;
 
-$game-details-state-mobile-breakpoint: 42rem;
-
 .game-details-state {
   display: flex;
   align-items: flex-start;
@@ -58,11 +56,4 @@ $game-details-state-mobile-breakpoint: 42rem;
 .game-details-state-link:focus-visible {
   color: $color-text-primary;
   outline: none;
-}
-
-@media (max-width: $game-details-state-mobile-breakpoint) {
-  .game-details-state {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
 }

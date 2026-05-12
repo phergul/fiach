@@ -88,10 +88,10 @@ func (s *ProfileService) ActivateProfile(gameID int64, profileID int64) (profile
 	return s.store.ActivateProfile(context.Background(), gameID, profileID)
 }
 
-func (s *ProfileService) ClearActiveProfile(gameID int64) (err error) {
+func (s *ProfileService) DeactivateProfile(gameID int64) (err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("clear active profile: %w", err)
+			err = fmt.Errorf("deactivate profile: %w", err)
 		}
 	}()
 
@@ -99,7 +99,7 @@ func (s *ProfileService) ClearActiveProfile(gameID int64) (err error) {
 		return errors.New("storage is not configured")
 	}
 
-	return s.store.ClearActiveProfile(context.Background(), gameID)
+	return s.store.DeactivateProfile(context.Background(), gameID)
 }
 
 func (s *ProfileService) GetActiveProfile(gameID int64) (profile *storage.ModProfile, err error) {

@@ -1,20 +1,34 @@
 @use '@styles' as *;
 
 $game-mods-section-search-height: 2.75rem;
+$game-mods-section-icon-size: 1rem;
 
 .game-mods-section {
   background: $color-background;
 }
 
 .game-mods-section-search {
+  position: relative;
   padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
+}
+
+.game-mods-section-search-icon {
+  position: absolute;
+  top: 50%;
+  left: calc($spacing-xl + $spacing-md);
+  width: $game-mods-section-icon-size;
+  height: $game-mods-section-icon-size;
+  color: $color-text-muted;
+  transform: translateY(-50%);
+  pointer-events: none;
+  stroke-width: 1.8;
 }
 
 .game-mods-section-search-input {
   width: 100%;
   height: $game-mods-section-search-height;
-  padding: 0 $spacing-lg;
+  padding: 0 $spacing-lg 0 calc($spacing-xl + $spacing-sm);
   color: $color-text-primary;
   background: $color-surface;
   border: $app-border;
@@ -25,10 +39,87 @@ $game-mods-section-search-height: 2.75rem;
   color: $color-text-subtle;
 }
 
-.game-mods-section-empty {
+.game-mods-section-search-input:focus-visible {
+  border-color: $color-border-strong;
+}
+
+.game-mods-section-search-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-mods-section-empty,
+.game-mods-section-state {
   margin: 0;
   padding: $spacing-lg $spacing-xl;
   color: $color-text-subtle;
   border-bottom: $app-border;
   font-size: $font-size-base;
+}
+
+.game-mods-section-state {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.game-mods-section-state-title,
+.game-mods-section-state-message {
+  margin: 0;
+}
+
+.game-mods-section-state-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mods-section-button {
+  display: inline-flex;
+  min-height: $input-height;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  cursor: pointer;
+}
+
+.game-mods-section-button:hover,
+.game-mods-section-button:focus-visible {
+  border-color: $color-border-strong;
+  outline: none;
+}
+
+.game-mods-section-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-mods-section-list-item {
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-mods-section-list-item-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mods-section-list-item-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mods-section-list-item-path {
+  overflow-wrap: anywhere;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
 }

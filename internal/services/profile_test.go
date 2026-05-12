@@ -118,8 +118,8 @@ func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
 		t.Fatalf("GetActiveProfile() = %+v, want active profile", activePtr)
 	}
 
-	if err := service.ClearActiveProfile(gameID); err != nil {
-		t.Fatalf("ClearActiveProfile() error = %v", err)
+	if err := service.DeactivateProfile(gameID); err != nil {
+		t.Fatalf("DeactivateProfile() error = %v", err)
 	}
 	activePtr, err = service.GetActiveProfile(gameID)
 	if err != nil {

@@ -1,6 +1,7 @@
 @use '@styles' as *;
 
-$game-profiles-section-mobile-breakpoint: 42rem;
+$game-profiles-section-sidebar-width: 24rem;
+$game-profiles-section-mobile-breakpoint: 56rem;
 
 .game-profiles-section {
   display: flex;
@@ -10,25 +11,43 @@ $game-profiles-section-mobile-breakpoint: 42rem;
   background: $color-background;
 }
 
-.game-profiles-section-fixed {
-  flex: 0 0 auto;
+.game-profiles-section-workspace {
+  display: grid;
+  min-height: 32rem;
+  flex: 1 1 auto;
+  grid-template-columns: $game-profiles-section-sidebar-width minmax(0, 1fr);
+  border-top: $app-border;
+}
+
+.game-profiles-section-sidebar,
+.game-profiles-section-detail {
+  min-width: 0;
+  min-height: 0;
+}
+
+.game-profiles-section-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: $app-border;
+}
+
+.game-profiles-section-detail {
+  display: flex;
+  flex-direction: column;
 }
 
 .game-profiles-section-button {
   display: inline-flex;
+  min-height: $input-height;
   align-items: center;
   justify-content: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
   color: $color-text-primary;
   background: transparent;
   border: $app-border-width solid $color-border;
   border-radius: $radius-sm;
   cursor: pointer;
-}
-
-.game-profiles-section-button {
-  min-height: $input-height;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
   white-space: nowrap;
 }
 
@@ -44,18 +63,15 @@ $game-profiles-section-mobile-breakpoint: 42rem;
 }
 
 .game-profiles-section-state {
+  display: flex;
   margin: 0;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
   padding: $spacing-lg $spacing-xl;
   color: $color-text-subtle;
   border-bottom: $app-border;
   font-size: $font-size-base;
-}
-
-.game-profiles-section-state {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: $spacing-sm;
 }
 
 .game-profiles-section-state-title,
@@ -69,6 +85,15 @@ $game-profiles-section-mobile-breakpoint: 42rem;
 }
 
 @media (max-width: $game-profiles-section-mobile-breakpoint) {
+  .game-profiles-section-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .game-profiles-section-sidebar {
+    border-right: 0;
+    border-bottom: $app-border;
+  }
+
   .game-profiles-section-state {
     padding-right: $spacing-md;
     padding-left: $spacing-md;

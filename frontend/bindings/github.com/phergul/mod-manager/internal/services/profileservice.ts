@@ -15,8 +15,10 @@ export function ActivateProfile(gameID: number, profileID: number): $Cancellable
     });
 }
 
-export function ClearActiveProfile(gameID: number): $CancellablePromise<void> {
-    return $Call.ByID(576432483, gameID);
+export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<storage$0.ProfileMod> {
+    return $Call.ByID(2973118192, profileID, modID).then(($result: any) => {
+        return $$createType1($result);
+    });
 }
 
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
@@ -25,20 +27,34 @@ export function CreateProfile(gameID: number, name: string): $CancellablePromise
     });
 }
 
+export function DeactivateProfile(gameID: number): $CancellablePromise<void> {
+    return $Call.ByID(2619307730, gameID);
+}
+
 export function DeleteProfile(profileID: number): $CancellablePromise<void> {
     return $Call.ByID(3036503493, profileID);
 }
 
 export function GetActiveProfile(gameID: number): $CancellablePromise<storage$0.ModProfile | null> {
     return $Call.ByID(4123009592, gameID).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
+    });
+}
+
+export function ListProfileMods(profileID: number): $CancellablePromise<storage$0.ProfileMod[]> {
+    return $Call.ByID(1055361377, profileID).then(($result: any) => {
+        return $$createType3($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<storage$0.ModProfile[]> {
     return $Call.ByID(3489323205, gameID).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType4($result);
     });
+}
+
+export function RemoveModFromProfile(profileID: number, modID: number): $CancellablePromise<void> {
+    return $Call.ByID(666984022, profileID, modID);
 }
 
 export function RenameProfile(profileID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
@@ -47,7 +63,15 @@ export function RenameProfile(profileID: number, name: string): $CancellableProm
     });
 }
 
+export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<storage$0.ProfileMod> {
+    return $Call.ByID(734528755, profileID, modID, enabled).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = storage$0.ModProfile.createFrom;
-const $$createType1 = $Create.Nullable($$createType0);
-const $$createType2 = $Create.Array($$createType0);
+const $$createType1 = storage$0.ProfileMod.createFrom;
+const $$createType2 = $Create.Nullable($$createType0);
+const $$createType3 = $Create.Array($$createType1);
+const $$createType4 = $Create.Array($$createType0);

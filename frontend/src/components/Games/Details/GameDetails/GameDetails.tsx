@@ -9,7 +9,7 @@ import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
-import { useGameArtwork, useGameProfiles, useStoredGames } from '@hooks';
+import { useGameArtwork, useGameMods, useGameProfiles, useStoredGames } from '@hooks';
 
 import './GameDetails.scss';
 
@@ -28,11 +28,12 @@ const parseGameID = (gameID: string | undefined) => {
 
 export const GameDetails = () => {
   const { gameId } = useParams();
-  const [activeTab, setActiveTab] = useState<GameDetailsTab>('mods');
+  const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
+  const gameModManager = useGameMods(game?.ID ?? null);
   const heroArtworkSource = useGameArtwork(
     game?.Source === 'steam' ? game.SourceID : '',
     ImageType.ImageTypeHero,
@@ -83,14 +84,19 @@ export const GameDetails = () => {
             logoArtworkSource={logoArtworkSource}
           />
 
-          <GameDetailsMetadata game={game} profileCount={profileManager.profiles.length} />
+          <GameDetailsMetadata
+            game={game}
+            modCount={gameModManager.mods.length}
+            profileCount={profileManager.profiles.length}
+            profileModsByProfileID={profileManager.profileModsByProfileID}
+          />
 
           <GameDetailsTabs activeTab={activeTab} onActiveTabChange={setActiveTab} />
 
           {activeTab === 'mods' ? (
-            <GameModsSection />
+            <GameModsSection modManager={gameModManager} />
           ) : (
-            <GameProfilesSection profileManager={profileManager} />
+            <GameProfilesSection gameModManager={gameModManager} profileManager={profileManager} />
           )}
         </>
       )}

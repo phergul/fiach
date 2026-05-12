@@ -1,4 +1,4 @@
-import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
 import { GameProfilesListItem } from '../GameProfilesListItem/GameProfilesListItem';
 
@@ -10,12 +10,15 @@ interface GameProfilesListProps {
   isBusy: boolean;
   isLoading: boolean;
   pendingAction: string | null;
+  profileModsByProfileID: Record<number, ProfileMod[]>;
   profiles: ModProfile[];
+  selectedProfileID: number | null;
   onActivateProfile: (profileID: number) => void;
   onCancelRename: () => void;
   onDeleteProfile: (profile: ModProfile) => void;
   onEditingProfileNameChange: (name: string) => void;
   onRenameProfile: (profileID: number) => void;
+  onSelectProfile: (profileID: number) => void;
   onStartRename: (profile: ModProfile) => void;
 }
 
@@ -25,12 +28,15 @@ export const GameProfilesList = ({
   isBusy,
   isLoading,
   pendingAction,
+  profileModsByProfileID,
   profiles,
+  selectedProfileID,
   onActivateProfile,
   onCancelRename,
   onDeleteProfile,
   onEditingProfileNameChange,
   onRenameProfile,
+  onSelectProfile,
   onStartRename,
 }: GameProfilesListProps) => {
   return (
@@ -48,7 +54,9 @@ export const GameProfilesList = ({
               editingProfileName={editingProfileName}
               isBusy={isBusy}
               isEditing={editingProfileID === profile.ID}
+              isSelected={selectedProfileID === profile.ID}
               key={profile.ID}
+              modCount={profileModsByProfileID[profile.ID]?.length ?? 0}
               pendingAction={pendingAction}
               profile={profile}
               onActivateProfile={onActivateProfile}
@@ -56,6 +64,7 @@ export const GameProfilesList = ({
               onDeleteProfile={onDeleteProfile}
               onEditingProfileNameChange={onEditingProfileNameChange}
               onRenameProfile={onRenameProfile}
+              onSelectProfile={onSelectProfile}
               onStartRename={onStartRename}
             />
           ))}

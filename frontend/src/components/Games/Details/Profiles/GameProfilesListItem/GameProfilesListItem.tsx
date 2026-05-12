@@ -10,6 +10,8 @@ interface GameProfilesListItemProps {
   editingProfileName: string;
   isBusy: boolean;
   isEditing: boolean;
+  isSelected: boolean;
+  modCount: number;
   pendingAction: string | null;
   profile: ModProfile;
   onActivateProfile: (profileID: number) => void;
@@ -17,6 +19,7 @@ interface GameProfilesListItemProps {
   onDeleteProfile: (profile: ModProfile) => void;
   onEditingProfileNameChange: (name: string) => void;
   onRenameProfile: (profileID: number) => void;
+  onSelectProfile: (profileID: number) => void;
   onStartRename: (profile: ModProfile) => void;
 }
 
@@ -24,6 +27,8 @@ export const GameProfilesListItem = ({
   editingProfileName,
   isBusy,
   isEditing,
+  isSelected,
+  modCount,
   pendingAction,
   profile,
   onActivateProfile,
@@ -31,10 +36,13 @@ export const GameProfilesListItem = ({
   onDeleteProfile,
   onEditingProfileNameChange,
   onRenameProfile,
+  onSelectProfile,
   onStartRename,
 }: GameProfilesListItemProps) => {
+  const modSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
+
   return (
-    <li className="game-profiles-list-item">
+    <li className={isSelected ? 'game-profiles-list-item game-profiles-list-item-selected' : 'game-profiles-list-item'}>
       <div className="game-profiles-list-item-main">
         {isEditing ? (
           <input
@@ -46,14 +54,20 @@ export const GameProfilesListItem = ({
             aria-label={`Rename ${profile.Name}`}
           />
         ) : (
-          <div className="game-profiles-list-item-copy">
-            <div className="game-profiles-list-item-title">
+          <button
+            className="game-profiles-list-item-selector"
+            onClick={() => onSelectProfile(profile.ID)}
+            type="button"
+            aria-current={isSelected ? 'true' : undefined}
+          >
+            <span className="game-profiles-list-item-title">
               <span className="game-profiles-list-item-name">{profile.Name}</span>
-            </div>
-            <span className="game-profiles-list-item-meta">
-              0 mods applied · {formatProfileEditedAt(profile.UpdatedAt)}
+              {profile.IsActive && <span className="game-profiles-list-item-active">Active</span>}
             </span>
-          </div>
+            <span className="game-profiles-list-item-meta">
+              {modSummary} · {formatProfileEditedAt(profile.UpdatedAt)}
+            </span>
+          </button>
         )}
       </div>
 
@@ -83,13 +97,13 @@ export const GameProfilesListItem = ({
           <>
             {!profile.IsActive && (
               <button
-                className="game-profiles-list-item-button"
+                className="game-profiles-list-item-icon-button"
                 disabled={isBusy}
                 onClick={() => onActivateProfile(profile.ID)}
+                title="Activate profile"
                 type="button"
               >
-                <Power className="game-profiles-list-item-button-icon" aria-hidden="true" />
-                <span>Activate</span>
+                <Power className="game-profiles-list-item-icon" aria-hidden="true" />
               </button>
             )}
             <button

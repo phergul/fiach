@@ -1,7 +1,5 @@
 @use '@styles' as *;
 
-$game-profiles-active-summary-mobile-breakpoint: 42rem;
-
 .game-profiles-active-summary {
   display: flex;
   align-items: center;
@@ -63,12 +61,4 @@ $game-profiles-active-summary-mobile-breakpoint: 42rem;
   height: 1rem;
   flex: 0 0 1rem;
   stroke-width: 1.8;
-}
-
-@media (max-width: $game-profiles-active-summary-mobile-breakpoint) {
-  .game-profiles-active-summary {
-    align-items: flex-start;
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
 }

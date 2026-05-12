@@ -202,7 +202,7 @@ func TestActivateProfileEnforcesSingleActiveProfilePerGame(t *testing.T) {
 	}
 }
 
-func TestClearActiveProfileLeavesNoActiveProfile(t *testing.T) {
+func TestDeactivateProfileLeavesNoActiveProfile(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -214,8 +214,8 @@ func TestClearActiveProfileLeavesNoActiveProfile(t *testing.T) {
 		t.Fatalf("ActivateProfile() error = %v", err)
 	}
 
-	if err := store.ClearActiveProfile(context.Background(), gameID); err != nil {
-		t.Fatalf("ClearActiveProfile() error = %v", err)
+	if err := store.DeactivateProfile(context.Background(), gameID); err != nil {
+		t.Fatalf("DeactivateProfile() error = %v", err)
 	}
 
 	_, found, err := store.GetActiveProfile(context.Background(), gameID)

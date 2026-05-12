@@ -1,7 +1,6 @@
 @use '@styles' as *;
 
 $game-details-toolbar-height: 3.5rem;
-$game-details-mobile-breakpoint: 42rem;
 
 .game-details {
   display: flex;
@@ -37,17 +36,4 @@ $game-details-mobile-breakpoint: 42rem;
 .game-details-back-link:focus-visible {
   color: $color-text-primary;
   outline: none;
-}
-
-@media (max-width: $game-details-mobile-breakpoint) {
-  .game-details {
-    height: $app-min-height;
-    min-height: $app-min-height;
-    margin: -$spacing-md;
-  }
-
-  .game-details-toolbar {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
 }

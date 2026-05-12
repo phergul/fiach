@@ -2,28 +2,60 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   ActivateProfile,
-  ClearActiveProfile,
+  AddModToProfile,
   CreateProfile,
+  DeactivateProfile,
   DeleteProfile,
+  ListProfileMods,
   ListProfiles,
+  RemoveModFromProfile,
   RenameProfile,
+  SetProfileModEnabled,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
-import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 
-type ProfileAction = 'activate' | 'clear-active' | 'create' | 'delete' | 'rename';
+type ProfileAction =
+  | 'activate'
+  | 'add-mod'
+  | 'create'
+  | 'deactivate'
+  | 'delete'
+  | 'remove-mod'
+  | 'rename'
+  | 'toggle-mod';
+
+const loadProfileModEntries = async (profiles: ModProfile[]) => {
+  return Promise.all(
+    profiles.map(async (profile) => {
+      const loadedProfileMods = await ListProfileMods(profile.ID);
+      return [profile.ID, loadedProfileMods] as const;
+    }),
+  );
+};
 
 export const useGameProfiles = (gameID: number | null) => {
   const { addToast } = useToast();
   const [profiles, setProfiles] = useState<ModProfile[]>([]);
+  const [profileModsByProfileID, setProfileModsByProfileID] = useState<Record<number, ProfileMod[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<ProfileAction | null>(null);
 
+  const loadProfileMods = useCallback(async (profileID: number) => {
+    const loadedProfileMods = await ListProfileMods(profileID);
+    setProfileModsByProfileID((currentProfileMods) => ({
+      ...currentProfileMods,
+      [profileID]: loadedProfileMods,
+    }));
+    return loadedProfileMods;
+  }, []);
+
   const loadProfiles = useCallback(async () => {
     if (gameID === null) {
       setProfiles([]);
+      setProfileModsByProfileID({});
       setIsLoading(false);
       setLoadError(null);
       return [];
@@ -34,7 +66,9 @@ export const useGameProfiles = (gameID: number | null) => {
 
     try {
       const loadedProfiles = await ListProfiles(gameID);
+      const profileModEntries = await loadProfileModEntries(loadedProfiles);
       setProfiles(loadedProfiles);
+      setProfileModsByProfileID(Object.fromEntries(profileModEntries));
       return loadedProfiles;
     } catch (error) {
       const message = getErrorMessage(error);
@@ -93,6 +127,47 @@ export const useGameProfiles = (gameID: number | null) => {
     [runProfileAction],
   );
 
+  const addModToProfile = useCallback(
+    (profileID: number, modID: number) =>
+      runProfileAction(
+        'add-mod',
+        async () => {
+          const profileMod = await AddModToProfile(profileID, modID);
+          await loadProfileMods(profileID);
+          return profileMod;
+        },
+        'Mod added to profile.',
+      ),
+    [loadProfileMods, runProfileAction],
+  );
+
+  const removeModFromProfile = useCallback(
+    (profileID: number, modID: number) =>
+      runProfileAction(
+        'remove-mod',
+        async () => {
+          await RemoveModFromProfile(profileID, modID);
+          await loadProfileMods(profileID);
+        },
+        'Mod removed from profile.',
+      ),
+    [loadProfileMods, runProfileAction],
+  );
+
+  const setProfileModEnabled = useCallback(
+    (profileID: number, modID: number, enabled: boolean) =>
+      runProfileAction(
+        'toggle-mod',
+        async () => {
+          const profileMod = await SetProfileModEnabled(profileID, modID, enabled);
+          await loadProfileMods(profileID);
+          return profileMod;
+        },
+        enabled ? 'Mod enabled for profile.' : 'Mod disabled for profile.',
+      ),
+    [loadProfileMods, runProfileAction],
+  );
+
   const activateProfile = useCallback(
     (profileID: number) => {
       if (gameID === null) {
@@ -108,16 +183,16 @@ export const useGameProfiles = (gameID: number | null) => {
     [gameID, runProfileAction],
   );
 
-  const clearActiveProfile = useCallback(
+  const deactivateProfile = useCallback(
     () => {
       if (gameID === null) {
         return Promise.reject(new Error('game is not selected'));
       }
 
       return runProfileAction(
-        'clear-active',
-        () => ClearActiveProfile(gameID),
-        'Active profile cleared.',
+        'deactivate',
+        () => DeactivateProfile(gameID),
+        'Profile deactivated.',
       );
     },
     [gameID, runProfileAction],
@@ -129,6 +204,7 @@ export const useGameProfiles = (gameID: number | null) => {
     const loadInitialProfiles = async () => {
       if (gameID === null) {
         setProfiles([]);
+        setProfileModsByProfileID({});
         setLoadError(null);
         setIsLoading(false);
         return;
@@ -139,8 +215,10 @@ export const useGameProfiles = (gameID: number | null) => {
 
       try {
         const loadedProfiles = await ListProfiles(gameID);
+        const profileModEntries = await loadProfileModEntries(loadedProfiles);
         if (isMounted) {
           setProfiles(loadedProfiles);
+          setProfileModsByProfileID(Object.fromEntries(profileModEntries));
         }
       } catch (error) {
         if (isMounted) {
@@ -163,15 +241,19 @@ export const useGameProfiles = (gameID: number | null) => {
   return {
     activeProfile: profiles.find((profile) => profile.IsActive) ?? null,
     activateProfile,
-    clearActiveProfile,
+    addModToProfile,
     createProfile,
+    deactivateProfile,
     deleteProfile,
     isLoading,
     loadError,
     pendingAction,
+    profileModsByProfileID,
     profiles,
+    removeModFromProfile,
     refreshProfiles: loadProfiles,
     renameProfile,
+    setProfileModEnabled,
   };
 };
 

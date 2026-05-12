@@ -7,13 +7,13 @@ import './GameProfilesActiveSummary.scss';
 interface GameProfilesActiveSummaryProps {
   activeProfile: ModProfile | null;
   isBusy: boolean;
-  onClearActiveProfile: () => void;
+  onDeactivateProfile: () => void;
 }
 
 export const GameProfilesActiveSummary = ({
   activeProfile,
   isBusy,
-  onClearActiveProfile,
+  onDeactivateProfile,
 }: GameProfilesActiveSummaryProps) => {
   return (
     <div className="game-profiles-active-summary">
@@ -27,11 +27,11 @@ export const GameProfilesActiveSummary = ({
         <button
           className="game-profiles-active-summary-button"
           disabled={isBusy}
-          onClick={onClearActiveProfile}
+          onClick={onDeactivateProfile}
           type="button"
         >
           <PowerOff className="game-profiles-active-summary-button-icon" aria-hidden="true" />
-          <span>Clear active</span>
+          <span>Deactivate</span>
         </button>
       )}
     </div>

@@ -1,40 +1,60 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
-import { GameProfilesActiveSummary } from '@components/Games/Details/Profiles/GameProfilesActiveSummary/GameProfilesActiveSummary';
+import { GameProfileModsPanel } from '@components/Games/Details/Profiles/GameProfileModsPanel/GameProfileModsPanel';
 import { GameProfilesCreateForm } from '@components/Games/Details/Profiles/GameProfilesCreateForm/GameProfilesCreateForm';
 import { GameProfilesList } from '@components/Games/Details/Profiles/GameProfilesList/GameProfilesList';
-import type { UseGameProfilesResult } from '@hooks';
+import type { UseGameModsResult, UseGameProfilesResult } from '@hooks';
 
 import './GameProfilesSection.scss';
 
 interface GameProfilesSectionProps {
+  gameModManager: UseGameModsResult;
   profileManager: UseGameProfilesResult;
 }
 
-export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps) => {
+export const GameProfilesSection = ({ gameModManager, profileManager }: GameProfilesSectionProps) => {
   const { addToast } = useToast();
+  const { isLoading: isGameModsLoading, mods: gameMods } = gameModManager;
   const {
     activeProfile,
     activateProfile,
-    clearActiveProfile,
+    addModToProfile,
     createProfile,
+    deactivateProfile,
     deleteProfile,
     isLoading,
     loadError,
     pendingAction,
+    profileModsByProfileID,
     profiles,
+    removeModFromProfile,
     refreshProfiles,
     renameProfile,
+    setProfileModEnabled,
   } = profileManager;
   const [newProfileName, setNewProfileName] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProfileID, setEditingProfileID] = useState<number | null>(null);
   const [editingProfileName, setEditingProfileName] = useState('');
   const [deleteCandidate, setDeleteCandidate] = useState<ModProfile | null>(null);
+  const [selectedProfileID, setSelectedProfileID] = useState<number | null>(null);
   const isBusy = pendingAction !== null;
+  const selectedProfile = useMemo(
+    () => profiles.find((profile) => profile.ID === selectedProfileID) ?? activeProfile ?? profiles[0] ?? null,
+    [activeProfile, profiles, selectedProfileID],
+  );
+  const selectedProfileMods = selectedProfile === null ? [] : profileModsByProfileID[selectedProfile.ID] ?? [];
+
+  useEffect(() => {
+    if (selectedProfileID !== null && profiles.some((profile) => profile.ID === selectedProfileID)) {
+      return;
+    }
+
+    setSelectedProfileID(activeProfile?.ID ?? profiles[0]?.ID ?? null);
+  }, [activeProfile, profiles, selectedProfileID]);
 
   const handleCreateProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,6 +78,7 @@ export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps
   };
 
   const startRename = (profile: ModProfile) => {
+    setSelectedProfileID(profile.ID);
     setEditingProfileID(profile.ID);
     setEditingProfileName(profile.Name);
   };
@@ -93,6 +114,9 @@ export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps
     try {
       await deleteProfile(deleteCandidate.ID);
       setDeleteCandidate(null);
+      if (selectedProfileID === deleteCandidate.ID) {
+        setSelectedProfileID(null);
+      }
     } catch {
       // error toast is handled by useGameProfiles
     }
@@ -107,8 +131,20 @@ export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps
     activateProfile(profileID).catch(() => undefined);
   };
 
-  const handleClearActiveProfile = () => {
-    clearActiveProfile().catch(() => undefined);
+  const handleDeactivateProfile = () => {
+    deactivateProfile().catch(() => undefined);
+  };
+
+  const handleAddModToProfile = (profileID: number, modID: number) => {
+    addModToProfile(profileID, modID).catch(() => undefined);
+  };
+
+  const handleRemoveModFromProfile = (profileID: number, modID: number) => {
+    removeModFromProfile(profileID, modID).catch(() => undefined);
+  };
+
+  const handleSetProfileModEnabled = (profileID: number, modID: number, enabled: boolean) => {
+    setProfileModEnabled(profileID, modID, enabled).catch(() => undefined);
   };
 
   return (
@@ -128,13 +164,8 @@ export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps
       )}
 
       {loadError === null && (
-        <>
-          <div className="game-profiles-section-fixed">
-            <GameProfilesActiveSummary
-              activeProfile={activeProfile}
-              isBusy={isBusy}
-              onClearActiveProfile={handleClearActiveProfile}
-            />
+        <div className="game-profiles-section-workspace">
+          <aside className="game-profiles-section-sidebar" aria-label="Profile list">
             <GameProfilesCreateForm
               isCreateOpen={isCreateOpen}
               newProfileName={newProfileName}
@@ -144,23 +175,44 @@ export const GameProfilesSection = ({ profileManager }: GameProfilesSectionProps
               onNewProfileNameChange={setNewProfileName}
               onToggleCreate={() => setIsCreateOpen((currentValue) => !currentValue)}
             />
-          </div>
 
-          <GameProfilesList
-            editingProfileID={editingProfileID}
-            editingProfileName={editingProfileName}
-            isBusy={isBusy}
-            isLoading={isLoading}
-            pendingAction={pendingAction}
-            profiles={profiles}
-            onActivateProfile={handleActivateProfile}
-            onCancelRename={cancelRename}
-            onDeleteProfile={setDeleteCandidate}
-            onEditingProfileNameChange={setEditingProfileName}
-            onRenameProfile={handleRenameProfile}
-            onStartRename={startRename}
-          />
-        </>
+            <GameProfilesList
+              editingProfileID={editingProfileID}
+              editingProfileName={editingProfileName}
+              isBusy={isBusy}
+              isLoading={isLoading}
+              pendingAction={pendingAction}
+              profileModsByProfileID={profileModsByProfileID}
+              profiles={profiles}
+              selectedProfileID={selectedProfile?.ID ?? null}
+              onActivateProfile={handleActivateProfile}
+              onCancelRename={cancelRename}
+              onDeleteProfile={setDeleteCandidate}
+              onEditingProfileNameChange={setEditingProfileName}
+              onRenameProfile={handleRenameProfile}
+              onSelectProfile={setSelectedProfileID}
+              onStartRename={startRename}
+            />
+          </aside>
+
+          <div className="game-profiles-section-detail">
+            <GameProfileModsPanel
+              gameMods={gameMods}
+              isBusy={isBusy}
+              isGameModsLoading={isGameModsLoading}
+              isProfilesLoading={isLoading}
+              profile={selectedProfile}
+              profileMods={selectedProfileMods}
+              onActivateProfile={handleActivateProfile}
+              onAddModToProfile={handleAddModToProfile}
+              onDeactivateProfile={handleDeactivateProfile}
+              onDeleteProfile={setDeleteCandidate}
+              onRemoveModFromProfile={handleRemoveModFromProfile}
+              onSetProfileModEnabled={handleSetProfileModEnabled}
+              onStartRename={startRename}
+            />
+          </div>
+        </div>
       )}
 
       <ConfirmDialog

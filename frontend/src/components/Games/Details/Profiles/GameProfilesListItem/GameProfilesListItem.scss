@@ -1,45 +1,72 @@
 @use '@styles' as *;
 
-$game-profiles-list-item-control-height: 2.75rem;
+$game-profiles-list-item-control-height: 2.5rem;
 $game-profiles-list-item-icon-size: 1rem;
-$game-profiles-list-item-min-height: 6rem;
-$game-profiles-list-item-mobile-breakpoint: 42rem;
+$game-profiles-list-item-min-height: 5.25rem;
+$game-profiles-list-item-mobile-breakpoint: 56rem;
 
 .game-profiles-list-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: $spacing-md;
+  gap: $spacing-sm;
   min-height: $game-profiles-list-item-min-height;
-  padding: $spacing-lg $spacing-xl;
   border-bottom: $app-border;
+}
+
+.game-profiles-list-item-selected {
+  background: $color-surface;
 }
 
 .game-profiles-list-item-main {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: $spacing-md;
 }
 
-.game-profiles-list-item-copy {
+.game-profiles-list-item-selector {
   display: flex;
+  width: 100%;
   min-width: 0;
+  min-height: $game-profiles-list-item-min-height;
+  align-items: flex-start;
   flex-direction: column;
+  justify-content: center;
   gap: $spacing-xs;
+  padding: $spacing-md 0 $spacing-md $spacing-xl;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.game-profiles-list-item-selector:hover,
+.game-profiles-list-item-selector:focus-visible {
+  background: rgba($color-surface, 0.42);
+  outline: none;
 }
 
 .game-profiles-list-item-title {
   display: flex;
+  max-width: 100%;
   min-width: 0;
   align-items: center;
+  gap: $spacing-sm;
 }
 
 .game-profiles-list-item-name {
   min-width: 0;
   overflow-wrap: anywhere;
   color: $color-text-primary;
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-list-item-active {
+  flex: 0 0 auto;
+  color: $color-success;
+  font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
 }
 
@@ -52,14 +79,16 @@ $game-profiles-list-item-mobile-breakpoint: 42rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: $spacing-sm;
+  gap: $spacing-xs;
+  padding-right: $spacing-md;
 }
 
 .game-profiles-list-item-input {
-  width: 100%;
+  width: calc(100% - $spacing-xl);
   height: $game-profiles-list-item-control-height;
   min-width: 0;
-  padding: 0 $spacing-lg;
+  margin-left: $spacing-xl;
+  padding: 0 $spacing-md;
   color: $color-text-primary;
   background: $color-surface;
   border: $app-border;
@@ -70,9 +99,11 @@ $game-profiles-list-item-mobile-breakpoint: 42rem;
   border-color: $color-border-strong;
 }
 
-.game-profiles-list-item-button,
 .game-profiles-list-item-icon-button {
   display: inline-flex;
+  width: $game-profiles-list-item-control-height;
+  height: $game-profiles-list-item-control-height;
+  flex: 0 0 $game-profiles-list-item-control-height;
   align-items: center;
   justify-content: center;
   color: $color-text-primary;
@@ -82,28 +113,12 @@ $game-profiles-list-item-mobile-breakpoint: 42rem;
   cursor: pointer;
 }
 
-.game-profiles-list-item-button {
-  min-height: $input-height;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
-  white-space: nowrap;
-}
-
-.game-profiles-list-item-icon-button {
-  width: $input-height;
-  height: $input-height;
-  flex: 0 0 $input-height;
-}
-
-.game-profiles-list-item-button:hover,
-.game-profiles-list-item-button:focus-visible,
 .game-profiles-list-item-icon-button:hover,
 .game-profiles-list-item-icon-button:focus-visible {
   border-color: $color-border-strong;
   outline: none;
 }
 
-.game-profiles-list-item-button:disabled,
 .game-profiles-list-item-icon-button:disabled,
 .game-profiles-list-item-input:disabled {
   cursor: not-allowed;
@@ -114,7 +129,6 @@ $game-profiles-list-item-mobile-breakpoint: 42rem;
   color: $color-danger;
 }
 
-.game-profiles-list-item-button-icon,
 .game-profiles-list-item-icon {
   width: $game-profiles-list-item-icon-size;
   height: $game-profiles-list-item-icon-size;
@@ -123,17 +137,12 @@ $game-profiles-list-item-mobile-breakpoint: 42rem;
 }
 
 @media (max-width: $game-profiles-list-item-mobile-breakpoint) {
-  .game-profiles-list-item {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: stretch;
-    padding-right: $spacing-md;
+  .game-profiles-list-item-selector {
     padding-left: $spacing-md;
   }
 
-  .game-profiles-list-item-main,
-  .game-profiles-list-item-title,
-  .game-profiles-list-item-actions {
-    align-items: stretch;
-    flex-wrap: wrap;
+  .game-profiles-list-item-input {
+    width: calc(100% - $spacing-md);
+    margin-left: $spacing-md;
   }
 }

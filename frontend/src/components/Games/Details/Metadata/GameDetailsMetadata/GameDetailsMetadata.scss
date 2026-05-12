@@ -1,6 +1,5 @@
 @use '@styles' as *;
 
-$game-details-metadata-mobile-breakpoint: 48rem;
 $game-details-metadata-icon-size: 1.25rem;
 
 .game-details-metadata {
@@ -45,18 +44,4 @@ $game-details-metadata-icon-size: 1.25rem;
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
-}
-
-@media (max-width: $game-details-metadata-mobile-breakpoint) {
-  .game-details-metadata {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .game-details-metadata-item:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .game-details-metadata-item:nth-child(-n + 2) {
-    border-bottom: $app-border;
-  }
 }
