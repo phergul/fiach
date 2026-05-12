@@ -31,6 +31,7 @@ func main() {
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
 		Services: []application.Service{
+			application.NewService(services.NewModService(store)),
 			application.NewService(services.NewProfileService(store)),
 			application.NewService(services.NewSteamService(store)),
 		},

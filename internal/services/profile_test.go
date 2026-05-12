@@ -31,6 +31,56 @@ func TestProfileServiceCreatesAndListsProfiles(t *testing.T) {
 	}
 }
 
+func TestProfileServiceManagesProfileMods(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	service := NewProfileService(store)
+	profile, err := service.CreateProfile(gameID, "Default")
+	if err != nil {
+		t.Fatalf("CreateProfile() error = %v", err)
+	}
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+
+	profileMod, err := service.AddModToProfile(profile.ID, modID)
+	if err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+	if profileMod.ProfileID != profile.ID || profileMod.ModID != modID || !profileMod.Enabled {
+		t.Fatalf("AddModToProfile() = %+v, want enabled profile mod", profileMod)
+	}
+
+	profileMods, err := service.ListProfileMods(profile.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 1 || profileMods[0].ModID != modID {
+		t.Fatalf("ListProfileMods() = %+v, want inserted profile mod", profileMods)
+	}
+
+	disabled, err := service.SetProfileModEnabled(profile.ID, modID, false)
+	if err != nil {
+		t.Fatalf("SetProfileModEnabled() error = %v", err)
+	}
+	if disabled.Enabled {
+		t.Fatalf("SetProfileModEnabled() = %+v, want disabled", disabled)
+	}
+
+	if err := service.RemoveModFromProfile(profile.ID, modID); err != nil {
+		t.Fatalf("RemoveModFromProfile() error = %v", err)
+	}
+	profileMods, err = service.ListProfileMods(profile.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() after remove error = %v", err)
+	}
+	if len(profileMods) != 0 {
+		t.Fatalf("ListProfileMods() after remove = %+v, want empty", profileMods)
+	}
+}
+
 func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
 	t.Parallel()
 
@@ -103,6 +153,14 @@ func TestProfileServiceReturnsStorageConfigurationError(t *testing.T) {
 	if !strings.Contains(err.Error(), "create profile") || !strings.Contains(err.Error(), "storage is not configured") {
 		t.Fatalf("CreateProfile() error = %q, want service context", err.Error())
 	}
+
+	_, err = service.AddModToProfile(1, 1)
+	if err == nil {
+		t.Fatal("AddModToProfile() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "add mod to profile") || !strings.Contains(err.Error(), "storage is not configured") {
+		t.Fatalf("AddModToProfile() error = %q, want service context", err.Error())
+	}
 }
 
 func TestProfileServiceWrapsStorageErrors(t *testing.T) {
@@ -118,6 +176,14 @@ func TestProfileServiceWrapsStorageErrors(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "create profile") || !strings.Contains(err.Error(), "insert profile row") {
 		t.Fatalf("CreateProfile() error = %q, want distinct service and storage context", err.Error())
+	}
+
+	_, err = service.AddModToProfile(1, 999)
+	if err == nil {
+		t.Fatal("AddModToProfile() error = nil, want storage error")
+	}
+	if !strings.Contains(err.Error(), "add mod to profile") || !strings.Contains(err.Error(), "insert profile mod row") {
+		t.Fatalf("AddModToProfile() error = %q, want distinct service and storage context", err.Error())
 	}
 }
 
@@ -135,6 +201,25 @@ func insertServiceProfileTestGame(t *testing.T, store *storage.Store, name strin
 	id, err := result.LastInsertId()
 	if err != nil {
 		t.Fatalf("service profile test game LastInsertId(): %v", err)
+	}
+
+	return id
+}
+
+func insertServiceProfileTestMod(t *testing.T, store *storage.Store, gameID int64, name string, sourcePath string) int64 {
+	t.Helper()
+
+	result, err := store.DB().Exec(`
+		INSERT INTO mods (game_id, name, source_path)
+		VALUES (?, ?, ?)
+	`, gameID, name, sourcePath)
+	if err != nil {
+		t.Fatalf("insert service profile test mod: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("service profile test mod LastInsertId(): %v", err)
 	}
 
 	return id

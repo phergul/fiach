@@ -9,6 +9,13 @@ defer func() {
 }()
 ```
 - When both a service and an inner layer wrap errors, the messages should be distinct. Service-level messages should describe the higher-level user operation, while storage/helper-layer messages should describe the lower-level action so errors do not repeat the same prefix twice.
+- `internal/storage` is the persistence layer. It can be organized by table or by a close table/domain cluster when queries naturally cross tables. Do not introduce repository structs unless there is a concrete need beyond grouping SQL.
+- `internal/services` is workflow/domain-oriented, not one service per database table. Services expose app-facing operations and coordinate storage/helper packages.
+- `profile_mods` operations belong on `ProfileService` because they describe profile composition: which mods are in a profile, enabled state, and load order.
+- Service file organization:
+    - `internal/services/mod.go`: `ModService`
+    - `internal/services/profile.go`: `ProfileService`
+    - `internal/services/profile_mods.go`: `ProfileService` methods that manage profile-mod membership and state.
 
 # Frontend
 
