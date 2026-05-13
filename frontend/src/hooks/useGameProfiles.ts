@@ -19,6 +19,7 @@ import { getErrorMessage } from '@utils';
 type ProfileAction =
   | 'activate'
   | 'add-mod'
+  | 'add-mods'
   | 'create'
   | 'deactivate'
   | 'delete'
@@ -141,6 +142,37 @@ export const useGameProfiles = (gameID: number | null) => {
     [loadProfileMods, runProfileAction],
   );
 
+  const addModsToProfile = useCallback(
+    async (profileID: number, modIDs: number[]) => {
+      if (modIDs.length === 0) {
+        return;
+      }
+
+      setPendingAction('add-mods');
+
+      try {
+        for (const modID of modIDs) {
+          await AddModToProfile(profileID, modID);
+        }
+
+        await loadProfileMods(profileID);
+        addToast({
+          message: `${modIDs.length} ${modIDs.length === 1 ? 'mod' : 'mods'} added to profile.`,
+          tone: 'success',
+        });
+      } catch (error) {
+        addToast({
+          message: getErrorMessage(error),
+          tone: 'error',
+        });
+        throw error;
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [addToast, loadProfileMods],
+  );
+
   const removeModFromProfile = useCallback(
     (profileID: number, modID: number) =>
       runProfileAction(
@@ -242,6 +274,7 @@ export const useGameProfiles = (gameID: number | null) => {
     activeProfile: profiles.find((profile) => profile.IsActive) ?? null,
     activateProfile,
     addModToProfile,
+    addModsToProfile,
     createProfile,
     deactivateProfile,
     deleteProfile,

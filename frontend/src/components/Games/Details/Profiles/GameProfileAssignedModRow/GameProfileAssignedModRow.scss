@@ -1,0 +1,131 @@
+@use '@styles' as *;
+
+$game-profile-assigned-mod-row-control-height: 2.5rem;
+$game-profile-assigned-mod-row-icon-size: 1rem;
+$game-profile-assigned-mod-row-order-width: 3.5rem;
+$game-profile-assigned-mod-row-toggle-width: 2.25rem;
+$game-profile-assigned-mod-row-toggle-height: 1.25rem;
+$game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
+$game-profile-assigned-mod-row-hidden-input-size: 0.0625rem;
+$game-profile-assigned-mod-row-hidden-input-offset: -0.0625rem;
+
+.game-profile-assigned-mod-row {
+  display: grid;
+  grid-template-columns: $game-profile-assigned-mod-row-order-width minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  min-height: 4.75rem;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-assigned-mod-row-order {
+  color: $color-text-subtle;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.game-profile-assigned-mod-row-main {
+  min-width: 0;
+}
+
+.game-profile-assigned-mod-row-name {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profile-assigned-mod-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.game-profile-assigned-mod-row-toggle {
+  display: inline-flex;
+  min-height: $game-profile-assigned-mod-row-control-height;
+  align-items: center;
+  gap: $spacing-sm;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  cursor: pointer;
+}
+
+.game-profile-assigned-mod-row-toggle input {
+  position: absolute;
+  width: $game-profile-assigned-mod-row-hidden-input-size;
+  height: $game-profile-assigned-mod-row-hidden-input-size;
+  margin: $game-profile-assigned-mod-row-hidden-input-offset;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.game-profile-assigned-mod-row-toggle-control {
+  position: relative;
+  width: $game-profile-assigned-mod-row-toggle-width;
+  height: $game-profile-assigned-mod-row-toggle-height;
+  flex: 0 0 $game-profile-assigned-mod-row-toggle-width;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
+}
+
+.game-profile-assigned-mod-row-toggle-control::after {
+  position: absolute;
+  top: 50%;
+  left: $spacing-xs;
+  width: $game-profile-assigned-mod-row-toggle-knob-size;
+  height: $game-profile-assigned-mod-row-toggle-knob-size;
+  background: $color-text-subtle;
+  border-radius: $radius-sm;
+  content: '';
+  transform: translateY(-50%);
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    left $transition-duration-fast $transition-easing-standard;
+}
+
+.game-profile-assigned-mod-row-toggle input:checked + .game-profile-assigned-mod-row-toggle-control {
+  border-color: $color-success;
+}
+
+.game-profile-assigned-mod-row-toggle input:checked + .game-profile-assigned-mod-row-toggle-control::after {
+  left: calc(100% - $game-profile-assigned-mod-row-toggle-knob-size - $spacing-xs);
+  background: $color-success;
+}
+
+.game-profile-assigned-mod-row-toggle:has(input:focus-visible) .game-profile-assigned-mod-row-toggle-control {
+  border-color: $color-border-strong;
+}
+
+.game-profile-assigned-mod-row-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-profile-assigned-mod-row-icon-button {
+  width: $game-profile-assigned-mod-row-control-height;
+  height: $game-profile-assigned-mod-row-control-height;
+  flex: 0 0 $game-profile-assigned-mod-row-control-height;
+}
+
+.game-profile-assigned-mod-row-icon-button-danger {
+  color: $color-danger;
+}
+
+.game-profile-assigned-mod-row-icon {
+  width: $game-profile-assigned-mod-row-icon-size;
+  height: $game-profile-assigned-mod-row-icon-size;
+  flex: 0 0 $game-profile-assigned-mod-row-icon-size;
+  stroke-width: 1.8;
+}

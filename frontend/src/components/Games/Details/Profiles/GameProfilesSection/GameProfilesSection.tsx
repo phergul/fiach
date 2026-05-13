@@ -5,6 +5,7 @@ import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameProfileModsPanel } from '@components/Games/Details/Profiles/GameProfileModsPanel/GameProfileModsPanel';
+import { GameProfilesActiveSummary } from '@components/Games/Details/Profiles/GameProfilesActiveSummary/GameProfilesActiveSummary';
 import { GameProfilesCreateForm } from '@components/Games/Details/Profiles/GameProfilesCreateForm/GameProfilesCreateForm';
 import { GameProfilesList } from '@components/Games/Details/Profiles/GameProfilesList/GameProfilesList';
 import type { UseGameModsResult, UseGameProfilesResult } from '@hooks';
@@ -22,7 +23,7 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
   const {
     activeProfile,
     activateProfile,
-    addModToProfile,
+    addModsToProfile,
     createProfile,
     deactivateProfile,
     deleteProfile,
@@ -136,8 +137,8 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
     deactivateProfile().catch(() => undefined);
   };
 
-  const handleAddModToProfile = (profileID: number, modID: number) => {
-    addModToProfile(profileID, modID).catch(() => undefined);
+  const handleAddModsToProfile = (profileID: number, modIDs: number[]) => {
+    return addModsToProfile(profileID, modIDs);
   };
 
   const handleRemoveModFromProfile = (profileID: number, modID: number) => {
@@ -165,6 +166,12 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
       {loadError === null && (
         <div className="game-profiles-section-workspace">
           <aside className="game-profiles-section-sidebar" aria-label="Profile list">
+            <GameProfilesActiveSummary
+              activeProfile={activeProfile}
+              isBusy={isBusy}
+              onDeactivateProfile={handleDeactivateProfile}
+            />
+
             <GameProfilesCreateForm
               isCreateOpen={isCreateOpen}
               newProfileName={newProfileName}
@@ -202,13 +209,9 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
               isProfilesLoading={isLoading}
               profile={selectedProfile}
               profileMods={selectedProfileMods}
-              onActivateProfile={handleActivateProfile}
-              onAddModToProfile={handleAddModToProfile}
-              onDeactivateProfile={handleDeactivateProfile}
-              onDeleteProfile={setDeleteCandidate}
+              onAddModsToProfile={handleAddModsToProfile}
               onRemoveModFromProfile={handleRemoveModFromProfile}
               onSetProfileModEnabled={handleSetProfileModEnabled}
-              onStartRename={startRename}
             />
           </div>
         </div>

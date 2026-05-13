@@ -1,0 +1,228 @@
+@use '@styles' as *;
+
+$game-profile-add-mods-modal-width: 48rem;
+$game-profile-add-mods-modal-max-height: 80vh;
+$game-profile-add-mods-modal-search-height: 2.75rem;
+$game-profile-add-mods-modal-control-height: 2.5rem;
+$game-profile-add-mods-modal-icon-size: 1rem;
+$game-profile-add-mods-modal-option-size: 1.25rem;
+$game-profile-add-mods-modal-option-offset: 0.125rem;
+$game-profile-add-mods-modal-check-top: 0.1875rem;
+$game-profile-add-mods-modal-check-left: 0.375rem;
+$game-profile-add-mods-modal-check-width: 0.375rem;
+$game-profile-add-mods-modal-check-height: 0.625rem;
+$game-profile-add-mods-modal-hidden-input-size: 0.0625rem;
+$game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
+
+.game-profile-add-mods-modal {
+  position: fixed;
+  z-index: $z-index-toast + 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: $spacing-lg;
+}
+
+.game-profile-add-mods-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 56%);
+}
+
+.game-profile-add-mods-modal-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min($game-profile-add-mods-modal-width, 100%);
+  max-height: $game-profile-add-mods-modal-max-height;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  background: $color-background;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-subtle;
+}
+
+.game-profile-add-mods-modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl $spacing-md;
+  border-bottom: $app-border;
+}
+
+.game-profile-add-mods-modal-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-profile-add-mods-modal-title {
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.game-profile-add-mods-modal-summary {
+  overflow-wrap: anywhere;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-profile-add-mods-modal-close {
+  width: $game-profile-add-mods-modal-control-height;
+  height: $game-profile-add-mods-modal-control-height;
+  flex: 0 0 $game-profile-add-mods-modal-control-height;
+}
+
+.game-profile-add-mods-modal-search {
+  position: relative;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-add-mods-modal-search-icon {
+  position: absolute;
+  top: 50%;
+  left: calc($spacing-xl + $spacing-md);
+  width: $game-profile-add-mods-modal-icon-size;
+  height: $game-profile-add-mods-modal-icon-size;
+  color: $color-text-muted;
+  transform: translateY(-50%);
+  pointer-events: none;
+  stroke-width: 1.8;
+}
+
+.game-profile-add-mods-modal-search-input {
+  width: 100%;
+  height: $game-profile-add-mods-modal-search-height;
+  padding: 0 $spacing-lg 0 calc($spacing-xl + $spacing-sm);
+  border: $app-border;
+}
+
+.game-profile-add-mods-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.game-profile-add-mods-modal-state {
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-profile-add-mods-modal-list-item {
+  border-bottom: $app-border;
+}
+
+.game-profile-add-mods-modal-option {
+  display: grid;
+  grid-template-columns: $game-profile-add-mods-modal-option-size minmax(0, 1fr);
+  align-items: start;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  cursor: pointer;
+}
+
+.game-profile-add-mods-modal-option:hover {
+  background: rgba($color-surface, 0.42);
+}
+
+.game-profile-add-mods-modal-option input {
+  position: absolute;
+  width: $game-profile-add-mods-modal-hidden-input-size;
+  height: $game-profile-add-mods-modal-hidden-input-size;
+  margin: $game-profile-add-mods-modal-hidden-input-offset;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.game-profile-add-mods-modal-option-control {
+  position: relative;
+  width: $game-profile-add-mods-modal-option-size;
+  height: $game-profile-add-mods-modal-option-size;
+  margin-top: $game-profile-add-mods-modal-option-offset;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
+}
+
+.game-profile-add-mods-modal-option-control::after {
+  position: absolute;
+  top: $game-profile-add-mods-modal-check-top;
+  left: $game-profile-add-mods-modal-check-left;
+  width: $game-profile-add-mods-modal-check-width;
+  height: $game-profile-add-mods-modal-check-height;
+  border-right: $app-border-width solid $color-background;
+  border-bottom: $app-border-width solid $color-background;
+  content: '';
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+.game-profile-add-mods-modal-option input:checked+.game-profile-add-mods-modal-option-control {
+  background: $color-success;
+  border-color: $color-success;
+}
+
+.game-profile-add-mods-modal-option input:checked+.game-profile-add-mods-modal-option-control::after {
+  opacity: 1;
+}
+
+.game-profile-add-mods-modal-option:has(input:focus-visible) .game-profile-add-mods-modal-option-control {
+  border-color: $color-border-strong;
+}
+
+.game-profile-add-mods-modal-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.game-profile-add-mods-modal-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-profile-add-mods-modal-option-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profile-add-mods-modal-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl $spacing-lg;
+  border-top: $app-border;
+}
+
+.game-profile-add-mods-modal-add-button,
+.game-profile-add-mods-modal-cancel-button {
+  min-height: $game-profile-add-mods-modal-control-height;
+}
+
+.game-profile-add-mods-modal-add-button {
+  background: $color-text-subtle;
+  color: $color-background;
+  border-color: $color-text-subtle;
+}
+
+.game-profile-add-mods-modal-add-button:hover:not(:disabled),
+.game-profile-add-mods-modal-add-button:focus-visible:not(:disabled) {
+  background: $color-text-primary;
+  border-color: $color-text-primary;
+}
+
+.game-profile-add-mods-modal-icon {
+  width: $game-profile-add-mods-modal-icon-size;
+  height: $game-profile-add-mods-modal-icon-size;
+  flex: 0 0 $game-profile-add-mods-modal-icon-size;
+  stroke-width: 1.8;
+}

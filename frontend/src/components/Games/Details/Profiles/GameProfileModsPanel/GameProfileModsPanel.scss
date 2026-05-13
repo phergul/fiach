@@ -2,7 +2,6 @@
 
 $game-profile-mods-panel-control-height: 2.5rem;
 $game-profile-mods-panel-icon-size: 1rem;
-$game-profile-mods-panel-mobile-breakpoint: 56rem;
 
 .game-profile-mods-panel {
   display: flex;
@@ -10,96 +9,6 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
   flex: 1 1 auto;
   flex-direction: column;
   background: $color-background;
-}
-
-.game-profile-mods-panel-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
-}
-
-.game-profile-mods-panel-title,
-.game-profile-mods-panel-mod-copy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: $spacing-xs;
-}
-
-.game-profile-mods-panel-name {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: $spacing-sm;
-  overflow-wrap: anywhere;
-  color: $color-text-primary;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-semibold;
-}
-
-.game-profile-mods-panel-active {
-  flex: 0 0 auto;
-  color: $color-success;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-}
-
-.game-profile-mods-panel-mod-name {
-  overflow-wrap: anywhere;
-  color: $color-text-primary;
-  font-weight: $font-weight-semibold;
-}
-
-.game-profile-mods-panel-count,
-.game-profile-mods-panel-mod-meta {
-  overflow-wrap: anywhere;
-  color: $color-text-subtle;
-  font-size: $font-size-sm;
-}
-
-.game-profile-mods-panel-header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: $spacing-sm;
-}
-
-.game-profile-mods-panel-add-row {
-  padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
-}
-
-.game-profile-mods-panel-add {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: $spacing-sm;
-}
-
-.game-profile-mods-panel-select {
-  width: 100%;
-  height: $game-profile-mods-panel-control-height;
-  min-width: 0;
-  padding: 0 $spacing-md;
-  border: $app-border;
-}
-
-.game-profile-mods-panel-button,
-.game-profile-mods-panel-add-button {
-  min-height: $game-profile-mods-panel-control-height;
-  white-space: nowrap;
-}
-
-.game-profile-mods-panel-icon-button {
-  width: $game-profile-mods-panel-control-height;
-  height: $game-profile-mods-panel-control-height;
-  flex: 0 0 $game-profile-mods-panel-control-height;
-}
-
-.game-profile-mods-panel-icon-button-danger {
-  color: $color-danger;
 }
 
 .game-profile-mods-panel-icon {
@@ -120,62 +29,13 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
   border-bottom: $app-border;
 }
 
-.game-profile-mods-panel-list-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-lg $spacing-xl;
-  border-bottom: $app-border;
+.game-profile-mods-panel-footer {
+  padding: $spacing-md $spacing-xl;
+  border-top: $app-border;
 }
 
-.game-profile-mods-panel-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: $spacing-sm;
-}
-
-.game-profile-mods-panel-toggle {
-  display: inline-flex;
+.game-profile-mods-panel-add-button {
+  width: 100%;
   min-height: $game-profile-mods-panel-control-height;
-  align-items: center;
-  gap: $spacing-sm;
   color: $color-text-subtle;
-  font-size: $font-size-sm;
-  cursor: pointer;
-}
-
-.game-profile-mods-panel-toggle input {
-  width: $game-profile-mods-panel-icon-size;
-  height: $game-profile-mods-panel-icon-size;
-  accent-color: $color-success;
-}
-
-.game-profile-mods-panel-toggle:has(input:disabled) {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-@media (max-width: $game-profile-mods-panel-mobile-breakpoint) {
-
-  .game-profile-mods-panel-header,
-  .game-profile-mods-panel-list-item {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: stretch;
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
-
-  .game-profile-mods-panel-add-row,
-  .game-profile-mods-panel-empty {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
-
-  .game-profile-mods-panel-header-actions,
-  .game-profile-mods-panel-actions {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
 }

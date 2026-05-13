@@ -19,6 +19,7 @@ defer func() {
 
 # Frontend
 
+- This is a desktop app, no mobile breakpoint
 - Everything should be componentised. Pages only orchestrate routing and data flow. UI logic belongs in components.
 - Components live under `frontend/src/components`.
 - Top-level component folders should represent either:
@@ -40,7 +41,7 @@ defer func() {
     - `ComponentName/ComponentName.scss`
 - Component names should describe the component itself, not the app shell. Avoid prefixes like `AppSidebar`. use `Sidebar`.
 - Styling rules:
-    - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. `frontend/src/styles/_variables.scss` is where all variables live.
+    - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. Root styles are for primitives that are used around the whole app for consistency (e.g. button). `frontend/src/styles/_variables.scss` is where all variables live.
     - Component-specific SCSS variables used only by one component should be defined at the top of that component's SCSS file.
     - Each component should have its own scss file, and styles should be scoped to that component.
     - Don't use arbitrary class names, use localised `component-name-style`

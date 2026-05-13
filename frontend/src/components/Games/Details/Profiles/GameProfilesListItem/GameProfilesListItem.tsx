@@ -62,7 +62,6 @@ export const GameProfilesListItem = ({
           >
             <span className="game-profiles-list-item-title">
               <span className="game-profiles-list-item-name">{profile.Name}</span>
-              {profile.IsActive && <span className="game-profiles-list-item-active">Active</span>}
             </span>
             <span className="game-profiles-list-item-meta">
               {modSummary} · {formatProfileEditedAt(profile.UpdatedAt)}

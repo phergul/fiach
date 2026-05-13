@@ -1,7 +1,5 @@
 @use '@styles' as *;
 
-$game-profiles-list-mobile-breakpoint: 56rem;
-
 .game-profiles-list-shell {
   min-height: 0;
   flex: 1 1 auto;
@@ -17,11 +15,4 @@ $game-profiles-list-mobile-breakpoint: 56rem;
   padding: $spacing-lg $spacing-xl;
   border-top: $app-border;
   border-bottom: $app-border;
-}
-
-@media (max-width: $game-profiles-list-mobile-breakpoint) {
-  .game-profiles-list-empty {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
 }

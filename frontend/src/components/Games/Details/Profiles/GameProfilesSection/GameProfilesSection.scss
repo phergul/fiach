@@ -1,7 +1,6 @@
 @use '@styles' as *;
 
 $game-profiles-section-sidebar-width: 24rem;
-$game-profiles-section-mobile-breakpoint: 56rem;
 
 .game-profiles-section {
   display: flex;
@@ -43,20 +42,4 @@ $game-profiles-section-mobile-breakpoint: 56rem;
 .game-profiles-section-state {
   padding: $spacing-lg $spacing-xl;
   border-bottom: $app-border;
-}
-
-@media (max-width: $game-profiles-section-mobile-breakpoint) {
-  .game-profiles-section-workspace {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .game-profiles-section-sidebar {
-    border-right: 0;
-    border-bottom: $app-border;
-  }
-
-  .game-profiles-section-state {
-    padding-right: $spacing-md;
-    padding-left: $spacing-md;
-  }
 }

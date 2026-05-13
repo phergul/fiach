@@ -1,5 +1,3 @@
-import { PowerOff } from 'lucide-react';
-
 import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
 import './GameProfilesActiveSummary.scss';
@@ -30,7 +28,6 @@ export const GameProfilesActiveSummary = ({
           onClick={onDeactivateProfile}
           type="button"
         >
-          <PowerOff className="game-profiles-active-summary-button-icon" aria-hidden="true" />
           <span>Deactivate</span>
         </button>
       )}
