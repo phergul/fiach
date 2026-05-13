@@ -32,6 +32,23 @@ select {
   font: inherit;
 }
 
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
 button {
   display: inline-flex;
   align-items: center;
@@ -63,4 +80,40 @@ button:focus-visible {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
+}
+
+input:not([type='checkbox']):not([type='radio']),
+textarea,
+select {
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  outline: none;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard,
+    color $transition-duration-fast $transition-easing-standard;
+}
+
+input:not([type='checkbox']):not([type='radio'])::placeholder,
+textarea::placeholder {
+  color: $color-text-muted;
+}
+
+input:not([type='checkbox']):not([type='radio']):focus,
+textarea:focus,
+select:focus {
+  border-color: $color-border-strong;
+}
+
+input:not([type='checkbox']):not([type='radio']):disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  margin: 0;
 }

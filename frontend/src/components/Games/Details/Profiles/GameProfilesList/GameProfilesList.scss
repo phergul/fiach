@@ -11,18 +11,12 @@ $game-profiles-list-mobile-breakpoint: 56rem;
 .game-profiles-list {
   display: flex;
   flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .game-profiles-list-empty {
-  margin: 0;
   padding: $spacing-lg $spacing-xl;
-  color: $color-text-subtle;
   border-top: $app-border;
   border-bottom: $app-border;
-  font-size: $font-size-base;
 }
 
 @media (max-width: $game-profiles-list-mobile-breakpoint) {

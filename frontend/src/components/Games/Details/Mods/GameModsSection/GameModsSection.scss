@@ -29,59 +29,17 @@ $game-mods-section-icon-size: 1rem;
   width: 100%;
   height: $game-mods-section-search-height;
   padding: 0 $spacing-lg 0 calc($spacing-xl + $spacing-sm);
-  color: $color-text-primary;
-  background: $color-surface;
   border: $app-border;
-  outline: none;
-}
-
-.game-mods-section-search-input::placeholder {
-  color: $color-text-subtle;
-}
-
-.game-mods-section-search-input:focus-visible {
-  border-color: $color-border-strong;
-}
-
-.game-mods-section-search-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }
 
 .game-mods-section-empty,
 .game-mods-section-state {
-  margin: 0;
   padding: $spacing-lg $spacing-xl;
-  color: $color-text-subtle;
   border-bottom: $app-border;
-  font-size: $font-size-base;
-}
-
-.game-mods-section-state {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.game-mods-section-state-title,
-.game-mods-section-state-message {
-  margin: 0;
-}
-
-.game-mods-section-state-title {
-  color: $color-text-primary;
-  font-weight: $font-weight-semibold;
 }
 
 .game-mods-section-button {
   min-height: $input-height;
-}
-
-.game-mods-section-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .game-mods-section-list-item {

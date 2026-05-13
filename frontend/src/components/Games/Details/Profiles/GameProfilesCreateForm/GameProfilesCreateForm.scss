@@ -57,18 +57,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
   height: $game-profiles-create-form-control-height;
   min-width: 0;
   padding: 0 $spacing-lg;
-  color: $color-text-primary;
-  background: $color-surface;
   border: $app-border;
-  outline: none;
-}
-
-.game-profiles-create-form-input::placeholder {
-  color: $color-text-subtle;
-}
-
-.game-profiles-create-form-input:focus-visible {
-  border-color: $color-border-strong;
 }
 
 .game-profiles-create-form-actions {
@@ -84,9 +73,4 @@ $game-profiles-create-form-toggle-height: 3.25rem;
 
 .game-profiles-create-form-button-primary {
   background: $color-surface-elevated;
-}
-
-.game-profiles-create-form-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }

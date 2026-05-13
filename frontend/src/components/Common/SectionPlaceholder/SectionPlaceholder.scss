@@ -7,7 +7,6 @@
 }
 
 .section-placeholder-title {
-  margin: 0;
   color: $color-text-primary;
   font-size: $font-size-xl;
   font-weight: $font-weight-semibold;
@@ -16,7 +15,6 @@
 
 .section-placeholder-description {
   max-width: $app-content-max-width;
-  margin: 0;
   color: $color-text-subtle;
   font-size: $font-size-base;
 }

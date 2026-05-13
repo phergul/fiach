@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameProfileModsPanel } from '@components/Games/Details/Profiles/GameProfileModsPanel/GameProfileModsPanel';
 import { GameProfilesCreateForm } from '@components/Games/Details/Profiles/GameProfilesCreateForm/GameProfilesCreateForm';
@@ -150,9 +151,7 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
   return (
     <section className="game-profiles-section" aria-label="Profiles">
       {loadError !== null && (
-        <div className="game-profiles-section-state">
-          <p className="game-profiles-section-state-title">Could not load profiles.</p>
-          <p className="game-profiles-section-state-message">{loadError}</p>
+        <StateBlock className="game-profiles-section-state" title="Could not load profiles." message={loadError}>
           <button
             className="game-profiles-section-button"
             onClick={refreshProfiles}
@@ -160,7 +159,7 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
           >
             Retry
           </button>
-        </div>
+        </StateBlock>
       )}
 
       {loadError === null && (

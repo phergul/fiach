@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
+
 import './GameDetailsState.scss';
 
 interface GameDetailsStateProps {
@@ -18,13 +20,11 @@ export const GameDetailsState = ({
   onAction,
 }: GameDetailsStateProps) => {
   if (title === undefined && message === undefined) {
-    return <p className="game-details-state">Loading game...</p>;
+    return <StateBlock className="game-details-state" message="Loading game..." />;
   }
 
   return (
-    <div className="game-details-state">
-      {title !== undefined && <p className="game-details-state-title">{title}</p>}
-      {message !== undefined && <p className="game-details-state-message">{message}</p>}
+    <StateBlock className="game-details-state" title={title} message={message}>
       {(actionLabel !== undefined || linkLabel !== undefined) && (
         <div className="game-details-state-actions">
           {actionLabel !== undefined && onAction !== undefined && (
@@ -39,6 +39,6 @@ export const GameDetailsState = ({
           )}
         </div>
       )}
-    </div>
+    </StateBlock>
   );
 };

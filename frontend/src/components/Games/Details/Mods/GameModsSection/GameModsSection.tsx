@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { Search } from 'lucide-react';
 
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import type { UseGameModsResult } from '@hooks';
 
 import './GameModsSection.scss';
@@ -42,25 +43,23 @@ export const GameModsSection = ({ modManager }: GameModsSectionProps) => {
       </div>
 
       {loadError !== null && (
-        <div className="game-mods-section-state">
-          <p className="game-mods-section-state-title">Could not load mods.</p>
-          <p className="game-mods-section-state-message">{loadError}</p>
+        <StateBlock className="game-mods-section-state" title="Could not load mods." message={loadError}>
           <button className="game-mods-section-button" onClick={refreshMods} type="button">
             Retry
           </button>
-        </div>
+        </StateBlock>
       )}
 
       {loadError === null && isLoading && (
-        <p className="game-mods-section-empty">Loading imported mods...</p>
+        <StateBlock className="game-mods-section-empty" message="Loading imported mods..." />
       )}
 
       {loadError === null && !isLoading && mods.length === 0 && (
-        <p className="game-mods-section-empty">Imported mods for this game will appear here.</p>
+        <StateBlock className="game-mods-section-empty" message="Imported mods for this game will appear here." />
       )}
 
       {loadError === null && !isLoading && mods.length > 0 && filteredMods.length === 0 && (
-        <p className="game-mods-section-empty">No imported mods match this search.</p>
+        <StateBlock className="game-mods-section-empty" message="No imported mods match this search." />
       )}
 
       {loadError === null && !isLoading && filteredMods.length > 0 && (

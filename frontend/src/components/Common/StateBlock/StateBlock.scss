@@ -1,0 +1,15 @@
+@use '@styles' as *;
+
+.state-block {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: $spacing-sm;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+}
+
+.state-block-title {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}

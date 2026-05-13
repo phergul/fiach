@@ -17,17 +17,5 @@ $game-search-min-width: 16rem;
 .game-search-input {
   height: $input-height;
   padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: $color-surface;
-  border: $app-border-width solid $color-border;
   border-radius: $radius-md;
-  outline: none;
-}
-
-.game-search-input::placeholder {
-  color: $color-text-muted;
-}
-
-.game-search-input:focus {
-  border-color: $color-border-strong;
 }

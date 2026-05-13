@@ -31,11 +31,6 @@ $confirm-dialog-width: 26rem;
   box-shadow: $shadow-subtle;
 }
 
-.confirm-dialog-title,
-.confirm-dialog-message {
-  margin: 0;
-}
-
 .confirm-dialog-title {
   color: $color-text-primary;
   font-size: $font-size-lg;

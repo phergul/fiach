@@ -1,3 +1,4 @@
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameGrid } from '@components/Games/Grid/GameGrid/GameGrid';
 import { GameSearch } from '@components/Games/Library/GameSearch/GameSearch';
 import { useGameSearch, useStoredGames } from '@hooks';
@@ -38,29 +39,26 @@ export const GameLibrary = () => {
         </div>
       </div>
 
-      {isInitialLoading && <p className="game-library-state">Loading games...</p>}
+      {isInitialLoading && <StateBlock className="game-library-state" message="Loading games..." />}
 
       {hasLoadError && (
-        <div className="game-library-state">
-          <p className="game-library-state-title">Could not load games.</p>
-          <p className="game-library-state-message">{loadError}</p>
+        <StateBlock className="game-library-state" title="Could not load games." message={loadError}>
           <button className="game-library-state-action" onClick={retryLoadGames} type="button">
             Retry
           </button>
-        </div>
+        </StateBlock>
       )}
 
       {hasEmptyLibrary && (
-        <div className="game-library-state">
-          <p className="game-library-state-title">No games found.</p>
+        <StateBlock className="game-library-state" title="No games found.">
           <button className="game-library-state-action" onClick={refreshGames} type="button">
             Scan Steam
           </button>
-        </div>
+        </StateBlock>
       )}
 
       {hasNoSearchResults && (
-        <p className="game-library-state">No games match "{searchQuery}".</p>
+        <StateBlock className="game-library-state" message={`No games match "${searchQuery}".`} />
       )}
 
       {filteredGames.length > 0 && <GameGrid games={filteredGames} />}

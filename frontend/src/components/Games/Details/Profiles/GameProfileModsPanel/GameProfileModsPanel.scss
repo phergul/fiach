@@ -83,14 +83,7 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
   height: $game-profile-mods-panel-control-height;
   min-width: 0;
   padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: $color-surface;
   border: $app-border;
-  outline: none;
-}
-
-.game-profile-mods-panel-select:focus-visible {
-  border-color: $color-border-strong;
 }
 
 .game-profile-mods-panel-button,
@@ -103,11 +96,6 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
   width: $game-profile-mods-panel-control-height;
   height: $game-profile-mods-panel-control-height;
   flex: 0 0 $game-profile-mods-panel-control-height;
-}
-
-.game-profile-mods-panel-select:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }
 
 .game-profile-mods-panel-icon-button-danger {
@@ -128,16 +116,8 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
 }
 
 .game-profile-mods-panel-empty {
-  margin: 0;
   padding: $spacing-lg $spacing-xl;
-  color: $color-text-subtle;
   border-bottom: $app-border;
-}
-
-.game-profile-mods-panel-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .game-profile-mods-panel-list-item {
@@ -169,7 +149,6 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
 .game-profile-mods-panel-toggle input {
   width: $game-profile-mods-panel-icon-size;
   height: $game-profile-mods-panel-icon-size;
-  margin: 0;
   accent-color: $color-success;
 }
 

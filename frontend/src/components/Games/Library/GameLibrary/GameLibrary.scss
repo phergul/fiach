@@ -21,7 +21,6 @@
 }
 
 .game-library-title {
-  margin: 0;
   color: $color-text-primary;
   font-size: $font-size-xl;
   font-weight: $font-weight-semibold;
@@ -29,7 +28,6 @@
 }
 
 .game-library-count {
-  margin: 0;
   color: $color-text-subtle;
   font-size: $font-size-sm;
 }
@@ -56,25 +54,8 @@
 }
 
 .game-library-state {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: $spacing-sm;
-  margin: 0;
   padding: $spacing-lg;
-  color: $color-text-subtle;
   background: $color-surface;
   border: $app-border-width solid $color-border-subtle;
   border-radius: $radius-md;
-  font-size: $font-size-base;
-}
-
-.game-library-state-title,
-.game-library-state-message {
-  margin: 0;
-}
-
-.game-library-state-title {
-  color: $color-text-primary;
-  font-weight: $font-weight-semibold;
 }

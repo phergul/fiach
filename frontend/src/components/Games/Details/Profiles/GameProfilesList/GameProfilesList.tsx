@@ -1,4 +1,5 @@
 import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 
 import { GameProfilesListItem } from '../GameProfilesListItem/GameProfilesListItem';
 
@@ -41,10 +42,10 @@ export const GameProfilesList = ({
 }: GameProfilesListProps) => {
   return (
     <div className="game-profiles-list-shell">
-      {isLoading && <p className="game-profiles-list-empty">Loading profiles...</p>}
+      {isLoading && <StateBlock className="game-profiles-list-empty" message="Loading profiles..." />}
 
       {!isLoading && profiles.length === 0 && (
-        <p className="game-profiles-list-empty">No profiles have been created yet.</p>
+        <StateBlock className="game-profiles-list-empty" message="No profiles have been created yet." />
       )}
 
       {!isLoading && profiles.length > 0 && (

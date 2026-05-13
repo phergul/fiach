@@ -1,26 +1,9 @@
 @use '@styles' as *;
 
 .game-details-state {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: $spacing-sm;
-  margin: 0;
   padding: $spacing-lg $spacing-xl;
-  color: $color-text-subtle;
   background: $color-background;
   border-bottom: $app-border;
-  font-size: $font-size-base;
-}
-
-.game-details-state-title,
-.game-details-state-message {
-  margin: 0;
-}
-
-.game-details-state-title {
-  color: $color-text-primary;
-  font-weight: $font-weight-semibold;
 }
 
 .game-details-state-actions {

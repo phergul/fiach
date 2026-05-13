@@ -16,7 +16,6 @@ $game-profiles-section-mobile-breakpoint: 56rem;
   min-height: 32rem;
   flex: 1 1 auto;
   grid-template-columns: $game-profiles-section-sidebar-width minmax(0, 1fr);
-  border-top: $app-border;
 }
 
 .game-profiles-section-sidebar,
@@ -42,25 +41,8 @@ $game-profiles-section-mobile-breakpoint: 56rem;
 }
 
 .game-profiles-section-state {
-  display: flex;
-  margin: 0;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: $spacing-sm;
   padding: $spacing-lg $spacing-xl;
-  color: $color-text-subtle;
   border-bottom: $app-border;
-  font-size: $font-size-base;
-}
-
-.game-profiles-section-state-title,
-.game-profiles-section-state-message {
-  margin: 0;
-}
-
-.game-profiles-section-state-title {
-  color: $color-text-primary;
-  font-weight: $font-weight-semibold;
 }
 
 @media (max-width: $game-profiles-section-mobile-breakpoint) {

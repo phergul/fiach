@@ -3,6 +3,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Power, PowerOff, Trash2 } from 'lucide-react';
 
 import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 
 import './GameProfileModsPanel.scss';
 
@@ -69,9 +70,10 @@ export const GameProfileModsPanel = ({
   if (profile === null) {
     return (
       <section className="game-profile-mods-panel" aria-label="Profile mods">
-        <p className="game-profile-mods-panel-empty">
-          {isProfilesLoading ? 'Loading profile details...' : 'Create a profile to configure mods.'}
-        </p>
+        <StateBlock
+          className="game-profile-mods-panel-empty"
+          message={isProfilesLoading ? 'Loading profile details...' : 'Create a profile to configure mods.'}
+        />
       </section>
     );
   }
@@ -165,15 +167,18 @@ export const GameProfileModsPanel = ({
 
       <div className="game-profile-mods-panel-body">
         {isGameModsLoading && (
-          <p className="game-profile-mods-panel-empty">Loading imported mods...</p>
+          <StateBlock className="game-profile-mods-panel-empty" message="Loading imported mods..." />
         )}
 
         {!isGameModsLoading && gameMods.length === 0 && (
-          <p className="game-profile-mods-panel-empty">Import mods for this game before assigning them to a profile.</p>
+          <StateBlock
+            className="game-profile-mods-panel-empty"
+            message="Import mods for this game before assigning them to a profile."
+          />
         )}
 
         {!isGameModsLoading && gameMods.length > 0 && profileMods.length === 0 && (
-          <p className="game-profile-mods-panel-empty">No mods are assigned to this profile yet.</p>
+          <StateBlock className="game-profile-mods-panel-empty" message="No mods are assigned to this profile yet." />
         )}
 
         {profileMods.length > 0 && (

@@ -86,25 +86,13 @@ $game-profiles-list-item-mobile-breakpoint: 56rem;
   min-width: 0;
   margin-left: $spacing-xl;
   padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: $color-surface;
   border: $app-border;
-  outline: none;
-}
-
-.game-profiles-list-item-input:focus-visible {
-  border-color: $color-border-strong;
 }
 
 .game-profiles-list-item-icon-button {
   width: $game-profiles-list-item-control-height;
   height: $game-profiles-list-item-control-height;
   flex: 0 0 $game-profiles-list-item-control-height;
-}
-
-.game-profiles-list-item-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }
 
 .game-profiles-list-item-icon-button-danger {
