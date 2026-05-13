@@ -31,17 +31,7 @@
 
 .game-details-state-action {
   height: $input-height;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: transparent;
   border: $app-border;
-  cursor: pointer;
-}
-
-.game-details-state-action:hover,
-.game-details-state-action:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
 }
 
 .game-details-state-link {

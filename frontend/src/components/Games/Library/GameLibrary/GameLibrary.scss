@@ -43,12 +43,9 @@
 .game-library-rescan,
 .game-library-state-action {
   height: $input-height;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
   background: $color-surface-elevated;
   border: $app-border-width solid $color-border;
   border-radius: $radius-md;
-  cursor: pointer;
 }
 
 .game-library-rescan:disabled,
@@ -56,15 +53,6 @@
   color: $color-text-muted;
   background: $color-surface;
   border-color: $color-border-subtle;
-  cursor: not-allowed;
-}
-
-.game-library-rescan:hover:not(:disabled),
-.game-library-state-action:hover:not(:disabled),
-.game-library-rescan:focus-visible,
-.game-library-state-action:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
 }
 
 .game-library-state {

@@ -23,25 +23,18 @@
 }
 
 .sidebar-pin-button {
-  display: flex;
   width: 100%;
   height: $app-sidebar-control-size;
-  align-items: center;
   justify-content: flex-start;
   gap: 0;
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
-  font: inherit;
   text-align: left;
   white-space: nowrap;
   background: transparent;
   border: 0;
   border-radius: $radius-md;
-  cursor: pointer;
-  transition:
-    background-color $transition-duration-fast $transition-easing-standard,
-    color $transition-duration-fast $transition-easing-standard;
 }
 
 .sidebar:hover .sidebar-pin-button,
@@ -52,6 +45,10 @@
 .sidebar-pin-button:hover {
   background: $color-border-subtle;
   color: $color-text-primary;
+}
+
+.sidebar-pin-button:focus-visible {
+  background: $color-border-subtle;
 }
 
 .sidebar-pin-button-icon {

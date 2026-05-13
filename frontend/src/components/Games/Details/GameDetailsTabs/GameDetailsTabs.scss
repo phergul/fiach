@@ -16,7 +16,6 @@ $game-details-tabs-tab-height: 3.25rem;
   background: transparent;
   border: 0;
   border-bottom: $app-border-width solid transparent;
-  cursor: pointer;
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
 }
@@ -24,7 +23,6 @@ $game-details-tabs-tab-height: 3.25rem;
 .game-details-tabs-tab:hover,
 .game-details-tabs-tab:focus-visible {
   color: $color-text-primary;
-  outline: none;
 }
 
 .game-details-tabs-tab-active {

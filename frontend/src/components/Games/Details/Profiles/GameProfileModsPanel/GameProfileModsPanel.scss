@@ -94,23 +94,8 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
 }
 
 .game-profile-mods-panel-button,
-.game-profile-mods-panel-add-button,
-.game-profile-mods-panel-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  cursor: pointer;
-}
-
-.game-profile-mods-panel-button,
 .game-profile-mods-panel-add-button {
   min-height: $game-profile-mods-panel-control-height;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
   white-space: nowrap;
 }
 
@@ -120,20 +105,7 @@ $game-profile-mods-panel-mobile-breakpoint: 56rem;
   flex: 0 0 $game-profile-mods-panel-control-height;
 }
 
-.game-profile-mods-panel-button:hover,
-.game-profile-mods-panel-button:focus-visible,
-.game-profile-mods-panel-add-button:hover,
-.game-profile-mods-panel-add-button:focus-visible,
-.game-profile-mods-panel-icon-button:hover,
-.game-profile-mods-panel-icon-button:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
-}
-
-.game-profile-mods-panel-select:disabled,
-.game-profile-mods-panel-button:disabled,
-.game-profile-mods-panel-add-button:disabled,
-.game-profile-mods-panel-icon-button:disabled {
+.game-profile-mods-panel-select:disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }

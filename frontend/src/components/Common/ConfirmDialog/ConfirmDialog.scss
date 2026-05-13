@@ -56,18 +56,6 @@ $confirm-dialog-width: 26rem;
 
 .confirm-dialog-button {
   min-height: $input-height;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  cursor: pointer;
-}
-
-.confirm-dialog-button:hover,
-.confirm-dialog-button:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
 }
 
 .confirm-dialog-button-danger {

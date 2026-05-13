@@ -4,18 +4,13 @@ $game-profiles-create-form-control-height: 2.75rem;
 $game-profiles-create-form-toggle-height: 3.25rem;
 
 .game-profiles-create-form-toggle {
-  display: flex;
   width: 100%;
   min-height: $game-profiles-create-form-toggle-height;
-  align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
   padding: 0 $spacing-xl;
-  color: $color-text-primary;
   background: $color-background;
   border: 0;
   border-bottom: $app-border;
-  cursor: pointer;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   text-align: left;
@@ -25,7 +20,6 @@ $game-profiles-create-form-toggle-height: 3.25rem;
 .game-profiles-create-form-toggle:focus-visible {
   color: $color-text-primary;
   background: rgba($color-surface, 0.42);
-  outline: none;
 }
 
 .game-profiles-create-form-toggle-copy {
@@ -84,17 +78,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
 }
 
 .game-profiles-create-form-button {
-  display: inline-flex;
   min-height: $input-height;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  cursor: pointer;
   white-space: nowrap;
 }
 
@@ -102,13 +86,6 @@ $game-profiles-create-form-toggle-height: 3.25rem;
   background: $color-surface-elevated;
 }
 
-.game-profiles-create-form-button:hover,
-.game-profiles-create-form-button:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
-}
-
-.game-profiles-create-form-button:disabled,
 .game-profiles-create-form-input:disabled {
   cursor: not-allowed;
   opacity: 0.58;

@@ -25,7 +25,6 @@ $game-profiles-list-item-mobile-breakpoint: 56rem;
 }
 
 .game-profiles-list-item-selector {
-  display: flex;
   width: 100%;
   min-width: 0;
   min-height: $game-profiles-list-item-min-height;
@@ -37,14 +36,12 @@ $game-profiles-list-item-mobile-breakpoint: 56rem;
   color: inherit;
   background: transparent;
   border: 0;
-  cursor: pointer;
   text-align: left;
 }
 
 .game-profiles-list-item-selector:hover,
 .game-profiles-list-item-selector:focus-visible {
   background: rgba($color-surface, 0.42);
-  outline: none;
 }
 
 .game-profiles-list-item-title {
@@ -100,26 +97,11 @@ $game-profiles-list-item-mobile-breakpoint: 56rem;
 }
 
 .game-profiles-list-item-icon-button {
-  display: inline-flex;
   width: $game-profiles-list-item-control-height;
   height: $game-profiles-list-item-control-height;
   flex: 0 0 $game-profiles-list-item-control-height;
-  align-items: center;
-  justify-content: center;
-  color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  cursor: pointer;
 }
 
-.game-profiles-list-item-icon-button:hover,
-.game-profiles-list-item-icon-button:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
-}
-
-.game-profiles-list-item-icon-button:disabled,
 .game-profiles-list-item-input:disabled {
   cursor: not-allowed;
   opacity: 0.58;

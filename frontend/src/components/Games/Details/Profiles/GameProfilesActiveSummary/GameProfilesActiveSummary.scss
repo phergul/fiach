@@ -31,29 +31,8 @@
 }
 
 .game-profiles-active-summary-button {
-  display: inline-flex;
   min-height: $input-height;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  cursor: pointer;
   white-space: nowrap;
-}
-
-.game-profiles-active-summary-button:hover,
-.game-profiles-active-summary-button:focus-visible {
-  border-color: $color-border-strong;
-  outline: none;
-}
-
-.game-profiles-active-summary-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }
 
 .game-profiles-active-summary-button-icon {
