@@ -5,8 +5,9 @@
   align-items: center;
   justify-content: space-between;
   gap: $spacing-lg;
-  padding: $spacing-sm $spacing-md $spacing-sm $spacing-xl;
+  padding: $spacing-md $spacing-md $spacing-md $spacing-xl;
   border-bottom: $app-border;
+  background: rgba($color-surface, 0.42);
 }
 
 .game-profiles-active-summary-copy {
@@ -17,14 +18,14 @@
 
 .game-profiles-active-summary-label {
   color: $color-text-subtle;
-  font-size: $font-size-sm;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
 }
 
 .game-profiles-active-summary-name {
   overflow-wrap: anywhere;
   color: $color-text-primary;
-  font-size: $font-size-xl;
+  font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
 }
 

@@ -95,11 +95,11 @@ $game-profile-assigned-mod-row-hidden-input-offset: -0.0625rem;
     left $transition-duration-fast $transition-easing-standard;
 }
 
-.game-profile-assigned-mod-row-toggle input:checked + .game-profile-assigned-mod-row-toggle-control {
+.game-profile-assigned-mod-row-toggle input:checked+.game-profile-assigned-mod-row-toggle-control {
   border-color: $color-success;
 }
 
-.game-profile-assigned-mod-row-toggle input:checked + .game-profile-assigned-mod-row-toggle-control::after {
+.game-profile-assigned-mod-row-toggle input:checked+.game-profile-assigned-mod-row-toggle-control::after {
   left: calc(100% - $game-profile-assigned-mod-row-toggle-knob-size - $spacing-xs);
   background: $color-success;
 }

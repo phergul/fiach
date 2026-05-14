@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, Plus, Menu } from 'lucide-react';
 
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
@@ -53,8 +54,26 @@ export const GameDetails = () => {
     >
       <div className="game-details-toolbar">
         <Link className="game-details-back-link" to="/library">
+          <ArrowLeft className="game-details-toolbar-icon" aria-hidden="true" />
           Back
         </Link>
+        <div className="game-details-toolbar-actions">
+          <button
+            className="game-details-toolbar-button game-details-import-mods"
+            type="button"
+          // onClick={}
+          >
+            <Plus className="game-details-toolbar-icon" aria-hidden="true" />
+            <span>Import Mods</span>
+          </button>
+          <button
+            className="game-details-toolbar-button game-details-toolbar-icon-button"
+            title="Game actions"
+            type="button"
+          >
+            <Menu className="game-details-toolbar-icon" aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       {isWaitingForGame && <GameDetailsState />}

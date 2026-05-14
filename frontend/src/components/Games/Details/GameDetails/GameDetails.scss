@@ -1,6 +1,10 @@
 @use '@styles' as *;
 
 $game-details-toolbar-height: 3.5rem;
+$game-details-toolbar-button-height: 2.25rem;
+$game-details-toolbar-import-width: 9rem;
+$game-details-toolbar-menu-width: 2.25rem;
+$game-details-toolbar-icon-size: 1.25rem;
 
 .game-details {
   display: flex;
@@ -19,16 +23,21 @@ $game-details-toolbar-height: 3.5rem;
   min-height: $game-details-toolbar-height;
   align-items: center;
   justify-content: space-between;
-  padding: 0 $spacing-xl;
+  padding: 0 $spacing-md;
   background: $color-background;
   border-bottom: $app-border;
 }
 
 .game-details-back-link {
+  display: inline-flex;
+  min-height: $game-details-toolbar-button-height;
+  align-items: center;
+  gap: $spacing-xs;
   width: fit-content;
   color: $color-text-subtle;
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
   text-decoration: none;
 }
 
@@ -36,4 +45,37 @@ $game-details-toolbar-height: 3.5rem;
 .game-details-back-link:focus-visible {
   color: $color-text-primary;
   outline: none;
+}
+
+.game-details-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-left: auto;
+}
+
+.game-details-toolbar-button {
+  min-height: $game-details-toolbar-button-height;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  padding: 0;
+}
+
+.game-details-import-mods {
+  width: $game-details-toolbar-import-width;
+}
+
+.game-details-toolbar-icon-button {
+  width: $game-details-toolbar-menu-width;
+  padding: 0;
+}
+
+.game-details-toolbar-icon {
+  width: $game-details-toolbar-icon-size;
+  height: $game-details-toolbar-icon-size;
+  flex: 0 0 $game-details-toolbar-icon-size;
+  stroke-width: 1.8;
 }

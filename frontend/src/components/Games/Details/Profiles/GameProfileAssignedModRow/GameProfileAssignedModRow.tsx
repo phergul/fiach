@@ -38,9 +38,6 @@ export const GameProfileAssignedModRow = ({
             type="checkbox"
           />
           <span className="game-profile-assigned-mod-row-toggle-control" aria-hidden="true" />
-          <span className="game-profile-assigned-mod-row-toggle-text">
-            {mod.Enabled ? 'Enabled' : 'Disabled'}
-          </span>
         </label>
 
         <button
