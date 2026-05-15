@@ -181,6 +181,7 @@ export class StoredGame {
     "SourceID": string;
     "Available": boolean;
     "LastSeenAt": string;
+    "ModStoragePathOverride": string | null;
 
     /** Creates a new StoredGame instance. */
     constructor($$source: Partial<StoredGame> = {}) {
@@ -204,6 +205,9 @@ export class StoredGame {
         }
         if (!("LastSeenAt" in $$source)) {
             this["LastSeenAt"] = "";
+        }
+        if (!("ModStoragePathOverride" in $$source)) {
+            this["ModStoragePathOverride"] = null;
         }
 
         Object.assign(this, $$source);

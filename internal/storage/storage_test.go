@@ -2,13 +2,11 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/pressly/goose/v3"
 )
 
 func TestOpenCreatesDatabaseFile(t *testing.T) {
@@ -69,8 +67,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 3 {
-		t.Fatalf("goose version = %d, want 3", version)
+	if version != 1 {
+		t.Fatalf("goose version = %d, want 1", version)
 	}
 
 	for _, table := range []string{
@@ -127,7 +125,7 @@ func TestMigrateUpAddsProfileActiveState(t *testing.T) {
 	}
 }
 
-func TestProfileActiveStateDownMigrationPreservesProfiles(t *testing.T) {
+func TestMigrateUpAddsModStorageConfiguration(t *testing.T) {
 	t.Parallel()
 
 	store := openStore(t)
@@ -137,46 +135,8 @@ func TestProfileActiveStateDownMigrationPreservesProfiles(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	result, err := store.DB().Exec(`
-		INSERT INTO games (name, install_path)
-		VALUES (?, ?)
-	`, "Skyrim", "/games/skyrim")
-	if err != nil {
-		t.Fatalf("insert game: %v", err)
-	}
-	gameID, err := result.LastInsertId()
-	if err != nil {
-		t.Fatalf("game LastInsertId(): %v", err)
-	}
-
-	if _, err := store.DB().Exec(`
-		INSERT INTO profiles (game_id, name, is_active)
-		VALUES (?, ?, 1)
-	`, gameID, "Default"); err != nil {
-		t.Fatalf("insert profile: %v", err)
-	}
-
-	if err := runGoose(store.DB().DB, func(db *sql.DB, dir string, opts ...goose.OptionsFunc) error {
-		return goose.DownTo(db, dir, 2, opts...)
-	}); err != nil {
-		t.Fatalf("goose DownTo(2) error = %v", err)
-	}
-
-	if columnExists(t, store, "profiles", "is_active") {
-		t.Fatal("profiles.is_active exists after down migration, want removed")
-	}
-
-	var count int
-	if err := store.DB().Get(&count, `
-		SELECT COUNT(*)
-		FROM profiles
-		WHERE game_id = ?
-			AND name = ?
-	`, gameID, "Default"); err != nil {
-		t.Fatalf("count preserved profiles: %v", err)
-	}
-	if count != 1 {
-		t.Fatalf("preserved profile count = %d, want 1", count)
+	if !columnExists(t, store, "games", "mod_storage_path_override") {
+		t.Fatal("expected games.mod_storage_path_override column to exist")
 	}
 }
 
@@ -461,8 +421,146 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 3 {
-		t.Fatalf("goose version = %d, want 3", version)
+	if version != 1 {
+		t.Fatalf("goose version = %d, want 1", version)
+	}
+}
+
+func TestGlobalModStorageRootCanBeSetUpdatedAndRead(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	root, err := store.GetGlobalModStorageRoot(context.Background())
+	if err != nil {
+		t.Fatalf("GetGlobalModStorageRoot() missing error = %v", err)
+	}
+	if root != "" {
+		t.Fatalf("GetGlobalModStorageRoot() = %q, want empty missing root", root)
+	}
+
+	if err := store.SetGlobalModStorageRoot(context.Background(), "/mods/one"); err != nil {
+		t.Fatalf("SetGlobalModStorageRoot() insert error = %v", err)
+	}
+	if err := store.SetGlobalModStorageRoot(context.Background(), "/mods/two"); err != nil {
+		t.Fatalf("SetGlobalModStorageRoot() update error = %v", err)
+	}
+
+	root, err = store.GetGlobalModStorageRoot(context.Background())
+	if err != nil {
+		t.Fatalf("GetGlobalModStorageRoot() error = %v", err)
+	}
+	if root != "/mods/two" {
+		t.Fatalf("GetGlobalModStorageRoot() = %q, want updated root", root)
+	}
+}
+
+func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	if _, err := store.SetGameModStoragePathOverride(context.Background(), gameID, "/custom/skyrim"); err != nil {
+		t.Fatalf("SetGameModStoragePathOverride() error = %v", err)
+	}
+
+	path, err := store.ResolveGameModStoragePath(context.Background(), gameID, "/global/mods")
+	if err != nil {
+		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
+	}
+	if path != "/custom/skyrim" {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want override path", path)
+	}
+}
+
+func TestResolveGameModStoragePathUsesSanitizedGameNameAndInternalID(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertStoredGameWithID(t, store, `  Skyrim: Special/Edition?  `, "/games/skyrim", GameSourceManual, "", true)
+	root := filepath.Join(t.TempDir(), "managed")
+
+	path, err := store.ResolveGameModStoragePath(context.Background(), gameID, root)
+	if err != nil {
+		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
+	}
+
+	want := filepath.Join(root, "Skyrim- Special-Edition-"+strconv.FormatInt(gameID, 10))
+	if path != want {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, want)
+	}
+}
+
+func TestResolveGameModStoragePathRequiresGlobalRootWithoutOverride(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+
+	_, err := store.ResolveGameModStoragePath(context.Background(), gameID, "")
+	if err == nil {
+		t.Fatal("ResolveGameModStoragePath() error = nil, want missing root error")
+	}
+	if !strings.Contains(err.Error(), "global mod storage root is not configured") {
+		t.Fatalf("ResolveGameModStoragePath() error = %q, want missing root context", err.Error())
+	}
+}
+
+func TestChangingGlobalModStorageRootDoesNotMoveExistingModRows(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	if _, err := store.DB().Exec(`
+		INSERT INTO mods (game_id, name, source_path)
+		VALUES (?, ?, ?)
+	`, gameID, "SkyUI", "/old/root/SkyUI"); err != nil {
+		t.Fatalf("insert mod: %v", err)
+	}
+
+	if err := store.SetGlobalModStorageRoot(context.Background(), "/new/root"); err != nil {
+		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
+	}
+
+	var sourcePath string
+	if err := store.DB().Get(&sourcePath, `
+		SELECT source_path
+		FROM mods
+		WHERE game_id = ?
+	`, gameID); err != nil {
+		t.Fatalf("select mod source path: %v", err)
+	}
+	if sourcePath != "/old/root/SkyUI" {
+		t.Fatalf("source_path = %q, want existing path unchanged", sourcePath)
 	}
 }
 
@@ -488,17 +586,31 @@ func closeStore(t *testing.T, store *Store) {
 func insertStoredGame(t *testing.T, store *Store, name string, installPath string, source string, sourceID string, available bool) {
 	t.Helper()
 
+	insertStoredGameWithID(t, store, name, installPath, source, sourceID, available)
+}
+
+func insertStoredGameWithID(t *testing.T, store *Store, name string, installPath string, source string, sourceID string, available bool) int64 {
+	t.Helper()
+
 	availableValue := 0
 	if available {
 		availableValue = 1
 	}
 
-	if _, err := store.DB().Exec(`
+	result, err := store.DB().Exec(`
 		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
 		VALUES (?, ?, ?, ?, ?, ?)
-	`, name, installPath, source, sourceID, availableValue, "2026-05-10T00:00:00Z"); err != nil {
+	`, name, installPath, source, sourceID, availableValue, "2026-05-10T00:00:00Z")
+	if err != nil {
 		t.Fatalf("insert stored game: %v", err)
 	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("stored game LastInsertId(): %v", err)
+	}
+
+	return id
 }
 
 func tableExists(t *testing.T, store *Store, table string) bool {

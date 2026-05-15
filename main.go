@@ -33,6 +33,7 @@ func main() {
 		Services: []application.Service{
 			application.NewService(services.NewModService(store)),
 			application.NewService(services.NewProfileService(store)),
+			application.NewService(services.NewSettingsService(store)),
 			application.NewService(services.NewSteamService(store)),
 		},
 		OnShutdown: func() {

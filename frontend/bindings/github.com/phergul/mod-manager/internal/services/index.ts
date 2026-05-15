@@ -3,9 +3,11 @@
 
 import * as ModService from "./modservice.js";
 import * as ProfileService from "./profileservice.js";
+import * as SettingsService from "./settingsservice.js";
 import * as SteamService from "./steamservice.js";
 export {
     ModService,
     ProfileService,
+    SettingsService,
     SteamService
 };
