@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { Modal } from '@components/Common/Modal/Modal';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 
 import './GameProfileAddModsModal.scss';
@@ -63,10 +64,6 @@ export const GameProfileAddModsModal = ({
     });
   }, [availableMods]);
 
-  if (!isOpen) {
-    return null;
-  }
-
   const toggleSelectedMod = (modID: number) => {
     setSelectedModIDs((currentSelectedModIDs) => {
       const nextSelectedModIDs = new Set(currentSelectedModIDs);
@@ -79,14 +76,6 @@ export const GameProfileAddModsModal = ({
     });
   };
 
-  const handleClose = () => {
-    if (isBusy) {
-      return;
-    }
-
-    onClose();
-  };
-
   const handleAddMods = async () => {
     if (selectedCount === 0) {
       return;
@@ -97,36 +86,39 @@ export const GameProfileAddModsModal = ({
   };
 
   return (
-    <div className="game-profile-add-mods-modal" role="presentation">
-      <div className="game-profile-add-mods-modal-backdrop" onClick={handleClose} aria-hidden="true" />
-
-      <section
-        className="game-profile-add-mods-modal-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="game-profile-add-mods-modal-title"
-      >
-        <header className="game-profile-add-mods-modal-header">
-          <div className="game-profile-add-mods-modal-heading">
-            <h2 className="game-profile-add-mods-modal-title" id="game-profile-add-mods-modal-title">
-              Add Mods to Profile
-            </h2>
-            <p className="game-profile-add-mods-modal-summary">
-              {availableMods.length} available for {profileName} · {selectedCount} selected
-            </p>
-          </div>
-
+    <Modal
+      bodyClassName="game-profile-add-mods-modal-body"
+      closeTitle="Close add mods"
+      description={`${availableMods.length} available for ${profileName} · ${selectedCount} selected`}
+      isBusy={isBusy}
+      isOpen={isOpen}
+      labelledByID="game-profile-add-mods-modal-title"
+      onClose={onClose}
+      panelClassName="game-profile-add-mods-modal-panel"
+      size="lg"
+      title="Add Mods to Profile"
+      footer={(
+        <>
           <button
-            className="game-profile-add-mods-modal-close"
-            disabled={isBusy}
-            onClick={handleClose}
-            title="Close add mods"
+            className="game-profile-add-mods-modal-add-button"
+            disabled={isBusy || selectedCount === 0}
+            onClick={handleAddMods}
             type="button"
           >
-            <X className="game-profile-add-mods-modal-icon" aria-hidden="true" />
+            Add Mods
           </button>
-        </header>
-
+          <button
+            className="game-profile-add-mods-modal-cancel-button"
+            disabled={isBusy}
+            onClick={onClose}
+            type="button"
+          >
+            Cancel
+          </button>
+        </>
+      )}
+    >
+      <>
         <div className="game-profile-add-mods-modal-search">
           <Search className="game-profile-add-mods-modal-search-icon" aria-hidden="true" />
           <input
@@ -139,7 +131,7 @@ export const GameProfileAddModsModal = ({
           />
         </div>
 
-        <div className="game-profile-add-mods-modal-body">
+        <div className="game-profile-add-mods-modal-list-body">
           {isGameModsLoading && (
             <StateBlock className="game-profile-add-mods-modal-state" message="Loading imported mods..." />
           )}
@@ -177,26 +169,7 @@ export const GameProfileAddModsModal = ({
             </ul>
           )}
         </div>
-
-        <footer className="game-profile-add-mods-modal-footer">
-          <button
-            className="game-profile-add-mods-modal-add-button"
-            disabled={isBusy || selectedCount === 0}
-            onClick={handleAddMods}
-            type="button"
-          >
-            Add Mods
-          </button>
-          <button
-            className="game-profile-add-mods-modal-cancel-button"
-            disabled={isBusy}
-            onClick={handleClose}
-            type="button"
-          >
-            Cancel
-          </button>
-        </footer>
-      </section>
-    </div>
+      </>
+    </Modal>
   );
 };

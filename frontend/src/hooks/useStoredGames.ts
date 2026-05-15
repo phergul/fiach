@@ -34,6 +34,12 @@ export const useStoredGames = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
+  const updateStoredGame = useCallback((updatedGame: StoredGame) => {
+    setGames((currentGames) => (
+      currentGames.map((game) => (game.ID === updatedGame.ID ? updatedGame : game))
+    ));
+  }, []);
+
   const loadGames = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
@@ -141,5 +147,6 @@ export const useStoredGames = () => {
     refreshGames,
     retryLoadGames: loadGames,
     scanError,
+    updateStoredGame,
   };
 };

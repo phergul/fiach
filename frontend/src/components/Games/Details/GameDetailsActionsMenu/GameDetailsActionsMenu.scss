@@ -1,0 +1,41 @@
+@use '@styles' as *;
+
+$game-details-actions-menu-width: 16rem;
+$game-details-actions-menu-icon-size: 1rem;
+
+.game-details-actions-menu {
+  position: absolute;
+  top: calc(100% + $spacing-xs);
+  right: 0;
+  z-index: $z-index-toast;
+  display: flex;
+  width: $game-details-actions-menu-width;
+  flex-direction: column;
+  padding: $spacing-xs;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-subtle;
+}
+
+.game-details-actions-menu-item {
+  justify-content: flex-start;
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  border-color: transparent;
+  text-align: left;
+}
+
+.game-details-actions-menu-item:hover:not(:disabled),
+.game-details-actions-menu-item:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
+  border-color: transparent;
+}
+
+.game-details-actions-menu-icon {
+  width: $game-details-actions-menu-icon-size;
+  height: $game-details-actions-menu-icon-size;
+  flex: 0 0 $game-details-actions-menu-icon-size;
+  color: $color-text-subtle;
+  stroke-width: 1.8;
+}

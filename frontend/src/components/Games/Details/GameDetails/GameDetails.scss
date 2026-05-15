@@ -55,6 +55,10 @@ $game-details-toolbar-icon-size: 1.25rem;
   margin-left: auto;
 }
 
+.game-details-actions-menu-anchor {
+  position: relative;
+}
+
 .game-details-toolbar-button {
   min-height: $game-details-toolbar-button-height;
   color: $color-text-primary;

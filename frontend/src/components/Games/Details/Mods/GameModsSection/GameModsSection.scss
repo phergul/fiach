@@ -2,21 +2,29 @@
 
 $game-mods-section-search-height: 2.75rem;
 $game-mods-section-icon-size: 1rem;
+$game-mods-section-import-width: 8.5rem;
 
 .game-mods-section {
   background: $color-background;
 }
 
-.game-mods-section-search {
-  position: relative;
+.game-mods-section-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) $game-mods-section-import-width;
+  align-items: center;
+  gap: $spacing-sm;
   padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
+}
+
+.game-mods-section-search {
+  position: relative;
 }
 
 .game-mods-section-search-icon {
   position: absolute;
   top: 50%;
-  left: calc($spacing-xl + $spacing-md);
+  left: $spacing-md;
   width: $game-mods-section-icon-size;
   height: $game-mods-section-icon-size;
   color: $color-text-muted;
@@ -28,8 +36,20 @@ $game-mods-section-icon-size: 1rem;
 .game-mods-section-search-input {
   width: 100%;
   height: $game-mods-section-search-height;
-  padding: 0 $spacing-lg 0 calc($spacing-xl + $spacing-sm);
+  padding: 0 $spacing-lg 0 calc($spacing-lg + $spacing-sm);
   border: $app-border;
+}
+
+.game-mods-section-import-button {
+  min-height: $game-mods-section-search-height;
+  padding: 0 $spacing-xs;
+}
+
+.game-mods-section-button-icon {
+  width: $game-mods-section-icon-size;
+  height: $game-mods-section-icon-size;
+  flex: 0 0 $game-mods-section-icon-size;
+  stroke-width: 1.8;
 }
 
 .game-mods-section-empty,

@@ -1,8 +1,12 @@
+import { Modal } from '@components/Common/Modal/Modal';
+
 import './ConfirmDialog.scss';
 
 interface ConfirmDialogProps {
   cancelLabel?: string;
   confirmLabel?: string;
+  confirmTone?: 'danger' | 'default';
+  isBusy?: boolean;
   isOpen: boolean;
   message: string;
   onCancel: () => void;
@@ -13,45 +17,48 @@ interface ConfirmDialogProps {
 export const ConfirmDialog = ({
   cancelLabel = 'Cancel',
   confirmLabel = 'Delete',
+  confirmTone = 'danger',
+  isBusy = false,
   isOpen,
   message,
   onCancel,
   onConfirm,
   title,
 }: ConfirmDialogProps) => {
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="confirm-dialog" role="presentation">
-      <div className="confirm-dialog-backdrop" onClick={onCancel} aria-hidden="true" />
-      <section
-        className="confirm-dialog-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-message"
-      >
-        <h2 className="confirm-dialog-title" id="confirm-dialog-title">
-          {title}
-        </h2>
-        <p className="confirm-dialog-message" id="confirm-dialog-message">
-          {message}
-        </p>
-        <div className="confirm-dialog-actions">
-          <button className="confirm-dialog-button" onClick={onCancel} type="button">
+    <Modal
+      background="surface"
+      bodyClassName="confirm-dialog-body"
+      describedByID="confirm-dialog-message"
+      isBusy={isBusy}
+      isOpen={isOpen}
+      labelledByID="confirm-dialog-title"
+      onClose={onCancel}
+      size="sm"
+      title={title}
+      footer={(
+        <>
+          <button className="confirm-dialog-button" disabled={isBusy} onClick={onCancel} type="button">
             {cancelLabel}
           </button>
           <button
-            className="confirm-dialog-button confirm-dialog-button-danger"
+            className={
+              confirmTone === 'danger'
+                ? 'confirm-dialog-button confirm-dialog-button-danger'
+                : 'confirm-dialog-button'
+            }
+            disabled={isBusy}
             onClick={onConfirm}
             type="button"
           >
             {confirmLabel}
           </button>
-        </div>
-      </section>
-    </div>
+        </>
+      )}
+    >
+      <p className="confirm-dialog-message" id="confirm-dialog-message">
+        {message}
+      </p>
+    </Modal>
   );
 };

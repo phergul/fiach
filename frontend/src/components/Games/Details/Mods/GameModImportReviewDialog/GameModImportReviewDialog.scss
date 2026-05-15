@@ -1,0 +1,68 @@
+@use '@styles' as *;
+
+$game-mod-import-review-dialog-control-height: 2.5rem;
+
+.game-mod-import-review-dialog-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.game-mod-import-review-dialog-field,
+.game-mod-import-review-dialog-path-row {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-review-dialog-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-review-dialog-input {
+  width: 100%;
+  height: $input-height;
+  padding: 0 $spacing-md;
+  border: $app-border;
+}
+
+.game-mod-import-review-dialog-paths {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.game-mod-import-review-dialog-path {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-review-dialog-error {
+  overflow-wrap: anywhere;
+  color: $color-danger;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-review-dialog-import-button,
+.game-mod-import-review-dialog-cancel-button {
+  min-height: $game-mod-import-review-dialog-control-height;
+}
+
+.game-mod-import-review-dialog-import-button {
+  background: $color-text-subtle;
+  color: $color-background;
+  border-color: $color-text-subtle;
+}
+
+.game-mod-import-review-dialog-import-button:hover:not(:disabled),
+.game-mod-import-review-dialog-import-button:focus-visible:not(:disabled) {
+  background: $color-text-primary;
+  border-color: $color-text-primary;
+}

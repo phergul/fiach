@@ -1,18 +1,43 @@
 import { useState } from 'react';
 
+import { Dialogs } from '@wailsio/runtime';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Menu } from 'lucide-react';
 
+import { ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import {
+  ResolveGameModStoragePath,
+  SetGameModStoragePathOverride,
+} from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
+import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { useToast } from '@components/Common/Toast/Toast';
+import { GameDetailsActionsMenu } from '@components/Games/Details/GameDetailsActionsMenu/GameDetailsActionsMenu';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
 import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
+import { GameModImportReviewDialog } from '@components/Games/Details/Mods/GameModImportReviewDialog/GameModImportReviewDialog';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useGameMods, useGameProfiles, useStoredGames } from '@hooks';
+import { getErrorMessage } from '@utils';
 
 import './GameDetails.scss';
+
+interface ImportReviewState {
+  initialName: string;
+  sourcePath: string;
+  targetPath: string;
+}
+
+interface PendingStorageOverride {
+  confirmLabel: string;
+  path: string;
+  successMessage: string;
+  title: string;
+}
 
 const parseGameID = (gameID: string | undefined) => {
   if (gameID === undefined || gameID.trim() === '') {
@@ -27,10 +52,42 @@ const parseGameID = (gameID: string | undefined) => {
   return parsedGameID;
 };
 
+const getFolderName = (path: string) => {
+  const trimmedPath = path.trim().replace(/[\\/]+$/, '');
+  const folderName = trimmedPath.split(/[\\/]/).pop();
+
+  return folderName && folderName.trim() !== '' ? folderName : 'Imported Mod';
+};
+
+const openDirectory = async (title: string, buttonText: string, canCreateDirectories: boolean) => {
+  const selectedPath = await Dialogs.OpenFile({
+    AllowsMultipleSelection: false,
+    ButtonText: buttonText,
+    CanChooseDirectories: true,
+    CanChooseFiles: false,
+    CanCreateDirectories: canCreateDirectories,
+    Title: title,
+  });
+
+  if (Array.isArray(selectedPath)) {
+    const firstSelectedPath = selectedPath[0];
+    return firstSelectedPath && firstSelectedPath.trim() !== '' ? firstSelectedPath : null;
+  }
+
+  return selectedPath.trim() === '' ? null : selectedPath;
+};
+
 export const GameDetails = () => {
   const { gameId } = useParams();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
-  const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
+  const [importReview, setImportReview] = useState<ImportReviewState | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [pendingStorageOverride, setPendingStorageOverride] = useState<PendingStorageOverride | null>(null);
+  const [isApplyingStorageOverride, setIsApplyingStorageOverride] = useState(false);
+  const { games, isLoading, isScanning, loadError, retryLoadGames, updateStoredGame } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
@@ -47,6 +104,148 @@ export const GameDetails = () => {
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
 
+  const startImportFlow = async () => {
+    if (game === undefined || isImporting) {
+      return;
+    }
+
+    setImportError(null);
+
+    try {
+      const sourcePath = await openDirectory('Select mod folder', 'Review Import', false);
+      if (sourcePath === null) {
+        return;
+      }
+
+      const targetPath = await ResolveGameModStoragePath(game.ID);
+      setImportReview({
+        initialName: getFolderName(sourcePath),
+        sourcePath,
+        targetPath,
+      });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      addToast({
+        message,
+        tone: 'error',
+      });
+    }
+  };
+
+  const closeImportReview = () => {
+    if (isImporting) {
+      return;
+    }
+
+    setImportReview(null);
+    setImportError(null);
+  };
+
+  const importReviewedMod = async (name: string) => {
+    if (game === undefined || importReview === null || isImporting) {
+      return;
+    }
+
+    setIsImporting(true);
+    setImportError(null);
+
+    try {
+      const importedMod = await ImportModFolder(game.ID, name, importReview.sourcePath);
+      setImportReview(null);
+
+      try {
+        await gameModManager.refreshMods();
+      } catch (refreshError) {
+        addToast({
+          message: getErrorMessage(refreshError),
+          tone: 'error',
+        });
+      }
+
+      addToast({
+        message: `Imported ${importedMod.Name}.`,
+        tone: 'success',
+      });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setImportError(message);
+      addToast({
+        message,
+        tone: 'error',
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const requestSetStorageOverride = async () => {
+    if (game === undefined || isApplyingStorageOverride) {
+      return;
+    }
+
+    setIsActionsMenuOpen(false);
+
+    try {
+      const path = await openDirectory('Select mod storage override', 'Use Folder', true);
+      if (path === null) {
+        return;
+      }
+
+      setPendingStorageOverride({
+        confirmLabel: 'Set Override',
+        path,
+        successMessage: 'Mod storage override set.',
+        title: 'Set Storage Override?',
+      });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      addToast({
+        message,
+        tone: 'error',
+      });
+    }
+  };
+
+  const requestClearStorageOverride = () => {
+    if (game === undefined || isApplyingStorageOverride) {
+      return;
+    }
+
+    setIsActionsMenuOpen(false);
+    setPendingStorageOverride({
+      confirmLabel: 'Clear Override',
+      path: '',
+      successMessage: 'Mod storage override cleared.',
+      title: 'Clear Storage Override?',
+    });
+  };
+
+  const applyStorageOverride = async () => {
+    if (game === undefined || pendingStorageOverride === null || isApplyingStorageOverride) {
+      return;
+    }
+
+    setIsApplyingStorageOverride(true);
+
+    try {
+      const updatedGame: StoredGame = await SetGameModStoragePathOverride(game.ID, pendingStorageOverride.path);
+      updateStoredGame(updatedGame);
+      addToast({
+        message: pendingStorageOverride.successMessage,
+        tone: 'success',
+      });
+      setPendingStorageOverride(null);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      addToast({
+        message,
+        tone: 'error',
+      });
+    } finally {
+      setIsApplyingStorageOverride(false);
+    }
+  };
+
   return (
     <section
       className={heroArtworkSource === '' ? 'game-details' : 'game-details game-details-with-backdrop'}
@@ -60,19 +259,34 @@ export const GameDetails = () => {
         <div className="game-details-toolbar-actions">
           <button
             className="game-details-toolbar-button game-details-import-mods"
+            disabled={game === undefined || isImporting}
+            onClick={startImportFlow}
             type="button"
-          // onClick={}
           >
             <Plus className="game-details-toolbar-icon" aria-hidden="true" />
             <span>Import Mods</span>
           </button>
-          <button
-            className="game-details-toolbar-button game-details-toolbar-icon-button"
-            title="Game actions"
-            type="button"
-          >
-            <Menu className="game-details-toolbar-icon" aria-hidden="true" />
-          </button>
+          <div className="game-details-actions-menu-anchor">
+            <button
+              className="game-details-toolbar-button game-details-toolbar-icon-button"
+              disabled={game === undefined}
+              onClick={() => setIsActionsMenuOpen((currentValue) => !currentValue)}
+              title="Game actions"
+              type="button"
+              aria-expanded={isActionsMenuOpen}
+            >
+              <Menu className="game-details-toolbar-icon" aria-hidden="true" />
+            </button>
+
+            {game !== undefined && (
+              <GameDetailsActionsMenu
+                game={game}
+                isOpen={isActionsMenuOpen}
+                onClearStorageOverride={requestClearStorageOverride}
+                onSetStorageOverride={requestSetStorageOverride}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -113,12 +327,42 @@ export const GameDetails = () => {
           <GameDetailsTabs activeTab={activeTab} onActiveTabChange={setActiveTab} />
 
           {activeTab === 'mods' ? (
-            <GameModsSection modManager={gameModManager} />
+            <GameModsSection
+              isImportDisabled={isImporting}
+              modManager={gameModManager}
+              onImportMod={startImportFlow}
+            />
           ) : (
             <GameProfilesSection gameModManager={gameModManager} profileManager={profileManager} />
           )}
         </>
       )}
+
+      <GameModImportReviewDialog
+        error={importError}
+        initialName={importReview?.initialName ?? ''}
+        isBusy={isImporting}
+        isOpen={importReview !== null}
+        onClose={closeImportReview}
+        onImport={importReviewedMod}
+        sourcePath={importReview?.sourcePath ?? ''}
+        targetPath={importReview?.targetPath ?? ''}
+      />
+
+      <ConfirmDialog
+        confirmLabel={pendingStorageOverride?.confirmLabel}
+        confirmTone="default"
+        isBusy={isApplyingStorageOverride}
+        isOpen={pendingStorageOverride !== null}
+        message="Changing this setting affects future imports only. Existing imported mod folders and mod rows will not be moved."
+        onCancel={() => {
+          if (!isApplyingStorageOverride) {
+            setPendingStorageOverride(null);
+          }
+        }}
+        onConfirm={applyStorageOverride}
+        title={pendingStorageOverride?.title ?? 'Confirm Storage Change'}
+      />
     </section>
   );
 };

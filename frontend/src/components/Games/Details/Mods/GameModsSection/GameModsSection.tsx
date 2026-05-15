@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import type { UseGameModsResult } from '@hooks';
@@ -8,10 +8,16 @@ import type { UseGameModsResult } from '@hooks';
 import './GameModsSection.scss';
 
 interface GameModsSectionProps {
+  isImportDisabled?: boolean;
   modManager: UseGameModsResult;
+  onImportMod: () => void;
 }
 
-export const GameModsSection = ({ modManager }: GameModsSectionProps) => {
+export const GameModsSection = ({
+  isImportDisabled = false,
+  modManager,
+  onImportMod,
+}: GameModsSectionProps) => {
   const { isLoading, loadError, mods, refreshMods } = modManager;
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
@@ -30,16 +36,28 @@ export const GameModsSection = ({ modManager }: GameModsSectionProps) => {
 
   return (
     <section className="game-mods-section" aria-label="Imported mods">
-      <div className="game-mods-section-search">
-        <Search className="game-mods-section-search-icon" aria-hidden="true" />
-        <input
-          className="game-mods-section-search-input"
-          disabled={isLoading || mods.length === 0}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="Search mods..."
-          type="search"
-          value={searchQuery}
-        />
+      <div className="game-mods-section-controls">
+        <div className="game-mods-section-search">
+          <Search className="game-mods-section-search-icon" aria-hidden="true" />
+          <input
+            className="game-mods-section-search-input"
+            disabled={isLoading || mods.length === 0}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search mods..."
+            type="search"
+            value={searchQuery}
+          />
+        </div>
+
+        <button
+          className="game-mods-section-import-button"
+          disabled={isImportDisabled}
+          onClick={onImportMod}
+          type="button"
+        >
+          <Plus className="game-mods-section-button-icon" aria-hidden="true" />
+          Import Mod
+        </button>
       </div>
 
       {loadError !== null && (

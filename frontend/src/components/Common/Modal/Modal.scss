@@ -1,0 +1,107 @@
+@use '@styles' as *;
+
+$modal-width-sm: 26rem;
+$modal-width-md: 42rem;
+$modal-width-lg: 48rem;
+$modal-max-height: 80vh;
+$modal-control-height: 2.5rem;
+$modal-icon-size: 1rem;
+
+.modal {
+  position: fixed;
+  z-index: $z-index-toast + 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: $spacing-lg;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 56%);
+}
+
+.modal-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min($modal-width-md, 100%);
+  max-height: $modal-max-height;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-subtle;
+}
+
+.modal-panel-sm {
+  width: min($modal-width-sm, 100%);
+}
+
+.modal-panel-lg {
+  width: min($modal-width-lg, 100%);
+}
+
+.modal-panel-background {
+  background: $color-background;
+}
+
+.modal-panel-surface {
+  background: $color-surface;
+}
+
+.modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl $spacing-md;
+  border-bottom: $app-border;
+}
+
+.modal-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.modal-title {
+  color: $color-text-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.modal-summary {
+  overflow-wrap: anywhere;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.modal-close {
+  width: $modal-control-height;
+  height: $modal-control-height;
+  flex: 0 0 $modal-control-height;
+}
+
+.modal-body {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl $spacing-lg;
+  border-top: $app-border;
+}
+
+.modal-icon {
+  width: $modal-icon-size;
+  height: $modal-icon-size;
+  flex: 0 0 $modal-icon-size;
+  stroke-width: 1.8;
+}

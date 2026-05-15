@@ -1,52 +1,15 @@
 @use '@styles' as *;
 
-$confirm-dialog-width: 26rem;
-
-.confirm-dialog {
-  position: fixed;
-  z-index: $z-index-toast + 1;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: $spacing-lg;
-}
-
-.confirm-dialog-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgb(0 0 0 / 56%);
-}
-
-.confirm-dialog-panel {
-  position: relative;
-  z-index: 1;
+.confirm-dialog-body {
   display: flex;
-  width: min($confirm-dialog-width, 100%);
   flex-direction: column;
   gap: $spacing-md;
-  padding: $spacing-lg;
-  background: $color-surface;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-subtle;
-}
-
-.confirm-dialog-title {
-  color: $color-text-primary;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  line-height: $line-height-heading;
+  padding: $spacing-md $spacing-xl;
 }
 
 .confirm-dialog-message {
   color: $color-text-subtle;
   font-size: $font-size-base;
-}
-
-.confirm-dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: $spacing-sm;
 }
 
 .confirm-dialog-button {
