@@ -56,6 +56,48 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	return mods, nil
 }
 
+func (s *Store) CreateMod(ctx context.Context, gameID int64, name string, sourcePath string, originalSourcePath string) (mod Mod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("insert mod row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return Mod{}, errors.New("store is not open")
+	}
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return Mod{}, errors.New("mod name is required")
+	}
+
+	sourcePath = cleanOptionalPath(sourcePath)
+	if sourcePath == "" {
+		return Mod{}, errors.New("managed mod source path is required")
+	}
+
+	originalSourcePath, err = CanonicalModOriginalSourcePath(originalSourcePath)
+	if err != nil {
+		return Mod{}, err
+	}
+
+	result, err := s.db.ExecContext(ctx, `
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, name, sourcePath, originalSourcePath)
+	if err != nil {
+		return Mod{}, err
+	}
+
+	modID, err := result.LastInsertId()
+	if err != nil {
+		return Mod{}, fmt.Errorf("get created mod id: %w", err)
+	}
+
+	return getModByID(ctx, s.db, modID)
+}
+
 func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod Mod, found bool, err error) {
 	defer func() {
 		if err != nil {

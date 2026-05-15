@@ -68,6 +68,70 @@ func TestFindModByOriginalSourcePathUsesCanonicalPathAndGame(t *testing.T) {
 	}
 }
 
+func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	originalPath, err := CanonicalModOriginalSourcePath(filepath.Join(t.TempDir(), "SkyUI"))
+	if err != nil {
+		t.Fatalf("CanonicalModOriginalSourcePath() error = %v", err)
+	}
+
+	mod, err := store.CreateMod(context.Background(), gameID, " SkyUI ", "/managed/skyui", originalPath)
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+
+	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath {
+		t.Fatalf("CreateMod() = %+v, want persisted mod fields", mod)
+	}
+}
+
+func TestCreateModRequiresNameAndPaths(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	tests := []struct {
+		name               string
+		modName            string
+		sourcePath         string
+		originalSourcePath string
+	}{
+		{
+			name:               "missing name",
+			modName:            " ",
+			sourcePath:         "/managed/skyui",
+			originalSourcePath: "/imports/skyui",
+		},
+		{
+			name:               "missing managed source",
+			modName:            "SkyUI",
+			sourcePath:         " ",
+			originalSourcePath: "/imports/skyui",
+		},
+		{
+			name:               "missing original source",
+			modName:            "SkyUI",
+			sourcePath:         "/managed/skyui",
+			originalSourcePath: " ",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := store.CreateMod(context.Background(), gameID, tt.modName, tt.sourcePath, tt.originalSourcePath); err == nil {
+				t.Fatal("CreateMod() error = nil, want validation error")
+			}
+		})
+	}
+}
+
 func TestOriginalSourcePathIsUniquePerGame(t *testing.T) {
 	t.Parallel()
 

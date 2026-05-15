@@ -9,6 +9,12 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
+export function ImportModFolder(gameID: number, name: string, sourceFolderPath: string): $CancellablePromise<storage$0.Mod> {
+    return $Call.ByID(2686117309, gameID, name, sourceFolderPath).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function ListMods(gameID: number): $CancellablePromise<storage$0.Mod[]> {
     return $Call.ByID(2000775995, gameID).then(($result: any) => {
         return $$createType1($result);
