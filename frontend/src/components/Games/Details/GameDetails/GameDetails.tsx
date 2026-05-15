@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { Dialogs } from '@wailsio/runtime';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Menu } from 'lucide-react';
 
@@ -22,7 +21,7 @@ import { GameModImportReviewDialog } from '@components/Games/Details/Mods/GameMo
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useGameMods, useGameProfiles, useStoredGames } from '@hooks';
-import { getErrorMessage } from '@utils';
+import { getErrorMessage, openDirectory } from '@utils';
 
 import './GameDetails.scss';
 
@@ -57,24 +56,6 @@ const getFolderName = (path: string) => {
   const folderName = trimmedPath.split(/[\\/]/).pop();
 
   return folderName && folderName.trim() !== '' ? folderName : 'Imported Mod';
-};
-
-const openDirectory = async (title: string, buttonText: string, canCreateDirectories: boolean) => {
-  const selectedPath = await Dialogs.OpenFile({
-    AllowsMultipleSelection: false,
-    ButtonText: buttonText,
-    CanChooseDirectories: true,
-    CanChooseFiles: false,
-    CanCreateDirectories: canCreateDirectories,
-    Title: title,
-  });
-
-  if (Array.isArray(selectedPath)) {
-    const firstSelectedPath = selectedPath[0];
-    return firstSelectedPath && firstSelectedPath.trim() !== '' ? firstSelectedPath : null;
-  }
-
-  return selectedPath.trim() === '' ? null : selectedPath;
 };
 
 export const GameDetails = () => {
@@ -112,7 +93,10 @@ export const GameDetails = () => {
     setImportError(null);
 
     try {
-      const sourcePath = await openDirectory('Select mod folder', 'Review Import', false);
+      const sourcePath = await openDirectory({
+        buttonText: 'Review Import',
+        title: 'Select mod folder',
+      });
       if (sourcePath === null) {
         return;
       }
@@ -186,7 +170,11 @@ export const GameDetails = () => {
     setIsActionsMenuOpen(false);
 
     try {
-      const path = await openDirectory('Select mod storage override', 'Use Folder', true);
+      const path = await openDirectory({
+        buttonText: 'Use Folder',
+        canCreateDirectories: true,
+        title: 'Select mod storage override',
+      });
       if (path === null) {
         return;
       }

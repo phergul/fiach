@@ -1,0 +1,30 @@
+@use '@styles' as *;
+
+$settings-section-header-min-height: 4rem;
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  border-bottom: $app-border;
+}
+
+.settings-section-header {
+  display: flex;
+  min-height: $settings-section-header-min-height;
+  align-items: center;
+  padding: 0 $spacing-xl;
+  background: $color-surface;
+  border-bottom: $app-border;
+}
+
+.settings-section-title {
+  color: $color-text-subtle;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.settings-section-content {
+  display: flex;
+  flex-direction: column;
+}

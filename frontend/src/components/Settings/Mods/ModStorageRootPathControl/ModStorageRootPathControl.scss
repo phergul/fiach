@@ -1,0 +1,54 @@
+@use '@styles' as *;
+
+$mod-storage-root-path-control-button-height: 2.25rem;
+$mod-storage-root-path-control-icon-size: 1.125rem;
+$mod-storage-root-path-control-value-min-height: $input-height;
+
+.mod-storage-root-path-control {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.mod-storage-root-path-control-value {
+  display: flex;
+  min-height: $mod-storage-root-path-control-value-min-height;
+  align-items: center;
+  padding: 0 $spacing-md;
+  overflow: hidden;
+  color: $color-text-primary;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mod-storage-root-path-control-value-empty {
+  color: $color-text-muted;
+}
+
+.mod-storage-root-path-control-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.mod-storage-root-path-control-button {
+  min-height: $mod-storage-root-path-control-button-height;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.mod-storage-root-path-control-button-icon {
+  width: $mod-storage-root-path-control-icon-size;
+  height: $mod-storage-root-path-control-icon-size;
+  flex: 0 0 $mod-storage-root-path-control-icon-size;
+  stroke-width: 1.8;
+}

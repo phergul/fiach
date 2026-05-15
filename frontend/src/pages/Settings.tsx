@@ -1,10 +1,5 @@
-import { SectionPlaceholder } from '@components/Common/SectionPlaceholder/SectionPlaceholder';
+import { Settings as SettingsComponent } from '@components/Settings/Settings/Settings';
 
 export const Settings = () => {
-  return (
-    <SectionPlaceholder
-      title="Settings"
-      description="Configure libraries, storage, and application preferences."
-    />
-  );
+  return <SettingsComponent />;
 };
