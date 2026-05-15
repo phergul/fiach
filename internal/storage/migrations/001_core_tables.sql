@@ -7,6 +7,7 @@ CREATE TABLE games (
     source_id TEXT,
     available INTEGER NOT NULL DEFAULT 1 CHECK (available IN (0, 1)),
     last_seen_at TEXT,
+    mod_storage_path TEXT,
     mod_storage_path_override TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -17,9 +18,9 @@ CREATE TABLE mods (
     game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     source_path TEXT NOT NULL,
+    original_source_path TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(game_id, source_path)
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE profiles (
@@ -62,6 +63,7 @@ CREATE TABLE settings (
 );
 
 CREATE INDEX idx_mods_game_id ON mods(game_id);
+CREATE UNIQUE INDEX idx_mods_game_original_source_path ON mods(game_id, original_source_path);
 CREATE UNIQUE INDEX idx_games_source_source_id
 ON games(source, source_id)
 WHERE source_id IS NOT NULL;
@@ -78,6 +80,7 @@ DROP INDEX IF EXISTS idx_profile_mods_mod_id;
 DROP INDEX IF EXISTS idx_profiles_active_game_id;
 DROP INDEX IF EXISTS idx_profiles_game_id;
 DROP INDEX IF EXISTS idx_games_source_source_id;
+DROP INDEX IF EXISTS idx_mods_game_original_source_path;
 DROP INDEX IF EXISTS idx_mods_game_id;
 
 DROP TABLE IF EXISTS settings;

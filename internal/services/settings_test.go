@@ -3,7 +3,6 @@ package services
 import (
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -72,7 +71,7 @@ func TestSettingsServiceEnsuresGameModStoragePath(t *testing.T) {
 		t.Fatalf("EnsureGameModStoragePath() error = %v", err)
 	}
 
-	want := filepath.Join(root, "Skyrim-"+strconv.FormatInt(gameID, 10))
+	want := filepath.Join(root, storage.DefaultGameModStorageFolderName(storage.StoredGame{ID: gameID}))
 	if path != want {
 		t.Fatalf("EnsureGameModStoragePath() = %q, want %q", path, want)
 	}

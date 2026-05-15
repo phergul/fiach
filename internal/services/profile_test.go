@@ -210,9 +210,9 @@ func insertServiceProfileTestMod(t *testing.T, store *storage.Store, gameID int6
 	t.Helper()
 
 	result, err := store.DB().Exec(`
-		INSERT INTO mods (game_id, name, source_path)
-		VALUES (?, ?, ?)
-	`, gameID, name, sourcePath)
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, name, sourcePath, sourcePath)
 	if err != nil {
 		t.Fatalf("insert service profile test mod: %v", err)
 	}

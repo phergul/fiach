@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -135,8 +134,28 @@ func TestMigrateUpAddsModStorageConfiguration(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	if !columnExists(t, store, "games", "mod_storage_path_override") {
-		t.Fatal("expected games.mod_storage_path_override column to exist")
+	for _, column := range []string{"mod_storage_path", "mod_storage_path_override"} {
+		if !columnExists(t, store, "games", column) {
+			t.Fatalf("expected games.%s column to exist", column)
+		}
+	}
+}
+
+func TestMigrateUpAddsOriginalSourcePathUniqueness(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	if !columnExists(t, store, "mods", "original_source_path") {
+		t.Fatal("expected mods.original_source_path column to exist")
+	}
+	if !indexExists(t, store, "idx_mods_game_original_source_path") {
+		t.Fatal("expected idx_mods_game_original_source_path to exist")
 	}
 }
 
@@ -334,6 +353,9 @@ func TestGetStoredGamePreservesUnsetNullableValues(t *testing.T) {
 	if game.ModStoragePathOverride != nil {
 		t.Fatalf("ModStoragePathOverride = %q, want nil", *game.ModStoragePathOverride)
 	}
+	if game.ModStoragePath != nil {
+		t.Fatalf("ModStoragePath = %q, want nil", *game.ModStoragePath)
+	}
 }
 
 func TestForeignKeyConstraintRejectsMissingParent(t *testing.T) {
@@ -347,9 +369,9 @@ func TestForeignKeyConstraintRejectsMissingParent(t *testing.T) {
 	}
 
 	_, err := store.DB().Exec(`
-		INSERT INTO mods (game_id, name, source_path)
-		VALUES (?, ?, ?)
-	`, 999, "Missing Game Mod", "/mods/missing-game")
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, 999, "Missing Game Mod", "/mods/missing-game", "/imports/missing-game")
 	if err == nil {
 		t.Fatal("insert mod with missing game succeeded, want foreign key error")
 	}
@@ -378,9 +400,9 @@ func TestDeletingGameCascadesDependents(t *testing.T) {
 	}
 
 	result, err = store.DB().Exec(`
-		INSERT INTO mods (game_id, name, source_path)
-		VALUES (?, ?, ?)
-	`, gameID, "SkyUI", "/mods/skyui")
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, "SkyUI", "/mods/skyui", "/imports/skyui")
 	if err != nil {
 		t.Fatalf("insert mod: %v", err)
 	}
@@ -528,9 +550,39 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 	if game.ModStoragePathOverride != nil {
 		t.Fatalf("ModStoragePathOverride = %q, want nil after clear", *game.ModStoragePathOverride)
 	}
+	wantPath := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	if game.ModStoragePath == nil || *game.ModStoragePath != wantPath {
+		t.Fatalf("ModStoragePath = %v, want refreshed global path", game.ModStoragePath)
+	}
 }
 
-func TestResolveGameModStoragePathUsesSanitizedGameNameAndInternalID(t *testing.T) {
+func TestSetGlobalModStorageRootRefreshesGameModStoragePaths(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	if err := store.SetGlobalModStorageRoot(context.Background(), "/managed/root"); err != nil {
+		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
+	}
+
+	game, err := store.GetStoredGame(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetStoredGame() error = %v", err)
+	}
+
+	want := filepath.Join("/managed/root", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	if game.ModStoragePath == nil || *game.ModStoragePath != want {
+		t.Fatalf("ModStoragePath = %v, want %q", game.ModStoragePath, want)
+	}
+}
+
+func TestResolveGameModStoragePathUsesNumericGameID(t *testing.T) {
 	t.Parallel()
 
 	store := openStore(t)
@@ -548,13 +600,13 @@ func TestResolveGameModStoragePathUsesSanitizedGameNameAndInternalID(t *testing.
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
 
-	want := filepath.Join(root, "Skyrim- Special-Edition-"+strconv.FormatInt(gameID, 10))
+	want := filepath.Join(root, DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
 	if path != want {
 		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, want)
 	}
 }
 
-func TestResolveGameModStoragePathRequiresGlobalRootWithoutOverride(t *testing.T) {
+func TestResolveGameModStoragePathUsesDefaultRootWithoutGlobalRoot(t *testing.T) {
 	t.Parallel()
 
 	store := openStore(t)
@@ -566,12 +618,14 @@ func TestResolveGameModStoragePathRequiresGlobalRootWithoutOverride(t *testing.T
 
 	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
 
-	_, err := store.ResolveGameModStoragePath(context.Background(), gameID, "")
-	if err == nil {
-		t.Fatal("ResolveGameModStoragePath() error = nil, want missing root error")
+	path, err := store.ResolveGameModStoragePath(context.Background(), gameID, "")
+	if err != nil {
+		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "global mod storage root is not configured") {
-		t.Fatalf("ResolveGameModStoragePath() error = %q, want missing root context", err.Error())
+
+	want := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	if path != want {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, want)
 	}
 }
 
@@ -587,9 +641,9 @@ func TestChangingGlobalModStorageRootDoesNotMoveExistingModRows(t *testing.T) {
 
 	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
 	if _, err := store.DB().Exec(`
-		INSERT INTO mods (game_id, name, source_path)
-		VALUES (?, ?, ?)
-	`, gameID, "SkyUI", "/old/root/SkyUI"); err != nil {
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, "SkyUI", "/old/root/SkyUI", "/imports/SkyUI"); err != nil {
 		t.Fatalf("insert mod: %v", err)
 	}
 

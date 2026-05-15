@@ -25,6 +25,7 @@ type StoredGame struct {
 	SourceID               *string `db:"source_id"`
 	Available              bool    `db:"available"`
 	LastSeenAt             *string `db:"last_seen_at"`
+	ModStoragePath         *string `db:"mod_storage_path"`
 	ModStoragePathOverride *string `db:"mod_storage_path_override"`
 }
 
@@ -41,13 +42,19 @@ func (s *Store) SaveSteamScan(ctx context.Context, games []steam.Game) (SteamSca
 		return result, fmt.Errorf("save Steam scan: store is not open")
 	}
 
-	err := withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+	globalRoot, err := s.GetGlobalModStorageRoot(ctx)
+	if err != nil {
+		return SteamScanResult{}, fmt.Errorf("read managed mod storage root: %w", err)
+	}
+	defaultRoot := s.defaultModStorageRoot()
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
 		seenIDs := make([]string, 0, len(games))
 		seenSet := make(map[string]struct{}, len(games))
 		now := time.Now().UTC().Format(time.RFC3339)
 
 		for _, game := range dedupeSteamGames(games) {
-			stored, action, err := upsertSteamGame(ctx, tx, game, now)
+			stored, action, err := upsertSteamGame(ctx, tx, game, now, globalRoot, defaultRoot)
 			if err != nil {
 				return err
 			}
@@ -96,7 +103,7 @@ func withTransaction(ctx context.Context, db *sqlx.DB, fn func(*sqlx.Tx) error) 
 	return tx.Commit()
 }
 
-func upsertSteamGame(ctx context.Context, tx *sqlx.Tx, game steam.Game, seenAt string) (StoredGame, string, error) {
+func upsertSteamGame(ctx context.Context, tx *sqlx.Tx, game steam.Game, seenAt string, globalRoot string, defaultRoot string) (StoredGame, string, error) {
 	sourceID := strings.TrimSpace(game.AppID)
 	name := strings.TrimSpace(game.Name)
 	installPath := filepath.Clean(strings.TrimSpace(game.InstallPath))
@@ -118,7 +125,7 @@ func upsertSteamGame(ctx context.Context, tx *sqlx.Tx, game steam.Game, seenAt s
 	}
 
 	if found {
-		updated, err := updateStoredGameAsSteam(ctx, tx, stored.ID, name, installPath, sourceID, seenAt)
+		updated, err := updateStoredGameAsSteam(ctx, tx, stored.ID, name, installPath, sourceID, seenAt, globalRoot, defaultRoot)
 		if err != nil {
 			return StoredGame{}, "", err
 		}
@@ -126,7 +133,7 @@ func upsertSteamGame(ctx context.Context, tx *sqlx.Tx, game steam.Game, seenAt s
 		return updated, action, nil
 	}
 
-	inserted, err := insertSteamGame(ctx, tx, name, installPath, sourceID, seenAt)
+	inserted, err := insertSteamGame(ctx, tx, name, installPath, sourceID, seenAt, globalRoot, defaultRoot)
 	if err != nil {
 		return StoredGame{}, "", err
 	}
@@ -137,7 +144,7 @@ func upsertSteamGame(ctx context.Context, tx *sqlx.Tx, game steam.Game, seenAt s
 func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sourceID string) (StoredGame, bool, error) {
 	var game StoredGame
 	err := tx.GetContext(ctx, &game, `
-		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path_override
+		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
 		WHERE source = ?
 			AND source_id = ?
@@ -156,7 +163,7 @@ func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sour
 func getStoredGameByInstallPath(ctx context.Context, tx *sqlx.Tx, installPath string) (StoredGame, bool, error) {
 	var game StoredGame
 	err := tx.GetContext(ctx, &game, `
-		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path_override
+		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
 		WHERE install_path = ?
 	`, installPath)
@@ -171,8 +178,18 @@ func getStoredGameByInstallPath(ctx context.Context, tx *sqlx.Tx, installPath st
 	return game, true, nil
 }
 
-func updateStoredGameAsSteam(ctx context.Context, tx *sqlx.Tx, id int64, name string, installPath string, sourceID string, seenAt string) (StoredGame, error) {
-	_, err := tx.ExecContext(ctx, `
+func updateStoredGameAsSteam(ctx context.Context, tx *sqlx.Tx, id int64, name string, installPath string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (StoredGame, error) {
+	stored, err := getStoredGameByID(ctx, tx, id)
+	if err != nil {
+		return StoredGame{}, err
+	}
+	stored.Name = name
+	modStoragePath, err := resolveStoredGameModStoragePath(stored, globalRoot, defaultRoot)
+	if err != nil {
+		return StoredGame{}, fmt.Errorf("resolve Steam game mod storage path: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, `
 		UPDATE games
 		SET name = ?,
 			install_path = ?,
@@ -180,9 +197,10 @@ func updateStoredGameAsSteam(ctx context.Context, tx *sqlx.Tx, id int64, name st
 			source_id = ?,
 			available = 1,
 			last_seen_at = ?,
+			mod_storage_path = ?,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
-	`, name, installPath, GameSourceSteam, sourceID, seenAt, id)
+	`, name, installPath, GameSourceSteam, sourceID, seenAt, modStoragePath, id)
 	if err != nil {
 		return StoredGame{}, fmt.Errorf("update Steam game: %w", err)
 	}
@@ -190,7 +208,7 @@ func updateStoredGameAsSteam(ctx context.Context, tx *sqlx.Tx, id int64, name st
 	return getStoredGameByID(ctx, tx, id)
 }
 
-func insertSteamGame(ctx context.Context, tx *sqlx.Tx, name string, installPath string, sourceID string, seenAt string) (StoredGame, error) {
+func insertSteamGame(ctx context.Context, tx *sqlx.Tx, name string, installPath string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (StoredGame, error) {
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
 		VALUES (?, ?, ?, ?, 1, ?)
@@ -204,13 +222,30 @@ func insertSteamGame(ctx context.Context, tx *sqlx.Tx, name string, installPath 
 		return StoredGame{}, fmt.Errorf("insert Steam game id: %w", err)
 	}
 
+	stored := StoredGame{
+		ID:   id,
+		Name: name,
+	}
+	modStoragePath, err := resolveStoredGameModStoragePath(stored, globalRoot, defaultRoot)
+	if err != nil {
+		return StoredGame{}, fmt.Errorf("resolve Steam game mod storage path: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE games
+		SET mod_storage_path = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`, modStoragePath, id); err != nil {
+		return StoredGame{}, fmt.Errorf("update Steam game mod storage path: %w", err)
+	}
+
 	return getStoredGameByID(ctx, tx, id)
 }
 
 func getStoredGameByID(ctx context.Context, tx *sqlx.Tx, id int64) (StoredGame, error) {
 	var game StoredGame
 	err := tx.GetContext(ctx, &game, `
-		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path_override
+		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
 		WHERE id = ?
 	`, id)

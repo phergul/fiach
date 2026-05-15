@@ -42,6 +42,28 @@ func TestSaveSteamScanInsertsNewGames(t *testing.T) {
 		if game.LastSeenAt == nil || *game.LastSeenAt == "" {
 			t.Fatalf("LastSeenAt = %v, want non-empty pointer", game.LastSeenAt)
 		}
+		wantModStoragePath := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(game))
+		if game.ModStoragePath == nil || *game.ModStoragePath != wantModStoragePath {
+			t.Fatalf("ModStoragePath = %v, want %q", game.ModStoragePath, wantModStoragePath)
+		}
+
+		stored, err := store.GetStoredGame(context.Background(), game.ID)
+		if err != nil {
+			t.Fatalf("GetStoredGame() error = %v", err)
+		}
+		if stored.ModStoragePath == nil || *stored.ModStoragePath != wantModStoragePath {
+			t.Fatalf("GetStoredGame().ModStoragePath = %v, want %q", stored.ModStoragePath, wantModStoragePath)
+		}
+	}
+
+	storedGames, err := store.ListStoredGames(context.Background())
+	if err != nil {
+		t.Fatalf("ListStoredGames() error = %v", err)
+	}
+	for _, game := range storedGames {
+		if game.ModStoragePath == nil || *game.ModStoragePath == "" {
+			t.Fatalf("ListStoredGames() returned empty ModStoragePath: %+v", game)
+		}
 	}
 }
 

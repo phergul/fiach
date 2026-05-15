@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"path/filepath"
 	"testing"
 )
 
@@ -29,6 +30,61 @@ func TestListModsReturnsGameModsOrderedByName(t *testing.T) {
 	}
 	if mods[0].ID != alpha || mods[0].Name != "alpha Mod" || mods[1].Name != "Zoo Mod" {
 		t.Fatalf("ListMods() = %+v, want alpha then Zoo", mods)
+	}
+	if mods[0].OriginalSourcePath == "" {
+		t.Fatalf("OriginalSourcePath = empty, want imported source path")
+	}
+}
+
+func TestFindModByOriginalSourcePathUsesCanonicalPathAndGame(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
+	originalPath, err := CanonicalModOriginalSourcePath(filepath.Join(t.TempDir(), "mods", "..", "SkyUI"))
+	if err != nil {
+		t.Fatalf("CanonicalModOriginalSourcePath() error = %v", err)
+	}
+	modID := insertProfileTestModWithOriginalSource(t, store, gameID, "SkyUI", "/managed/skyrim/SkyUI", originalPath)
+	insertProfileTestModWithOriginalSource(t, store, otherGameID, "SkyUI", "/managed/fallout/SkyUI", originalPath)
+
+	foundMod, found, err := store.FindModByOriginalSourcePath(context.Background(), gameID, originalPath)
+	if err != nil {
+		t.Fatalf("FindModByOriginalSourcePath() error = %v", err)
+	}
+	if !found || foundMod.ID != modID || foundMod.OriginalSourcePath != originalPath {
+		t.Fatalf("FindModByOriginalSourcePath() = %+v, %v; want mod %d", foundMod, found, modID)
+	}
+
+	_, found, err = store.FindModByOriginalSourcePath(context.Background(), gameID, filepath.Join(filepath.Dir(originalPath), "Missing"))
+	if err != nil {
+		t.Fatalf("FindModByOriginalSourcePath() missing error = %v", err)
+	}
+	if found {
+		t.Fatal("FindModByOriginalSourcePath() missing found = true, want false")
+	}
+}
+
+func TestOriginalSourcePathIsUniquePerGame(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
+	originalPath := "/imports/skyui"
+	insertProfileTestModWithOriginalSource(t, store, gameID, "SkyUI", "/managed/skyrim/SkyUI", originalPath)
+	insertProfileTestModWithOriginalSource(t, store, otherGameID, "SkyUI", "/managed/fallout/SkyUI", originalPath)
+
+	if _, err := store.DB().Exec(`
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, "SkyUI Duplicate", "/managed/skyrim/SkyUI-copy", originalPath); err == nil {
+		t.Fatal("insert duplicate original source path succeeded, want unique constraint error")
 	}
 }
 
@@ -157,10 +213,16 @@ func TestSetProfileModEnabledPersistsState(t *testing.T) {
 func insertProfileTestMod(t *testing.T, store *Store, gameID int64, name string, sourcePath string) int64 {
 	t.Helper()
 
+	return insertProfileTestModWithOriginalSource(t, store, gameID, name, sourcePath, sourcePath)
+}
+
+func insertProfileTestModWithOriginalSource(t *testing.T, store *Store, gameID int64, name string, sourcePath string, originalSourcePath string) int64 {
+	t.Helper()
+
 	result, err := store.DB().Exec(`
-		INSERT INTO mods (game_id, name, source_path)
-		VALUES (?, ?, ?)
-	`, gameID, name, sourcePath)
+		INSERT INTO mods (game_id, name, source_path, original_source_path)
+		VALUES (?, ?, ?, ?)
+	`, gameID, name, sourcePath, originalSourcePath)
 	if err != nil {
 		t.Fatalf("insert profile test mod: %v", err)
 	}

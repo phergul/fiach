@@ -5,17 +5,20 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type Mod struct {
-	ID         int64  `db:"id"`
-	GameID     int64  `db:"game_id"`
-	Name       string `db:"name"`
-	SourcePath string `db:"source_path"`
-	CreatedAt  string `db:"created_at"`
-	UpdatedAt  string `db:"updated_at"`
+	ID                 int64  `db:"id"`
+	GameID             int64  `db:"game_id"`
+	Name               string `db:"name"`
+	SourcePath         string `db:"source_path"`
+	OriginalSourcePath string `db:"original_source_path"`
+	CreatedAt          string `db:"created_at"`
+	UpdatedAt          string `db:"updated_at"`
 }
 
 type ProfileMod struct {
@@ -41,7 +44,7 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	}
 
 	err = s.db.SelectContext(ctx, &mods, `
-		SELECT id, game_id, name, source_path, created_at, updated_at
+		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
 		FROM mods
 		WHERE game_id = ?
 		ORDER BY LOWER(name), id
@@ -51,6 +54,39 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	}
 
 	return mods, nil
+}
+
+func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod Mod, found bool, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("find mod by original source path: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return Mod{}, false, errors.New("store is not open")
+	}
+
+	originalSourcePath, err = CanonicalModOriginalSourcePath(originalSourcePath)
+	if err != nil {
+		return Mod{}, false, err
+	}
+
+	err = s.db.GetContext(ctx, &mod, `
+		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
+		FROM mods
+		WHERE game_id = ?
+			AND original_source_path = ?
+	`, gameID, originalSourcePath)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Mod{}, false, nil
+		}
+
+		return Mod{}, false, err
+	}
+
+	return mod, true, nil
 }
 
 func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []ProfileMod, err error) {
@@ -223,7 +259,7 @@ type modGetter interface {
 func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {
 	var mod Mod
 	err := db.GetContext(ctx, &mod, `
-		SELECT id, game_id, name, source_path, created_at, updated_at
+		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
 		FROM mods
 		WHERE id = ?
 	`, modID)
@@ -232,6 +268,21 @@ func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {
 	}
 
 	return mod, nil
+}
+
+func CanonicalModOriginalSourcePath(path string) (string, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "", errors.New("original source path is required")
+	}
+
+	path = filepath.Clean(path)
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return path, nil
+	}
+
+	return filepath.Clean(absolutePath), nil
 }
 
 func getProfileMod(ctx context.Context, db modGetter, profileID int64, modID int64) (ProfileMod, bool, error) {

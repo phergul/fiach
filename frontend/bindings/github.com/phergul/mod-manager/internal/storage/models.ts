@@ -10,6 +10,7 @@ export class Mod {
     "GameID": number;
     "Name": string;
     "SourcePath": string;
+    "OriginalSourcePath": string;
     "CreatedAt": string;
     "UpdatedAt": string;
 
@@ -26,6 +27,9 @@ export class Mod {
         }
         if (!("SourcePath" in $$source)) {
             this["SourcePath"] = "";
+        }
+        if (!("OriginalSourcePath" in $$source)) {
+            this["OriginalSourcePath"] = "";
         }
         if (!("CreatedAt" in $$source)) {
             this["CreatedAt"] = "";
@@ -181,6 +185,7 @@ export class StoredGame {
     "SourceID": string | null;
     "Available": boolean;
     "LastSeenAt": string | null;
+    "ModStoragePath": string | null;
     "ModStoragePathOverride": string | null;
 
     /** Creates a new StoredGame instance. */
@@ -205,6 +210,9 @@ export class StoredGame {
         }
         if (!("LastSeenAt" in $$source)) {
             this["LastSeenAt"] = null;
+        }
+        if (!("ModStoragePath" in $$source)) {
+            this["ModStoragePath"] = null;
         }
         if (!("ModStoragePathOverride" in $$source)) {
             this["ModStoragePathOverride"] = null;

@@ -65,7 +65,7 @@ func (s *Store) SetGlobalModStorageRoot(ctx context.Context, path string) (err e
 		return err
 	}
 
-	return nil
+	return s.RefreshGameModStoragePaths(ctx)
 }
 
 func (s *Store) SetSetting(ctx context.Context, key string, value string) (err error) {
