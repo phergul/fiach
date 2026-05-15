@@ -36,11 +36,11 @@ export const GameDetails = () => {
   const profileManager = useGameProfiles(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
   const heroArtworkSource = useGameArtwork(
-    game?.Source === 'steam' ? game.SourceID : '',
+    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
     ImageType.ImageTypeHero,
   );
   const logoArtworkSource = useGameArtwork(
-    game?.Source === 'steam' ? game.SourceID : '',
+    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
     ImageType.ImageTypeLogo,
   );
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;

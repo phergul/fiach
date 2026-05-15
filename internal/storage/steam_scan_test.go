@@ -36,8 +36,11 @@ func TestSaveSteamScanInsertsNewGames(t *testing.T) {
 		if !game.Available {
 			t.Fatal("Available = false, want true")
 		}
-		if game.LastSeenAt == "" {
-			t.Fatal("LastSeenAt is empty")
+		if game.SourceID == nil || *game.SourceID == "" {
+			t.Fatalf("SourceID = %v, want non-empty pointer", game.SourceID)
+		}
+		if game.LastSeenAt == nil || *game.LastSeenAt == "" {
+			t.Fatalf("LastSeenAt = %v, want non-empty pointer", game.LastSeenAt)
 		}
 	}
 }
@@ -95,7 +98,7 @@ func TestSaveSteamScanAttachesExistingInstallPathToSteam(t *testing.T) {
 	}
 
 	game := result.Games[0]
-	if game.Source != GameSourceSteam || game.SourceID != "10" || !game.Available {
+	if game.Source != GameSourceSteam || game.SourceID == nil || *game.SourceID != "10" || !game.Available {
 		t.Fatalf("game metadata = %+v, want attached Steam metadata", game)
 	}
 }

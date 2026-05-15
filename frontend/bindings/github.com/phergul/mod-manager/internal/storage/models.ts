@@ -178,9 +178,9 @@ export class StoredGame {
     "Name": string;
     "InstallPath": string;
     "Source": string;
-    "SourceID": string;
+    "SourceID": string | null;
     "Available": boolean;
-    "LastSeenAt": string;
+    "LastSeenAt": string | null;
     "ModStoragePathOverride": string | null;
 
     /** Creates a new StoredGame instance. */
@@ -198,13 +198,13 @@ export class StoredGame {
             this["Source"] = "";
         }
         if (!("SourceID" in $$source)) {
-            this["SourceID"] = "";
+            this["SourceID"] = null;
         }
         if (!("Available" in $$source)) {
             this["Available"] = false;
         }
         if (!("LastSeenAt" in $$source)) {
-            this["LastSeenAt"] = "";
+            this["LastSeenAt"] = null;
         }
         if (!("ModStoragePathOverride" in $$source)) {
             this["ModStoragePathOverride"] = null;

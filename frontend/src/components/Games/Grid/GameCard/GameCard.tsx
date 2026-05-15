@@ -18,7 +18,7 @@ const getSourceInitial = (source: string) => {
 };
 
 export const GameCard = ({ game }: GameCardProps) => {
-  const artworkSource = useGameArtwork(game.Source === 'steam' ? game.SourceID : '');
+  const artworkSource = useGameArtwork(game.Source === 'steam' && game.SourceID ? game.SourceID : '');
 
   return (
     <article className="game-card">

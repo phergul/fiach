@@ -298,6 +298,44 @@ func TestListStoredGamesReturnsEmptyForEmptyDatabase(t *testing.T) {
 	}
 }
 
+func TestGetStoredGamePreservesUnsetNullableValues(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	result, err := store.DB().Exec(`
+		INSERT INTO games (name, install_path)
+		VALUES (?, ?)
+	`, "Manual Game", "/games/manual")
+	if err != nil {
+		t.Fatalf("insert manual game: %v", err)
+	}
+	gameID, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("manual game LastInsertId(): %v", err)
+	}
+
+	game, err := store.GetStoredGame(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetStoredGame() error = %v", err)
+	}
+
+	if game.SourceID != nil {
+		t.Fatalf("SourceID = %q, want nil", *game.SourceID)
+	}
+	if game.LastSeenAt != nil {
+		t.Fatalf("LastSeenAt = %q, want nil", *game.LastSeenAt)
+	}
+	if game.ModStoragePathOverride != nil {
+		t.Fatalf("ModStoragePathOverride = %q, want nil", *game.ModStoragePathOverride)
+	}
+}
+
 func TestForeignKeyConstraintRejectsMissingParent(t *testing.T) {
 	t.Parallel()
 
@@ -481,6 +519,14 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 	}
 	if path != "/custom/skyrim" {
 		t.Fatalf("ResolveGameModStoragePath() = %q, want override path", path)
+	}
+
+	game, err := store.SetGameModStoragePathOverride(context.Background(), gameID, " ")
+	if err != nil {
+		t.Fatalf("SetGameModStoragePathOverride(clear) error = %v", err)
+	}
+	if game.ModStoragePathOverride != nil {
+		t.Fatalf("ModStoragePathOverride = %q, want nil after clear", *game.ModStoragePathOverride)
 	}
 }
 

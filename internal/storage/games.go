@@ -26,7 +26,7 @@ func (s *Store) ListStoredGames(ctx context.Context) (games []StoredGame, err er
 	}
 
 	err = s.db.SelectContext(ctx, &games, `
-		SELECT id, name, install_path, source, COALESCE(source_id, '') AS source_id, available, COALESCE(last_seen_at, '') AS last_seen_at, mod_storage_path_override
+		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path_override
 		FROM games
 		WHERE available = 1
 		ORDER BY LOWER(name), id
@@ -50,7 +50,7 @@ func (s *Store) GetStoredGame(ctx context.Context, gameID int64) (game StoredGam
 	}
 
 	err = s.db.GetContext(ctx, &game, `
-		SELECT id, name, install_path, source, COALESCE(source_id, '') AS source_id, available, COALESCE(last_seen_at, '') AS last_seen_at, mod_storage_path_override
+		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path_override
 		FROM games
 		WHERE id = ?
 	`, gameID)
