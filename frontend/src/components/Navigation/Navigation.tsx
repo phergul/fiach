@@ -19,6 +19,11 @@ export const Navigation = () => {
             isActive ? 'navigation-link navigation-link-active' : 'navigation-link'
           }
           key={item.path}
+          onClick={(event) => {
+            if (event.detail > 0) {
+              event.currentTarget.blur();
+            }
+          }}
           title={item.label}
           to={item.path}
         >

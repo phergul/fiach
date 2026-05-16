@@ -14,7 +14,7 @@
   height: $app-sidebar-control-size;
   align-items: center;
   justify-content: flex-start;
-  gap: 0;
+  gap: $spacing-sm;
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
@@ -24,11 +24,6 @@
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
-}
-
-.sidebar:hover .navigation-link,
-.sidebar-pinned .navigation-link {
-  gap: $spacing-sm;
 }
 
 .navigation-link:hover,
@@ -50,16 +45,17 @@
 }
 
 .navigation-link-label {
-  max-width: 0;
-  overflow: hidden;
   opacity: 0;
+  transform: translateX(-$spacing-xs);
   transition:
-    max-width $transition-duration-fast $transition-easing-standard,
-    opacity $transition-duration-fast $transition-easing-standard;
+    opacity $transition-duration-fast $transition-easing-standard,
+    transform $transition-duration-fast $transition-easing-standard;
 }
 
 .sidebar:hover .navigation-link-label,
+.sidebar:has(:focus-visible) .navigation-link-label,
 .sidebar-pinned .navigation-link-label {
-  max-width: 8rem;
   opacity: 1;
+  transform: translateX(0);
+  transition-delay: 120ms;
 }

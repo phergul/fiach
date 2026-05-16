@@ -1,32 +1,50 @@
 @use '@styles' as *;
 
 .sidebar {
-  display: flex;
   width: $app-sidebar-collapsed-width;
   flex: 0 0 $app-sidebar-collapsed-width;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: $spacing-lg;
-  padding: $spacing-sm;
-  background: $color-surface;
-  border-right: $app-border;
+  position: relative;
+  z-index: $z-index-sidebar;
+  min-height: $app-min-height;
   transition:
     width $transition-duration-fast $transition-easing-standard,
     flex-basis $transition-duration-fast $transition-easing-standard;
 }
 
-.sidebar:hover,
 .sidebar-pinned {
   width: $app-sidebar-width;
   flex-basis: $app-sidebar-width;
+}
+
+.sidebar-surface {
+  position: sticky;
+  top: 0;
+  display: flex;
+  width: $app-sidebar-collapsed-width;
+  height: 100vh;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-sm;
+  overflow: hidden;
+  background: $color-surface;
+  border-right: $app-border;
+  transition: width $transition-duration-fast $transition-easing-standard;
+}
+
+.sidebar:hover .sidebar-surface,
+.sidebar:has(:focus-visible) .sidebar-surface,
+.sidebar-pinned .sidebar-surface {
+  width: $app-sidebar-width;
+  transition-delay: 120ms;
 }
 
 .sidebar-pin-button {
   width: 100%;
   height: $app-sidebar-control-size;
   justify-content: flex-start;
-  gap: 0;
+  gap: $spacing-sm;
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
@@ -35,11 +53,6 @@
   background: transparent;
   border: 0;
   border-radius: $radius-md;
-}
-
-.sidebar:hover .sidebar-pin-button,
-.sidebar-pinned .sidebar-pin-button {
-  gap: $spacing-sm;
 }
 
 .sidebar-pin-button:hover {
@@ -58,16 +71,17 @@
 }
 
 .sidebar-pin-button-label {
-  max-width: 0;
-  overflow: hidden;
   opacity: 0;
+  transform: translateX(-$spacing-xs);
   transition:
-    max-width $transition-duration-fast $transition-easing-standard,
-    opacity $transition-duration-fast $transition-easing-standard;
+    opacity $transition-duration-fast $transition-easing-standard,
+    transform $transition-duration-fast $transition-easing-standard;
 }
 
 .sidebar:hover .sidebar-pin-button-label,
+.sidebar:has(:focus-visible) .sidebar-pin-button-label,
 .sidebar-pinned .sidebar-pin-button-label {
-  max-width: 9rem;
   opacity: 1;
+  transform: translateX(0);
+  transition-delay: 120ms;
 }
