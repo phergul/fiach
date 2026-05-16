@@ -9,8 +9,10 @@ export class Mod {
     "ID": number;
     "GameID": number;
     "Name": string;
+    "SourceType": ModSourceType;
     "SourcePath": string;
     "OriginalSourcePath": string;
+    "OriginalSourceName": string | null;
     "CreatedAt": string;
     "UpdatedAt": string;
 
@@ -25,11 +27,17 @@ export class Mod {
         if (!("Name" in $$source)) {
             this["Name"] = "";
         }
+        if (!("SourceType" in $$source)) {
+            this["SourceType"] = ModSourceType.$zero;
+        }
         if (!("SourcePath" in $$source)) {
             this["SourcePath"] = "";
         }
         if (!("OriginalSourcePath" in $$source)) {
             this["OriginalSourcePath"] = "";
+        }
+        if (!("OriginalSourceName" in $$source)) {
+            this["OriginalSourceName"] = null;
         }
         if (!("CreatedAt" in $$source)) {
             this["CreatedAt"] = "";
@@ -90,6 +98,16 @@ export class ModProfile {
         return new ModProfile($$parsedSource as Partial<ModProfile>);
     }
 }
+
+export enum ModSourceType {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ModSourceTypeFolder = "folder",
+    ModSourceTypeArchive = "archive",
+};
 
 export class ProfileMod {
     "ProfileID": number;

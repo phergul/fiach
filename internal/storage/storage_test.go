@@ -141,7 +141,7 @@ func TestMigrateUpAddsModStorageConfiguration(t *testing.T) {
 	}
 }
 
-func TestMigrateUpAddsOriginalSourcePathUniqueness(t *testing.T) {
+func TestMigrateUpAddsModSourceMetadata(t *testing.T) {
 	t.Parallel()
 
 	store := openStore(t)
@@ -151,8 +151,10 @@ func TestMigrateUpAddsOriginalSourcePathUniqueness(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	if !columnExists(t, store, "mods", "original_source_path") {
-		t.Fatal("expected mods.original_source_path column to exist")
+	for _, column := range []string{"source_type", "original_source_path", "original_source_name"} {
+		if !columnExists(t, store, "mods", column) {
+			t.Fatalf("expected mods.%s column to exist", column)
+		}
 	}
 	if !indexExists(t, store, "idx_mods_game_original_source_path") {
 		t.Fatal("expected idx_mods_game_original_source_path to exist")

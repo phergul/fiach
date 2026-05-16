@@ -4,6 +4,7 @@
 export {
     Mod,
     ModProfile,
+    ModSourceType,
     ProfileMod,
     SteamScanResult,
     StoredGame

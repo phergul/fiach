@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 
-import { Plus, Search } from 'lucide-react';
+import { Archive, ChevronDown, FolderOpen, Plus, Search } from 'lucide-react';
 
+import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import type { UseGameModsResult } from '@hooks';
 
@@ -10,15 +12,18 @@ import './GameModsSection.scss';
 interface GameModsSectionProps {
   isImportDisabled?: boolean;
   modManager: UseGameModsResult;
-  onImportMod: () => void;
+  onImportArchive: () => void;
+  onImportFolder: () => void;
 }
 
 export const GameModsSection = ({
   isImportDisabled = false,
   modManager,
-  onImportMod,
+  onImportArchive,
+  onImportFolder,
 }: GameModsSectionProps) => {
   const { isLoading, loadError, mods, refreshMods } = modManager;
+  const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredMods = useMemo(() => {
@@ -29,10 +34,32 @@ export const GameModsSection = ({
     return mods.filter((mod) => {
       return (
         mod.Name.toLowerCase().includes(trimmedSearchQuery) ||
-        mod.SourcePath.toLowerCase().includes(trimmedSearchQuery)
+        mod.SourcePath.toLowerCase().includes(trimmedSearchQuery) ||
+        mod.SourceType.toLowerCase().includes(trimmedSearchQuery) ||
+        mod.OriginalSourcePath.toLowerCase().includes(trimmedSearchQuery) ||
+        (mod.OriginalSourceName ?? '').toLowerCase().includes(trimmedSearchQuery)
       );
     });
   }, [mods, trimmedSearchQuery]);
+
+  const importMenuItems = [
+    {
+      icon: FolderOpen,
+      label: 'Folder',
+      onSelect: () => {
+        setIsImportMenuOpen(false);
+        onImportFolder();
+      },
+    },
+    {
+      icon: Archive,
+      label: 'ZIP Archive',
+      onSelect: () => {
+        setIsImportMenuOpen(false);
+        onImportArchive();
+      },
+    },
+  ];
 
   return (
     <section className="game-mods-section" aria-label="Imported mods">
@@ -49,15 +76,24 @@ export const GameModsSection = ({
           />
         </div>
 
-        <button
-          className="game-mods-section-import-button"
-          disabled={isImportDisabled}
-          onClick={onImportMod}
-          type="button"
-        >
-          <Plus className="game-mods-section-button-icon" aria-hidden="true" />
-          Import Mod
-        </button>
+        <div className="game-mods-section-import-anchor">
+          <button
+            className="game-mods-section-import-button"
+            disabled={isImportDisabled}
+            onClick={() => setIsImportMenuOpen((currentValue) => !currentValue)}
+            type="button"
+            aria-expanded={isImportMenuOpen}
+          >
+            <Plus className="game-mods-section-button-icon" aria-hidden="true" />
+            Import Mod
+          </button>
+
+          <DropdownMenu
+            ariaLabel="Import mod"
+            isOpen={isImportMenuOpen && !isImportDisabled}
+            items={importMenuItems}
+          />
+        </div>
       </div>
 
       {loadError !== null && (
@@ -86,6 +122,13 @@ export const GameModsSection = ({
             <li className="game-mods-section-list-item" key={mod.ID}>
               <div className="game-mods-section-list-item-copy">
                 <span className="game-mods-section-list-item-name">{mod.Name}</span>
+                <span className="game-mods-section-list-item-source">
+                  {mod.SourceType === ModSourceType.ModSourceTypeArchive ? 'Archive' : 'Folder'}
+                  {' '}
+                  -
+                  {' '}
+                  {mod.OriginalSourceName ?? mod.OriginalSourcePath}
+                </span>
                 <span className="game-mods-section-list-item-path">{mod.SourcePath}</span>
               </div>
             </li>

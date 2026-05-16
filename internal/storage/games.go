@@ -94,7 +94,7 @@ func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64,
 			mod_storage_path = ?,
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
-	`, nullablePath(path), modStoragePath, gameID)
+	`, nullableText(path), modStoragePath, gameID)
 	if err != nil {
 		return StoredGame{}, err
 	}

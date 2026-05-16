@@ -11,6 +11,7 @@ interface GameModImportReviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (name: string) => Promise<void> | void;
+  sourceLabel: string;
   sourcePath: string;
   targetPath: string;
 }
@@ -22,6 +23,7 @@ export const GameModImportReviewDialog = ({
   isOpen,
   onClose,
   onImport,
+  sourceLabel,
   sourcePath,
   targetPath,
 }: GameModImportReviewDialogProps) => {
@@ -88,7 +90,7 @@ export const GameModImportReviewDialog = ({
 
       <div className="game-mod-import-review-dialog-paths">
         <div className="game-mod-import-review-dialog-path-row">
-          <span className="game-mod-import-review-dialog-label">Source folder</span>
+          <span className="game-mod-import-review-dialog-label">{sourceLabel}</span>
           <span className="game-mod-import-review-dialog-path">{sourcePath}</span>
         </div>
 

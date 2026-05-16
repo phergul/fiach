@@ -17,8 +17,10 @@ CREATE TABLE mods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    source_type TEXT NOT NULL DEFAULT 'folder' CHECK (source_type IN ('folder', 'archive')),
     source_path TEXT NOT NULL,
     original_source_path TEXT NOT NULL,
+    original_source_name TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

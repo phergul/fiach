@@ -14,18 +14,27 @@ func cleanOptionalPath(path string) string {
 	return filepath.Clean(path)
 }
 
-func nullablePath(path string) any {
-	if path == "" {
-		return nil
-	}
-
-	return path
-}
-
-func cleanOptionalStringPath(path *string) string {
-	if path == nil {
+func cleanOptionalString(value *string) string {
+	if value == nil {
 		return ""
 	}
 
-	return cleanOptionalPath(*path)
+	return strings.TrimSpace(*value)
+}
+
+func nullableText(value string) any {
+	if value == "" {
+		return nil
+	}
+
+	return value
+}
+
+func cleanOptionalStringPath(path *string) string {
+	value := cleanOptionalString(path)
+	if value == "" {
+		return ""
+	}
+
+	return filepath.Clean(value)
 }

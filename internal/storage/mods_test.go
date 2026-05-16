@@ -80,12 +80,20 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 		t.Fatalf("CanonicalModOriginalSourcePath() error = %v", err)
 	}
 
-	mod, err := store.CreateMod(context.Background(), gameID, " SkyUI ", "/managed/skyui", originalPath)
+	originalName := "SkyUI.zip"
+	mod, err := store.CreateMod(context.Background(), CreateModInput{
+		GameID:             gameID,
+		Name:               " SkyUI ",
+		SourceType:         ModSourceTypeArchive,
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: originalPath,
+		OriginalSourceName: &originalName,
+	})
 	if err != nil {
 		t.Fatalf("CreateMod() error = %v", err)
 	}
 
-	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath {
+	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != ModSourceTypeArchive || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
 		t.Fatalf("CreateMod() = %+v, want persisted mod fields", mod)
 	}
 }
@@ -125,7 +133,13 @@ func TestCreateModRequiresNameAndPaths(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := store.CreateMod(context.Background(), gameID, tt.modName, tt.sourcePath, tt.originalSourcePath); err == nil {
+			_, err := store.CreateMod(context.Background(), CreateModInput{
+				GameID:             gameID,
+				Name:               tt.modName,
+				SourcePath:         tt.sourcePath,
+				OriginalSourcePath: tt.originalSourcePath,
+			})
+			if err == nil {
 				t.Fatal("CreateMod() error = nil, want validation error")
 			}
 		})

@@ -41,8 +41,13 @@ $game-mods-section-import-width: 8.5rem;
 }
 
 .game-mods-section-import-button {
+  width: 100%;
   min-height: $game-mods-section-search-height;
   padding: 0 $spacing-xs;
+}
+
+.game-mods-section-import-anchor {
+  position: relative;
 }
 
 .game-mods-section-button-icon {
@@ -81,8 +86,14 @@ $game-mods-section-import-width: 8.5rem;
   font-weight: $font-weight-semibold;
 }
 
-.game-mods-section-list-item-path {
+.game-mods-section-list-item-source {
   overflow-wrap: anywhere;
   color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-mods-section-list-item-path {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
   font-size: $font-size-sm;
 }

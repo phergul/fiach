@@ -12,13 +12,31 @@ import (
 )
 
 type Mod struct {
-	ID                 int64  `db:"id"`
-	GameID             int64  `db:"game_id"`
-	Name               string `db:"name"`
-	SourcePath         string `db:"source_path"`
-	OriginalSourcePath string `db:"original_source_path"`
-	CreatedAt          string `db:"created_at"`
-	UpdatedAt          string `db:"updated_at"`
+	ID                 int64         `db:"id"`
+	GameID             int64         `db:"game_id"`
+	Name               string        `db:"name"`
+	SourceType         ModSourceType `db:"source_type"`
+	SourcePath         string        `db:"source_path"`
+	OriginalSourcePath string        `db:"original_source_path"`
+	OriginalSourceName *string       `db:"original_source_name"`
+	CreatedAt          string        `db:"created_at"`
+	UpdatedAt          string        `db:"updated_at"`
+}
+
+type ModSourceType string
+
+const (
+	ModSourceTypeFolder  ModSourceType = "folder"
+	ModSourceTypeArchive ModSourceType = "archive"
+)
+
+type CreateModInput struct {
+	GameID             int64
+	Name               string
+	SourceType         ModSourceType
+	SourcePath         string
+	OriginalSourcePath string
+	OriginalSourceName *string
 }
 
 type ProfileMod struct {
@@ -44,7 +62,7 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	}
 
 	err = s.db.SelectContext(ctx, &mods, `
-		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
+		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
 		FROM mods
 		WHERE game_id = ?
 		ORDER BY LOWER(name), id
@@ -56,7 +74,7 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	return mods, nil
 }
 
-func (s *Store) CreateMod(ctx context.Context, gameID int64, name string, sourcePath string, originalSourcePath string) (mod Mod, err error) {
+func (s *Store) CreateMod(ctx context.Context, input CreateModInput) (mod Mod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("insert mod row: %w", err)
@@ -67,25 +85,34 @@ func (s *Store) CreateMod(ctx context.Context, gameID int64, name string, source
 		return Mod{}, errors.New("store is not open")
 	}
 
-	name = strings.TrimSpace(name)
+	name := strings.TrimSpace(input.Name)
 	if name == "" {
 		return Mod{}, errors.New("mod name is required")
 	}
 
-	sourcePath = cleanOptionalPath(sourcePath)
+	sourceType := input.SourceType
+	if sourceType == "" {
+		sourceType = ModSourceTypeFolder
+	}
+	if sourceType != ModSourceTypeFolder && sourceType != ModSourceTypeArchive {
+		return Mod{}, fmt.Errorf("unsupported mod source type %q", sourceType)
+	}
+
+	sourcePath := cleanOptionalPath(input.SourcePath)
 	if sourcePath == "" {
 		return Mod{}, errors.New("managed mod source path is required")
 	}
 
-	originalSourcePath, err = CanonicalModOriginalSourcePath(originalSourcePath)
+	originalSourcePath, err := CanonicalModOriginalSourcePath(input.OriginalSourcePath)
 	if err != nil {
 		return Mod{}, err
 	}
 
+	originalSourceName := cleanOptionalString(input.OriginalSourceName)
 	result, err := s.db.ExecContext(ctx, `
-		INSERT INTO mods (game_id, name, source_path, original_source_path)
-		VALUES (?, ?, ?, ?)
-	`, gameID, name, sourcePath, originalSourcePath)
+		INSERT INTO mods (game_id, name, source_type, source_path, original_source_path, original_source_name)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, input.GameID, name, sourceType, sourcePath, originalSourcePath, nullableText(originalSourceName))
 	if err != nil {
 		return Mod{}, err
 	}
@@ -115,7 +142,7 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	}
 
 	err = s.db.GetContext(ctx, &mod, `
-		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
+		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
 		FROM mods
 		WHERE game_id = ?
 			AND original_source_path = ?
@@ -301,7 +328,7 @@ type modGetter interface {
 func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {
 	var mod Mod
 	err := db.GetContext(ctx, &mod, `
-		SELECT id, game_id, name, source_path, original_source_path, created_at, updated_at
+		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
 		FROM mods
 		WHERE id = ?
 	`, modID)

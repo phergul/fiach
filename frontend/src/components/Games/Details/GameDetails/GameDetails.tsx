@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Menu } from 'lucide-react';
+import { Archive, ArrowLeft, ChevronDown, FolderOpen, Menu, Plus } from 'lucide-react';
 
-import { ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import { ImportModArchive, ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import {
   ResolveGameModStoragePath,
   SetGameModStoragePathOverride,
@@ -11,6 +11,7 @@ import {
 import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsActionsMenu } from '@components/Games/Details/GameDetailsActionsMenu/GameDetailsActionsMenu';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
@@ -21,12 +22,14 @@ import { GameModImportReviewDialog } from '@components/Games/Details/Mods/GameMo
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useGameMods, useGameProfiles, useStoredGames } from '@hooks';
-import { getErrorMessage, openDirectory } from '@utils';
+import { getErrorMessage, openDirectory, openZipArchive } from '@utils';
 
 import './GameDetails.scss';
 
 interface ImportReviewState {
   initialName: string;
+  sourceKind: 'folder' | 'archive';
+  sourceLabel: string;
   sourcePath: string;
   targetPath: string;
 }
@@ -58,6 +61,13 @@ const getFolderName = (path: string) => {
   return folderName && folderName.trim() !== '' ? folderName : 'Imported Mod';
 };
 
+const getArchiveName = (path: string) => {
+  const fileName = getFolderName(path);
+  const archiveName = fileName.replace(/\.zip$/i, '');
+
+  return archiveName.trim() === '' ? 'Imported Mod' : archiveName;
+};
+
 export const GameDetails = () => {
   const { gameId } = useParams();
   const { addToast } = useToast();
@@ -65,6 +75,7 @@ export const GameDetails = () => {
   const [importReview, setImportReview] = useState<ImportReviewState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [pendingStorageOverride, setPendingStorageOverride] = useState<PendingStorageOverride | null>(null);
   const [isApplyingStorageOverride, setIsApplyingStorageOverride] = useState(false);
@@ -85,11 +96,12 @@ export const GameDetails = () => {
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
 
-  const startImportFlow = async () => {
+  const startFolderImportFlow = async () => {
     if (game === undefined || isImporting) {
       return;
     }
 
+    setIsImportMenuOpen(false);
     setImportError(null);
 
     try {
@@ -104,6 +116,42 @@ export const GameDetails = () => {
       const targetPath = await ResolveGameModStoragePath(game.ID);
       setImportReview({
         initialName: getFolderName(sourcePath),
+        sourceKind: 'folder',
+        sourceLabel: 'Source folder',
+        sourcePath,
+        targetPath,
+      });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      addToast({
+        message,
+        tone: 'error',
+      });
+    }
+  };
+
+  const startArchiveImportFlow = async () => {
+    if (game === undefined || isImporting) {
+      return;
+    }
+
+    setIsImportMenuOpen(false);
+    setImportError(null);
+
+    try {
+      const sourcePath = await openZipArchive({
+        buttonText: 'Review Import',
+        title: 'Select mod archive',
+      });
+      if (sourcePath === null) {
+        return;
+      }
+
+      const targetPath = await ResolveGameModStoragePath(game.ID);
+      setImportReview({
+        initialName: getArchiveName(sourcePath),
+        sourceKind: 'archive',
+        sourceLabel: 'Source archive',
         sourcePath,
         targetPath,
       });
@@ -134,7 +182,9 @@ export const GameDetails = () => {
     setImportError(null);
 
     try {
-      const importedMod = await ImportModFolder(game.ID, name, importReview.sourcePath);
+      const importedMod = importReview.sourceKind === 'archive'
+        ? await ImportModArchive(game.ID, name, importReview.sourcePath)
+        : await ImportModFolder(game.ID, name, importReview.sourcePath);
       setImportReview(null);
 
       try {
@@ -245,20 +295,46 @@ export const GameDetails = () => {
           Back
         </Link>
         <div className="game-details-toolbar-actions">
-          <button
-            className="game-details-toolbar-button game-details-import-mods"
-            disabled={game === undefined || isImporting}
-            onClick={startImportFlow}
-            type="button"
-          >
-            <Plus className="game-details-toolbar-icon" aria-hidden="true" />
-            <span>Import Mods</span>
-          </button>
+          <div className="game-details-menu-anchor">
+            <button
+              className="game-details-toolbar-button game-details-import-mods"
+              disabled={game === undefined || isImporting}
+              onClick={() => {
+                setIsActionsMenuOpen(false);
+                setIsImportMenuOpen((currentValue) => !currentValue);
+              }}
+              type="button"
+              aria-expanded={isImportMenuOpen}
+            >
+              <Plus className="game-details-toolbar-icon" aria-hidden="true" />
+              <span>Import Mod</span>
+            </button>
+
+            <DropdownMenu
+              ariaLabel="Import mod"
+              isOpen={isImportMenuOpen && game !== undefined && !isImporting}
+              items={[
+                {
+                  icon: FolderOpen,
+                  label: 'Folder',
+                  onSelect: startFolderImportFlow,
+                },
+                {
+                  icon: Archive,
+                  label: 'ZIP Archive',
+                  onSelect: startArchiveImportFlow,
+                },
+              ]}
+            />
+          </div>
           <div className="game-details-actions-menu-anchor">
             <button
               className="game-details-toolbar-button game-details-toolbar-icon-button"
               disabled={game === undefined}
-              onClick={() => setIsActionsMenuOpen((currentValue) => !currentValue)}
+              onClick={() => {
+                setIsImportMenuOpen(false);
+                setIsActionsMenuOpen((currentValue) => !currentValue);
+              }}
               title="Game actions"
               type="button"
               aria-expanded={isActionsMenuOpen}
@@ -318,7 +394,8 @@ export const GameDetails = () => {
             <GameModsSection
               isImportDisabled={isImporting}
               modManager={gameModManager}
-              onImportMod={startImportFlow}
+              onImportArchive={startArchiveImportFlow}
+              onImportFolder={startFolderImportFlow}
             />
           ) : (
             <GameProfilesSection gameModManager={gameModManager} profileManager={profileManager} />
@@ -333,6 +410,7 @@ export const GameDetails = () => {
         isOpen={importReview !== null}
         onClose={closeImportReview}
         onImport={importReviewedMod}
+        sourceLabel={importReview?.sourceLabel ?? 'Source'}
         sourcePath={importReview?.sourcePath ?? ''}
         targetPath={importReview?.targetPath ?? ''}
       />
