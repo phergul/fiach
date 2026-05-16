@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { Archive, ChevronDown, FolderOpen, Plus, Search } from 'lucide-react';
+import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 
 import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';

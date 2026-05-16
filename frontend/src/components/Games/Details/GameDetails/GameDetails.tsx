@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
-import { Archive, ArrowLeft, ChevronDown, FolderOpen, Menu, Plus } from 'lucide-react';
+import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import { ImportModArchive, ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import {
@@ -9,7 +9,6 @@ import {
   SetGameModStoragePathOverride,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
 import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
-import { ImageType } from '@bindings/github.com/phergul/mod-manager/internal/steam/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { useToast } from '@components/Common/Toast/Toast';
@@ -84,13 +83,19 @@ export const GameDetails = () => {
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
-  const heroArtworkSource = useGameArtwork(
+  const {
+    artworkSource: heroArtworkSource,
+    handleArtworkError: handleHeroArtworkError,
+  } = useGameArtwork(
     game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    ImageType.ImageTypeHero,
+    'hero',
   );
-  const logoArtworkSource = useGameArtwork(
+  const {
+    artworkSource: logoArtworkSource,
+    handleArtworkError: handleLogoArtworkError,
+  } = useGameArtwork(
     game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    ImageType.ImageTypeLogo,
+    'logo',
   );
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;
   const hasLoadError = loadError !== null && game === undefined;
@@ -378,7 +383,9 @@ export const GameDetails = () => {
           <GameDetailsHeader
             game={game}
             heroArtworkSource={heroArtworkSource}
+            onHeroArtworkError={handleHeroArtworkError}
             logoArtworkSource={logoArtworkSource}
+            onLogoArtworkError={handleLogoArtworkError}
           />
 
           <GameDetailsMetadata

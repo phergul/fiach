@@ -2,12 +2,9 @@ package services
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/http"
-	"os"
-	"strings"
+	"sync"
 
 	"github.com/phergul/mod-manager/internal/steam"
 	"github.com/phergul/mod-manager/internal/storage"
@@ -16,7 +13,9 @@ import (
 const SteamInstallPathSettingKey = "steam.install_path"
 
 type SteamService struct {
-	store *storage.Store
+	store         *storage.Store
+	artworkRootMu sync.Mutex
+	artworkRoot   string
 }
 
 func NewSteamService(store *storage.Store) *SteamService {
@@ -76,40 +75,6 @@ func (s *SteamService) GetStoredGames() (games []storage.StoredGame, err error) 
 	return s.store.ListStoredGames(context.Background())
 }
 
-func (s *SteamService) GetGameImage(appID string, imageType steam.ImageType) (imageData string, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("get game image: %w", err)
-		}
-	}()
-
-	appID = strings.TrimSpace(appID)
-	if appID == "" {
-		return "", fmt.Errorf("app ID is required")
-	}
-
-	paths, err := s.locateSteamInstallation()
-	if err != nil {
-		return "", err
-	}
-
-	imagePath, err := steam.ResolveGameImagePath(paths.Artwork, appID, imageType)
-	if err != nil {
-		return "", err
-	}
-	if imagePath == "" {
-		return "", nil
-	}
-
-	content, err := os.ReadFile(imagePath)
-	if err != nil {
-		return "", fmt.Errorf("read image: %w", err)
-	}
-
-	mimeType := http.DetectContentType(content)
-	return "data:" + mimeType + ";base64," + base64.StdEncoding.EncodeToString(content), nil
-}
-
 func (s *SteamService) ScanAndSaveSteamGames() (storage.SteamScanResult, error) {
 	var result storage.SteamScanResult
 
@@ -124,6 +89,23 @@ func (s *SteamService) ScanAndSaveSteamGames() (storage.SteamScanResult, error) 
 	}
 
 	return result, nil
+}
+
+func (s *SteamService) steamArtworkRoot() (string, error) {
+	s.artworkRootMu.Lock()
+	defer s.artworkRootMu.Unlock()
+
+	if s.artworkRoot != "" {
+		return s.artworkRoot, nil
+	}
+
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return "", err
+	}
+
+	s.artworkRoot = paths.Artwork
+	return s.artworkRoot, nil
 }
 
 func (s *SteamService) locateSteamInstallation() (*steam.SteamPaths, error) {

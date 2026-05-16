@@ -18,14 +18,21 @@ const getSourceInitial = (source: string) => {
 };
 
 export const GameCard = ({ game }: GameCardProps) => {
-  const artworkSource = useGameArtwork(game.Source === 'steam' && game.SourceID ? game.SourceID : '');
+  const { artworkSource, handleArtworkError } = useGameArtwork(
+    game.Source === 'steam' && game.SourceID ? game.SourceID : '',
+  );
 
   return (
     <article className="game-card">
       <Link className="game-card-link" to={`/library/${game.ID}`} aria-label={`View ${game.Name} details`}>
         <div className="game-card-artwork">
           {artworkSource !== '' && (
-            <img className="game-card-image" src={artworkSource} alt={`${game.Name} artwork`} />
+            <img
+              className="game-card-image"
+              src={artworkSource}
+              alt={`${game.Name} artwork`}
+              onError={handleArtworkError}
+            />
           )}
           <span
             className="game-card-source"

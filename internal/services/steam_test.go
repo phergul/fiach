@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -279,7 +282,7 @@ func TestSteamServiceGetStoredGamesReturnsStorageError(t *testing.T) {
 	}
 }
 
-func TestSteamServiceGetsGameImage(t *testing.T) {
+func TestSteamArtworkMiddlewareServesExistingArtwork(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -294,18 +297,69 @@ func TestSteamServiceGetsGameImage(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	imageData, err := service.GetGameImage("400", steam.ImageTypeBanner)
-	if err != nil {
-		t.Fatalf("GetGameImage() error = %v", err)
-	}
+	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
 
-	if !strings.HasPrefix(imageData, "data:image/png;base64,") {
-		t.Fatalf("GetGameImage() = %q, want PNG data URL", imageData)
+	handler.ServeHTTP(response, request)
+
+	result := response.Result()
+	defer result.Body.Close()
+
+	if result.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body=%q", result.StatusCode, http.StatusOK, response.Body.String())
+	}
+	if got := result.Header.Get("Content-Type"); got != "image/png" {
+		t.Fatalf("Content-Type = %q, want image/png", got)
+	}
+	if got := result.Header.Get("Cache-Control"); got != steamArtworkCache {
+		t.Fatalf("Cache-Control = %q, want %q", got, steamArtworkCache)
+	}
+	if body := response.Body.String(); !strings.HasPrefix(body, "\x89PNG") {
+		t.Fatalf("body = %q, want PNG content", body)
 	}
 }
 
-func TestSteamServiceGetGameImageReturnsEmptyForMissingArtwork(t *testing.T) {
+func TestSteamArtworkMiddlewareSupportsHead(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	imageDir := filepath.Join(steamRoot, "appcache", "librarycache", "400")
+	mkdirAll(t, imageDir)
+	writeFile(t, filepath.Join(imageDir, "library_600x900.jpg"), "\xff\xd8\xff\xe0\x00\x10JFIF")
+
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodHead, "/artwork/steam/400/banner", nil)
+
+	handler.ServeHTTP(response, request)
+
+	result := response.Result()
+	defer result.Body.Close()
+
+	if result.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body=%q", result.StatusCode, http.StatusOK, response.Body.String())
+	}
+	if got := result.Header.Get("Content-Type"); got != "image/jpeg" {
+		t.Fatalf("Content-Type = %q, want image/jpeg", got)
+	}
+	body, err := io.ReadAll(result.Body)
+	if err != nil {
+		t.Fatalf("ReadAll() error = %v", err)
+	}
+	if len(body) != 0 {
+		t.Fatalf("body length = %d, want 0", len(body))
+	}
+}
+
+func TestSteamArtworkMiddlewareReturnsNotFoundForMissingArtwork(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -316,14 +370,132 @@ func TestSteamServiceGetGameImageReturnsEmptyForMissingArtwork(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	imageData, err := service.GetGameImage("400", steam.ImageTypeBanner)
-	if err != nil {
-		t.Fatalf("GetGameImage() error = %v", err)
+	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusNotFound)
+	}
+}
+
+func TestSteamArtworkMiddlewareReturnsNotFoundForInvalidRoutes(t *testing.T) {
+	t.Parallel()
+
+	handler := newSteamArtworkTestHandler(NewSteamService(nil))
+	tests := []string{
+		"/artwork/steam",
+		"/artwork/steam/",
+		"/artwork/steam/abc/banner",
+		"/artwork/steam/400",
+		"/artwork/steam/400/banner/extra",
+		"/artwork/steam/400/icon",
+		"/artwork/steam/40a/banner",
 	}
 
-	if imageData != "" {
-		t.Fatalf("GetGameImage() = %q, want empty string", imageData)
+	for _, path := range tests {
+		t.Run(path, func(t *testing.T) {
+			t.Parallel()
+
+			response := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodGet, path, nil)
+
+			handler.ServeHTTP(response, request)
+
+			if response.Code != http.StatusNotFound {
+				t.Fatalf("status = %d, want %d", response.Code, http.StatusNotFound)
+			}
+		})
+	}
+}
+
+func TestSteamArtworkMiddlewareRejectsUnsupportedMethods(t *testing.T) {
+	t.Parallel()
+
+	handler := newSteamArtworkTestHandler(NewSteamService(nil))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/artwork/steam/400/banner", nil)
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusMethodNotAllowed)
+	}
+	if got := response.Header().Get("Allow"); got != "GET, HEAD" {
+		t.Fatalf("Allow = %q, want GET, HEAD", got)
+	}
+}
+
+func TestSteamArtworkMiddlewarePassesThroughUnrelatedRoutes(t *testing.T) {
+	t.Parallel()
+
+	next := http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+		rw.WriteHeader(http.StatusTeapot)
+	})
+	handler := NewSteamArtworkMiddleware(NewSteamService(nil))(next)
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/assets/app.css", nil)
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusTeapot {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusTeapot)
+	}
+}
+
+func TestSteamArtworkMiddlewareCachesSuccessfulArtworkRoot(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	imageDir := filepath.Join(steamRoot, "appcache", "librarycache", "400")
+	mkdirAll(t, imageDir)
+	writeFile(t, filepath.Join(imageDir, "library_600x900.png"), "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	firstResponse := httptest.NewRecorder()
+	handler.ServeHTTP(firstResponse, httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil))
+	if firstResponse.Code != http.StatusOK {
+		t.Fatalf("first status = %d, want %d; body=%q", firstResponse.Code, http.StatusOK, firstResponse.Body.String())
+	}
+
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, filepath.Join(t.TempDir(), "missing")); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	secondResponse := httptest.NewRecorder()
+	handler.ServeHTTP(secondResponse, httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil))
+	if secondResponse.Code != http.StatusOK {
+		t.Fatalf("second status = %d, want %d; body=%q", secondResponse.Code, http.StatusOK, secondResponse.Body.String())
+	}
+}
+
+func TestSteamArtworkMiddlewareReturnsServerErrorForSteamLookupFailure(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, filepath.Join(t.TempDir(), "missing")); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+
+	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusInternalServerError)
 	}
 }
 
@@ -377,6 +549,14 @@ func closeStore(t *testing.T, store *storage.Store) {
 	if err := store.Close(); err != nil {
 		t.Fatalf("Close() error = %v", err)
 	}
+}
+
+func newSteamArtworkTestHandler(service *SteamService) http.Handler {
+	next := http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+		rw.WriteHeader(http.StatusNotFound)
+	})
+
+	return NewSteamArtworkMiddleware(service)(next)
 }
 
 func createSteamRoot(t *testing.T) string {

@@ -27,6 +27,8 @@ func main() {
 		log.Fatalf("failed to migrate storage: %v", err)
 	}
 
+	steamService := services.NewSteamService(store)
+
 	app := application.New(application.Options{
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
@@ -34,7 +36,7 @@ func main() {
 			application.NewService(services.NewModService(store)),
 			application.NewService(services.NewProfileService(store)),
 			application.NewService(services.NewSettingsService(store)),
-			application.NewService(services.NewSteamService(store)),
+			application.NewService(steamService),
 		},
 		OnShutdown: func() {
 			if err := store.Close(); err != nil {
@@ -42,7 +44,8 @@ func main() {
 			}
 		},
 		Assets: application.AssetOptions{
-			Handler: application.AssetFileServerFS(assets),
+			Handler:    application.AssetFileServerFS(assets),
+			Middleware: services.NewSteamArtworkMiddleware(steamService),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,

@@ -12,6 +12,7 @@ defer func() {
 - Nullable or unset storage values should use pointer types. Treat `nil` as "not set" and avoid collapsing SQL `NULL` into zero values unless a specific call site deliberately needs that behavior.
 - `internal/storage` is the persistence layer. It can be organized by table or by a close table/domain cluster when queries naturally cross tables. Do not introduce repository structs unless there is a concrete need beyond grouping SQL.
 - `internal/services` is workflow/domain-oriented, not one service per database table. Services expose app-facing operations and coordinate storage/helper packages.
+- Services are thin, so with heavy internal logic, create go package(s) with idiomatic conventions under `internal` for this logic. (example of this: `internal/modimport`)
 - `profile_mods` operations belong on `ProfileService` because they describe profile composition: which mods are in a profile, enabled state, and load order.
 - Service file organization:
     - `internal/services/mod.go`: `ModService`

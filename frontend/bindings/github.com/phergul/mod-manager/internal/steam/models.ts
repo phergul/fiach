@@ -46,17 +46,6 @@ export class Game {
     }
 }
 
-export enum ImageType {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    ImageTypeLogo = "logo",
-    ImageTypeBanner = "banner",
-    ImageTypeHero = "hero",
-};
-
 export class SteamPaths {
     "Root": string;
     "SteamApps": string;
