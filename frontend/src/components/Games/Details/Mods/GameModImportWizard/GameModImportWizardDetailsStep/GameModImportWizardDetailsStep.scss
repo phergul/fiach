@@ -1,0 +1,42 @@
+@use '@styles' as *;
+
+.game-mod-import-wizard-details-step {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.game-mod-import-wizard-details-step-field,
+.game-mod-import-wizard-details-step-path-row {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-wizard-details-step-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-details-step-input {
+  width: 100%;
+  height: $input-height;
+  padding: 0 $spacing-md;
+  border: $app-border;
+}
+
+.game-mod-import-wizard-details-step-paths {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.game-mod-import-wizard-details-step-path {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}

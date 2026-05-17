@@ -1,0 +1,79 @@
+@use '@styles' as *;
+
+$game-mod-import-wizard-strategy-step-icon-size: 1rem;
+
+.game-mod-import-wizard-strategy-step {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.game-mod-import-wizard-strategy-step-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-strategy-step-muted,
+.game-mod-import-wizard-strategy-step-error {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  overflow-wrap: anywhere;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-strategy-step-muted {
+  color: $color-text-subtle;
+}
+
+.game-mod-import-wizard-strategy-step-error {
+  color: $color-danger;
+}
+
+.game-mod-import-wizard-strategy-step-inline-icon,
+.game-mod-import-wizard-strategy-step-option-icon {
+  width: $game-mod-import-wizard-strategy-step-icon-size;
+  height: $game-mod-import-wizard-strategy-step-icon-size;
+  flex: 0 0 $game-mod-import-wizard-strategy-step-icon-size;
+  stroke-width: 1.8;
+}
+
+.game-mod-import-wizard-strategy-step-option {
+  display: grid;
+  width: 100%;
+  min-height: 5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  text-align: left;
+}
+
+.game-mod-import-wizard-strategy-step-option-selected {
+  background: $color-surface;
+  border-color: $color-text-subtle;
+}
+
+.game-mod-import-wizard-strategy-step-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-wizard-strategy-step-option-label {
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-strategy-step-description {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}

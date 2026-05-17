@@ -7,6 +7,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as installconfig$0 from "../installconfig/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
 export function ImportModArchive(gameID: number, name: string, archiveFilePath: string): $CancellablePromise<storage$0.Mod> {
@@ -21,12 +24,20 @@ export function ImportModFolder(gameID: number, name: string, sourceFolderPath: 
     });
 }
 
+export function ListImportStrategies(): $CancellablePromise<installconfig$0.StrategyDescriptor[]> {
+    return $Call.ByID(1013940886).then(($result: any) => {
+        return $$createType2($result);
+    });
+}
+
 export function ListMods(gameID: number): $CancellablePromise<storage$0.Mod[]> {
     return $Call.ByID(2000775995, gameID).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType3($result);
     });
 }
 
 // Private type creation functions
 const $$createType0 = storage$0.Mod.createFrom;
-const $$createType1 = $Create.Array($$createType0);
+const $$createType1 = installconfig$0.StrategyDescriptor.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = $Create.Array($$createType0);

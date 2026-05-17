@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
+import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
 import { ImportModArchive, ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import {
   ResolveGameModStoragePath,
@@ -17,7 +18,7 @@ import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/G
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
 import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
-import { GameModImportReviewDialog } from '@components/Games/Details/Mods/GameModImportReviewDialog/GameModImportReviewDialog';
+import { GameModImportWizard } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizard';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import { useGameArtwork, useGameMods, useGameProfiles, useStoredGames } from '@hooks';
@@ -71,7 +72,7 @@ export const GameDetails = () => {
   const { gameId } = useParams();
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
-  const [importReview, setImportReview] = useState<ImportReviewState | null>(null);
+  const [importWizard, setImportWizard] = useState<ImportReviewState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
@@ -111,7 +112,7 @@ export const GameDetails = () => {
 
     try {
       const sourcePath = await openDirectory({
-        buttonText: 'Review Import',
+        buttonText: 'Configure Import',
         title: 'Select mod folder',
       });
       if (sourcePath === null) {
@@ -119,7 +120,7 @@ export const GameDetails = () => {
       }
 
       const targetPath = await ResolveGameModStoragePath(game.ID);
-      setImportReview({
+      setImportWizard({
         initialName: getFolderName(sourcePath),
         sourceKind: 'folder',
         sourceLabel: 'Source folder',
@@ -145,7 +146,7 @@ export const GameDetails = () => {
 
     try {
       const sourcePath = await openZipArchive({
-        buttonText: 'Review Import',
+        buttonText: 'Configure Import',
         title: 'Select mod archive',
       });
       if (sourcePath === null) {
@@ -153,7 +154,7 @@ export const GameDetails = () => {
       }
 
       const targetPath = await ResolveGameModStoragePath(game.ID);
-      setImportReview({
+      setImportWizard({
         initialName: getArchiveName(sourcePath),
         sourceKind: 'archive',
         sourceLabel: 'Source archive',
@@ -174,12 +175,12 @@ export const GameDetails = () => {
       return;
     }
 
-    setImportReview(null);
+    setImportWizard(null);
     setImportError(null);
   };
 
-  const importReviewedMod = async (name: string) => {
-    if (game === undefined || importReview === null || isImporting) {
+  const importConfiguredWizardMod = async ({ name, strategyType }: { name: string; strategyType: StrategyType }) => {
+    if (game === undefined || importWizard === null || isImporting) {
       return;
     }
 
@@ -187,10 +188,10 @@ export const GameDetails = () => {
     setImportError(null);
 
     try {
-      const importedMod = importReview.sourceKind === 'archive'
-        ? await ImportModArchive(game.ID, name, importReview.sourcePath)
-        : await ImportModFolder(game.ID, name, importReview.sourcePath);
-      setImportReview(null);
+      const importedMod = importWizard.sourceKind === 'archive'
+        ? await ImportModArchive(game.ID, name, importWizard.sourcePath)
+        : await ImportModFolder(game.ID, name, importWizard.sourcePath);
+      setImportWizard(null);
 
       try {
         await gameModManager.refreshMods();
@@ -410,16 +411,16 @@ export const GameDetails = () => {
         </>
       )}
 
-      <GameModImportReviewDialog
+      <GameModImportWizard
         error={importError}
-        initialName={importReview?.initialName ?? ''}
+        initialName={importWizard?.initialName ?? ''}
         isBusy={isImporting}
-        isOpen={importReview !== null}
+        isOpen={importWizard !== null}
         onClose={closeImportReview}
-        onImport={importReviewedMod}
-        sourceLabel={importReview?.sourceLabel ?? 'Source'}
-        sourcePath={importReview?.sourcePath ?? ''}
-        targetPath={importReview?.targetPath ?? ''}
+        onImport={importConfiguredWizardMod}
+        sourceLabel={importWizard?.sourceLabel ?? 'Source'}
+        sourcePath={importWizard?.sourcePath ?? ''}
+        targetPath={importWizard?.targetPath ?? ''}
       />
 
       <ConfirmDialog

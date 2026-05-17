@@ -1,0 +1,84 @@
+@use '@styles' as *;
+
+$game-mod-import-wizard-control-height: 2.5rem;
+$game-mod-import-wizard-step-size: 1.5rem;
+
+.game-mod-import-wizard-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.game-mod-import-wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $spacing-sm;
+}
+
+.game-mod-import-wizard-step {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border-bottom: $app-border-width solid $color-border-subtle;
+  color: $color-text-muted;
+}
+
+.game-mod-import-wizard-step-active {
+  border-color: $color-text-subtle;
+  color: $color-text-primary;
+}
+
+.game-mod-import-wizard-step-number {
+  display: inline-flex;
+  width: $game-mod-import-wizard-step-size;
+  height: $game-mod-import-wizard-step-size;
+  flex: 0 0 $game-mod-import-wizard-step-size;
+  align-items: center;
+  justify-content: center;
+  border: $app-border-width solid currentColor;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+}
+
+.game-mod-import-wizard-step-label {
+  min-width: 0;
+  overflow: hidden;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-mod-import-wizard-error {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  overflow-wrap: anywhere;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-error {
+  color: $color-danger;
+}
+
+.game-mod-import-wizard-primary-button,
+.game-mod-import-wizard-secondary-button {
+  min-height: $game-mod-import-wizard-control-height;
+}
+
+.game-mod-import-wizard-primary-button {
+  background: $color-text-subtle;
+  color: $color-background;
+  border-color: $color-text-subtle;
+}
+
+.game-mod-import-wizard-primary-button:hover:not(:disabled),
+.game-mod-import-wizard-primary-button:focus-visible:not(:disabled) {
+  background: $color-text-primary;
+  border-color: $color-text-primary;
+}

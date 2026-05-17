@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -27,6 +28,26 @@ func TestModServiceListsMods(t *testing.T) {
 	}
 	if len(mods) != 1 || mods[0].ID != modID {
 		t.Fatalf("ListMods() = %+v, want inserted mod", mods)
+	}
+}
+
+func TestModServiceListsImportStrategies(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := NewModService(store)
+	strategies, err := service.ListImportStrategies()
+	if err != nil {
+		t.Fatalf("ListImportStrategies() error = %v", err)
+	}
+
+	if len(strategies) != 1 {
+		t.Fatalf("ListImportStrategies() length = %d, want 1: %+v", len(strategies), strategies)
+	}
+	if strategies[0].Type != installconfig.StrategyTypeGenericCopy || strategies[0].Visibility != installconfig.StrategyVisibilitySelectable {
+		t.Fatalf("ListImportStrategies()[0] = %+v, want selectable generic copy", strategies[0])
 	}
 }
 
