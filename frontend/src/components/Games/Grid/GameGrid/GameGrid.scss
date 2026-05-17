@@ -1,21 +1,9 @@
 @use '@styles' as *;
 
-$game-grid-column-width: 9rem;
+$game-grid-min-column-width: 9rem;
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, $game-grid-column-width);
+  grid-template-columns: repeat(auto-fill, minmax($game-grid-min-column-width, 1fr));
   gap: $spacing-lg;
-  justify-content: start;
-}
-
-.game-grid-item {
-  width: $game-grid-column-width;
-  min-width: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .game-grid-item {
-    transition: none;
-  }
 }
