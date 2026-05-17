@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
-import { ImportConfiguredMod } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import { ImportMod } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import {
   ResolveGameModStoragePath,
@@ -180,7 +180,7 @@ export const GameDetails = () => {
     setImportError(null);
   };
 
-  const importConfiguredWizardMod = async ({
+  const importWizardMod = async ({
     name,
     strategyType,
     targetRelativePath,
@@ -197,7 +197,7 @@ export const GameDetails = () => {
     setImportError(null);
 
     try {
-      const importResult = await ImportConfiguredMod({
+      const importResult = await ImportMod({
         GameID: game.ID,
         Name: name,
         SourceType: importWizard.sourceType,
@@ -432,7 +432,7 @@ export const GameDetails = () => {
         isBusy={isImporting}
         isOpen={importWizard !== null}
         onClose={closeImportReview}
-        onImport={importConfiguredWizardMod}
+        onImport={importWizardMod}
         sourceLabel={importWizard?.sourceLabel ?? 'Source'}
         sourcePath={importWizard?.sourcePath ?? ''}
         sourceType={importWizard?.sourceType ?? ModSourceType.$zero}

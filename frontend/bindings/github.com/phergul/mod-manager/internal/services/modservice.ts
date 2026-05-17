@@ -16,27 +16,15 @@ import * as storage$0 from "../storage/models.js";
 // @ts-ignore: Unused imports
 import * as $models from "./models.js";
 
-export function ImportConfiguredMod(input: $models.ImportConfiguredModInput): $CancellablePromise<$models.ImportConfiguredModResult> {
-    return $Call.ByID(991496197, input).then(($result: any) => {
+export function ImportMod(input: $models.ImportModInput): $CancellablePromise<$models.ImportModResult> {
+    return $Call.ByID(2313069445, input).then(($result: any) => {
         return $$createType0($result);
-    });
-}
-
-export function ImportModArchive(gameID: number, name: string, archiveFilePath: string): $CancellablePromise<storage$0.Mod> {
-    return $Call.ByID(3065580069, gameID, name, archiveFilePath).then(($result: any) => {
-        return $$createType1($result);
-    });
-}
-
-export function ImportModFolder(gameID: number, name: string, sourceFolderPath: string): $CancellablePromise<storage$0.Mod> {
-    return $Call.ByID(2686117309, gameID, name, sourceFolderPath).then(($result: any) => {
-        return $$createType1($result);
     });
 }
 
 export function ListImportStrategies(): $CancellablePromise<installconfig$0.StrategyDescriptor[]> {
     return $Call.ByID(1013940886).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType2($result);
     });
 }
 
@@ -53,9 +41,9 @@ export function PreviewImportConfiguration(input: $models.PreviewImportConfigura
 }
 
 // Private type creation functions
-const $$createType0 = $models.ImportConfiguredModResult.createFrom;
-const $$createType1 = storage$0.Mod.createFrom;
-const $$createType2 = installconfig$0.StrategyDescriptor.createFrom;
-const $$createType3 = $Create.Array($$createType2);
-const $$createType4 = $Create.Array($$createType1);
+const $$createType0 = $models.ImportModResult.createFrom;
+const $$createType1 = installconfig$0.StrategyDescriptor.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = storage$0.Mod.createFrom;
+const $$createType4 = $Create.Array($$createType3);
 const $$createType5 = installconfig$0.Preview.createFrom;

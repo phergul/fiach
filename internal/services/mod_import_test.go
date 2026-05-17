@@ -6,7 +6,42 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/installconfig"
+	"github.com/phergul/mod-manager/internal/storage"
 )
+
+func importFolderMod(service *ModService, gameID int64, name string, sourcePath string) (storage.Mod, error) {
+	result, err := service.ImportMod(ImportModInput{
+		GameID:             gameID,
+		Name:               name,
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: ".",
+	})
+	if err != nil {
+		return storage.Mod{}, err
+	}
+
+	return result.Mod, nil
+}
+
+func importArchiveMod(service *ModService, gameID int64, name string, archivePath string) (storage.Mod, error) {
+	result, err := service.ImportMod(ImportModInput{
+		GameID:             gameID,
+		Name:               name,
+		SourceType:         storage.ModSourceTypeArchive,
+		SourcePath:         archivePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: ".",
+	})
+	if err != nil {
+		return storage.Mod{}, err
+	}
+
+	return result.Mod, nil
+}
 
 func makeSourceFolder(t *testing.T, files map[string]string) string {
 	t.Helper()

@@ -12,7 +12,7 @@ import * as installconfig$0 from "../installconfig/models.js";
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
-export class ImportConfiguredModInput {
+export class ImportModInput {
     "GameID": number;
     "Name": string;
     "SourceType": storage$0.ModSourceType;
@@ -20,8 +20,8 @@ export class ImportConfiguredModInput {
     "StrategyType": installconfig$0.StrategyType;
     "TargetRelativePath": string;
 
-    /** Creates a new ImportConfiguredModInput instance. */
-    constructor($$source: Partial<ImportConfiguredModInput> = {}) {
+    /** Creates a new ImportModInput instance. */
+    constructor($$source: Partial<ImportModInput> = {}) {
         if (!("GameID" in $$source)) {
             this["GameID"] = 0;
         }
@@ -45,20 +45,20 @@ export class ImportConfiguredModInput {
     }
 
     /**
-     * Creates a new ImportConfiguredModInput instance from a string or object.
+     * Creates a new ImportModInput instance from a string or object.
      */
-    static createFrom($$source: any = {}): ImportConfiguredModInput {
+    static createFrom($$source: any = {}): ImportModInput {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ImportConfiguredModInput($$parsedSource as Partial<ImportConfiguredModInput>);
+        return new ImportModInput($$parsedSource as Partial<ImportModInput>);
     }
 }
 
-export class ImportConfiguredModResult {
+export class ImportModResult {
     "Mod": storage$0.Mod;
     "Config": storage$0.ModInstallConfig;
 
-    /** Creates a new ImportConfiguredModResult instance. */
-    constructor($$source: Partial<ImportConfiguredModResult> = {}) {
+    /** Creates a new ImportModResult instance. */
+    constructor($$source: Partial<ImportModResult> = {}) {
         if (!("Mod" in $$source)) {
             this["Mod"] = (new storage$0.Mod());
         }
@@ -70,9 +70,9 @@ export class ImportConfiguredModResult {
     }
 
     /**
-     * Creates a new ImportConfiguredModResult instance from a string or object.
+     * Creates a new ImportModResult instance from a string or object.
      */
-    static createFrom($$source: any = {}): ImportConfiguredModResult {
+    static createFrom($$source: any = {}): ImportModResult {
         const $$createField0_0 = $$createType0;
         const $$createField1_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
@@ -82,7 +82,7 @@ export class ImportConfiguredModResult {
         if ("Config" in $$parsedSource) {
             $$parsedSource["Config"] = $$createField1_0($$parsedSource["Config"]);
         }
-        return new ImportConfiguredModResult($$parsedSource as Partial<ImportConfiguredModResult>);
+        return new ImportModResult($$parsedSource as Partial<ImportModResult>);
     }
 }
 

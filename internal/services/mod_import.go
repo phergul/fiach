@@ -19,7 +19,7 @@ type PreviewImportConfigurationInput struct {
 	TargetRelativePath string
 }
 
-type ImportConfiguredModInput struct {
+type ImportModInput struct {
 	GameID             int64
 	Name               string
 	SourceType         storage.ModSourceType
@@ -28,28 +28,9 @@ type ImportConfiguredModInput struct {
 	TargetRelativePath string
 }
 
-type ImportConfiguredModResult struct {
+type ImportModResult struct {
 	Mod    storage.Mod
 	Config storage.ModInstallConfig
-}
-
-func (s *ModService) ImportModFolder(gameID int64, name string, sourceFolderPath string) (mod storage.Mod, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("import mod folder: %w", err)
-		}
-	}()
-
-	if s == nil || s.store == nil {
-		return storage.Mod{}, errors.New("storage is not configured")
-	}
-
-	source, err := modimport.NewFolderSource(sourceFolderPath)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	return modimport.Import(context.Background(), s.store, gameID, name, source)
 }
 
 func (s *ModService) PreviewImportConfiguration(input PreviewImportConfigurationInput) (preview installconfig.Preview, err error) {
@@ -91,23 +72,23 @@ func (s *ModService) PreviewImportConfiguration(input PreviewImportConfiguration
 	})
 }
 
-func (s *ModService) ImportConfiguredMod(input ImportConfiguredModInput) (result ImportConfiguredModResult, err error) {
+func (s *ModService) ImportMod(input ImportModInput) (result ImportModResult, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("import configured mod: %w", err)
+			err = fmt.Errorf("import mod: %w", err)
 		}
 	}()
 
 	if s == nil || s.store == nil {
-		return ImportConfiguredModResult{}, errors.New("storage is not configured")
+		return ImportModResult{}, errors.New("storage is not configured")
 	}
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
-		return ImportConfiguredModResult{}, err
+		return ImportModResult{}, err
 	}
 
-	importResult, err := modimport.ImportConfigured(
+	importResult, err := modimport.Import(
 		context.Background(),
 		s.store,
 		input.GameID,
@@ -117,32 +98,13 @@ func (s *ModService) ImportConfiguredMod(input ImportConfiguredModInput) (result
 		input.TargetRelativePath,
 	)
 	if err != nil {
-		return ImportConfiguredModResult{}, err
+		return ImportModResult{}, err
 	}
 
-	return ImportConfiguredModResult{
+	return ImportModResult{
 		Mod:    importResult.Mod,
 		Config: importResult.Config,
 	}, nil
-}
-
-func (s *ModService) ImportModArchive(gameID int64, name string, archiveFilePath string) (mod storage.Mod, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("import mod archive: %w", err)
-		}
-	}()
-
-	if s == nil || s.store == nil {
-		return storage.Mod{}, errors.New("storage is not configured")
-	}
-
-	source, err := modimport.NewArchiveSource(archiveFilePath)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	return modimport.Import(context.Background(), s.store, gameID, name, source)
 }
 
 func importSource(sourceType storage.ModSourceType, sourcePath string) (modimport.Source, error) {

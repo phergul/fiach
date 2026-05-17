@@ -28,11 +28,7 @@ type Store interface {
 	FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (storage.Mod, bool, error)
 	GetGlobalModStorageRoot(ctx context.Context) (string, error)
 	ResolveGameModStoragePath(ctx context.Context, gameID int64, globalRoot string) (string, error)
-	CreateMod(ctx context.Context, input storage.CreateModInput) (storage.Mod, error)
-}
-
-type ConfiguredStore interface {
-	Store
+	CreateOrReplaceModInstallConfig(ctx context.Context, input storage.CreateModInstallConfigInput) (storage.ModInstallConfig, error)
 	CreateModWithInstallConfig(ctx context.Context, input storage.CreateModWithInstallConfigInput) (storage.CreateModWithInstallConfigResult, error)
 	GetModInstallConfig(ctx context.Context, modID int64) (storage.ModInstallConfig, bool, error)
 }
@@ -40,112 +36,10 @@ type ConfiguredStore interface {
 var unsafeManagedModFolderNameChars = regexp.MustCompile(`[<>:"/\\|?*\x00-\x1F]+`)
 var repeatedManagedModFolderSeparators = regexp.MustCompile(`-+`)
 
-func Import(ctx context.Context, store Store, gameID int64, name string, source Source) (mod storage.Mod, err error) {
+func Import(ctx context.Context, store Store, gameID int64, name string, source Source, strategyType installconfig.StrategyType, targetRelativePath string) (result storage.CreateModWithInstallConfigResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("import mod source: %w", err)
-		}
-	}()
-
-	if store == nil {
-		return storage.Mod{}, errors.New("store is not configured")
-	}
-	if source == nil {
-		return storage.Mod{}, errors.New("import source is required")
-	}
-
-	name, err = NormalizeName(name)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	existing, found, err := store.FindModByOriginalSourcePath(ctx, gameID, source.OriginalPath())
-	if err != nil {
-		return storage.Mod{}, err
-	}
-	if found {
-		return existing, nil
-	}
-
-	if err := source.Validate(); err != nil {
-		return storage.Mod{}, err
-	}
-
-	globalRoot, err := store.GetGlobalModStorageRoot(ctx)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	gameStoragePath, err := store.ResolveGameModStoragePath(ctx, gameID, globalRoot)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	if err := os.MkdirAll(gameStoragePath, 0o755); err != nil {
-		return storage.Mod{}, fmt.Errorf("create game mod storage folder: %w", err)
-	}
-	if pathContains(gameStoragePath, source.OriginalPath()) {
-		return storage.Mod{}, fmt.Errorf("source %q contains the managed mod storage folder %q", source.OriginalPath(), gameStoragePath)
-	}
-
-	destinationPath, err := uniqueManagedModDestination(gameStoragePath, name)
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	tempPath, err := makeImportTempDir(gameStoragePath, filepath.Base(destinationPath))
-	if err != nil {
-		return storage.Mod{}, err
-	}
-	removeTemp := true
-	defer func() {
-		if removeTemp {
-			_ = os.RemoveAll(tempPath)
-		}
-	}()
-
-	if err := source.Materialize(tempPath); err != nil {
-		return storage.Mod{}, err
-	}
-
-	if _, err := os.Stat(destinationPath); err == nil {
-		return storage.Mod{}, fmt.Errorf("managed mod destination %q already exists", destinationPath)
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return storage.Mod{}, fmt.Errorf("check managed mod destination: %w", err)
-	}
-
-	if err := os.Rename(tempPath, destinationPath); err != nil {
-		return storage.Mod{}, fmt.Errorf("move managed mod folder into place: %w", err)
-	}
-	removeTemp = false
-
-	removeDestination := true
-	defer func() {
-		if removeDestination {
-			_ = os.RemoveAll(destinationPath)
-		}
-	}()
-
-	mod, err = store.CreateMod(ctx, storage.CreateModInput{
-		GameID:             gameID,
-		Name:               name,
-		SourceType:         source.Type(),
-		SourcePath:         destinationPath,
-		OriginalSourcePath: source.OriginalPath(),
-		OriginalSourceName: source.OriginalName(),
-	})
-	if err != nil {
-		return storage.Mod{}, err
-	}
-
-	removeDestination = false
-	return mod, nil
-}
-
-func ImportConfigured(ctx context.Context, store ConfiguredStore, gameID int64, name string, source Source, strategyType installconfig.StrategyType, targetRelativePath string) (result storage.CreateModWithInstallConfigResult, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("import configured mod source: %w", err)
 		}
 	}()
 
@@ -172,10 +66,22 @@ func ImportConfigured(ctx context.Context, store ConfiguredStore, gameID int64, 
 	if err != nil {
 		return storage.CreateModWithInstallConfigResult{}, err
 	}
+	configInput := storage.CreateModInstallConfigInput{
+		StrategyType:       string(strategyType),
+		TargetBase:         installconfig.TargetBaseGameRoot,
+		TargetRelativePath: targetRelativePath,
+	}
 	if found {
-		config, _, err := store.GetModInstallConfig(ctx, existing.ID)
+		config, configFound, err := store.GetModInstallConfig(ctx, existing.ID)
 		if err != nil {
 			return storage.CreateModWithInstallConfigResult{}, err
+		}
+		if !configFound {
+			configInput.ModID = existing.ID
+			config, err = store.CreateOrReplaceModInstallConfig(ctx, configInput)
+			if err != nil {
+				return storage.CreateModWithInstallConfigResult{}, err
+			}
 		}
 		return storage.CreateModWithInstallConfigResult{
 			Mod:    existing,
@@ -251,11 +157,7 @@ func ImportConfigured(ctx context.Context, store ConfiguredStore, gameID int64, 
 			OriginalSourcePath: source.OriginalPath(),
 			OriginalSourceName: source.OriginalName(),
 		},
-		Config: storage.CreateModInstallConfigInput{
-			StrategyType:       string(strategyType),
-			TargetBase:         installconfig.TargetBaseGameRoot,
-			TargetRelativePath: targetRelativePath,
-		},
+		Config: configInput,
 	})
 	if err != nil {
 		return storage.CreateModWithInstallConfigResult{}, err

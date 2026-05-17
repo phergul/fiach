@@ -13,7 +13,7 @@ export {
 };
 
 export {
-    ImportConfiguredModInput,
-    ImportConfiguredModResult,
+    ImportModInput,
+    ImportModResult,
     PreviewImportConfigurationInput
 } from "./models.js";
