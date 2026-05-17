@@ -3,11 +3,14 @@
 $game-details-tabs-tab-height: 3.25rem;
 
 .game-details-tabs {
+  position: relative;
+  z-index: 1;
   display: grid;
   flex: 0 0 auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  background: $color-background;
-  border-bottom: $app-border;
+  background: rgba($color-background, 0.5);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .game-details-tabs-tab {

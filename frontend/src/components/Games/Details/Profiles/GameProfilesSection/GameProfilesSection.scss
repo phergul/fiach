@@ -8,6 +8,7 @@ $game-profiles-section-sidebar-width: 24rem;
   flex: 1;
   flex-direction: column;
   background: $color-background;
+  z-index: 1;
 }
 
 .game-profiles-section-workspace {

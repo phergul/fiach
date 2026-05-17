@@ -4,32 +4,17 @@ import './GameDetailsHeader.scss';
 
 interface GameDetailsHeaderProps {
   game: StoredGame;
-  heroArtworkSource: string;
-  onHeroArtworkError: () => void;
   logoArtworkSource: string;
   onLogoArtworkError: () => void;
 }
 
 export const GameDetailsHeader = ({
   game,
-  heroArtworkSource,
-  onHeroArtworkError,
   logoArtworkSource,
   onLogoArtworkError,
 }: GameDetailsHeaderProps) => {
   return (
     <div className="game-details-header">
-      {heroArtworkSource !== '' && (
-        <div className="game-details-header-backdrop" aria-hidden="true">
-          <img
-            className="game-details-header-backdrop-image"
-            src={heroArtworkSource}
-            alt=""
-            onError={onHeroArtworkError}
-          />
-        </div>
-      )}
-
       <div className="game-details-header-heading">
         <h1 className="game-details-header-title" id="game-details-title">
           {game.Name}

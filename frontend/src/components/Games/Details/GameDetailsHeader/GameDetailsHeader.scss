@@ -1,45 +1,20 @@
 @use '@styles' as *;
 
-$game-details-header-hero-height: 6rem;
-$game-details-header-hero-image-opacity: 0.42;
+$game-details-header-height: 6rem;
 $game-details-header-title-font-size: 2rem;
 $game-details-header-logo-width: 14rem;
 
 .game-details-header {
   position: relative;
+  z-index: 1;
   display: flex;
   flex: 0 0 auto;
-  min-height: $game-details-header-hero-height;
+  min-height: $game-details-header-height;
   align-items: center;
   justify-content: space-between;
   gap: $spacing-xl;
   padding: $spacing-md $spacing-xl;
   overflow: hidden;
-  background: $color-background;
-  border-bottom: $app-border;
-}
-
-.game-details-header-backdrop {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.game-details-header-backdrop::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  background:
-    linear-gradient(to bottom, rgba($color-background, 0.18) 0%, rgba($color-background, 0.64) 58%, $color-background 100%),
-    linear-gradient(to right, rgba($color-background, 0.44) 0%, rgba($color-background, 0.18) 42%, rgba($color-background, 0.78) 100%);
-}
-
-.game-details-header-backdrop-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  opacity: $game-details-header-hero-image-opacity;
 }
 
 .game-details-header-heading {

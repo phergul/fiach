@@ -6,6 +6,7 @@ $game-mods-section-import-width: 8.5rem;
 
 .game-mods-section {
   background: $color-background;
+  z-index: 1;
 }
 
 .game-mods-section-controls {

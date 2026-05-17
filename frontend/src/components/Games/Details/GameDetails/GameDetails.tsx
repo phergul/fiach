@@ -374,6 +374,17 @@ export const GameDetails = () => {
         </div>
       </div>
 
+      {heroArtworkSource !== '' && (
+        <div className="game-details-backdrop" aria-hidden="true">
+          <img
+            className="game-details-backdrop-image"
+            src={heroArtworkSource}
+            alt=""
+            onError={handleHeroArtworkError}
+          />
+        </div>
+      )}
+
       {isWaitingForGame && <GameDetailsState />}
 
       {hasLoadError && (
@@ -397,8 +408,6 @@ export const GameDetails = () => {
         <>
           <GameDetailsHeader
             game={game}
-            heroArtworkSource={heroArtworkSource}
-            onHeroArtworkError={handleHeroArtworkError}
             logoArtworkSource={logoArtworkSource}
             onLogoArtworkError={handleLogoArtworkError}
           />
