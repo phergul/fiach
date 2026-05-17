@@ -1,24 +1,28 @@
 import { FormEvent, useEffect, useState } from 'react';
 
-import type { StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
-import { ListImportStrategies } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import type { Preview, StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
+import type { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { ListImportStrategies, PreviewImportConfiguration } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import { Modal } from '@components/Common/Modal/Modal';
 import { GameModImportWizardDetailsStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardDetailsStep/GameModImportWizardDetailsStep';
-import { GameModImportWizardReviewStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardReviewStep/GameModImportWizardReviewStep';
+import { GameModImportWizardPreviewStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardPreviewStep/GameModImportWizardPreviewStep';
 import { GameModImportWizardStrategyStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardStrategyStep/GameModImportWizardStrategyStep';
+import { GameModImportWizardTargetStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardTargetStep/GameModImportWizardTargetStep';
 import { getErrorMessage } from '@utils';
 
 import './GameModImportWizard.scss';
 
-type GameModImportWizardStep = 'details' | 'strategy' | 'review';
+type GameModImportWizardStep = 'details' | 'strategy' | 'target' | 'preview';
 
 interface GameModImportWizardSubmitInput {
   name: string;
   strategyType: StrategyType;
+  targetRelativePath: string;
 }
 
 interface GameModImportWizardProps {
   error: string | null;
+  gameID: number;
   initialName: string;
   isBusy: boolean;
   isOpen: boolean;
@@ -26,19 +30,22 @@ interface GameModImportWizardProps {
   onImport: (input: GameModImportWizardSubmitInput) => Promise<void> | void;
   sourceLabel: string;
   sourcePath: string;
+  sourceType: ModSourceType;
   targetPath: string;
 }
 
 const stepLabels: Record<GameModImportWizardStep, string> = {
   details: 'Details',
   strategy: 'Strategy',
-  review: 'Review',
+  target: 'Target',
+  preview: 'Preview',
 };
 
-const stepOrder: GameModImportWizardStep[] = ['details', 'strategy', 'review'];
+const stepOrder: GameModImportWizardStep[] = ['details', 'strategy', 'target', 'preview'];
 
 export const GameModImportWizard = ({
   error,
+  gameID,
   initialName,
   isBusy,
   isOpen,
@@ -46,24 +53,34 @@ export const GameModImportWizard = ({
   onImport,
   sourceLabel,
   sourcePath,
+  sourceType,
   targetPath,
 }: GameModImportWizardProps) => {
   const [step, setStep] = useState<GameModImportWizardStep>('details');
   const [name, setName] = useState(initialName);
   const [selectedStrategyType, setSelectedStrategyType] = useState<StrategyType | null>(null);
+  const [targetRelativePath, setTargetRelativePath] = useState('.');
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [strategies, setStrategies] = useState<StrategyDescriptor[]>([]);
   const [strategyLoadError, setStrategyLoadError] = useState<string | null>(null);
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(false);
   const trimmedName = name.trim();
-  const selectedStrategy = strategies.find((strategy) => strategy.type === selectedStrategyType);
+  const selectedStrategy = strategies.find((strategy) => strategy.Type === selectedStrategyType);
   const isDetailsStep = step === 'details';
   const isStrategyStep = step === 'strategy';
-  const isReviewStep = step === 'review';
+  const isTargetStep = step === 'target';
+  const isPreviewStep = step === 'preview';
   const canContinueFromDetails = trimmedName !== '';
   const canContinueFromStrategy = selectedStrategyType !== null && strategyLoadError === null;
+  const canPreviewTarget = selectedStrategyType !== null && targetRelativePath.trim() !== '';
   const isNextDisabled = isBusy ||
+    isPreviewing ||
     (isDetailsStep && !canContinueFromDetails) ||
-    (isStrategyStep && !canContinueFromStrategy);
+    (isStrategyStep && !canContinueFromStrategy) ||
+    (isTargetStep && !canPreviewTarget) ||
+    (isPreviewStep && preview === null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -74,6 +91,10 @@ export const GameModImportWizard = ({
     setStep('details');
     setName(initialName);
     setSelectedStrategyType(null);
+    setTargetRelativePath('.');
+    setPreview(null);
+    setPreviewError(null);
+    setIsPreviewing(false);
     setStrategyLoadError(null);
     setStrategies([]);
     setIsLoadingStrategies(true);
@@ -85,6 +106,9 @@ export const GameModImportWizard = ({
         }
 
         setStrategies(loadedStrategies);
+        if (loadedStrategies.length === 1) {
+          setSelectedStrategyType(loadedStrategies[0].Type);
+        }
       })
       .catch((loadError) => {
         if (isCancelled) {
@@ -104,6 +128,39 @@ export const GameModImportWizard = ({
     };
   }, [initialName, isOpen]);
 
+  const handleTargetRelativePathChange = (nextTargetRelativePath: string) => {
+    setTargetRelativePath(nextTargetRelativePath);
+    setPreview(null);
+    setPreviewError(null);
+  };
+
+  const loadPreview = async () => {
+    if (selectedStrategyType === null || targetRelativePath.trim() === '') {
+      return;
+    }
+
+    setIsPreviewing(true);
+    setPreview(null);
+    setPreviewError(null);
+
+    try {
+      const loadedPreview = await PreviewImportConfiguration({
+        GameID: gameID,
+        SourceType: sourceType,
+        SourcePath: sourcePath,
+        StrategyType: selectedStrategyType,
+        TargetRelativePath: targetRelativePath,
+      });
+      setTargetRelativePath(loadedPreview.TargetRelativePath);
+      setPreview(loadedPreview);
+      setStep('preview');
+    } catch (previewLoadError) {
+      setPreviewError(getErrorMessage(previewLoadError));
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -120,15 +177,21 @@ export const GameModImportWizard = ({
 
     if (isStrategyStep) {
       if (canContinueFromStrategy) {
-        setStep('review');
+        setStep('target');
       }
       return;
     }
 
-    if (isReviewStep && trimmedName !== '' && selectedStrategyType !== null) {
+    if (isTargetStep) {
+      await loadPreview();
+      return;
+    }
+
+    if (isPreviewStep && trimmedName !== '' && selectedStrategyType !== null && preview !== null) {
       await onImport({
         name: trimmedName,
         strategyType: selectedStrategyType,
+        targetRelativePath: preview.TargetRelativePath,
       });
     }
   };
@@ -141,8 +204,11 @@ export const GameModImportWizard = ({
     if (isStrategyStep) {
       setStep('details');
     }
-    if (isReviewStep) {
+    if (isTargetStep) {
       setStep('strategy');
+    }
+    if (isPreviewStep) {
+      setStep('target');
     }
   };
 
@@ -160,10 +226,10 @@ export const GameModImportWizard = ({
       )}
       <button
         className="game-mod-import-wizard-primary-button"
-        disabled={isNextDisabled || (isReviewStep && selectedStrategyType === null)}
+        disabled={isNextDisabled}
         type="submit"
       >
-        {isReviewStep ? (isBusy ? 'Importing...' : 'Import Mod') : 'Next'}
+        {isPreviewStep ? (isBusy ? 'Importing...' : 'Import Mod') : isTargetStep ? (isPreviewing ? 'Previewing...' : 'Preview') : 'Next'}
       </button>
       <button
         className="game-mod-import-wizard-secondary-button"
@@ -226,16 +292,25 @@ export const GameModImportWizard = ({
         />
       )}
 
-      {isReviewStep && (
-        <GameModImportWizardReviewStep
-          name={trimmedName}
-          selectedStrategy={selectedStrategy}
-          sourceLabel={sourceLabel}
-          sourcePath={sourcePath}
-          targetPath={targetPath}
+      {isTargetStep && (
+        <GameModImportWizardTargetStep
+          isBusy={isBusy || isPreviewing}
+          onTargetRelativePathChange={handleTargetRelativePathChange}
+          targetRelativePath={targetRelativePath}
         />
       )}
 
+      {isPreviewStep && preview !== null && (
+        <GameModImportWizardPreviewStep
+          name={trimmedName}
+          preview={preview}
+          selectedStrategy={selectedStrategy}
+          sourceLabel={sourceLabel}
+          sourcePath={sourcePath}
+        />
+      )}
+
+      {previewError !== null && <p className="game-mod-import-wizard-error">{previewError}</p>}
       {error !== null && <p className="game-mod-import-wizard-error">{error}</p>}
     </Modal>
   );

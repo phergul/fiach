@@ -117,6 +117,129 @@ func TestModServiceImportsModArchive(t *testing.T) {
 	}
 }
 
+func TestModServicePreviewsFolderImportConfiguration(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	sourcePath := makeSourceFolder(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+		"readme.txt":     "hello",
+	})
+	service := NewModService(store)
+
+	preview, err := service.PreviewImportConfiguration(PreviewImportConfigurationInput{
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: "Mods/SkyUI",
+	})
+	if err != nil {
+		t.Fatalf("PreviewImportConfiguration() error = %v", err)
+	}
+
+	wantPaths := []string{"Mods/SkyUI/Data/SkyUI.esp", "Mods/SkyUI/readme.txt"}
+	if preview.TotalFileCount != 2 || preview.TargetRelativePath != "Mods/SkyUI" || strings.Join(preview.TargetFilePaths, "|") != strings.Join(wantPaths, "|") {
+		t.Fatalf("PreviewImportConfiguration() = %+v, want mapped target paths %+v", preview, wantPaths)
+	}
+}
+
+func TestModServicePreviewsArchiveWithImportLayout(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	archivePath := makeZipArchive(t, map[string]string{
+		"SkyUI/Data/SkyUI.esp": "plugin",
+		"SkyUI/readme.txt":     "hello",
+	})
+	service := NewModService(store)
+
+	preview, err := service.PreviewImportConfiguration(PreviewImportConfigurationInput{
+		SourceType:         storage.ModSourceTypeArchive,
+		SourcePath:         archivePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: ".",
+	})
+	if err != nil {
+		t.Fatalf("PreviewImportConfiguration() error = %v", err)
+	}
+
+	wantPaths := []string{"Data/SkyUI.esp", "readme.txt"}
+	if preview.TargetDisplayPath != "Game root" || strings.Join(preview.TargetFilePaths, "|") != strings.Join(wantPaths, "|") {
+		t.Fatalf("PreviewImportConfiguration() = %+v, want stripped archive paths %+v", preview, wantPaths)
+	}
+}
+
+func TestModServiceImportsConfiguredMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "plugin"})
+	service := NewModService(store)
+
+	result, err := service.ImportConfiguredMod(ImportConfiguredModInput{
+		GameID:             gameID,
+		Name:               " SkyUI ",
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("ImportConfiguredMod() error = %v", err)
+	}
+
+	if result.Mod.Name != "SkyUI" || result.Config.ModID != result.Mod.ID || result.Config.StrategyType != string(installconfig.StrategyTypeGenericCopy) || result.Config.TargetBase != installconfig.TargetBaseGameRoot || result.Config.TargetRelativePath != "Data" {
+		t.Fatalf("ImportConfiguredMod() = %+v, want imported mod and config", result)
+	}
+	assertFileContents(t, filepath.Join(result.Mod.SourcePath, "Data", "SkyUI.esp"), "plugin")
+}
+
+func TestModServiceConfiguredImportReturnsExistingModAndConfig(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "one"})
+	service := NewModService(store)
+
+	first, err := service.ImportConfiguredMod(ImportConfiguredModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("ImportConfiguredMod() first error = %v", err)
+	}
+
+	second, err := service.ImportConfiguredMod(ImportConfiguredModInput{
+		GameID:             gameID,
+		Name:               "Renamed",
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: "Other",
+	})
+	if err != nil {
+		t.Fatalf("ImportConfiguredMod() second error = %v", err)
+	}
+
+	if second.Mod.ID != first.Mod.ID || second.Mod.Name != first.Mod.Name || second.Config.TargetRelativePath != "Data" {
+		t.Fatalf("ImportConfiguredMod() repeat = %+v, want existing mod/config %+v", second, first)
+	}
+}
+
 func TestModServiceImportReturnsExistingModForRepeatedArchivePath(t *testing.T) {
 	t.Parallel()
 
@@ -432,6 +555,53 @@ func TestModServiceImportArchiveDatabaseFailureCleansManagedFolder(t *testing.T)
 	}
 	if _, err := os.Stat(filepath.Join(gameStoragePath, "DB Fail")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("managed folder stat error = %v, want cleaned destination", err)
+	}
+}
+
+func TestModServiceConfiguredImportConfigFailureCleansManagedFolder(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "one"})
+	gameStoragePath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(storage.StoredGame{ID: gameID}))
+	if _, err := store.DB().Exec(`
+		CREATE TRIGGER fail_config_insert
+		BEFORE INSERT ON mod_install_configs
+		BEGIN
+			SELECT RAISE(FAIL, 'forced config failure');
+		END
+	`); err != nil {
+		t.Fatalf("create failing config insert trigger: %v", err)
+	}
+
+	service := NewModService(store)
+	_, err := service.ImportConfiguredMod(ImportConfiguredModInput{
+		GameID:             gameID,
+		Name:               "Config Fail",
+		SourceType:         storage.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err == nil {
+		t.Fatal("ImportConfiguredMod() error = nil, want config error")
+	}
+	if !strings.Contains(err.Error(), "insert mod with install config rows") {
+		t.Fatalf("ImportConfiguredMod() error = %q, want configured storage context", err.Error())
+	}
+	if _, err := os.Stat(filepath.Join(gameStoragePath, "Config Fail")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("managed folder stat error = %v, want cleaned destination", err)
+	}
+
+	var count int
+	if err := store.DB().Get(&count, `SELECT COUNT(*) FROM mods WHERE name = 'Config Fail'`); err != nil {
+		t.Fatalf("count config fail mods: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("config fail mod count = %d, want transaction rollback", count)
 	}
 }
 

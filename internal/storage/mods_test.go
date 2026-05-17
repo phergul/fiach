@@ -146,6 +146,111 @@ func TestCreateModRequiresNameAndPaths(t *testing.T) {
 	}
 }
 
+func TestCreateOrReplaceModInstallConfigPersistsNullableSourceSubpath(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	config, err := store.CreateOrReplaceModInstallConfig(context.Background(), CreateModInstallConfigInput{
+		ModID:              modID,
+		StrategyType:       "generic_copy",
+		TargetBase:         "game_root",
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("CreateOrReplaceModInstallConfig() error = %v", err)
+	}
+	if config.ModID != modID || config.StrategyType != "generic_copy" || config.TargetBase != "game_root" || config.TargetRelativePath != "Data" || config.SourceSubpath != nil {
+		t.Fatalf("CreateOrReplaceModInstallConfig() = %+v, want persisted config without source subpath", config)
+	}
+
+	sourceSubpath := "plugin"
+	replaced, err := store.CreateOrReplaceModInstallConfig(context.Background(), CreateModInstallConfigInput{
+		ModID:              modID,
+		StrategyType:       "generic_copy",
+		TargetBase:         "game_root",
+		TargetRelativePath: "BepInEx/plugins",
+		SourceSubpath:      &sourceSubpath,
+	})
+	if err != nil {
+		t.Fatalf("CreateOrReplaceModInstallConfig() replace error = %v", err)
+	}
+	if replaced.TargetRelativePath != "BepInEx/plugins" || replaced.SourceSubpath == nil || *replaced.SourceSubpath != sourceSubpath {
+		t.Fatalf("CreateOrReplaceModInstallConfig() replaced = %+v, want updated config", replaced)
+	}
+}
+
+func TestGetModInstallConfigReportsMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	config, found, err := store.GetModInstallConfig(context.Background(), 999)
+	if err != nil {
+		t.Fatalf("GetModInstallConfig() error = %v", err)
+	}
+	if found || config != (ModInstallConfig{}) {
+		t.Fatalf("GetModInstallConfig() = %+v, %v; want missing", config, found)
+	}
+}
+
+func TestCreateModWithInstallConfigIsTransactional(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	result, err := store.CreateModWithInstallConfig(context.Background(), CreateModWithInstallConfigInput{
+		Mod: CreateModInput{
+			GameID:             gameID,
+			Name:               "SkyUI",
+			SourcePath:         "/managed/skyui",
+			OriginalSourcePath: "/imports/skyui",
+		},
+		Config: CreateModInstallConfigInput{
+			StrategyType:       "generic_copy",
+			TargetBase:         "game_root",
+			TargetRelativePath: "Data",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateModWithInstallConfig() error = %v", err)
+	}
+	if result.Mod.ID == 0 || result.Config.ModID != result.Mod.ID || result.Config.TargetRelativePath != "Data" {
+		t.Fatalf("CreateModWithInstallConfig() = %+v, want mod and config", result)
+	}
+
+	_, err = store.CreateModWithInstallConfig(context.Background(), CreateModWithInstallConfigInput{
+		Mod: CreateModInput{
+			GameID:             gameID,
+			Name:               "Broken",
+			SourcePath:         "/managed/broken",
+			OriginalSourcePath: "/imports/broken",
+		},
+		Config: CreateModInstallConfigInput{
+			StrategyType:       "unsupported",
+			TargetBase:         "game_root",
+			TargetRelativePath: "Data",
+		},
+	})
+	if err == nil {
+		t.Fatal("CreateModWithInstallConfig() invalid config error = nil, want error")
+	}
+
+	var count int
+	if err := store.DB().Get(&count, `SELECT COUNT(*) FROM mods WHERE name = 'Broken'`); err != nil {
+		t.Fatalf("count broken mods: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("broken mod count = %d, want transaction rollback", count)
+	}
+}
+
 func TestOriginalSourcePathIsUniquePerGame(t *testing.T) {
 	t.Parallel()
 

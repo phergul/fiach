@@ -4,7 +4,8 @@ import { Link, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
-import { ImportModArchive, ImportModFolder } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import { ImportConfiguredMod } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import {
   ResolveGameModStoragePath,
   SetGameModStoragePathOverride,
@@ -28,9 +29,9 @@ import './GameDetails.scss';
 
 interface ImportReviewState {
   initialName: string;
-  sourceKind: 'folder' | 'archive';
   sourceLabel: string;
   sourcePath: string;
+  sourceType: ModSourceType;
   targetPath: string;
 }
 
@@ -122,9 +123,9 @@ export const GameDetails = () => {
       const targetPath = await ResolveGameModStoragePath(game.ID);
       setImportWizard({
         initialName: getFolderName(sourcePath),
-        sourceKind: 'folder',
         sourceLabel: 'Source folder',
         sourcePath,
+        sourceType: ModSourceType.ModSourceTypeFolder,
         targetPath,
       });
     } catch (error) {
@@ -156,9 +157,9 @@ export const GameDetails = () => {
       const targetPath = await ResolveGameModStoragePath(game.ID);
       setImportWizard({
         initialName: getArchiveName(sourcePath),
-        sourceKind: 'archive',
         sourceLabel: 'Source archive',
         sourcePath,
+        sourceType: ModSourceType.ModSourceTypeArchive,
         targetPath,
       });
     } catch (error) {
@@ -179,7 +180,15 @@ export const GameDetails = () => {
     setImportError(null);
   };
 
-  const importConfiguredWizardMod = async ({ name, strategyType }: { name: string; strategyType: StrategyType }) => {
+  const importConfiguredWizardMod = async ({
+    name,
+    strategyType,
+    targetRelativePath,
+  }: {
+    name: string;
+    strategyType: StrategyType;
+    targetRelativePath: string;
+  }) => {
     if (game === undefined || importWizard === null || isImporting) {
       return;
     }
@@ -188,9 +197,14 @@ export const GameDetails = () => {
     setImportError(null);
 
     try {
-      const importedMod = importWizard.sourceKind === 'archive'
-        ? await ImportModArchive(game.ID, name, importWizard.sourcePath)
-        : await ImportModFolder(game.ID, name, importWizard.sourcePath);
+      const importResult = await ImportConfiguredMod({
+        GameID: game.ID,
+        Name: name,
+        SourceType: importWizard.sourceType,
+        SourcePath: importWizard.sourcePath,
+        StrategyType: strategyType,
+        TargetRelativePath: targetRelativePath,
+      });
       setImportWizard(null);
 
       try {
@@ -203,7 +217,7 @@ export const GameDetails = () => {
       }
 
       addToast({
-        message: `Imported ${importedMod.Name}.`,
+        message: `Imported ${importResult.Mod.Name}.`,
         tone: 'success',
       });
     } catch (error) {
@@ -413,6 +427,7 @@ export const GameDetails = () => {
 
       <GameModImportWizard
         error={importError}
+        gameID={game?.ID ?? 0}
         initialName={importWizard?.initialName ?? ''}
         isBusy={isImporting}
         isOpen={importWizard !== null}
@@ -420,6 +435,7 @@ export const GameDetails = () => {
         onImport={importConfiguredWizardMod}
         sourceLabel={importWizard?.sourceLabel ?? 'Source'}
         sourcePath={importWizard?.sourcePath ?? ''}
+        sourceType={importWizard?.sourceType ?? ModSourceType.$zero}
         targetPath={importWizard?.targetPath ?? ''}
       />
 

@@ -73,6 +73,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 	for _, table := range []string{
 		"games",
 		"mods",
+		"mod_install_configs",
 		"profiles",
 		"profile_mods",
 		"applied_manifests",

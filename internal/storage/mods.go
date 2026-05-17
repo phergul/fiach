@@ -39,6 +39,34 @@ type CreateModInput struct {
 	OriginalSourceName *string
 }
 
+type ModInstallConfig struct {
+	ModID              int64   `db:"mod_id"`
+	StrategyType       string  `db:"strategy_type"`
+	TargetBase         string  `db:"target_base"`
+	TargetRelativePath string  `db:"target_relative_path"`
+	SourceSubpath      *string `db:"source_subpath"`
+	CreatedAt          string  `db:"created_at"`
+	UpdatedAt          string  `db:"updated_at"`
+}
+
+type CreateModInstallConfigInput struct {
+	ModID              int64
+	StrategyType       string
+	TargetBase         string
+	TargetRelativePath string
+	SourceSubpath      *string
+}
+
+type CreateModWithInstallConfigInput struct {
+	Mod    CreateModInput
+	Config CreateModInstallConfigInput
+}
+
+type CreateModWithInstallConfigResult struct {
+	Mod    Mod
+	Config ModInstallConfig
+}
+
 type ProfileMod struct {
 	ProfileID  int64  `db:"profile_id"`
 	ModID      int64  `db:"mod_id"`
@@ -125,6 +153,85 @@ func (s *Store) CreateMod(ctx context.Context, input CreateModInput) (mod Mod, e
 	return getModByID(ctx, s.db, modID)
 }
 
+func (s *Store) CreateOrReplaceModInstallConfig(ctx context.Context, input CreateModInstallConfigInput) (config ModInstallConfig, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("upsert mod install config row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return ModInstallConfig{}, errors.New("store is not open")
+	}
+
+	if err := validateModInstallConfigInput(input); err != nil {
+		return ModInstallConfig{}, err
+	}
+
+	config, err = upsertModInstallConfig(ctx, s.db, input)
+	if err != nil {
+		return ModInstallConfig{}, err
+	}
+
+	return config, nil
+}
+
+func (s *Store) GetModInstallConfig(ctx context.Context, modID int64) (config ModInstallConfig, found bool, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("select mod install config: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return ModInstallConfig{}, false, errors.New("store is not open")
+	}
+
+	config, found, err = getModInstallConfig(ctx, s.db, modID)
+	if err != nil {
+		return ModInstallConfig{}, false, err
+	}
+
+	return config, found, nil
+}
+
+func (s *Store) CreateModWithInstallConfig(ctx context.Context, input CreateModWithInstallConfigInput) (result CreateModWithInstallConfigResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("insert mod with install config rows: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return CreateModWithInstallConfigResult{}, errors.New("store is not open")
+	}
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+		mod, err := insertMod(ctx, tx, input.Mod)
+		if err != nil {
+			return err
+		}
+
+		configInput := input.Config
+		configInput.ModID = mod.ID
+		config, err := upsertModInstallConfig(ctx, tx, configInput)
+		if err != nil {
+			return err
+		}
+
+		result = CreateModWithInstallConfigResult{
+			Mod:    mod,
+			Config: config,
+		}
+		return nil
+	})
+	if err != nil {
+		return CreateModWithInstallConfigResult{}, err
+	}
+
+	return result, nil
+}
+
 func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod Mod, found bool, err error) {
 	defer func() {
 		if err != nil {
@@ -156,6 +263,50 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	}
 
 	return mod, true, nil
+}
+
+func insertMod(ctx context.Context, db interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	GetContext(context.Context, any, string, ...any) error
+}, input CreateModInput) (Mod, error) {
+	name := strings.TrimSpace(input.Name)
+	if name == "" {
+		return Mod{}, errors.New("mod name is required")
+	}
+
+	sourceType := input.SourceType
+	if sourceType == "" {
+		sourceType = ModSourceTypeFolder
+	}
+	if sourceType != ModSourceTypeFolder && sourceType != ModSourceTypeArchive {
+		return Mod{}, fmt.Errorf("unsupported mod source type %q", sourceType)
+	}
+
+	sourcePath := cleanOptionalPath(input.SourcePath)
+	if sourcePath == "" {
+		return Mod{}, errors.New("managed mod source path is required")
+	}
+
+	originalSourcePath, err := CanonicalModOriginalSourcePath(input.OriginalSourcePath)
+	if err != nil {
+		return Mod{}, err
+	}
+
+	originalSourceName := cleanOptionalString(input.OriginalSourceName)
+	result, err := db.ExecContext(ctx, `
+		INSERT INTO mods (game_id, name, source_type, source_path, original_source_path, original_source_name)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, input.GameID, name, sourceType, sourcePath, originalSourcePath, nullableText(originalSourceName))
+	if err != nil {
+		return Mod{}, err
+	}
+
+	modID, err := result.LastInsertId()
+	if err != nil {
+		return Mod{}, fmt.Errorf("get created mod id: %w", err)
+	}
+
+	return getModByID(ctx, db, modID)
 }
 
 func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []ProfileMod, err error) {
@@ -337,6 +488,80 @@ func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {
 	}
 
 	return mod, nil
+}
+
+func upsertModInstallConfig(ctx context.Context, db interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	GetContext(context.Context, any, string, ...any) error
+}, input CreateModInstallConfigInput) (ModInstallConfig, error) {
+	if err := validateModInstallConfigInput(input); err != nil {
+		return ModInstallConfig{}, err
+	}
+
+	sourceSubpath := cleanOptionalString(input.SourceSubpath)
+	if _, err := db.ExecContext(ctx, `
+		INSERT INTO mod_install_configs (
+			mod_id,
+			strategy_type,
+			target_base,
+			target_relative_path,
+			source_subpath
+		)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(mod_id) DO UPDATE SET
+			strategy_type = excluded.strategy_type,
+			target_base = excluded.target_base,
+			target_relative_path = excluded.target_relative_path,
+			source_subpath = excluded.source_subpath,
+			updated_at = CURRENT_TIMESTAMP
+	`, input.ModID, strings.TrimSpace(input.StrategyType), strings.TrimSpace(input.TargetBase), strings.TrimSpace(input.TargetRelativePath), nullableText(sourceSubpath)); err != nil {
+		return ModInstallConfig{}, err
+	}
+
+	config, found, err := getModInstallConfig(ctx, db, input.ModID)
+	if err != nil {
+		return ModInstallConfig{}, err
+	}
+	if !found {
+		return ModInstallConfig{}, sql.ErrNoRows
+	}
+
+	return config, nil
+}
+
+func validateModInstallConfigInput(input CreateModInstallConfigInput) error {
+	if input.ModID <= 0 {
+		return errors.New("mod id is required")
+	}
+	if strings.TrimSpace(input.StrategyType) == "" {
+		return errors.New("install strategy type is required")
+	}
+	if strings.TrimSpace(input.TargetBase) == "" {
+		return errors.New("install target base is required")
+	}
+	if strings.TrimSpace(input.TargetRelativePath) == "" {
+		return errors.New("install target relative path is required")
+	}
+
+	return nil
+}
+
+func getModInstallConfig(ctx context.Context, db modGetter, modID int64) (ModInstallConfig, bool, error) {
+	var config ModInstallConfig
+	err := db.GetContext(ctx, &config, `
+		SELECT mod_id, strategy_type, target_base, target_relative_path, source_subpath, created_at, updated_at
+		FROM mod_install_configs
+		WHERE mod_id = ?
+	`, modID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ModInstallConfig{}, false, nil
+		}
+
+		return ModInstallConfig{}, false, err
+	}
+
+	return config, true, nil
 }
 
 func CanonicalModOriginalSourcePath(path string) (string, error) {

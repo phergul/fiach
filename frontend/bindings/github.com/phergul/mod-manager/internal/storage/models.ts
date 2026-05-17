@@ -58,6 +58,51 @@ export class Mod {
     }
 }
 
+export class ModInstallConfig {
+    "ModID": number;
+    "StrategyType": string;
+    "TargetBase": string;
+    "TargetRelativePath": string;
+    "SourceSubpath": string | null;
+    "CreatedAt": string;
+    "UpdatedAt": string;
+
+    /** Creates a new ModInstallConfig instance. */
+    constructor($$source: Partial<ModInstallConfig> = {}) {
+        if (!("ModID" in $$source)) {
+            this["ModID"] = 0;
+        }
+        if (!("StrategyType" in $$source)) {
+            this["StrategyType"] = "";
+        }
+        if (!("TargetBase" in $$source)) {
+            this["TargetBase"] = "";
+        }
+        if (!("TargetRelativePath" in $$source)) {
+            this["TargetRelativePath"] = "";
+        }
+        if (!("SourceSubpath" in $$source)) {
+            this["SourceSubpath"] = null;
+        }
+        if (!("CreatedAt" in $$source)) {
+            this["CreatedAt"] = "";
+        }
+        if (!("UpdatedAt" in $$source)) {
+            this["UpdatedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModInstallConfig instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModInstallConfig {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModInstallConfig($$parsedSource as Partial<ModInstallConfig>);
+    }
+}
+
 export class ModProfile {
     "ID": number;
     "GameID": number;

@@ -42,7 +42,7 @@ export const GameModImportWizardStrategyStep = ({
     <fieldset className="game-mod-import-wizard-strategy-step">
       <legend className="game-mod-import-wizard-strategy-step-label">Install strategy</legend>
       {strategies.map((strategy) => {
-        const isSelected = selectedStrategyType === strategy.type;
+        const isSelected = selectedStrategyType === strategy.Type;
 
         return (
           <button
@@ -50,14 +50,14 @@ export const GameModImportWizardStrategyStep = ({
               ? 'game-mod-import-wizard-strategy-step-option game-mod-import-wizard-strategy-step-option-selected'
               : 'game-mod-import-wizard-strategy-step-option'}
             disabled={isBusy}
-            key={strategy.type}
-            onClick={() => onStrategySelect(strategy.type)}
+            key={strategy.Type}
+            onClick={() => onStrategySelect(strategy.Type)}
             type="button"
             aria-pressed={isSelected}
           >
             <span className="game-mod-import-wizard-strategy-step-copy">
-              <span className="game-mod-import-wizard-strategy-step-option-label">{strategy.label}</span>
-              <span className="game-mod-import-wizard-strategy-step-description">{strategy.description}</span>
+              <span className="game-mod-import-wizard-strategy-step-option-label">{strategy.Label}</span>
+              <span className="game-mod-import-wizard-strategy-step-description">{strategy.Description}</span>
             </span>
             {isSelected && <Check className="game-mod-import-wizard-strategy-step-option-icon" aria-hidden="true" />}
           </button>

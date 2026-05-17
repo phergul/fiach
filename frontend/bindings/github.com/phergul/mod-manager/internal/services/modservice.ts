@@ -12,32 +12,50 @@ import * as installconfig$0 from "../installconfig/models.js";
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as $models from "./models.js";
+
+export function ImportConfiguredMod(input: $models.ImportConfiguredModInput): $CancellablePromise<$models.ImportConfiguredModResult> {
+    return $Call.ByID(991496197, input).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function ImportModArchive(gameID: number, name: string, archiveFilePath: string): $CancellablePromise<storage$0.Mod> {
     return $Call.ByID(3065580069, gameID, name, archiveFilePath).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType1($result);
     });
 }
 
 export function ImportModFolder(gameID: number, name: string, sourceFolderPath: string): $CancellablePromise<storage$0.Mod> {
     return $Call.ByID(2686117309, gameID, name, sourceFolderPath).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType1($result);
     });
 }
 
 export function ListImportStrategies(): $CancellablePromise<installconfig$0.StrategyDescriptor[]> {
     return $Call.ByID(1013940886).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
 export function ListMods(gameID: number): $CancellablePromise<storage$0.Mod[]> {
     return $Call.ByID(2000775995, gameID).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
+    });
+}
+
+export function PreviewImportConfiguration(input: $models.PreviewImportConfigurationInput): $CancellablePromise<installconfig$0.Preview> {
+    return $Call.ByID(1144919971, input).then(($result: any) => {
+        return $$createType5($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = storage$0.Mod.createFrom;
-const $$createType1 = installconfig$0.StrategyDescriptor.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = $Create.Array($$createType0);
+const $$createType0 = $models.ImportConfiguredModResult.createFrom;
+const $$createType1 = storage$0.Mod.createFrom;
+const $$createType2 = installconfig$0.StrategyDescriptor.createFrom;
+const $$createType3 = $Create.Array($$createType2);
+const $$createType4 = $Create.Array($$createType1);
+const $$createType5 = installconfig$0.Preview.createFrom;

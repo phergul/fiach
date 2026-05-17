@@ -25,6 +25,23 @@ CREATE TABLE mods (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE mod_install_configs (
+    mod_id INTEGER PRIMARY KEY REFERENCES mods(id) ON DELETE CASCADE,
+    strategy_type TEXT NOT NULL CHECK (
+        strategy_type IN (
+            'generic_copy',
+            'replace_files',
+            'bepinex',
+            'unreal_pak'
+        )
+    ),
+    target_base TEXT NOT NULL DEFAULT 'game_root' CHECK (target_base IN ('game_root')),
+    target_relative_path TEXT NOT NULL,
+    source_subpath TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
@@ -89,5 +106,6 @@ DROP TABLE IF EXISTS settings;
 DROP TABLE IF EXISTS applied_manifests;
 DROP TABLE IF EXISTS profile_mods;
 DROP TABLE IF EXISTS profiles;
+DROP TABLE IF EXISTS mod_install_configs;
 DROP TABLE IF EXISTS mods;
 DROP TABLE IF EXISTS games;

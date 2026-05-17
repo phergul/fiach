@@ -1,0 +1,64 @@
+@use '@styles' as *;
+
+$game-mod-import-wizard-preview-step-list-height: 13rem;
+
+.game-mod-import-wizard-preview-step {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.game-mod-import-wizard-preview-step-summary {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-md;
+}
+
+.game-mod-import-wizard-preview-step-row {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-wizard-preview-step-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-preview-step-value,
+.game-mod-import-wizard-preview-step-path,
+.game-mod-import-wizard-preview-step-file {
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-preview-step-path,
+.game-mod-import-wizard-preview-step-file {
+  overflow-wrap: anywhere;
+}
+
+.game-mod-import-wizard-preview-step-warning {
+  margin: 0;
+  color: $color-warning;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-preview-step-file-list {
+  display: flex;
+  min-width: 0;
+  max-height: $game-mod-import-wizard-preview-step-list-height;
+  flex-direction: column;
+  gap: $spacing-xs;
+  overflow: auto;
+  padding: $spacing-sm;
+  border: $app-border;
+  background: $color-surface;
+}
+
+.game-mod-import-wizard-preview-step-file {
+  font-family: $font-family-monospace;
+}

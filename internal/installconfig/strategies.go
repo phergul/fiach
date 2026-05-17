@@ -22,11 +22,11 @@ const (
 )
 
 type StrategyDescriptor struct {
-	Type               StrategyType       `json:"type"`
-	Label              string             `json:"label"`
-	Description        string             `json:"description"`
-	Visibility         StrategyVisibility `json:"visibility"`
-	RequiresTargetPath bool               `json:"requiresTargetPath"`
+	Type               StrategyType
+	Label              string
+	Description        string
+	Visibility         StrategyVisibility
+	RequiresTargetPath bool
 }
 
 var strategies = []StrategyDescriptor{

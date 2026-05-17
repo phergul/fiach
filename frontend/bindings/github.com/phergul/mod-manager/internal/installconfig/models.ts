@@ -5,29 +5,94 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+export class Preview {
+    "StrategyType": StrategyType;
+    "TargetBase": string;
+    "TargetRelativePath": string;
+    "TargetDisplayPath": string;
+    "TotalFileCount": number;
+    "TotalDirectoryCount": number;
+    "TargetFilePaths": string[];
+    "IsCapped": boolean;
+    "Cap": number;
+    "Warnings": string[];
+
+    /** Creates a new Preview instance. */
+    constructor($$source: Partial<Preview> = {}) {
+        if (!("StrategyType" in $$source)) {
+            this["StrategyType"] = StrategyType.$zero;
+        }
+        if (!("TargetBase" in $$source)) {
+            this["TargetBase"] = "";
+        }
+        if (!("TargetRelativePath" in $$source)) {
+            this["TargetRelativePath"] = "";
+        }
+        if (!("TargetDisplayPath" in $$source)) {
+            this["TargetDisplayPath"] = "";
+        }
+        if (!("TotalFileCount" in $$source)) {
+            this["TotalFileCount"] = 0;
+        }
+        if (!("TotalDirectoryCount" in $$source)) {
+            this["TotalDirectoryCount"] = 0;
+        }
+        if (!("TargetFilePaths" in $$source)) {
+            this["TargetFilePaths"] = [];
+        }
+        if (!("IsCapped" in $$source)) {
+            this["IsCapped"] = false;
+        }
+        if (!("Cap" in $$source)) {
+            this["Cap"] = 0;
+        }
+        if (!("Warnings" in $$source)) {
+            this["Warnings"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Preview instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Preview {
+        const $$createField6_0 = $$createType0;
+        const $$createField9_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("TargetFilePaths" in $$parsedSource) {
+            $$parsedSource["TargetFilePaths"] = $$createField6_0($$parsedSource["TargetFilePaths"]);
+        }
+        if ("Warnings" in $$parsedSource) {
+            $$parsedSource["Warnings"] = $$createField9_0($$parsedSource["Warnings"]);
+        }
+        return new Preview($$parsedSource as Partial<Preview>);
+    }
+}
+
 export class StrategyDescriptor {
-    "type": StrategyType;
-    "label": string;
-    "description": string;
-    "visibility": StrategyVisibility;
-    "requiresTargetPath": boolean;
+    "Type": StrategyType;
+    "Label": string;
+    "Description": string;
+    "Visibility": StrategyVisibility;
+    "RequiresTargetPath": boolean;
 
     /** Creates a new StrategyDescriptor instance. */
     constructor($$source: Partial<StrategyDescriptor> = {}) {
-        if (!("type" in $$source)) {
-            this["type"] = StrategyType.$zero;
+        if (!("Type" in $$source)) {
+            this["Type"] = StrategyType.$zero;
         }
-        if (!("label" in $$source)) {
-            this["label"] = "";
+        if (!("Label" in $$source)) {
+            this["Label"] = "";
         }
-        if (!("description" in $$source)) {
-            this["description"] = "";
+        if (!("Description" in $$source)) {
+            this["Description"] = "";
         }
-        if (!("visibility" in $$source)) {
-            this["visibility"] = StrategyVisibility.$zero;
+        if (!("Visibility" in $$source)) {
+            this["Visibility"] = StrategyVisibility.$zero;
         }
-        if (!("requiresTargetPath" in $$source)) {
-            this["requiresTargetPath"] = false;
+        if (!("RequiresTargetPath" in $$source)) {
+            this["RequiresTargetPath"] = false;
         }
 
         Object.assign(this, $$source);
@@ -64,3 +129,6 @@ export enum StrategyVisibility {
     StrategyVisibilityDisabled = "disabled",
     StrategyVisibilityInternal = "internal",
 };
+
+// Private type creation functions
+const $$createType0 = $Create.Array($Create.Any);

@@ -3,6 +3,7 @@
 
 export {
     Mod,
+    ModInstallConfig,
     ModProfile,
     ModSourceType,
     ProfileMod,

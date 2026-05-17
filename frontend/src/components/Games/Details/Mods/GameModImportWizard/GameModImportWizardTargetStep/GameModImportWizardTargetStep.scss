@@ -1,0 +1,26 @@
+@use '@styles' as *;
+
+.game-mod-import-wizard-target-step {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-wizard-target-step-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-target-step-input {
+  width: 100%;
+  height: $input-height;
+  padding: 0 $spacing-md;
+  border: $app-border;
+}
+
+.game-mod-import-wizard-target-step-help {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
