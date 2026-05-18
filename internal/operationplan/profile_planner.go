@@ -39,8 +39,12 @@ type ProfilePlanIssue struct {
 }
 
 type ResolveProfilePlanResult struct {
-	Mods   []ProfilePlanMod
-	Issues []ProfilePlanIssue
+	ProfileID          int64
+	GameID             int64
+	GameInstallPath    string
+	GameModStoragePath string
+	Mods               []ProfilePlanMod
+	Issues             []ProfilePlanIssue
 }
 
 func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int64) (result ResolveProfilePlanResult, err error) {
@@ -54,13 +58,28 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 		return ResolveProfilePlanResult{}, errors.New("store is not configured")
 	}
 
-	_, found, err := store.GetProfile(ctx, profileID)
+	profile, found, err := store.GetProfile(ctx, profileID)
 	if err != nil {
 		return ResolveProfilePlanResult{}, err
 	}
 	if !found {
 		return ResolveProfilePlanResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
+
+	game, err := store.GetStoredGame(ctx, profile.GameID)
+	if err != nil {
+		return ResolveProfilePlanResult{}, err
+	}
+
+	gameModStoragePath, err := store.ResolveGameModStoragePath(ctx, profile.GameID, "")
+	if err != nil {
+		return ResolveProfilePlanResult{}, err
+	}
+
+	result.ProfileID = profileID
+	result.GameID = profile.GameID
+	result.GameInstallPath = game.InstallPath
+	result.GameModStoragePath = gameModStoragePath
 
 	profileMods, err := store.ListProfileMods(ctx, profileID)
 	if err != nil {

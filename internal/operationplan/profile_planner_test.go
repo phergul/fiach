@@ -36,6 +36,12 @@ func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
 		t.Fatalf("ResolveProfilePlan() error = %v", err)
 	}
 
+	if result.ProfileID != profileID || result.GameID != gameID || result.GameInstallPath != "/games/skyrim" {
+		t.Fatalf("ResolveProfilePlan() context = %+v, want profile/game/install path", result)
+	}
+	if result.GameModStoragePath == "" {
+		t.Fatalf("ResolveProfilePlan() GameModStoragePath = empty, want resolved managed storage path")
+	}
 	if len(result.Issues) != 0 {
 		t.Fatalf("ResolveProfilePlan() issues = %+v, want none", result.Issues)
 	}

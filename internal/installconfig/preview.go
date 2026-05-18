@@ -3,10 +3,10 @@ package installconfig
 import (
 	"fmt"
 	"io/fs"
-	"path"
 	"path/filepath"
 	"sort"
-	"strings"
+
+	"github.com/phergul/mod-manager/internal/installpath"
 )
 
 const DefaultPreviewFileCap = 100
@@ -94,7 +94,7 @@ func BuildPreview(input PreviewInput) (preview Preview, err error) {
 		}
 
 		preview.TotalFileCount++
-		targetPaths = append(targetPaths, joinTargetPath(targetRelativePath, filepath.ToSlash(sourceRelativePath)))
+		targetPaths = append(targetPaths, installpath.JoinTargetRelativePath(targetRelativePath, filepath.ToSlash(sourceRelativePath)))
 		return nil
 	})
 	if err != nil {
@@ -111,13 +111,4 @@ func BuildPreview(input PreviewInput) (preview Preview, err error) {
 	}
 
 	return preview, nil
-}
-
-func joinTargetPath(targetRelativePath string, sourceRelativePath string) string {
-	sourceRelativePath = strings.TrimPrefix(path.Clean(sourceRelativePath), "/")
-	if targetRelativePath == "." {
-		return sourceRelativePath
-	}
-
-	return path.Join(targetRelativePath, sourceRelativePath)
 }
