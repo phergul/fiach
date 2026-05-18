@@ -45,7 +45,7 @@ defer func() {
 - Styling rules:
     - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. Root styles are for primitives that are used around the whole app for consistency (e.g. button). `frontend/src/styles/_variables.scss` is where all variables live.
     - Component-specific SCSS variables used only by one component should be defined at the top of that component's SCSS file.
-    - Each component should have its own scss file, and styles should be scoped to that component.
+    - Each component should have its own scss file, and styles should be scoped to that component (don't create .scss file if there are no styles to apply).
     - Don't use arbitrary class names, use localised `component-name-style`
     - Always prefer using local styles over global styles, and avoid using global styles unless necessary.
     - Don't use arbitrary numbers in styles, use variables instead, and define them in the `_theme.scss` file (e.g. padding, sizes etc).

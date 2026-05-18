@@ -17,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
-    name: Backend Checks
+  checks:
+    name: Frontend and Backend Checks
     runs-on: ubuntu-latest
 
     steps:
@@ -50,7 +50,11 @@ jobs:
         working-directory: frontend
         run: bun install --frozen-lockfile
 
-      - name: Build frontend assets for Go embed checks
+      - name: Type-check frontend
+        working-directory: frontend
+        run: bunx tsc --noEmit
+
+      - name: Build frontend
         working-directory: frontend
         run: bun run build
 
@@ -68,28 +72,3 @@ jobs:
 
       - name: Run Go tests
         run: go test ./...
-
-  frontend:
-    name: Frontend Checks
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install frontend dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Type-check frontend
-        run: bunx tsc --noEmit
-
-      - name: Build frontend
-        run: bun run build
