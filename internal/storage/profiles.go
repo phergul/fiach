@@ -228,6 +228,29 @@ func (s *Store) GetActiveProfile(ctx context.Context, gameID int64) (profile Mod
 	return profile, true, nil
 }
 
+func (s *Store) GetProfile(ctx context.Context, profileID int64) (profile ModProfile, found bool, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("select profile row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return ModProfile{}, false, errors.New("store is not open")
+	}
+
+	profile, err = getProfileByID(ctx, s.db, profileID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ModProfile{}, false, nil
+		}
+
+		return ModProfile{}, false, err
+	}
+
+	return profile, true, nil
+}
+
 type profileGetter interface {
 	GetContext(context.Context, any, string, ...any) error
 }
