@@ -11,7 +11,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
   background: $color-background;
   border: 0;
   border-radius: 0;
-  border-bottom: $app-border;
+  // border-bottom: $app-border;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   text-align: left;
@@ -44,7 +44,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
   gap: $spacing-md;
   padding: $spacing-md $spacing-xl $spacing-lg;
   background: rgba($color-surface, 0.42);
-  border-bottom: $app-border;
+  border-top: $app-border;
 }
 
 .game-profiles-create-form-label {
