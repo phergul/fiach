@@ -1,20 +1,23 @@
 @use 'sass:list';
 
-$color-background: #252422ff;
-$color-surface: #2f2d2aff;
-$color-surface-elevated: #403d39ff;
-$color-text-muted: #8f897fff;
-$color-text-subtle: #ccc5b9ff;
-$color-text-primary: #fffcf2ff;
-$color-danger: #eb5e28ff;
-$color-warning: #d9823fff;
-$color-accent-warm: #f08a61ff;
-$color-info: #7d80daff;
-$color-success: #588b8bff;
-$color-accent: #7e9181ff;
-$color-border-subtle: #34312dff;
-$color-border: #4d4943ff;
-$color-border-strong: #625d55ff;
+$color-background: var(--color-background, #252422ff);
+$color-background-rgb: var(--color-background-rgb, 37 36 34);
+$color-surface: var(--color-surface, #2f2d2aff);
+$color-surface-rgb: var(--color-surface-rgb, 47 45 42);
+$color-surface-elevated: var(--color-surface-elevated, #403d39ff);
+$color-text-muted: var(--color-text-muted, #8f897fff);
+$color-text-subtle: var(--color-text-subtle, #ccc5b9ff);
+$color-text-primary: var(--color-text-primary, #fffcf2ff);
+$color-danger: var(--color-danger, #eb5e28ff);
+$color-danger-rgb: var(--color-danger-rgb, 235 94 40);
+$color-warning: var(--color-warning, #d9823fff);
+$color-accent-warm: var(--color-accent-warm, #f08a61ff);
+$color-info: var(--color-info, #7d80daff);
+$color-success: var(--color-success, #588b8bff);
+$color-accent: var(--color-accent, #7e9181ff);
+$color-border-subtle: var(--color-border-subtle, #34312dff);
+$color-border: var(--color-border, #4d4943ff);
+$color-border-strong: var(--color-border-strong, #625d55ff);
 
 $spacing-xs: 0.25rem;
 $spacing-sm: 0.5rem;
@@ -51,7 +54,7 @@ $app-border: $app-border-width solid $color-border-subtle;
 $input-height: 2.5rem;
 $toast-width: 20rem;
 
-$shadow-subtle: 0 0.125rem 0.5rem rgb(0 0 0 / 18%);
+$shadow-subtle: var(--shadow-subtle, 0 0.125rem 0.5rem rgb(0 0 0 / 18%));
 
 $z-index-sidebar: 10;
 $z-index-toast: 20;

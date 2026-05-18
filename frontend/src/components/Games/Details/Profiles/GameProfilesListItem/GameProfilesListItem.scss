@@ -40,7 +40,7 @@ $game-profiles-list-item-min-height: 5.25rem;
 
 .game-profiles-list-item-selector:hover,
 .game-profiles-list-item-selector:focus-visible {
-  background: rgba($color-surface, 0.42);
+  background: rgb(#{$color-surface-rgb} / 42%);
 }
 
 .game-profiles-list-item-title {

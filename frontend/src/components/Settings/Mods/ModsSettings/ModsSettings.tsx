@@ -11,8 +11,6 @@ import { SettingsSection } from '@components/Settings/Common/SettingsSection/Set
 import { ModStorageRootPathControl } from '@components/Settings/Mods/ModStorageRootPathControl/ModStorageRootPathControl';
 import { getErrorMessage, openDirectory } from '@utils';
 
-import './ModsSettings.scss';
-
 interface PendingGlobalRootChange {
   confirmLabel: string;
   path: string;

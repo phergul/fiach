@@ -20,7 +20,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
 .game-profiles-create-form-toggle:hover,
 .game-profiles-create-form-toggle:focus-visible {
   color: $color-text-primary;
-  background: rgba($color-surface, 0.42);
+  background: rgb(#{$color-surface-rgb} / 42%);
 }
 
 .game-profiles-create-form-toggle-copy {
@@ -43,7 +43,7 @@ $game-profiles-create-form-toggle-height: 3.25rem;
   flex-direction: column;
   gap: $spacing-md;
   padding: $spacing-md $spacing-xl $spacing-lg;
-  background: rgba($color-surface, 0.42);
+  background: rgb(#{$color-surface-rgb} / 42%);
   border-top: $app-border;
 }
 

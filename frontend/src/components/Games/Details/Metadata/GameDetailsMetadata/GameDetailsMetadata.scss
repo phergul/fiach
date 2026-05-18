@@ -7,7 +7,7 @@ $game-details-metadata-icon-size: 1.25rem;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: rgba($color-background, 0.4);
+  background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }

@@ -70,7 +70,7 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 }
 
 .game-profile-add-mods-modal-option:hover {
-  background: rgba($color-surface, 0.42);
+  background: rgb(#{$color-surface-rgb} / 42%);
 }
 
 .game-profile-add-mods-modal-option input {

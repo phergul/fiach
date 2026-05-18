@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/phergul/mod-manager/internal/storage"
 )
@@ -45,6 +46,39 @@ func (s *SettingsService) SetGlobalModStorageRoot(path string) (err error) {
 	}
 
 	return s.store.SetGlobalModStorageRoot(context.Background(), path)
+}
+
+func (s *SettingsService) GetThemeID() (themeID string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get theme ID: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return "", errors.New("storage is not configured")
+	}
+
+	return s.store.GetThemeID(context.Background())
+}
+
+func (s *SettingsService) SetThemeID(themeID string) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("set theme ID: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return errors.New("storage is not configured")
+	}
+
+	themeID = strings.TrimSpace(themeID)
+	if themeID == "" {
+		return errors.New("theme ID is required")
+	}
+
+	return s.store.SetThemeID(context.Background(), themeID)
 }
 
 func (s *SettingsService) SetGameModStoragePathOverride(gameID int64, path string) (game storage.StoredGame, err error) {

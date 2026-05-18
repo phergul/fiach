@@ -1,0 +1,7 @@
+@use '@styles' as *;
+
+.theme-select-control {
+  min-width: 12rem;
+  height: $input-height;
+  padding: 0 $spacing-md;
+}

@@ -17,6 +17,10 @@ export function GetGlobalModStorageRoot(): $CancellablePromise<string> {
     return $Call.ByID(956269605);
 }
 
+export function GetThemeID(): $CancellablePromise<string> {
+    return $Call.ByID(79896145);
+}
+
 export function ResolveGameModStoragePath(gameID: number): $CancellablePromise<string> {
     return $Call.ByID(2190485991, gameID);
 }
@@ -29,6 +33,10 @@ export function SetGameModStoragePathOverride(gameID: number, path: string): $Ca
 
 export function SetGlobalModStorageRoot(path: string): $CancellablePromise<void> {
     return $Call.ByID(3589951673, path);
+}
+
+export function SetThemeID(themeID: string): $CancellablePromise<void> {
+    return $Call.ByID(268691973, themeID);
 }
 
 // Private type creation functions

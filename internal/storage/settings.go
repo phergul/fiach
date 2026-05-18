@@ -8,6 +8,7 @@ import (
 )
 
 const GlobalModStorageRootSettingKey = "mods.global_storage_root"
+const AppThemeSettingKey = "app.theme"
 
 func (s *Store) GetSetting(ctx context.Context, key string) (value string, found bool, err error) {
 	defer func() {
@@ -66,6 +67,34 @@ func (s *Store) SetGlobalModStorageRoot(ctx context.Context, path string) (err e
 	}
 
 	return s.RefreshGameModStoragePaths(ctx)
+}
+
+func (s *Store) GetThemeID(ctx context.Context) (themeID string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("read app theme setting: %w", err)
+		}
+	}()
+
+	value, found, err := s.GetSetting(ctx, AppThemeSettingKey)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", nil
+	}
+
+	return value, nil
+}
+
+func (s *Store) SetThemeID(ctx context.Context, themeID string) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("write app theme setting: %w", err)
+		}
+	}()
+
+	return s.SetSetting(ctx, AppThemeSettingKey, themeID)
 }
 
 func (s *Store) SetSetting(ctx context.Context, key string, value string) (err error) {

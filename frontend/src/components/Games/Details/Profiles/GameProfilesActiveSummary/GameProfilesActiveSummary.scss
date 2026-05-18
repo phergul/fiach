@@ -7,7 +7,7 @@
   gap: $spacing-lg;
   padding: $spacing-md $spacing-md $spacing-md $spacing-xl;
   border-bottom: $app-border;
-  background: rgba($color-surface, 0.42);
+  background: rgb(#{$color-surface-rgb} / 42%);
 }
 
 .game-profiles-active-summary-copy {

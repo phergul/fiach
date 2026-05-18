@@ -18,5 +18,5 @@
 
 .confirm-dialog-button-danger {
   color: $color-danger;
-  border-color: rgba($color-danger, 0.64);
+  border-color: rgb(#{$color-danger-rgb} / 64%);
 }

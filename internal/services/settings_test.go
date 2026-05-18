@@ -29,6 +29,38 @@ func TestSettingsServiceGetsAndSetsGlobalModStorageRoot(t *testing.T) {
 	}
 }
 
+func TestSettingsServiceGetsAndSetsThemeID(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := NewSettingsService(store)
+	if err := service.SetThemeID("midnight"); err != nil {
+		t.Fatalf("SetThemeID() error = %v", err)
+	}
+
+	themeID, err := service.GetThemeID()
+	if err != nil {
+		t.Fatalf("GetThemeID() error = %v", err)
+	}
+	if themeID != "midnight" {
+		t.Fatalf("GetThemeID() = %q, want midnight", themeID)
+	}
+}
+
+func TestSettingsServiceSetThemeIDRejectsBlankValues(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := NewSettingsService(store)
+	if err := service.SetThemeID("   "); err == nil {
+		t.Fatal("SetThemeID() error = nil, want validation error")
+	}
+}
+
 func TestSettingsServiceResolvesGameModStoragePathWithOverride(t *testing.T) {
 	t.Parallel()
 
@@ -94,6 +126,19 @@ func TestSettingsServiceErrorsHaveDistinctServiceAndStorageContext(t *testing.T)
 	}
 	if !strings.Contains(err.Error(), "resolve game mod storage path") || !strings.Contains(err.Error(), "storage is not configured") {
 		t.Fatalf("ResolveGameModStoragePath() error = %q, want service and storage context", err.Error())
+	}
+}
+
+func TestSettingsServiceThemeErrorsHaveDistinctServiceAndStorageContext(t *testing.T) {
+	t.Parallel()
+
+	service := NewSettingsService(nil)
+	_, err := service.GetThemeID()
+	if err == nil {
+		t.Fatal("GetThemeID() error = nil, want storage error")
+	}
+	if !strings.Contains(err.Error(), "get theme ID") || !strings.Contains(err.Error(), "storage is not configured") {
+		t.Fatalf("GetThemeID() error = %q, want service and storage context", err.Error())
 	}
 }
 

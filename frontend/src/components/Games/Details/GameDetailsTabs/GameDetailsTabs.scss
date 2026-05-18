@@ -8,7 +8,7 @@ $game-details-tabs-tab-height: 3.25rem;
   display: grid;
   flex: 0 0 auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  background: rgba($color-background, 0.5);
+  background: rgb(#{$color-background-rgb} / 50%);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }

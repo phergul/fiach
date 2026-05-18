@@ -21,6 +21,7 @@
       "@hooks": ["src/hooks/index.ts"],
       "@pages": ["src/pages/index.ts"],
       "@styles": ["src/styles/index.scss"],
+      "@theme/*": ["src/styles/theme/*"],
       "@utils": ["src/utils/index.ts"]
     },
 

@@ -269,6 +269,40 @@ func TestSettingsCanBeSetUpdatedAndRead(t *testing.T) {
 	}
 }
 
+func TestThemeIDCanBeSetUpdatedAndRead(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	themeID, err := store.GetThemeID(context.Background())
+	if err != nil {
+		t.Fatalf("GetThemeID() missing error = %v", err)
+	}
+	if themeID != "" {
+		t.Fatalf("GetThemeID() = %q, want empty string", themeID)
+	}
+
+	if err := store.SetThemeID(context.Background(), "ash"); err != nil {
+		t.Fatalf("SetThemeID() insert error = %v", err)
+	}
+	if err := store.SetThemeID(context.Background(), "midnight"); err != nil {
+		t.Fatalf("SetThemeID() update error = %v", err)
+	}
+
+	themeID, err = store.GetThemeID(context.Background())
+	if err != nil {
+		t.Fatalf("GetThemeID() error = %v", err)
+	}
+	if themeID != "midnight" {
+		t.Fatalf("GetThemeID() = %q, want midnight", themeID)
+	}
+}
+
 func TestListStoredGamesReturnsAvailableGamesOrderedByName(t *testing.T) {
 	t.Parallel()
 
