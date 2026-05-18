@@ -19,11 +19,26 @@ func TestOperationTypeConstants(t *testing.T) {
 	}
 }
 
+func TestPlanIssueConstants(t *testing.T) {
+	t.Parallel()
+
+	if PlanIssueSeverityError != "error" {
+		t.Fatalf("PlanIssueSeverityError = %q, want error", PlanIssueSeverityError)
+	}
+	if PlanIssueSeverityWarning != "warning" {
+		t.Fatalf("PlanIssueSeverityWarning = %q, want warning", PlanIssueSeverityWarning)
+	}
+	if PlanIssueTargetPathConflict != "target_path_conflict" {
+		t.Fatalf("PlanIssueTargetPathConflict = %q, want target_path_conflict", PlanIssueTargetPathConflict)
+	}
+}
+
 func TestOperationPlanSupportsMixedOperations(t *testing.T) {
 	t.Parallel()
 
 	sourcePath := "/mods/skyui/Data/SkyUI.esp"
 	backupPath := "/backups/Skyrim/Data/SkyUI.esp.bak"
+	targetPath := "/games/Skyrim/Data/Existing.esp"
 
 	plan := OperationPlan{
 		Operations: []Operation{
@@ -40,7 +55,7 @@ func TestOperationPlanSupportsMixedOperations(t *testing.T) {
 			},
 			{
 				Type:       OperationTypeReplace,
-				TargetPath: "/games/Skyrim/Data/Existing.esp",
+				TargetPath: targetPath,
 				Conflict:   true,
 				Mod: ModContext{
 					ModID:   2,
@@ -56,6 +71,16 @@ func TestOperationPlanSupportsMixedOperations(t *testing.T) {
 				},
 			},
 		},
+		Issues: []PlanIssue{
+			{
+				Severity:   PlanIssueSeverityWarning,
+				Kind:       PlanIssueReplaceExistingTarget,
+				Message:    "replace warning",
+				ProfileID:  1,
+				TargetPath: &targetPath,
+			},
+		},
+		CanApply: true,
 	}
 
 	if len(plan.Operations) != 3 {
@@ -63,6 +88,9 @@ func TestOperationPlanSupportsMixedOperations(t *testing.T) {
 	}
 	if plan.Operations[0].Type != OperationTypeCopy || plan.Operations[1].Type != OperationTypeReplace || plan.Operations[2].Type != OperationTypeCreateDirectory {
 		t.Fatalf("plan.Operations types = %+v, want mixed future-safe operation types", plan.Operations)
+	}
+	if len(plan.Issues) != 1 || !plan.CanApply {
+		t.Fatalf("plan metadata = %+v, want one warning issue and CanApply=true", plan)
 	}
 }
 
@@ -125,9 +153,14 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 	if planType.Kind() != reflect.Struct {
 		t.Fatalf("OperationPlan kind = %v, want struct", planType.Kind())
 	}
-	operationsField, ok := planType.FieldByName("Operations")
-	if !ok || !operationsField.IsExported() {
-		t.Fatalf("OperationPlan field Operations exported = %v, want true", ok && operationsField.IsExported())
+	for _, name := range []string{"Operations", "Issues", "CanApply"} {
+		field, ok := planType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("OperationPlan field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("OperationPlan field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
 	}
 
 	operationType := reflect.TypeOf(Operation{})
@@ -139,6 +172,17 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 		}
 		if field.Tag != "" {
 			t.Fatalf("Operation field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	issueType := reflect.TypeOf(PlanIssue{})
+	for _, name := range []string{"Severity", "Kind", "Message", "ProfileID", "SourcePath", "TargetPath", "Mod"} {
+		field, ok := issueType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("PlanIssue field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("PlanIssue field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
 		}
 	}
 

@@ -50,6 +50,9 @@ func TestBuildOperationPlanCreatesDirectoriesAndFilesInStableOrder(t *testing.T)
 		t.Fatalf("BuildOperationPlan() error = %v", err)
 	}
 
+	if !plan.CanApply || len(plan.Issues) != 0 {
+		t.Fatalf("BuildOperationPlan() plan metadata = %+v, want CanApply=true and no issues", plan)
+	}
 	if len(plan.Operations) != 7 {
 		t.Fatalf("BuildOperationPlan() operation count = %d, want 7: %+v", len(plan.Operations), plan.Operations)
 	}
@@ -84,7 +87,7 @@ func TestBuildOperationPlanCreatesDirectoriesAndFilesInStableOrder(t *testing.T)
 	}
 }
 
-func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithManagedBackupPath(t *testing.T) {
+func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithWarningAndManagedBackupPath(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -119,18 +122,59 @@ func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithManagedBackupPath(t 
 		t.Fatalf("BuildOperationPlan() error = %v", err)
 	}
 
+	if !plan.CanApply {
+		t.Fatalf("BuildOperationPlan() CanApply = false, want true for replace warning: %+v", plan)
+	}
 	if len(plan.Operations) != 1 {
 		t.Fatalf("BuildOperationPlan() operation count = %d, want 1", len(plan.Operations))
+	}
+	if len(plan.Issues) != 1 || plan.Issues[0].Severity != PlanIssueSeverityWarning || plan.Issues[0].Kind != PlanIssueReplaceExistingTarget {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want one replace warning", plan.Issues)
 	}
 
 	operation := plan.Operations[0]
 	wantBackupPath := filepath.Join(resolved.GameModStoragePath, backupRootDirName, "Data", "SkyUI.esp")
-	if operation.Type != OperationTypeReplace || !operation.Conflict || operation.BackupPath == nil || *operation.BackupPath != wantBackupPath {
-		t.Fatalf("replace operation = %+v, want replace with managed backup path %q", operation, wantBackupPath)
+	if operation.Type != OperationTypeReplace || operation.Conflict || operation.BackupPath == nil || *operation.BackupPath != wantBackupPath {
+		t.Fatalf("replace operation = %+v, want replace without conflict and managed backup path %q", operation, wantBackupPath)
 	}
 }
 
-func TestBuildOperationPlanDeduplicatesSharedDirectoriesToFirstMod(t *testing.T) {
+func TestBuildOperationPlanReportsMissingGameInstallPathWithoutReturningError(t *testing.T) {
+	t.Parallel()
+
+	plan, err := BuildOperationPlan(ResolveProfilePlanResult{})
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v, want planner issue result", err)
+	}
+
+	if plan.CanApply {
+		t.Fatalf("BuildOperationPlan() CanApply = true, want false: %+v", plan)
+	}
+	if len(plan.Operations) != 0 {
+		t.Fatalf("BuildOperationPlan() operations = %+v, want none", plan.Operations)
+	}
+	if len(plan.Issues) != 1 || plan.Issues[0].Kind != PlanIssueMissingGameInstallPath || plan.Issues[0].Severity != PlanIssueSeverityError {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want missing game install path error issue", plan.Issues)
+	}
+}
+
+func TestBuildOperationPlanReportsMissingGameInstallDirectory(t *testing.T) {
+	t.Parallel()
+
+	plan, err := BuildOperationPlan(ResolveProfilePlanResult{
+		ProfileID:       1,
+		GameInstallPath: filepath.Join(t.TempDir(), "missing"),
+	})
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v, want planner issue result", err)
+	}
+
+	if len(plan.Issues) != 1 || plan.Issues[0].Kind != PlanIssueMissingGameInstallDir {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want missing install directory issue", plan.Issues)
+	}
+}
+
+func TestBuildOperationPlanReportsMissingSourceRootAndSkipsOnlyThatMod(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -140,16 +184,14 @@ func TestBuildOperationPlanDeduplicatesSharedDirectoriesToFirstMod(t *testing.T)
 	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
 	profileID := insertPlannerProfile(t, store, gameID, "Default")
 
-	firstSource := makePlannerSourceTree(t, map[string]string{"Alpha.txt": "a"})
-	secondSource := makePlannerSourceTree(t, map[string]string{"Beta.txt": "b"})
-	firstModID := insertPlannerMod(t, store, gameID, "Alpha", firstSource)
-	secondModID := insertPlannerMod(t, store, gameID, "Beta", secondSource)
+	validSource := makePlannerSourceTree(t, map[string]string{"Valid.txt": "ok"})
+	validModID := insertPlannerMod(t, store, gameID, "Valid", validSource)
+	missingModID := insertPlannerMod(t, store, gameID, "Missing", filepath.Join(t.TempDir(), "gone"))
 
-	addPlannerProfileMod(t, store, profileID, firstModID, true, 0)
-	addPlannerProfileMod(t, store, profileID, secondModID, true, 1)
-
-	addPlannerInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared/Folder", nil)
-	addPlannerInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeUnrealPak), installconfig.TargetBaseGameRoot, "Shared/Folder", nil)
+	addPlannerProfileMod(t, store, profileID, validModID, true, 0)
+	addPlannerProfileMod(t, store, profileID, missingModID, true, 1)
+	addPlannerInstallConfig(t, store, validModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+	addPlannerInstallConfig(t, store, missingModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
 	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
 	if err != nil {
@@ -161,48 +203,228 @@ func TestBuildOperationPlanDeduplicatesSharedDirectoriesToFirstMod(t *testing.T)
 		t.Fatalf("BuildOperationPlan() error = %v", err)
 	}
 
-	if len(plan.Operations) < 2 {
-		t.Fatalf("BuildOperationPlan() operations = %+v, want at least 2", plan.Operations)
+	if plan.CanApply {
+		t.Fatalf("BuildOperationPlan() CanApply = true, want false for missing source root: %+v", plan)
 	}
-
-	sharedDir := filepath.Join(gameRoot, "Shared", "Folder")
-	var dirOperation *Operation
-	for index := range plan.Operations {
-		if plan.Operations[index].Type == OperationTypeCreateDirectory && plan.Operations[index].TargetPath == sharedDir {
-			dirOperation = &plan.Operations[index]
-			break
+	if !hasIssueKind(plan.Issues, PlanIssueMissingSourceRoot) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want missing source root issue", plan.Issues)
+	}
+	if len(plan.Operations) == 0 {
+		t.Fatalf("BuildOperationPlan() operations = %+v, want valid mod operations to remain", plan.Operations)
+	}
+	for _, operation := range plan.Operations {
+		if operation.Mod.ModID == missingModID {
+			t.Fatalf("BuildOperationPlan() operation = %+v, want missing-source mod skipped", operation)
 		}
-	}
-	if dirOperation == nil {
-		t.Fatalf("create_directory for %q not found in %+v", sharedDir, plan.Operations)
-	}
-	if dirOperation.Mod.ModID != firstModID {
-		t.Fatalf("shared directory owner = %+v, want first mod %d", dirOperation.Mod, firstModID)
 	}
 }
 
-func TestBuildOperationPlanReturnsErrorWhenGameModStoragePathIsMissing(t *testing.T) {
+func TestBuildOperationPlanReportsSourceRootThatIsAFile(t *testing.T) {
 	t.Parallel()
 
-	_, err := BuildOperationPlan(ResolveProfilePlanResult{
-		GameInstallPath: "/games/skyrim",
-		Mods: []ProfilePlanMod{
-			{
-				ModID:              1,
-				ModName:            "SkyUI",
-				ManagedSourcePath:  "/managed/skyui",
-				StrategyType:       installconfig.StrategyTypeGenericCopy,
-				TargetBase:         installconfig.TargetBaseGameRoot,
-				TargetRelativePath: "Data",
-			},
-		},
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	sourceFilePath := filepath.Join(t.TempDir(), "source.txt")
+	if err := os.WriteFile(sourceFilePath, []byte("not a dir"), 0o644); err != nil {
+		t.Fatalf("os.WriteFile() error = %v", err)
+	}
+
+	modID := insertPlannerMod(t, store, gameID, "SkyUI", sourceFilePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if !hasIssueKind(plan.Issues, PlanIssueSourceRootNotDirectory) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want source root not directory issue", plan.Issues)
+	}
+}
+
+func TestBuildOperationPlanReportsExistingFileWhereDirectoryMustBeCreated(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	sourcePath := makePlannerSourceTree(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
 	})
-	if err == nil {
-		t.Fatal("BuildOperationPlan() error = nil, want error")
+	modID := insertPlannerMod(t, store, gameID, "SkyUI", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
+
+	blockingPath := filepath.Join(gameRoot, "Mods")
+	if err := os.WriteFile(blockingPath, []byte("file"), 0o644); err != nil {
+		t.Fatalf("os.WriteFile() error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "build operation plan") || !strings.Contains(err.Error(), "game mod storage path is required") {
-		t.Fatalf("BuildOperationPlan() error = %q, want wrapped missing managed storage path error", err.Error())
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
 	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if !hasIssueKind(plan.Issues, PlanIssueTargetDirectoryPathFile) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want target directory path file issue", plan.Issues)
+	}
+	if len(plan.Operations) != 0 {
+		t.Fatalf("BuildOperationPlan() operations = %+v, want mod operations skipped on blocking directory issue", plan.Operations)
+	}
+}
+
+func TestBuildOperationPlanReportsExistingDirectoryWhereFileMustBeWritten(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	sourcePath := makePlannerSourceTree(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+	})
+	modID := insertPlannerMod(t, store, gameID, "SkyUI", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, ".", nil)
+
+	targetPath := filepath.Join(gameRoot, "Data", "SkyUI.esp")
+	if err := os.MkdirAll(targetPath, 0o755); err != nil {
+		t.Fatalf("os.MkdirAll() error = %v", err)
+	}
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if !hasIssueKind(plan.Issues, PlanIssueTargetFilePathDirectory) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want target file path directory issue", plan.Issues)
+	}
+}
+
+func TestBuildOperationPlanMarksSameTargetOperationsAsConflicts(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	firstSource := makePlannerSourceTree(t, map[string]string{"plugin.txt": "a"})
+	secondSource := makePlannerSourceTree(t, map[string]string{"plugin.txt": "b"})
+	firstModID := insertPlannerMod(t, store, gameID, "Alpha", firstSource)
+	secondModID := insertPlannerMod(t, store, gameID, "Beta", secondSource)
+
+	addPlannerProfileMod(t, store, profileID, firstModID, true, 0)
+	addPlannerProfileMod(t, store, profileID, secondModID, true, 1)
+	addPlannerInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
+	addPlannerInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if plan.CanApply {
+		t.Fatalf("BuildOperationPlan() CanApply = true, want false for target conflict: %+v", plan)
+	}
+	if !hasIssueKind(plan.Issues, PlanIssueTargetPathConflict) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want target path conflict issue", plan.Issues)
+	}
+
+	conflictingCount := 0
+	for _, operation := range plan.Operations {
+		if operation.Type != OperationTypeCreateDirectory && operation.Conflict {
+			conflictingCount++
+		}
+	}
+	if conflictingCount != 2 {
+		t.Fatalf("conflicting file operation count = %d, want 2: %+v", conflictingCount, plan.Operations)
+	}
+}
+
+func TestBuildOperationPlanReportsPartialOperationsAndAccumulatedIssues(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	validSource := makePlannerSourceTree(t, map[string]string{"Valid.txt": "ok"})
+	validModID := insertPlannerMod(t, store, gameID, "Valid", validSource)
+	missingConfigModID := insertPlannerMod(t, store, gameID, "Missing Config", validSource)
+	missingSourceModID := insertPlannerMod(t, store, gameID, "Missing Source", filepath.Join(t.TempDir(), "gone"))
+
+	addPlannerProfileMod(t, store, profileID, validModID, true, 0)
+	addPlannerProfileMod(t, store, profileID, missingConfigModID, true, 1)
+	addPlannerProfileMod(t, store, profileID, missingSourceModID, true, 2)
+	addPlannerInstallConfig(t, store, validModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+	addPlannerInstallConfig(t, store, missingSourceModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if len(plan.Operations) == 0 {
+		t.Fatalf("BuildOperationPlan() operations = %+v, want valid operations to remain", plan.Operations)
+	}
+	if !hasIssueKind(plan.Issues, PlanIssueMissingInstallConfig) || !hasIssueKind(plan.Issues, PlanIssueMissingSourceRoot) {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want accumulated resolver and builder issues", plan.Issues)
+	}
+}
+
+func hasIssueKind(issues []PlanIssue, kind PlanIssueKind) bool {
+	for _, issue := range issues {
+		if issue.Kind == kind {
+			return true
+		}
+	}
+
+	return false
 }
 
 func makePlannerSourceTree(t *testing.T, files map[string]string) string {

@@ -22,29 +22,13 @@ type ProfilePlanMod struct {
 	SourceSubpath      *string
 }
 
-type ProfilePlanIssueKind string
-
-const (
-	ProfilePlanIssueMissingManagedSourcePath ProfilePlanIssueKind = "missing_managed_source_path"
-	ProfilePlanIssueMissingInstallConfig     ProfilePlanIssueKind = "missing_install_config"
-	ProfilePlanIssueIncompleteInstallConfig  ProfilePlanIssueKind = "incomplete_install_config"
-)
-
-type ProfilePlanIssue struct {
-	Kind      ProfilePlanIssueKind
-	ProfileID int64
-	ModID     int64
-	ModName   string
-	Message   string
-}
-
 type ResolveProfilePlanResult struct {
 	ProfileID          int64
 	GameID             int64
 	GameInstallPath    string
 	GameModStoragePath string
 	Mods               []ProfilePlanMod
-	Issues             []ProfilePlanIssue
+	Issues             []PlanIssue
 }
 
 func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int64) (result ResolveProfilePlanResult, err error) {
@@ -93,13 +77,15 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 
 		managedSourcePath := strings.TrimSpace(profileMod.SourcePath)
 		if managedSourcePath == "" {
-			result.Issues = append(result.Issues, ProfilePlanIssue{
-				Kind:      ProfilePlanIssueMissingManagedSourcePath,
-				ProfileID: profileID,
-				ModID:     profileMod.ModID,
-				ModName:   profileMod.Name,
-				Message:   fmt.Sprintf("mod %q is missing a managed source path", profileMod.Name),
-			})
+			result.Issues = append(result.Issues, newPlanIssue(
+				PlanIssueSeverityError,
+				PlanIssueMissingManagedSourcePath,
+				profileID,
+				fmt.Sprintf("mod %q is missing a managed source path", profileMod.Name),
+				modContextPtr(profileMod.ModID, profileMod.Name),
+				nil,
+				nil,
+			))
 			continue
 		}
 
@@ -108,24 +94,28 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 			return ResolveProfilePlanResult{}, err
 		}
 		if !found {
-			result.Issues = append(result.Issues, ProfilePlanIssue{
-				Kind:      ProfilePlanIssueMissingInstallConfig,
-				ProfileID: profileID,
-				ModID:     profileMod.ModID,
-				ModName:   profileMod.Name,
-				Message:   fmt.Sprintf("mod %q is missing an install configuration", profileMod.Name),
-			})
+			result.Issues = append(result.Issues, newPlanIssue(
+				PlanIssueSeverityError,
+				PlanIssueMissingInstallConfig,
+				profileID,
+				fmt.Sprintf("mod %q is missing an install configuration", profileMod.Name),
+				modContextPtr(profileMod.ModID, profileMod.Name),
+				nil,
+				nil,
+			))
 			continue
 		}
 
 		if strings.TrimSpace(config.StrategyType) == "" || strings.TrimSpace(config.TargetBase) == "" || strings.TrimSpace(config.TargetRelativePath) == "" {
-			result.Issues = append(result.Issues, ProfilePlanIssue{
-				Kind:      ProfilePlanIssueIncompleteInstallConfig,
-				ProfileID: profileID,
-				ModID:     profileMod.ModID,
-				ModName:   profileMod.Name,
-				Message:   fmt.Sprintf("mod %q has an incomplete install configuration", profileMod.Name),
-			})
+			result.Issues = append(result.Issues, newPlanIssue(
+				PlanIssueSeverityError,
+				PlanIssueIncompleteInstallConfig,
+				profileID,
+				fmt.Sprintf("mod %q has an incomplete install configuration", profileMod.Name),
+				modContextPtr(profileMod.ModID, profileMod.Name),
+				nil,
+				nil,
+			))
 			continue
 		}
 
@@ -143,4 +133,35 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 	}
 
 	return result, nil
+}
+
+func newPlanIssue(
+	severity PlanIssueSeverity,
+	kind PlanIssueKind,
+	profileID int64,
+	message string,
+	mod *ModContext,
+	sourcePath *string,
+	targetPath *string,
+) PlanIssue {
+	return PlanIssue{
+		Severity:   severity,
+		Kind:       kind,
+		Message:    message,
+		ProfileID:  profileID,
+		SourcePath: sourcePath,
+		TargetPath: targetPath,
+		Mod:        mod,
+	}
+}
+
+func modContextPtr(modID int64, modName string) *ModContext {
+	return &ModContext{
+		ModID:   modID,
+		ModName: modName,
+	}
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

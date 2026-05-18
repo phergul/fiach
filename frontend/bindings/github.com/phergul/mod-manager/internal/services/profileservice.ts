@@ -7,6 +7,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as operationplan$0 from "../operationplan/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
 export function ActivateProfile(gameID: number, profileID: number): $CancellablePromise<storage$0.ModProfile> {
@@ -18,6 +21,12 @@ export function ActivateProfile(gameID: number, profileID: number): $Cancellable
 export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<storage$0.ProfileMod> {
     return $Call.ByID(2973118192, profileID, modID).then(($result: any) => {
         return $$createType1($result);
+    });
+}
+
+export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<operationplan$0.OperationPlan> {
+    return $Call.ByID(1803445544, profileID).then(($result: any) => {
+        return $$createType2($result);
     });
 }
 
@@ -37,19 +46,19 @@ export function DeleteProfile(profileID: number): $CancellablePromise<void> {
 
 export function GetActiveProfile(gameID: number): $CancellablePromise<storage$0.ModProfile | null> {
     return $Call.ByID(4123009592, gameID).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
 export function ListProfileMods(profileID: number): $CancellablePromise<storage$0.ProfileMod[]> {
     return $Call.ByID(1055361377, profileID).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<storage$0.ModProfile[]> {
     return $Call.ByID(3489323205, gameID).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType5($result);
     });
 }
 
@@ -72,6 +81,7 @@ export function SetProfileModEnabled(profileID: number, modID: number, enabled: 
 // Private type creation functions
 const $$createType0 = storage$0.ModProfile.createFrom;
 const $$createType1 = storage$0.ProfileMod.createFrom;
-const $$createType2 = $Create.Nullable($$createType0);
-const $$createType3 = $Create.Array($$createType1);
-const $$createType4 = $Create.Array($$createType0);
+const $$createType2 = operationplan$0.OperationPlan.createFrom;
+const $$createType3 = $Create.Nullable($$createType0);
+const $$createType4 = $Create.Array($$createType1);
+const $$createType5 = $Create.Array($$createType0);

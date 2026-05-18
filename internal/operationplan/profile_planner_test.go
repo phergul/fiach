@@ -82,7 +82,7 @@ func TestResolveProfilePlanReportsMissingInstallConfig(t *testing.T) {
 		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
-	if issue.Kind != ProfilePlanIssueMissingInstallConfig || issue.ProfileID != profileID || issue.ModID != modID || issue.ModName != "SkyUI" || !strings.Contains(issue.Message, "missing an install configuration") {
+	if issue.Severity != PlanIssueSeverityError || issue.Kind != PlanIssueMissingInstallConfig || issue.ProfileID != profileID || issue.Mod == nil || issue.Mod.ModID != modID || issue.Mod.ModName != "SkyUI" || !strings.Contains(issue.Message, "missing an install configuration") {
 		t.Fatalf("issue = %+v, want missing install config issue", issue)
 	}
 }
@@ -111,7 +111,7 @@ func TestResolveProfilePlanReportsIncompleteInstallConfig(t *testing.T) {
 		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
-	if issue.Kind != ProfilePlanIssueIncompleteInstallConfig || issue.ModID != modID || !strings.Contains(issue.Message, "incomplete install configuration") {
+	if issue.Severity != PlanIssueSeverityError || issue.Kind != PlanIssueIncompleteInstallConfig || issue.Mod == nil || issue.Mod.ModID != modID || !strings.Contains(issue.Message, "incomplete install configuration") {
 		t.Fatalf("issue = %+v, want incomplete install config issue", issue)
 	}
 }
@@ -140,7 +140,7 @@ func TestResolveProfilePlanReportsMissingManagedSourcePath(t *testing.T) {
 		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
-	if issue.Kind != ProfilePlanIssueMissingManagedSourcePath || issue.ModID != modID || !strings.Contains(issue.Message, "missing a managed source path") {
+	if issue.Severity != PlanIssueSeverityError || issue.Kind != PlanIssueMissingManagedSourcePath || issue.Mod == nil || issue.Mod.ModID != modID || !strings.Contains(issue.Message, "missing a managed source path") {
 		t.Fatalf("issue = %+v, want missing managed source path issue", issue)
 	}
 }
