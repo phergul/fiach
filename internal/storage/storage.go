@@ -12,18 +12,19 @@ import (
 	"sync"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	_ "modernc.org/sqlite"
 )
 
 const (
 	defaultAppName = "mod-manager"
 	databaseName   = "mod-manager.db"
 
-	driverName      = "sqlite3"
-	migrationsDir   = "migrations"
-	filePermissions = 0755
+	sqliteDriverName = "sqlite"
+	gooseDialect     = "sqlite3"
+	migrationsDir    = "migrations"
+	filePermissions  = 0755
 
 	busyTimeoutMillis = "5000"
 	sqliteJournalMode = "WAL"
@@ -55,7 +56,7 @@ func Open(ctx context.Context, opts Options) (*Store, error) {
 		return nil, fmt.Errorf("create database directory %q: %w", filepath.Dir(dbPath), err)
 	}
 
-	db, err := sqlx.Open(driverName, dataSourceName(dbPath))
+	db, err := sqlx.Open(sqliteDriverName, dataSourceName(dbPath))
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite database %q: %w", dbPath, err)
 	}
@@ -136,9 +137,9 @@ func databasePath(opts Options) (string, error) {
 
 func dataSourceName(dbPath string) string {
 	values := url.Values{}
-	values.Set("_busy_timeout", busyTimeoutMillis)
-	values.Set("_foreign_keys", sqliteForeignKeys)
-	values.Set("_journal_mode", sqliteJournalMode)
+	values.Add("_pragma", "busy_timeout="+busyTimeoutMillis)
+	values.Add("_pragma", "foreign_keys="+sqliteForeignKeys)
+	values.Add("_pragma", "journal_mode("+sqliteJournalMode+")")
 
 	uriPath := dbPath
 	// specifically for Windows, ensure the path starts with a slash to be treated as an absolute path
@@ -161,7 +162,7 @@ func runGoose(db *sql.DB, fn func(*sql.DB, string, ...goose.OptionsFunc) error) 
 	goose.SetBaseFS(migrationsFS)
 	defer goose.SetBaseFS(nil)
 
-	if err := goose.SetDialect(driverName); err != nil {
+	if err := goose.SetDialect(gooseDialect); err != nil {
 		return fmt.Errorf("set goose dialect: %w", err)
 	}
 
@@ -176,7 +177,7 @@ func gooseVersion(db *sql.DB) (int64, error) {
 	goose.SetBaseFS(migrationsFS)
 	defer goose.SetBaseFS(nil)
 
-	if err := goose.SetDialect(driverName); err != nil {
+	if err := goose.SetDialect(gooseDialect); err != nil {
 		return 0, fmt.Errorf("set goose dialect: %w", err)
 	}
 

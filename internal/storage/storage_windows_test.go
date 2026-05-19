@@ -15,13 +15,13 @@ func TestDataSourceNameUsesWindowsFileURI(t *testing.T) {
 	if !strings.HasPrefix(dsn, "file:///C:/Users/Fergal/AppData/Local/mod-manager/mod-manager.db?") {
 		t.Fatalf("dataSourceName() = %q, want file URI with triple slash and slash-separated path", dsn)
 	}
-	if !strings.Contains(dsn, "_busy_timeout=5000") {
-		t.Fatalf("dataSourceName() = %q, missing _busy_timeout", dsn)
+	if !strings.Contains(dsn, "_pragma=busy_timeout%3D5000") {
+		t.Fatalf("dataSourceName() = %q, missing busy_timeout pragma", dsn)
 	}
-	if !strings.Contains(dsn, "_foreign_keys=1") {
-		t.Fatalf("dataSourceName() = %q, missing _foreign_keys", dsn)
+	if !strings.Contains(dsn, "_pragma=foreign_keys%3D1") {
+		t.Fatalf("dataSourceName() = %q, missing foreign_keys pragma", dsn)
 	}
-	if !strings.Contains(dsn, "_journal_mode=WAL") {
-		t.Fatalf("dataSourceName() = %q, missing _journal_mode", dsn)
+	if !strings.Contains(dsn, "_pragma=journal_mode%28WAL%29") {
+		t.Fatalf("dataSourceName() = %q, missing journal_mode pragma", dsn)
 	}
 }
