@@ -5,7 +5,6 @@
   width: 100%;
   align-items: stretch;
   flex-direction: column;
-  gap: $spacing-xs;
 }
 
 .navigation-link {
@@ -18,7 +17,7 @@
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
-  border-radius: $radius-md;
+  border-radius: $radius-sm;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -28,7 +27,7 @@
 
 .navigation-link:hover,
 .navigation-link:focus-visible {
-  background: $color-border-subtle;
+  background: $color-surface-elevated;
   color: $color-text-primary;
   outline: none;
 }
@@ -42,6 +41,15 @@
   width: $app-sidebar-icon-size;
   height: $app-sidebar-icon-size;
   flex: 0 0 $app-sidebar-icon-size;
+  stroke-width: 1.8;
+}
+
+.navigation-separator {
+  width: $app-sidebar-control-size;
+  height: $app-border-width;
+  margin: $spacing-xs auto;
+  background: $color-border-subtle;
+  transition: width $transition-duration-fast $transition-easing-standard;
 }
 
 .navigation-link-label {
@@ -57,5 +65,12 @@
 .sidebar-pinned .navigation-link-label {
   opacity: 1;
   transform: translateX(0);
+  transition-delay: 120ms;
+}
+
+.sidebar:hover .navigation-separator,
+.sidebar:has(:focus-visible) .navigation-separator,
+.sidebar-pinned .navigation-separator {
+  width: 100%;
   transition-delay: 120ms;
 }

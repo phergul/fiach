@@ -20,7 +20,7 @@
   position: sticky;
   top: 0;
   display: flex;
-  width: $app-sidebar-collapsed-width;
+  width: calc($app-sidebar-collapsed-width + $app-border-width);
   height: 100vh;
   flex-direction: column;
   align-items: stretch;
@@ -36,8 +36,21 @@
 .sidebar:hover .sidebar-surface,
 .sidebar:has(:focus-visible) .sidebar-surface,
 .sidebar-pinned .sidebar-surface {
-  width: $app-sidebar-width;
+  width: calc($app-sidebar-width + $app-border-width);
   transition-delay: 120ms;
+}
+
+.sidebar-pin-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-separator {
+  width: $app-sidebar-control-size;
+  height: $app-border-width;
+  margin: 0 auto $spacing-xs;
+  background: $color-border-subtle;
+  transition: width $transition-duration-fast $transition-easing-standard;
 }
 
 .sidebar-pin-button {
@@ -52,22 +65,23 @@
   white-space: nowrap;
   background: transparent;
   border: 0;
-  border-radius: $radius-md;
+  border-radius: $radius-sm;
 }
 
 .sidebar-pin-button:hover {
-  background: $color-border-subtle;
+  background: $color-surface-elevated;
   color: $color-text-primary;
 }
 
 .sidebar-pin-button:focus-visible {
-  background: $color-border-subtle;
+  background: $color-surface-elevated;
 }
 
 .sidebar-pin-button-icon {
   width: $app-sidebar-icon-size;
   height: $app-sidebar-icon-size;
   flex: 0 0 $app-sidebar-icon-size;
+  stroke-width: 1.8;
 }
 
 .sidebar-pin-button-label {
@@ -83,5 +97,12 @@
 .sidebar-pinned .sidebar-pin-button-label {
   opacity: 1;
   transform: translateX(0);
+  transition-delay: 120ms;
+}
+
+.sidebar:hover .sidebar-separator,
+.sidebar:has(:focus-visible) .sidebar-separator,
+.sidebar-pinned .sidebar-separator {
+  width: 100%;
   transition-delay: 120ms;
 }
