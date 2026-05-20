@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
-import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
+import { Archive, ArrowLeft, CheckCircle2, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
 import { ImportMod } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
@@ -102,6 +102,10 @@ export const GameDetails = () => {
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
+  const applyProfilePath = game === undefined ? '/library' : `/library/${game.ID}/apply`;
+  const applyProfileTitle = profileManager.activeProfile === null
+    ? 'Select an active profile before applying.'
+    : `Preview apply for ${profileManager.activeProfile.Name}.`;
 
   const startFolderImportFlow = async () => {
     if (game === undefined || isImporting) {
@@ -315,6 +319,25 @@ export const GameDetails = () => {
           Back
         </Link>
         <div className="game-details-toolbar-actions">
+          <Link
+            className={
+              game === undefined || profileManager.activeProfile === null
+                ? 'game-details-toolbar-button game-details-apply-profile game-details-toolbar-link-disabled'
+                : 'game-details-toolbar-button game-details-apply-profile'
+            }
+            to={applyProfilePath}
+            onClick={(event) => {
+              if (game === undefined || profileManager.activeProfile === null) {
+                event.preventDefault();
+              }
+            }}
+            title={applyProfileTitle}
+            aria-disabled={game === undefined || profileManager.activeProfile === null}
+          >
+            <CheckCircle2 className="game-details-toolbar-icon" aria-hidden="true" />
+            <span>Apply Profile</span>
+          </Link>
+
           <div className="game-details-menu-anchor">
             <button
               className="game-details-toolbar-button game-details-import-mods"
@@ -429,7 +452,11 @@ export const GameDetails = () => {
               onImportFolder={startFolderImportFlow}
             />
           ) : (
-            <GameProfilesSection gameModManager={gameModManager} profileManager={profileManager} />
+            <GameProfilesSection
+              applyProfilePath={applyProfilePath}
+              gameModManager={gameModManager}
+              profileManager={profileManager}
+            />
           )}
         </>
       )}

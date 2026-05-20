@@ -1,0 +1,42 @@
+@use '@styles' as *;
+
+.game-apply-summary {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: rgb(#{$color-background-rgb} / 40%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.game-apply-summary-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-md $spacing-xl;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.game-apply-summary-item:last-child {
+  border-right: 0;
+}
+
+.game-apply-summary-label {
+  overflow: hidden;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-apply-summary-value {
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}

@@ -2,10 +2,10 @@
 
 .game-profiles-active-summary {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-lg;
-  padding: $spacing-md $spacing-md $spacing-md $spacing-xl;
+  align-items: stretch;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
   background: rgb(#{$color-surface-rgb} / 42%);
 }
@@ -32,4 +32,39 @@
 .game-profiles-active-summary-button {
   min-height: $input-height;
   white-space: nowrap;
+}
+
+.game-profiles-active-summary-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.game-profiles-active-summary-apply {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  background: rgb(88 139 139 / 26%);
+  border: $app-border-width solid rgb(88 139 139 / 72%);
+  border-radius: $radius-sm;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-decoration: none;
+}
+
+.game-profiles-active-summary-apply:hover,
+.game-profiles-active-summary-apply:focus-visible {
+  background: rgb(88 139 139 / 36%);
+  border-color: $color-success;
+  outline: none;
+}
+
+.game-profiles-active-summary-link-disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }

@@ -13,11 +13,12 @@ import type { UseGameModsResult, UseGameProfilesResult } from '@hooks';
 import './GameProfilesSection.scss';
 
 interface GameProfilesSectionProps {
+  applyProfilePath: string;
   gameModManager: UseGameModsResult;
   profileManager: UseGameProfilesResult;
 }
 
-export const GameProfilesSection = ({ gameModManager, profileManager }: GameProfilesSectionProps) => {
+export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileManager }: GameProfilesSectionProps) => {
   const { addToast } = useToast();
   const { isLoading: isGameModsLoading, mods: gameMods } = gameModManager;
   const {
@@ -168,6 +169,7 @@ export const GameProfilesSection = ({ gameModManager, profileManager }: GameProf
           <aside className="game-profiles-section-sidebar" aria-label="Profile list">
             <GameProfilesActiveSummary
               activeProfile={activeProfile}
+              applyProfilePath={applyProfilePath}
               isBusy={isBusy}
               onDeactivateProfile={handleDeactivateProfile}
             />

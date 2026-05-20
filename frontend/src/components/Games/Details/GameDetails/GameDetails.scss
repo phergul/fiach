@@ -2,6 +2,7 @@
 
 $game-details-toolbar-height: 3.5rem;
 $game-details-toolbar-button-height: 2.25rem;
+$game-details-toolbar-apply-width: 9.5rem;
 $game-details-toolbar-import-width: 9rem;
 $game-details-toolbar-menu-width: 2.25rem;
 $game-details-toolbar-icon-size: 1.25rem;
@@ -62,16 +63,41 @@ $game-details-toolbar-icon-size: 1.25rem;
 }
 
 .game-details-toolbar-button {
+  display: inline-flex;
   min-height: $game-details-toolbar-button-height;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
   color: $color-text-primary;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
   padding: 0;
+  text-decoration: none;
+}
+
+.game-details-apply-profile {
+  width: $game-details-toolbar-apply-width;
+  color: $color-text-primary;
+  background: rgb(88 139 139 / 26%);
+  border: $app-border-width solid rgb(88 139 139 / 72%);
+  border-radius: $radius-sm;
+}
+
+.game-details-apply-profile:hover,
+.game-details-apply-profile:focus-visible {
+  background: rgb(88 139 139 / 36%);
+  border-color: $color-success;
+  outline: none;
 }
 
 .game-details-import-mods {
   width: $game-details-toolbar-import-width;
+}
+
+.game-details-toolbar-link-disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .game-details-toolbar-icon-button {
