@@ -437,9 +437,10 @@ export const GameDetails = () => {
 
           <GameDetailsMetadata
             game={game}
+            isStorageUsageLoading={gameModManager.isStorageUsageLoading}
             modCount={gameModManager.mods.length}
             profileCount={profileManager.profiles.length}
-            profileModsByProfileID={profileManager.profileModsByProfileID}
+            storageUsedBytes={gameModManager.storageUsedBytes}
           />
 
           <GameDetailsTabs activeTab={activeTab} onActiveTabChange={setActiveTab} />

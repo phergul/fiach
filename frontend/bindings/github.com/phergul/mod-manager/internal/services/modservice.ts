@@ -16,6 +16,10 @@ import * as storage$0 from "../storage/models.js";
 // @ts-ignore: Unused imports
 import * as $models from "./models.js";
 
+export function GetGameManagedModStorageUsage(gameID: number): $CancellablePromise<number> {
+    return $Call.ByID(1476392311, gameID);
+}
+
 export function ImportMod(input: $models.ImportModInput): $CancellablePromise<$models.ImportModResult> {
     return $Call.ByID(2313069445, input).then(($result: any) => {
         return $$createType0($result);

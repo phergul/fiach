@@ -32,6 +32,111 @@ func TestModServiceListsMods(t *testing.T) {
 	}
 }
 
+func TestModServiceGetsManagedModStorageUsage(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	firstModPath := makeSourceFolder(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+		"readme.txt":     "hello",
+	})
+	secondModPath := makeSourceFolder(t, map[string]string{
+		"nested/config.json": "{}",
+	})
+	insertServiceProfileTestMod(t, store, gameID, "SkyUI", firstModPath)
+	insertServiceProfileTestMod(t, store, gameID, "Config", secondModPath)
+
+	service := NewModService(store)
+	got, err := service.GetGameManagedModStorageUsage(gameID)
+	if err != nil {
+		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
+	}
+
+	want := int64(len("plugin") + len("hello") + len("{}"))
+	if got != want {
+		t.Fatalf("GetGameManagedModStorageUsage() = %d, want %d", got, want)
+	}
+}
+
+func TestModServiceManagedStorageUsageIgnoresMissingAndUnreadablePaths(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	readablePath := makeSourceFolder(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+	})
+	missingPath := filepath.Join(t.TempDir(), "missing")
+	insertServiceProfileTestMod(t, store, gameID, "SkyUI", readablePath)
+	insertServiceProfileTestMod(t, store, gameID, "Missing", missingPath)
+
+	if runtime.GOOS != "windows" {
+		unreadablePath := makeSourceFolder(t, map[string]string{
+			"secret.txt": "secret",
+		})
+		if err := os.Chmod(unreadablePath, 0o000); err != nil {
+			t.Fatalf("make unreadable folder: %v", err)
+		}
+		t.Cleanup(func() {
+			_ = os.Chmod(unreadablePath, 0o755)
+		})
+		insertServiceProfileTestMod(t, store, gameID, "Unreadable", unreadablePath)
+	}
+
+	service := NewModService(store)
+	got, err := service.GetGameManagedModStorageUsage(gameID)
+	if err != nil {
+		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
+	}
+
+	want := int64(len("plugin"))
+	if got != want {
+		t.Fatalf("GetGameManagedModStorageUsage() = %d, want %d", got, want)
+	}
+}
+
+func TestModServiceManagedStorageUsageDoesNotFollowSymlinks(t *testing.T) {
+	t.Parallel()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink creation requires elevated permissions on Windows")
+	}
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modPath := makeSourceFolder(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+	})
+	externalPath := makeSourceFolder(t, map[string]string{
+		"external.txt": "external content",
+	})
+	if err := os.Symlink(filepath.Join(externalPath, "external.txt"), filepath.Join(modPath, "external-file-link")); err != nil {
+		t.Fatalf("create file symlink: %v", err)
+	}
+	if err := os.Symlink(externalPath, filepath.Join(modPath, "external-dir-link")); err != nil {
+		t.Fatalf("create directory symlink: %v", err)
+	}
+	insertServiceProfileTestMod(t, store, gameID, "SkyUI", modPath)
+
+	service := NewModService(store)
+	got, err := service.GetGameManagedModStorageUsage(gameID)
+	if err != nil {
+		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
+	}
+
+	want := int64(len("plugin"))
+	if got != want {
+		t.Fatalf("GetGameManagedModStorageUsage() = %d, want %d", got, want)
+	}
+}
+
 func TestModServiceListsImportStrategies(t *testing.T) {
 	t.Parallel()
 
@@ -657,6 +762,14 @@ func TestModServiceReturnsStorageConfigurationError(t *testing.T) {
 		t.Fatalf("ListMods() error = %q, want service context", err.Error())
 	}
 
+	_, err = service.GetGameManagedModStorageUsage(1)
+	if err == nil {
+		t.Fatal("GetGameManagedModStorageUsage() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "get game managed mod storage usage") || !strings.Contains(err.Error(), "storage is not configured") {
+		t.Fatalf("GetGameManagedModStorageUsage() error = %q, want service context", err.Error())
+	}
+
 	_, err = importFolderMod(service, 1, "SkyUI", "/mods/skyui")
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want error")
@@ -691,5 +804,13 @@ func TestModServiceWrapsStorageErrors(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "list mods") || !strings.Contains(err.Error(), "select game mods") {
 		t.Fatalf("ListMods() error = %q, want distinct service and storage context", err.Error())
+	}
+
+	_, err = service.GetGameManagedModStorageUsage(1)
+	if err == nil {
+		t.Fatal("GetGameManagedModStorageUsage() error = nil, want storage error")
+	}
+	if !strings.Contains(err.Error(), "get game managed mod storage usage") || !strings.Contains(err.Error(), "select game mods") {
+		t.Fatalf("GetGameManagedModStorageUsage() error = %q, want distinct service and storage context", err.Error())
 	}
 }

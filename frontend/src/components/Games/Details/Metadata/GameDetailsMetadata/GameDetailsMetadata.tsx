@@ -1,24 +1,50 @@
-import { CircleSlash2, CheckCircle2, CircleCheck, Package, Users } from 'lucide-react';
+import { CheckCircle2, CircleSlash2, Database, Package, Users } from 'lucide-react';
 
-import type { ProfileMod, StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
 import './GameDetailsMetadata.scss';
 
 interface GameDetailsMetadataProps {
   game: StoredGame;
+  isStorageUsageLoading: boolean;
   modCount: number;
   profileCount: number;
-  profileModsByProfileID: Record<number, ProfileMod[]>;
+  storageUsedBytes: number | null;
 }
 
-export const GameDetailsMetadata = ({ game, modCount, profileCount, profileModsByProfileID }: GameDetailsMetadataProps) => {
-  const enabledProfileModCount = Object.values(profileModsByProfileID).reduce((enabledCount, profileMods) => {
-    return enabledCount + profileMods.filter((profileMod) => profileMod.Enabled).length;
-  }, 0);
+const formatStorageUsage = (bytes: number | null, isLoading: boolean) => {
+  if (isLoading || bytes === null) {
+    return '-';
+  }
+
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const formattedValue = value >= 100 ? value.toFixed(0) : value.toFixed(2);
+  return `${formattedValue} ${units[unitIndex]}`;
+};
+
+export const GameDetailsMetadata = ({
+  game,
+  isStorageUsageLoading,
+  modCount,
+  profileCount,
+  storageUsedBytes,
+}: GameDetailsMetadataProps) => {
   const metadataItems = [
     { Icon: game.Available ? CheckCircle2 : CircleSlash2, label: 'Available', value: game.Available ? 'Yes' : 'No' },
     { Icon: Package, label: 'Mods installed', value: String(modCount) },
-    { Icon: CircleCheck, label: 'Mods enabled', value: String(enabledProfileModCount) },
+    { Icon: Database, label: 'Storage used', value: formatStorageUsage(storageUsedBytes, isStorageUsageLoading) },
     { Icon: Users, label: 'Profiles', value: String(profileCount) },
   ];
 
