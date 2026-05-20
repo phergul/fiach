@@ -10,6 +10,7 @@ import {
   ListProfiles,
   RemoveModFromProfile,
   RenameProfile,
+  ReorderProfileMods,
   SetProfileModEnabled,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
 import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
@@ -24,6 +25,7 @@ type ProfileAction =
   | 'deactivate'
   | 'delete'
   | 'remove-mod'
+  | 'reorder-mods'
   | 'rename'
   | 'toggle-mod';
 
@@ -200,6 +202,30 @@ export const useGameProfiles = (gameID: number | null) => {
     [loadProfileMods, runProfileAction],
   );
 
+  const reorderProfileMods = useCallback(
+    async (profileID: number, orderedModIDs: number[]) => {
+      setPendingAction('reorder-mods');
+
+      try {
+        const reorderedProfileMods = await ReorderProfileMods(profileID, orderedModIDs);
+        setProfileModsByProfileID((currentProfileMods) => ({
+          ...currentProfileMods,
+          [profileID]: reorderedProfileMods,
+        }));
+        return reorderedProfileMods;
+      } catch (error) {
+        addToast({
+          message: getErrorMessage(error),
+          tone: 'error',
+        });
+        throw error;
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [addToast],
+  );
+
   const activateProfile = useCallback(
     (profileID: number) => {
       if (gameID === null) {
@@ -284,6 +310,7 @@ export const useGameProfiles = (gameID: number | null) => {
     profileModsByProfileID,
     profiles,
     removeModFromProfile,
+    reorderProfileMods,
     refreshProfiles: loadProfiles,
     renameProfile,
     setProfileModEnabled,

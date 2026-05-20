@@ -34,6 +34,7 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
     profileModsByProfileID,
     profiles,
     removeModFromProfile,
+    reorderProfileMods,
     refreshProfiles,
     renameProfile,
     setProfileModEnabled,
@@ -150,6 +151,10 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
     setProfileModEnabled(profileID, modID, enabled).catch(() => undefined);
   };
 
+  const handleReorderProfileMods = (profileID: number, orderedModIDs: number[]) => {
+    reorderProfileMods(profileID, orderedModIDs).catch(() => undefined);
+  };
+
   return (
     <section className="game-profiles-section" aria-label="Profiles">
       {loadError !== null && (
@@ -213,6 +218,7 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
               profileMods={selectedProfileMods}
               onAddModsToProfile={handleAddModsToProfile}
               onRemoveModFromProfile={handleRemoveModFromProfile}
+              onReorderProfileMods={handleReorderProfileMods}
               onSetProfileModEnabled={handleSetProfileModEnabled}
             />
           </div>

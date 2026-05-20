@@ -393,6 +393,124 @@ func TestSetProfileModEnabledPersistsState(t *testing.T) {
 	}
 }
 
+func TestReorderProfileModsPersistsContiguousOrderAndPreservesState(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	firstModID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	secondModID := insertProfileTestMod(t, store, gameID, "USSEP", "/mods/ussep")
+	thirdModID := insertProfileTestMod(t, store, gameID, "ENB", "/mods/enb")
+
+	for _, modID := range []int64{firstModID, secondModID, thirdModID} {
+		if _, err := store.AddModToProfile(context.Background(), profile.ID, modID); err != nil {
+			t.Fatalf("AddModToProfile(%d) error = %v", modID, err)
+		}
+	}
+	if _, err := store.SetProfileModEnabled(context.Background(), profile.ID, secondModID, false); err != nil {
+		t.Fatalf("SetProfileModEnabled() error = %v", err)
+	}
+
+	reordered, err := store.ReorderProfileMods(context.Background(), profile.ID, []int64{thirdModID, secondModID, firstModID})
+	if err != nil {
+		t.Fatalf("ReorderProfileMods() error = %v", err)
+	}
+
+	assertProfileModOrder(t, reordered, []int64{thirdModID, secondModID, firstModID})
+	if reordered[1].Enabled {
+		t.Fatalf("disabled mod after reorder = %+v, want still disabled", reordered[1])
+	}
+
+	listed, err := store.ListProfileMods(context.Background(), profile.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	assertProfileModOrder(t, listed, []int64{thirdModID, secondModID, firstModID})
+}
+
+func TestReorderProfileModsRejectsInvalidOrdersAndRollsBack(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	otherProfile := mustCreateProfile(t, store, otherGameID, "Default")
+	firstModID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	secondModID := insertProfileTestMod(t, store, gameID, "USSEP", "/mods/ussep")
+	otherProfileModID := insertProfileTestMod(t, store, otherGameID, "FallUI", "/mods/fallui")
+
+	for _, modID := range []int64{firstModID, secondModID} {
+		if _, err := store.AddModToProfile(context.Background(), profile.ID, modID); err != nil {
+			t.Fatalf("AddModToProfile(%d) error = %v", modID, err)
+		}
+	}
+	if _, err := store.AddModToProfile(context.Background(), otherProfile.ID, otherProfileModID); err != nil {
+		t.Fatalf("AddModToProfile() other profile error = %v", err)
+	}
+
+	invalidOrders := map[string][]int64{
+		"duplicate":     {firstModID, firstModID},
+		"empty":         {},
+		"extra":         {firstModID, secondModID, otherProfileModID},
+		"missing":       {firstModID},
+		"wrong-profile": {firstModID, otherProfileModID},
+	}
+	for name, modIDs := range invalidOrders {
+		t.Run(name, func(t *testing.T) {
+			if _, err := store.ReorderProfileMods(context.Background(), profile.ID, modIDs); err == nil {
+				t.Fatal("ReorderProfileMods() error = nil, want error")
+			}
+
+			listed, err := store.ListProfileMods(context.Background(), profile.ID)
+			if err != nil {
+				t.Fatalf("ListProfileMods() error = %v", err)
+			}
+			assertProfileModOrder(t, listed, []int64{firstModID, secondModID})
+		})
+	}
+}
+
+func TestReorderProfileModsAcceptsEmptyOrderForEmptyProfile(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+
+	reordered, err := store.ReorderProfileMods(context.Background(), profile.ID, nil)
+	if err != nil {
+		t.Fatalf("ReorderProfileMods() error = %v", err)
+	}
+	if len(reordered) != 0 {
+		t.Fatalf("ReorderProfileMods() length = %d, want 0: %+v", len(reordered), reordered)
+	}
+}
+
+func assertProfileModOrder(t *testing.T, profileMods []ProfileMod, modIDs []int64) {
+	t.Helper()
+
+	if len(profileMods) != len(modIDs) {
+		t.Fatalf("profile mod length = %d, want %d: %+v", len(profileMods), len(modIDs), profileMods)
+	}
+
+	for index, modID := range modIDs {
+		if profileMods[index].ModID != modID {
+			t.Fatalf("profileMods[%d].ModID = %d, want %d: %+v", index, profileMods[index].ModID, modID, profileMods)
+		}
+		if profileMods[index].LoadOrder != int64(index) {
+			t.Fatalf("profileMods[%d].LoadOrder = %d, want %d: %+v", index, profileMods[index].LoadOrder, index, profileMods)
+		}
+	}
+}
+
 func insertProfileTestMod(t *testing.T, store *Store, gameID int64, name string, sourcePath string) int64 {
 	t.Helper()
 

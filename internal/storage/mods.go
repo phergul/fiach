@@ -320,10 +320,7 @@ func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []Pr
 		return nil, errors.New("store is not open")
 	}
 
-	err = s.db.SelectContext(ctx, &mods, profileModsSelectSQL+`
-		WHERE pm.profile_id = ?
-		ORDER BY pm.load_order, LOWER(m.name), m.id
-	`, profileID)
+	mods, err = listProfileMods(ctx, s.db, profileID)
 	if err != nil {
 		return nil, err
 	}
@@ -458,6 +455,81 @@ func (s *Store) SetProfileModEnabled(ctx context.Context, profileID int64, modID
 	return profileMod, nil
 }
 
+func (s *Store) ReorderProfileMods(ctx context.Context, profileID int64, modIDs []int64) (mods []ProfileMod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("reorder profile mod rows: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return nil, errors.New("store is not open")
+	}
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+		if _, err := getProfileByID(ctx, tx, profileID); err != nil {
+			return err
+		}
+
+		currentMods, err := listProfileMods(ctx, tx, profileID)
+		if err != nil {
+			return err
+		}
+		if len(modIDs) != len(currentMods) {
+			return fmt.Errorf("ordered mod count %d does not match assigned mod count %d", len(modIDs), len(currentMods))
+		}
+
+		currentLoadOrders := make(map[int64]int64, len(currentMods))
+		for _, profileMod := range currentMods {
+			currentLoadOrders[profileMod.ModID] = profileMod.LoadOrder
+		}
+
+		seenModIDs := make(map[int64]struct{}, len(modIDs))
+		for index, modID := range modIDs {
+			if _, found := seenModIDs[modID]; found {
+				return fmt.Errorf("ordered mod list contains duplicate mod %d", modID)
+			}
+			currentLoadOrder, found := currentLoadOrders[modID]
+			if !found {
+				return fmt.Errorf("mod %d is not assigned to profile %d", modID, profileID)
+			}
+			seenModIDs[modID] = struct{}{}
+
+			loadOrder := int64(index)
+			if currentLoadOrder == loadOrder {
+				continue
+			}
+
+			result, err := tx.ExecContext(ctx, `
+				UPDATE profile_mods
+				SET load_order = ?,
+					updated_at = CURRENT_TIMESTAMP
+				WHERE profile_id = ?
+					AND mod_id = ?
+			`, loadOrder, profileID, modID)
+			if err != nil {
+				return err
+			}
+
+			affected, err := result.RowsAffected()
+			if err != nil {
+				return fmt.Errorf("get reordered profile mod count: %w", err)
+			}
+			if affected == 0 {
+				return sql.ErrNoRows
+			}
+		}
+
+		mods, err = listProfileMods(ctx, tx, profileID)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return mods, nil
+}
+
 const profileModsSelectSQL = `
 	SELECT
 		pm.profile_id,
@@ -474,6 +546,23 @@ const profileModsSelectSQL = `
 
 type modGetter interface {
 	GetContext(context.Context, any, string, ...any) error
+}
+
+type profileModSelector interface {
+	SelectContext(context.Context, any, string, ...any) error
+}
+
+func listProfileMods(ctx context.Context, db profileModSelector, profileID int64) ([]ProfileMod, error) {
+	var mods []ProfileMod
+	err := db.SelectContext(ctx, &mods, profileModsSelectSQL+`
+		WHERE pm.profile_id = ?
+		ORDER BY pm.load_order, LOWER(m.name), m.id
+	`, profileID)
+	if err != nil {
+		return nil, err
+	}
+
+	return mods, nil
 }
 
 func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {

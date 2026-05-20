@@ -63,3 +63,17 @@ func (s *ProfileService) SetProfileModEnabled(profileID int64, modID int64, enab
 
 	return s.store.SetProfileModEnabled(context.Background(), profileID, modID, enabled)
 }
+
+func (s *ProfileService) ReorderProfileMods(profileID int64, modIDs []int64) (mods []storage.ProfileMod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("reorder profile mods: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return nil, errors.New("storage is not configured")
+	}
+
+	return s.store.ReorderProfileMods(context.Background(), profileID, modIDs)
+}

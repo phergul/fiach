@@ -72,6 +72,12 @@ export function RenameProfile(profileID: number, name: string): $CancellableProm
     });
 }
 
+export function ReorderProfileMods(profileID: number, modIDs: number[]): $CancellablePromise<storage$0.ProfileMod[]> {
+    return $Call.ByID(3311644578, profileID, modIDs).then(($result: any) => {
+        return $$createType4($result);
+    });
+}
+
 export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<storage$0.ProfileMod> {
     return $Call.ByID(734528755, profileID, modID, enabled).then(($result: any) => {
         return $$createType1($result);

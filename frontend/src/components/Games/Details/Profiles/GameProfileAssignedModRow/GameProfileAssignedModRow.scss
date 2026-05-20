@@ -48,6 +48,12 @@ $game-profile-assigned-mod-row-hidden-input-offset: -0.0625rem;
   gap: $spacing-sm;
 }
 
+.game-profile-assigned-mod-row-order-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
 .game-profile-assigned-mod-row-toggle {
   display: inline-flex;
   min-height: $game-profile-assigned-mod-row-control-height;

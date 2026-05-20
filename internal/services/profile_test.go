@@ -81,6 +81,37 @@ func TestProfileServiceManagesProfileMods(t *testing.T) {
 	}
 }
 
+func TestProfileServiceReordersProfileMods(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	service := NewProfileService(store)
+	profile, err := service.CreateProfile(gameID, "Default")
+	if err != nil {
+		t.Fatalf("CreateProfile() error = %v", err)
+	}
+	firstModID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	secondModID := insertServiceProfileTestMod(t, store, gameID, "USSEP", "/mods/ussep")
+
+	if _, err := service.AddModToProfile(profile.ID, firstModID); err != nil {
+		t.Fatalf("AddModToProfile() first error = %v", err)
+	}
+	if _, err := service.AddModToProfile(profile.ID, secondModID); err != nil {
+		t.Fatalf("AddModToProfile() second error = %v", err)
+	}
+
+	reordered, err := service.ReorderProfileMods(profile.ID, []int64{secondModID, firstModID})
+	if err != nil {
+		t.Fatalf("ReorderProfileMods() error = %v", err)
+	}
+	if len(reordered) != 2 || reordered[0].ModID != secondModID || reordered[0].LoadOrder != 0 || reordered[1].ModID != firstModID || reordered[1].LoadOrder != 1 {
+		t.Fatalf("ReorderProfileMods() = %+v, want second then first", reordered)
+	}
+}
+
 func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
 	t.Parallel()
 

@@ -18,6 +18,7 @@ interface GameProfileModsPanelProps {
   profileMods: ProfileMod[];
   onAddModsToProfile: (profileID: number, modIDs: number[]) => Promise<void> | void;
   onRemoveModFromProfile: (profileID: number, modID: number) => void;
+  onReorderProfileMods: (profileID: number, orderedModIDs: number[]) => void;
   onSetProfileModEnabled: (profileID: number, modID: number, enabled: boolean) => void;
 }
 
@@ -30,6 +31,7 @@ export const GameProfileModsPanel = ({
   profileMods,
   onAddModsToProfile,
   onRemoveModFromProfile,
+  onReorderProfileMods,
   onSetProfileModEnabled,
 }: GameProfileModsPanelProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -50,6 +52,29 @@ export const GameProfileModsPanel = ({
     }
 
     await onAddModsToProfile(profile.ID, modIDs);
+  };
+
+  const handleMoveProfileMod = (modID: number, direction: -1 | 1) => {
+    if (profile === null) {
+      return;
+    }
+
+    const currentIndex = profileMods.findIndex((profileMod) => profileMod.ModID === modID);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= profileMods.length) {
+      return;
+    }
+
+    const reorderedProfileMods = [...profileMods];
+    [reorderedProfileMods[currentIndex], reorderedProfileMods[nextIndex]] = [
+      reorderedProfileMods[nextIndex],
+      reorderedProfileMods[currentIndex],
+    ];
+
+    onReorderProfileMods(
+      profile.ID,
+      reorderedProfileMods.map((profileMod) => profileMod.ModID),
+    );
   };
 
   if (profile === null) {
@@ -88,6 +113,7 @@ export const GameProfileModsPanel = ({
           <GameProfileAssignedModsList
             isBusy={isBusy}
             mods={profileMods}
+            onMoveMod={handleMoveProfileMod}
             onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
             onSetModEnabled={(modID, enabled) => onSetProfileModEnabled(profile.ID, modID, enabled)}
           />

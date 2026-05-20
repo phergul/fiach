@@ -1,19 +1,27 @@
-import { Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
 
 import type { ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
 import './GameProfileAssignedModRow.scss';
 
 interface GameProfileAssignedModRowProps {
+  canMoveDown: boolean;
+  canMoveUp: boolean;
   isBusy: boolean;
   mod: ProfileMod;
+  onMoveDown: () => void;
+  onMoveUp: () => void;
   onRemoveMod: (modID: number) => void;
   onSetModEnabled: (modID: number, enabled: boolean) => void;
 }
 
 export const GameProfileAssignedModRow = ({
+  canMoveDown,
+  canMoveUp,
   isBusy,
   mod,
+  onMoveDown,
+  onMoveUp,
   onRemoveMod,
   onSetModEnabled,
 }: GameProfileAssignedModRowProps) => {
@@ -30,6 +38,30 @@ export const GameProfileAssignedModRow = ({
       </div>
 
       <div className="game-profile-assigned-mod-row-actions">
+        <div className="game-profile-assigned-mod-row-order-actions">
+          <button
+            aria-label={`Move ${mod.Name} up`}
+            className="game-profile-assigned-mod-row-icon-button"
+            disabled={isBusy || !canMoveUp}
+            onClick={onMoveUp}
+            title="Move mod up"
+            type="button"
+          >
+            <ArrowUp className="game-profile-assigned-mod-row-icon" aria-hidden="true" />
+          </button>
+
+          <button
+            aria-label={`Move ${mod.Name} down`}
+            className="game-profile-assigned-mod-row-icon-button"
+            disabled={isBusy || !canMoveDown}
+            onClick={onMoveDown}
+            title="Move mod down"
+            type="button"
+          >
+            <ArrowDown className="game-profile-assigned-mod-row-icon" aria-hidden="true" />
+          </button>
+        </div>
+
         <label className="game-profile-assigned-mod-row-toggle">
           <input
             checked={mod.Enabled}
@@ -41,6 +73,7 @@ export const GameProfileAssignedModRow = ({
         </label>
 
         <button
+          aria-label={`Remove ${mod.Name} from profile`}
           className="game-profile-assigned-mod-row-icon-button game-profile-assigned-mod-row-icon-button-danger"
           disabled={isBusy}
           onClick={() => onRemoveMod(mod.ModID)}
