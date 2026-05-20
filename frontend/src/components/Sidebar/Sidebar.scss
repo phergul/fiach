@@ -46,11 +46,20 @@
 }
 
 .sidebar-separator {
-  width: $app-sidebar-control-size;
+  position: relative;
+  width: 100%;
   height: $app-border-width;
-  margin: 0 auto $spacing-xs;
+  margin: 0 0 $spacing-xs;
+}
+
+.sidebar-separator::before {
+  position: absolute;
+  inset: 0;
   background: $color-border-subtle;
-  transition: width $transition-duration-fast $transition-easing-standard;
+  content: '';
+  transform: scaleX(calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2))));
+  transform-origin: left center;
+  transition: transform $transition-duration-fast $transition-easing-standard;
 }
 
 .sidebar-pin-button {
@@ -100,9 +109,9 @@
   transition-delay: 120ms;
 }
 
-.sidebar:hover .sidebar-separator,
-.sidebar:has(:focus-visible) .sidebar-separator,
-.sidebar-pinned .sidebar-separator {
-  width: 100%;
+.sidebar:hover .sidebar-separator::before,
+.sidebar:has(:focus-visible) .sidebar-separator::before,
+.sidebar-pinned .sidebar-separator::before {
+  transform: scaleX(1);
   transition-delay: 120ms;
 }

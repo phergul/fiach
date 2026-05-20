@@ -45,11 +45,20 @@
 }
 
 .navigation-separator {
-  width: $app-sidebar-control-size;
+  position: relative;
+  width: 100%;
   height: $app-border-width;
-  margin: $spacing-xs auto;
+  margin: $spacing-xs 0;
+}
+
+.navigation-separator::before {
+  position: absolute;
+  inset: 0;
   background: $color-border-subtle;
-  transition: width $transition-duration-fast $transition-easing-standard;
+  content: '';
+  transform: scaleX(calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2))));
+  transform-origin: left center;
+  transition: transform $transition-duration-fast $transition-easing-standard;
 }
 
 .navigation-link-label {
@@ -68,9 +77,9 @@
   transition-delay: 120ms;
 }
 
-.sidebar:hover .navigation-separator,
-.sidebar:has(:focus-visible) .navigation-separator,
-.sidebar-pinned .navigation-separator {
-  width: 100%;
+.sidebar:hover .navigation-separator::before,
+.sidebar:has(:focus-visible) .navigation-separator::before,
+.sidebar-pinned .navigation-separator::before {
+  transform: scaleX(1);
   transition-delay: 120ms;
 }
