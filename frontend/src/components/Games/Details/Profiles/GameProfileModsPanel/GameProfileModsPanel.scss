@@ -1,6 +1,7 @@
 @use '@styles' as *;
 
 $game-profile-mods-panel-control-height: 2.5rem;
+$game-profile-mods-panel-empty-row-height: 4.75rem;
 $game-profile-mods-panel-icon-size: 1rem;
 
 .game-profile-mods-panel {
@@ -27,6 +28,11 @@ $game-profile-mods-panel-icon-size: 1rem;
 .game-profile-mods-panel-empty {
   padding: $spacing-lg $spacing-xl;
   border-bottom: $app-border;
+}
+
+.game-profile-mods-panel-empty-row {
+  min-height: $game-profile-mods-panel-empty-row-height;
+  justify-content: center;
 }
 
 .game-profile-mods-panel-footer {

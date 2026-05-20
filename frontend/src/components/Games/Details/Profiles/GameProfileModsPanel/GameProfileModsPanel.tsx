@@ -78,7 +78,10 @@ export const GameProfileModsPanel = ({
         )}
 
         {!isGameModsLoading && gameMods.length > 0 && profileMods.length === 0 && (
-          <StateBlock className="game-profile-mods-panel-empty" message="No mods are assigned to this profile yet." />
+          <StateBlock
+            className="game-profile-mods-panel-empty game-profile-mods-panel-empty-row"
+            message="No mods are assigned to this profile yet."
+          />
         )}
 
         {profileMods.length > 0 && (
