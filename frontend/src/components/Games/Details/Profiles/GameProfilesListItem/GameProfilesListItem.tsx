@@ -40,9 +40,17 @@ export const GameProfilesListItem = ({
   onStartRename,
 }: GameProfilesListItemProps) => {
   const modSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
+  const editedSummary = formatProfileEditedAt(profile.UpdatedAt);
 
   return (
-    <li className={isSelected ? 'game-profiles-list-item game-profiles-list-item-selected' : 'game-profiles-list-item'}>
+    <li
+      className={isSelected ? 'game-profiles-list-item game-profiles-list-item-selected' : 'game-profiles-list-item'}
+      onClick={() => {
+        if (!isEditing) {
+          onSelectProfile(profile.ID);
+        }
+      }}
+    >
       <div className="game-profiles-list-item-main">
         {isEditing ? (
           <input
@@ -56,7 +64,10 @@ export const GameProfilesListItem = ({
         ) : (
           <button
             className="game-profiles-list-item-selector"
-            onClick={() => onSelectProfile(profile.ID)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelectProfile(profile.ID);
+            }}
             type="button"
             aria-current={isSelected ? 'true' : undefined}
           >
@@ -64,7 +75,8 @@ export const GameProfilesListItem = ({
               <span className="game-profiles-list-item-name">{profile.Name}</span>
             </span>
             <span className="game-profiles-list-item-meta">
-              {modSummary} · {formatProfileEditedAt(profile.UpdatedAt)}
+              <span className="game-profiles-list-item-meta-part">{modSummary}</span>
+              <span className="game-profiles-list-item-meta-part">{editedSummary}</span>
             </span>
           </button>
         )}
@@ -94,11 +106,16 @@ export const GameProfilesListItem = ({
           </>
         ) : (
           <>
-            {!profile.IsActive && (
+            {profile.IsActive ? (
+              <span className="game-profiles-list-item-action-spacer" aria-hidden="true" />
+            ) : (
               <button
                 className="game-profiles-list-item-icon-button"
                 disabled={isBusy}
-                onClick={() => onActivateProfile(profile.ID)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onActivateProfile(profile.ID);
+                }}
                 title="Activate profile"
                 type="button"
               >
@@ -108,7 +125,10 @@ export const GameProfilesListItem = ({
             <button
               className="game-profiles-list-item-icon-button"
               disabled={isBusy}
-              onClick={() => onStartRename(profile)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onStartRename(profile);
+              }}
               title="Rename profile"
               type="button"
             >
@@ -117,7 +137,10 @@ export const GameProfilesListItem = ({
             <button
               className="game-profiles-list-item-icon-button game-profiles-list-item-icon-button-danger"
               disabled={isBusy}
-              onClick={() => onDeleteProfile(profile)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeleteProfile(profile);
+              }}
               title="Delete profile"
               type="button"
             >
