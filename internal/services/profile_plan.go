@@ -26,3 +26,23 @@ func (s *ProfileService) BuildProfileOperationPlan(profileID int64) (plan operat
 
 	return operationplan.BuildOperationPlan(resolved)
 }
+
+func (s *ProfileService) ConfirmProfileOperationPlan(profileID int64, plan operationplan.OperationPlan) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("confirm profile operation plan: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return errors.New("storage is not configured")
+	}
+	if profileID <= 0 {
+		return fmt.Errorf("profile ID must be positive")
+	}
+	if !plan.CanApply {
+		return errors.New("operation plan has blocking issues")
+	}
+
+	return errors.New("apply execution is reserved for Epic 8")
+}

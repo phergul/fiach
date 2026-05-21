@@ -30,6 +30,10 @@ export function BuildProfileOperationPlan(profileID: number): $CancellablePromis
     });
 }
 
+export function ConfirmProfileOperationPlan(profileID: number, plan: operationplan$0.OperationPlan): $CancellablePromise<void> {
+    return $Call.ByID(378801692, profileID, plan);
+}
+
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
     return $Call.ByID(4253656700, gameID, name).then(($result: any) => {
         return $$createType0($result);

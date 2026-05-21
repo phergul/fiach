@@ -1,18 +1,25 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
+import { ConfirmProfileOperationPlan } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
 import {
   OperationType,
   PlanIssueSeverity,
   type OperationPlan,
 } from '@bindings/github.com/phergul/mod-manager/internal/operationplan/models';
+import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
 import { GameApplyReview } from '@components/Games/Apply/GameApplyReview/GameApplyReview';
 import { GameApplySummary, type GameApplySummaryItem } from '@components/Games/Apply/GameApplySummary/GameApplySummary';
 import { useGameArtwork, useGameProfiles, useProfileOperationPlan, useStoredGames } from '@hooks';
+import { getErrorMessage } from '@utils';
 
 import './GameApply.scss';
+
+const applyExecutionHandoffMessage = 'apply execution is reserved for Epic 8';
 
 const parseGameID = (gameID: string | undefined) => {
   if (gameID === undefined || gameID.trim() === '') {
@@ -60,19 +67,32 @@ const buildSummaryItems = (plan: OperationPlan | null): GameApplySummaryItem[] =
   ];
 };
 
-const getApplyDisabledTitle = (plan: OperationPlan | null, isPlanLoading: boolean) => {
+const getApplyDisabledTitle = (
+  plan: OperationPlan | null,
+  isPlanLoading: boolean,
+  isApplyHandoffPending: boolean,
+) => {
+  if (isApplyHandoffPending) {
+    return 'Apply confirmation is already in progress.';
+  }
   if (isPlanLoading) {
     return 'Operation plan is loading.';
   }
   if (plan !== null && !plan.CanApply) {
     return 'Resolve blocking issues before applying this profile.';
   }
+  if (plan === null) {
+    return 'Operation plan is not ready yet.';
+  }
 
-  return 'Profile apply execution is not connected yet.';
+  return 'Confirm before applying this profile.';
 };
 
 export const GameApply = () => {
   const { gameId } = useParams();
+  const { addToast } = useToast();
+  const [isApplyConfirmOpen, setIsApplyConfirmOpen] = useState(false);
+  const [isApplyHandoffPending, setIsApplyHandoffPending] = useState(false);
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
@@ -103,9 +123,55 @@ export const GameApply = () => {
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
   const summaryItems = buildSummaryItems(plan);
+  const canStartApplyHandoff = activeProfile !== null &&
+    plan !== null &&
+    plan.CanApply &&
+    !isPlanLoading &&
+    !isApplyHandoffPending;
   const applyTitle = activeProfile === null
     ? 'Select an active profile before applying.'
-    : getApplyDisabledTitle(plan, isPlanLoading);
+    : getApplyDisabledTitle(plan, isPlanLoading, isApplyHandoffPending);
+  const confirmMessage = activeProfile === null || plan === null
+    ? 'Review the operation plan before applying this profile.'
+    : `This will alter game files for the installed game. Are you sure you want to apply ${activeProfile.Name}?`;
+
+  const openApplyConfirm = () => {
+    if (canStartApplyHandoff) {
+      setIsApplyConfirmOpen(true);
+    }
+  };
+
+  const closeApplyConfirm = () => {
+    if (!isApplyHandoffPending) {
+      setIsApplyConfirmOpen(false);
+    }
+  };
+
+  const confirmApplyHandoff = async () => {
+    if (activeProfile === null || plan === null || isApplyHandoffPending) {
+      return;
+    }
+
+    setIsApplyHandoffPending(true);
+
+    try {
+      await ConfirmProfileOperationPlan(activeProfile.ID, plan);
+      setIsApplyConfirmOpen(false);
+      addToast({
+        message: 'Operation plan confirmed.',
+        tone: 'success',
+      });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setIsApplyConfirmOpen(false);
+      addToast({
+        message,
+        tone: message.includes(applyExecutionHandoffMessage) ? 'info' : 'error',
+      });
+    } finally {
+      setIsApplyHandoffPending(false);
+    }
+  };
 
   return (
     <section
@@ -118,11 +184,29 @@ export const GameApply = () => {
           Back
         </Link>
 
-        <button className="game-apply-toolbar-button" disabled title={applyTitle} type="button">
+        <button
+          className="game-apply-toolbar-button"
+          disabled={!canStartApplyHandoff}
+          onClick={openApplyConfirm}
+          title={applyTitle}
+          type="button"
+        >
           <CheckCircle2 className="game-apply-toolbar-icon" aria-hidden="true" />
-          <span>Apply</span>
+          <span>{isApplyHandoffPending ? 'Confirming' : 'Apply'}</span>
         </button>
       </div>
+
+      <ConfirmDialog
+        cancelLabel="Cancel"
+        confirmLabel="Confirm apply"
+        confirmTone="default"
+        isBusy={isApplyHandoffPending}
+        isOpen={isApplyConfirmOpen}
+        message={confirmMessage}
+        onCancel={closeApplyConfirm}
+        onConfirm={confirmApplyHandoff}
+        title="Confirm apply"
+      />
 
       {heroArtworkSource !== '' && (
         <div className="game-apply-backdrop" aria-hidden="true">
@@ -167,7 +251,7 @@ export const GameApply = () => {
               {activeProfile === null ? 'Apply profile' : `Apply ${activeProfile.Name}`}
             </h2>
             <p className="game-apply-description">
-              Review planned file and folder changes before applying the active profile.
+              Review planned file and folder changes before applying.
             </p>
           </div>
 
