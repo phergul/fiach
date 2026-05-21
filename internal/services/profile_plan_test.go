@@ -97,28 +97,35 @@ func TestProfileServiceWrapsUnexpectedPlannerErrors(t *testing.T) {
 	}
 }
 
-func TestProfileServiceConfirmProfileOperationPlanReturnsEpic8Handoff(t *testing.T) {
+func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
 	gameRoot := t.TempDir()
-	unchangedPath := filepath.Join(gameRoot, "Data", "existing.txt")
-	if err := os.MkdirAll(filepath.Dir(unchangedPath), 0o755); err != nil {
-		t.Fatalf("os.MkdirAll(%q) error = %v", filepath.Dir(unchangedPath), err)
-	}
-	if err := os.WriteFile(unchangedPath, []byte("vanilla"), 0o644); err != nil {
-		t.Fatalf("os.WriteFile(%q) error = %v", unchangedPath, err)
-	}
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"Data/modded.txt": "modded",
+	})
+	targetPath := filepath.Join(gameRoot, "Data", "modded.txt")
+	backupPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(storage.StoredGame{ID: gameID}), "operation-backups", "Data", "modded.txt")
+	sourceFilePath := filepath.Join(sourcePath, "Data", "modded.txt")
 
 	service := NewProfileService(store)
-	err := service.ConfirmProfileOperationPlan(1, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
-				Type:       operationplan.OperationTypeReplace,
-				TargetPath: unchangedPath,
+				Type:       operationplan.OperationTypeCreateDirectory,
+				TargetPath: filepath.Dir(targetPath),
+			},
+			{
+				Type:       operationplan.OperationTypeCopy,
+				SourcePath: &sourceFilePath,
+				TargetPath: targetPath,
+				BackupPath: &backupPath,
 				Mod: operationplan.ModContext{
 					ModID:   1,
 					ModName: "SkyUI",
@@ -126,48 +133,94 @@ func TestProfileServiceConfirmProfileOperationPlanReturnsEpic8Handoff(t *testing
 			},
 		},
 	})
-	if err == nil {
-		t.Fatal("ConfirmProfileOperationPlan() error = nil, want Epic 8 handoff error")
-	}
-	if !strings.Contains(err.Error(), "confirm profile operation plan") || !strings.Contains(err.Error(), "apply execution is reserved for Epic 8") {
-		t.Fatalf("ConfirmProfileOperationPlan() error = %q, want wrapped Epic 8 handoff detail", err.Error())
-	}
-
-	contents, err := os.ReadFile(unchangedPath)
 	if err != nil {
-		t.Fatalf("os.ReadFile(%q) error = %v", unchangedPath, err)
+		t.Fatalf("ApplyProfileOperationPlan() error = %v", err)
 	}
-	if string(contents) != "vanilla" {
-		t.Fatalf("ConfirmProfileOperationPlan() changed %q to %q, want unchanged contents", unchangedPath, contents)
+	if !result.Success || result.CompletedCount != 2 {
+		t.Fatalf("ApplyProfileOperationPlan() = %+v, want two completed operations", result)
+	}
+	contents, err := os.ReadFile(targetPath)
+	if err != nil {
+		t.Fatalf("os.ReadFile(%q) error = %v", targetPath, err)
+	}
+	if string(contents) != "modded" {
+		t.Fatalf("ApplyProfileOperationPlan() wrote %q, want modded", contents)
 	}
 }
 
-func TestProfileServiceConfirmProfileOperationPlanRequiresStorage(t *testing.T) {
+func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
+	targetPath := filepath.Join(gameRoot, "Data", "missing.txt")
+
+	service := NewProfileService(store)
+	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
+		CanApply: true,
+		Operations: []operationplan.Operation{
+			{
+				Type:       operationplan.OperationTypeCopy,
+				SourcePath: &missingSourcePath,
+				TargetPath: targetPath,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ApplyProfileOperationPlan() error = %v, want partial result", err)
+	}
+	if result.Success || result.FailedCount != 1 || result.Results[0].Error == nil {
+		t.Fatalf("ApplyProfileOperationPlan() = %+v, want failed result", result)
+	}
+}
+
+func TestProfileServiceApplyProfileOperationPlanRequiresStorage(t *testing.T) {
 	t.Parallel()
 
 	service := NewProfileService(nil)
-	err := service.ConfirmProfileOperationPlan(1, operationplan.OperationPlan{CanApply: true})
+	_, err := service.ApplyProfileOperationPlan(1, operationplan.OperationPlan{CanApply: true})
 	if err == nil {
-		t.Fatal("ConfirmProfileOperationPlan() error = nil, want storage configuration error")
+		t.Fatal("ApplyProfileOperationPlan() error = nil, want storage configuration error")
 	}
-	if !strings.Contains(err.Error(), "confirm profile operation plan") || !strings.Contains(err.Error(), "storage is not configured") {
-		t.Fatalf("ConfirmProfileOperationPlan() error = %q, want service context", err.Error())
+	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "storage is not configured") {
+		t.Fatalf("ApplyProfileOperationPlan() error = %q, want service context", err.Error())
 	}
 }
 
-func TestProfileServiceConfirmProfileOperationPlanRejectsBlockingIssues(t *testing.T) {
+func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	err := service.ConfirmProfileOperationPlan(1, operationplan.OperationPlan{CanApply: false})
+	_, err := service.ApplyProfileOperationPlan(1, operationplan.OperationPlan{CanApply: false})
 	if err == nil {
-		t.Fatal("ConfirmProfileOperationPlan() error = nil, want blocking issue error")
+		t.Fatal("ApplyProfileOperationPlan() error = nil, want blocking issue error")
 	}
-	if !strings.Contains(err.Error(), "confirm profile operation plan") || !strings.Contains(err.Error(), "operation plan has blocking issues") {
-		t.Fatalf("ConfirmProfileOperationPlan() error = %q, want blocking issue detail", err.Error())
+	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "operation plan has blocking issues") {
+		t.Fatalf("ApplyProfileOperationPlan() error = %q, want blocking issue detail", err.Error())
+	}
+}
+
+func TestProfileServiceApplyProfileOperationPlanRejectsInvalidProfileID(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := NewProfileService(store)
+	_, err := service.ApplyProfileOperationPlan(0, operationplan.OperationPlan{CanApply: true})
+	if err == nil {
+		t.Fatal("ApplyProfileOperationPlan() error = nil, want invalid profile ID error")
+	}
+	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "profile ID must be positive") {
+		t.Fatalf("ApplyProfileOperationPlan() error = %q, want profile ID detail", err.Error())
 	}
 }
 

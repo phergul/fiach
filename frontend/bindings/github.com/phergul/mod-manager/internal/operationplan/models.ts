@@ -5,6 +5,99 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+export class ApplyOperationPlanResult {
+    "Success": boolean;
+    "CompletedCount": number;
+    "FailedCount": number;
+    "SkippedCount": number;
+    "Results": ApplyOperationResult[];
+
+    /** Creates a new ApplyOperationPlanResult instance. */
+    constructor($$source: Partial<ApplyOperationPlanResult> = {}) {
+        if (!("Success" in $$source)) {
+            this["Success"] = false;
+        }
+        if (!("CompletedCount" in $$source)) {
+            this["CompletedCount"] = 0;
+        }
+        if (!("FailedCount" in $$source)) {
+            this["FailedCount"] = 0;
+        }
+        if (!("SkippedCount" in $$source)) {
+            this["SkippedCount"] = 0;
+        }
+        if (!("Results" in $$source)) {
+            this["Results"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ApplyOperationPlanResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ApplyOperationPlanResult {
+        const $$createField4_0 = $$createType1;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Results" in $$parsedSource) {
+            $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
+        }
+        return new ApplyOperationPlanResult($$parsedSource as Partial<ApplyOperationPlanResult>);
+    }
+}
+
+export class ApplyOperationResult {
+    "OperationIndex": number;
+    "Operation": Operation;
+    "Status": ApplyOperationStatus;
+    "Message": string;
+    "Error": string | null;
+
+    /** Creates a new ApplyOperationResult instance. */
+    constructor($$source: Partial<ApplyOperationResult> = {}) {
+        if (!("OperationIndex" in $$source)) {
+            this["OperationIndex"] = 0;
+        }
+        if (!("Operation" in $$source)) {
+            this["Operation"] = (new Operation());
+        }
+        if (!("Status" in $$source)) {
+            this["Status"] = ApplyOperationStatus.$zero;
+        }
+        if (!("Message" in $$source)) {
+            this["Message"] = "";
+        }
+        if (!("Error" in $$source)) {
+            this["Error"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ApplyOperationResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ApplyOperationResult {
+        const $$createField1_0 = $$createType2;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Operation" in $$parsedSource) {
+            $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
+        }
+        return new ApplyOperationResult($$parsedSource as Partial<ApplyOperationResult>);
+    }
+}
+
+export enum ApplyOperationStatus {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ApplyOperationStatusCompleted = "completed",
+    ApplyOperationStatusFailed = "failed",
+    ApplyOperationStatusSkipped = "skipped",
+};
+
 export class ModContext {
     "ModID": number;
     "ModName": string;
@@ -66,7 +159,7 @@ export class Operation {
      * Creates a new Operation instance from a string or object.
      */
     static createFrom($$source: any = {}): Operation {
-        const $$createField5_0 = $$createType0;
+        const $$createField5_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField5_0($$parsedSource["Mod"]);
@@ -99,8 +192,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType2;
-        const $$createField1_0 = $$createType4;
+        const $$createField0_0 = $$createType4;
+        const $$createField1_0 = $$createType6;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -163,7 +256,7 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType5;
+        const $$createField6_0 = $$createType7;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -204,9 +297,11 @@ export enum PlanIssueSeverity {
 };
 
 // Private type creation functions
-const $$createType0 = ModContext.createFrom;
-const $$createType1 = Operation.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = PlanIssue.createFrom;
-const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = $Create.Nullable($$createType0);
+const $$createType0 = ApplyOperationResult.createFrom;
+const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = Operation.createFrom;
+const $$createType3 = ModContext.createFrom;
+const $$createType4 = $Create.Array($$createType2);
+const $$createType5 = PlanIssue.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = $Create.Nullable($$createType3);

@@ -33,6 +33,20 @@ func TestPlanIssueConstants(t *testing.T) {
 	}
 }
 
+func TestApplyOperationStatusConstants(t *testing.T) {
+	t.Parallel()
+
+	if ApplyOperationStatusCompleted != "completed" {
+		t.Fatalf("ApplyOperationStatusCompleted = %q, want completed", ApplyOperationStatusCompleted)
+	}
+	if ApplyOperationStatusFailed != "failed" {
+		t.Fatalf("ApplyOperationStatusFailed = %q, want failed", ApplyOperationStatusFailed)
+	}
+	if ApplyOperationStatusSkipped != "skipped" {
+		t.Fatalf("ApplyOperationStatusSkipped = %q, want skipped", ApplyOperationStatusSkipped)
+	}
+}
+
 func TestOperationPlanSupportsMixedOperations(t *testing.T) {
 	t.Parallel()
 
@@ -194,6 +208,28 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 		}
 		if field.Tag != "" {
 			t.Fatalf("ModContext field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	resultType := reflect.TypeOf(ApplyOperationPlanResult{})
+	for _, name := range []string{"Success", "CompletedCount", "FailedCount", "SkippedCount", "Results"} {
+		field, ok := resultType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("ApplyOperationPlanResult field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("ApplyOperationPlanResult field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	operationResultType := reflect.TypeOf(ApplyOperationResult{})
+	for _, name := range []string{"OperationIndex", "Operation", "Status", "Message", "Error"} {
+		field, ok := operationResultType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("ApplyOperationResult field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("ApplyOperationResult field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
 		}
 	}
 }

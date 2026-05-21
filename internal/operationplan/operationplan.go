@@ -62,3 +62,27 @@ type OperationPlan struct {
 	Issues     []PlanIssue
 	CanApply   bool
 }
+
+type ApplyOperationStatus string
+
+const (
+	ApplyOperationStatusCompleted ApplyOperationStatus = "completed"
+	ApplyOperationStatusFailed    ApplyOperationStatus = "failed"
+	ApplyOperationStatusSkipped   ApplyOperationStatus = "skipped"
+)
+
+type ApplyOperationResult struct {
+	OperationIndex int
+	Operation      Operation
+	Status         ApplyOperationStatus
+	Message        string
+	Error          *string
+}
+
+type ApplyOperationPlanResult struct {
+	Success        bool
+	CompletedCount int
+	FailedCount    int
+	SkippedCount   int
+	Results        []ApplyOperationResult
+}

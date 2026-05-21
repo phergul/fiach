@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/phergul/mod-manager/internal/applyplan"
 	"github.com/phergul/mod-manager/internal/operationplan"
 )
 
@@ -27,22 +28,42 @@ func (s *ProfileService) BuildProfileOperationPlan(profileID int64) (plan operat
 	return operationplan.BuildOperationPlan(resolved)
 }
 
-func (s *ProfileService) ConfirmProfileOperationPlan(profileID int64, plan operationplan.OperationPlan) (err error) {
+func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operationplan.OperationPlan) (result operationplan.ApplyOperationPlanResult, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("confirm profile operation plan: %w", err)
+			err = fmt.Errorf("apply profile operation plan: %w", err)
 		}
 	}()
 
 	if s == nil || s.store == nil {
-		return errors.New("storage is not configured")
+		return operationplan.ApplyOperationPlanResult{}, errors.New("storage is not configured")
 	}
 	if profileID <= 0 {
-		return fmt.Errorf("profile ID must be positive")
+		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
 	}
 	if !plan.CanApply {
-		return errors.New("operation plan has blocking issues")
+		return operationplan.ApplyOperationPlanResult{}, errors.New("operation plan has blocking issues")
 	}
 
-	return errors.New("apply execution is reserved for Epic 8")
+	profile, found, err := s.store.GetProfile(context.Background(), profileID)
+	if err != nil {
+		return operationplan.ApplyOperationPlanResult{}, err
+	}
+	if !found {
+		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
+	}
+
+	game, err := s.store.GetStoredGame(context.Background(), profile.GameID)
+	if err != nil {
+		return operationplan.ApplyOperationPlanResult{}, err
+	}
+	gameModStoragePath, err := s.store.ResolveGameModStoragePath(context.Background(), profile.GameID, "")
+	if err != nil {
+		return operationplan.ApplyOperationPlanResult{}, err
+	}
+
+	return applyplan.Execute(plan, applyplan.Context{
+		GameInstallPath:    game.InstallPath,
+		GameModStoragePath: gameModStoragePath,
+	})
 }

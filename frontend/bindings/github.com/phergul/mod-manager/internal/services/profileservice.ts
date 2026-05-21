@@ -24,14 +24,16 @@ export function AddModToProfile(profileID: number, modID: number): $CancellableP
     });
 }
 
-export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<operationplan$0.OperationPlan> {
-    return $Call.ByID(1803445544, profileID).then(($result: any) => {
+export function ApplyProfileOperationPlan(profileID: number, plan: operationplan$0.OperationPlan): $CancellablePromise<operationplan$0.ApplyOperationPlanResult> {
+    return $Call.ByID(3906686572, profileID, plan).then(($result: any) => {
         return $$createType2($result);
     });
 }
 
-export function ConfirmProfileOperationPlan(profileID: number, plan: operationplan$0.OperationPlan): $CancellablePromise<void> {
-    return $Call.ByID(378801692, profileID, plan);
+export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<operationplan$0.OperationPlan> {
+    return $Call.ByID(1803445544, profileID).then(($result: any) => {
+        return $$createType3($result);
+    });
 }
 
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
@@ -50,19 +52,19 @@ export function DeleteProfile(profileID: number): $CancellablePromise<void> {
 
 export function GetActiveProfile(gameID: number): $CancellablePromise<storage$0.ModProfile | null> {
     return $Call.ByID(4123009592, gameID).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
     });
 }
 
 export function ListProfileMods(profileID: number): $CancellablePromise<storage$0.ProfileMod[]> {
     return $Call.ByID(1055361377, profileID).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType5($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<storage$0.ModProfile[]> {
     return $Call.ByID(3489323205, gameID).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
 }
 
@@ -78,7 +80,7 @@ export function RenameProfile(profileID: number, name: string): $CancellableProm
 
 export function ReorderProfileMods(profileID: number, modIDs: number[]): $CancellablePromise<storage$0.ProfileMod[]> {
     return $Call.ByID(3311644578, profileID, modIDs).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType5($result);
     });
 }
 
@@ -91,7 +93,8 @@ export function SetProfileModEnabled(profileID: number, modID: number, enabled: 
 // Private type creation functions
 const $$createType0 = storage$0.ModProfile.createFrom;
 const $$createType1 = storage$0.ProfileMod.createFrom;
-const $$createType2 = operationplan$0.OperationPlan.createFrom;
-const $$createType3 = $Create.Nullable($$createType0);
-const $$createType4 = $Create.Array($$createType1);
-const $$createType5 = $Create.Array($$createType0);
+const $$createType2 = operationplan$0.ApplyOperationPlanResult.createFrom;
+const $$createType3 = operationplan$0.OperationPlan.createFrom;
+const $$createType4 = $Create.Nullable($$createType0);
+const $$createType5 = $Create.Array($$createType1);
+const $$createType6 = $Create.Array($$createType0);
