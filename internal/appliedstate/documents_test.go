@@ -78,6 +78,25 @@ func TestEncodeManifestUsesVersionedStableJSONShape(t *testing.T) {
 	}
 }
 
+func TestDecodeManifestValidatesVersionAndNormalizesSlices(t *testing.T) {
+	t.Parallel()
+
+	document, err := DecodeManifest(`{"version":1}`)
+	if err != nil {
+		t.Fatalf("DecodeManifest() error = %v", err)
+	}
+	if document.Version != DocumentVersion {
+		t.Fatalf("DecodeManifest() version = %d, want %d", document.Version, DocumentVersion)
+	}
+	if document.AddedFiles == nil || document.ReplacedFiles == nil || document.CreatedDirectories == nil {
+		t.Fatalf("DecodeManifest() = %+v, want non-nil slices", document)
+	}
+
+	if _, err := DecodeManifest(`{"version":2}`); err == nil {
+		t.Fatal("DecodeManifest() error = nil, want unsupported version error")
+	}
+}
+
 func TestEncodeProfileSnapshotHashesDeterministicOperationShape(t *testing.T) {
 	sourcePath := "/mods/SkyUI/Data/SkyUI.esp"
 	backupPath := "/managed/operation-backups/Data/SkyUI.esp"

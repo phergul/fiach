@@ -10,6 +10,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as operationplan$0 from "../operationplan/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as restoreplan$0 from "../restoreplan/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
 export function ActivateProfile(gameID: number, profileID: number): $CancellablePromise<storage$0.ModProfile> {
@@ -84,6 +87,12 @@ export function ReorderProfileMods(profileID: number, modIDs: number[]): $Cancel
     });
 }
 
+export function RestoreVanillaState(gameID: number): $CancellablePromise<restoreplan$0.RestoreResult> {
+    return $Call.ByID(969457823, gameID).then(($result: any) => {
+        return $$createType7($result);
+    });
+}
+
 export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<storage$0.ProfileMod> {
     return $Call.ByID(734528755, profileID, modID, enabled).then(($result: any) => {
         return $$createType1($result);
@@ -98,3 +107,4 @@ const $$createType3 = operationplan$0.OperationPlan.createFrom;
 const $$createType4 = $Create.Nullable($$createType0);
 const $$createType5 = $Create.Array($$createType1);
 const $$createType6 = $Create.Array($$createType0);
+const $$createType7 = restoreplan$0.RestoreResult.createFrom;

@@ -107,6 +107,31 @@ func (s *Store) GetAppliedProfileState(ctx context.Context, gameID int64) (state
 	return state, found, nil
 }
 
+func (s *Store) DeleteAppliedProfileState(ctx context.Context, gameID int64) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("delete applied profile state row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return errors.New("store is not open")
+	}
+	if gameID <= 0 {
+		return errors.New("game ID must be positive")
+	}
+
+	_, err = s.db.ExecContext(ctx, `
+		DELETE FROM applied_profile_states
+		WHERE game_id = ?
+	`, gameID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func validateSaveAppliedProfileStateInput(input SaveAppliedProfileStateInput) error {
 	if input.GameID <= 0 {
 		return errors.New("game ID must be positive")

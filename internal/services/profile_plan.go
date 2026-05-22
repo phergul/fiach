@@ -8,6 +8,7 @@ import (
 	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/applyplan"
 	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/mod-manager/internal/restoreplan"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -76,6 +77,59 @@ func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operati
 	}
 
 	if err := s.saveAppliedProfileState(context.Background(), game.ID, profileID, plan, result.Manifest); err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func (s *ProfileService) RestoreVanillaState(gameID int64) (result restoreplan.RestoreResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("restore vanilla state: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return restoreplan.RestoreResult{}, errors.New("storage is not configured")
+	}
+	if gameID <= 0 {
+		return restoreplan.RestoreResult{}, errors.New("game ID must be positive")
+	}
+
+	game, err := s.store.GetStoredGame(context.Background(), gameID)
+	if err != nil {
+		return restoreplan.RestoreResult{}, err
+	}
+	state, found, err := s.store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		return restoreplan.RestoreResult{}, err
+	}
+	if !found {
+		return restoreplan.RestoreResult{}, fmt.Errorf("no applied profile state found for game %d", gameID)
+	}
+
+	manifest, err := appliedstate.DecodeManifest(state.ManifestJSON)
+	if err != nil {
+		return restoreplan.RestoreResult{}, err
+	}
+	gameModStoragePath, err := s.store.ResolveGameModStoragePath(context.Background(), gameID, "")
+	if err != nil {
+		return restoreplan.RestoreResult{}, err
+	}
+
+	result, err = restoreplan.Execute(manifest, restoreplan.Context{
+		GameInstallPath:    game.InstallPath,
+		GameModStoragePath: gameModStoragePath,
+	})
+	if err != nil {
+		return restoreplan.RestoreResult{}, err
+	}
+	if !result.Success {
+		return result, nil
+	}
+
+	if err := s.store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
 		return result, err
 	}
 

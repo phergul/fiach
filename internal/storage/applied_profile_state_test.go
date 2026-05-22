@@ -110,6 +110,62 @@ func TestGetAppliedProfileStateReturnsNotFound(t *testing.T) {
 	}
 }
 
+func TestDeleteAppliedProfileStateClearsStateAndIsIdempotent(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	if _, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profile.ID,
+		ManifestJSON:        `{"version":1}`,
+		ProfileSnapshotJSON: `{"version":1}`,
+		ProfileSnapshotHash: "hash",
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	if err := store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
+		t.Fatalf("DeleteAppliedProfileState() error = %v", err)
+	}
+	_, found, err := store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", err)
+	}
+	if found {
+		t.Fatal("GetAppliedProfileState() found = true, want false")
+	}
+	if err := store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
+		t.Fatalf("DeleteAppliedProfileState() second error = %v", err)
+	}
+}
+
+func TestDeleteAppliedProfileStateRejectsInvalidInput(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	err := store.DeleteAppliedProfileState(context.Background(), 0)
+	if err == nil {
+		t.Fatal("DeleteAppliedProfileState() error = nil, want validation error")
+	}
+	if !strings.Contains(err.Error(), "delete applied profile state row") || !strings.Contains(err.Error(), "game ID must be positive") {
+		t.Fatalf("DeleteAppliedProfileState() error = %q, want context and validation detail", err.Error())
+	}
+}
+
 func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 	t.Parallel()
 

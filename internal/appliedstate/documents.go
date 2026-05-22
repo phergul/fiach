@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/phergul/mod-manager/internal/operationplan"
 )
@@ -139,6 +141,33 @@ func EncodeManifest(document ManifestDocument) (string, error) {
 	}
 
 	return string(encoded), nil
+}
+
+func DecodeManifest(documentJSON string) (ManifestDocument, error) {
+	documentJSON = strings.TrimSpace(documentJSON)
+	if documentJSON == "" {
+		return ManifestDocument{}, fmt.Errorf("manifest JSON is required")
+	}
+
+	var document ManifestDocument
+	if err := json.Unmarshal([]byte(documentJSON), &document); err != nil {
+		return ManifestDocument{}, fmt.Errorf("decode manifest JSON: %w", err)
+	}
+	if document.Version != DocumentVersion {
+		return ManifestDocument{}, fmt.Errorf("unsupported manifest version %d", document.Version)
+	}
+
+	if document.AddedFiles == nil {
+		document.AddedFiles = []AddedFile{}
+	}
+	if document.ReplacedFiles == nil {
+		document.ReplacedFiles = []ReplacedFile{}
+	}
+	if document.CreatedDirectories == nil {
+		document.CreatedDirectories = []CreatedDirectory{}
+	}
+
+	return document, nil
 }
 
 func EncodeProfileSnapshot(document ProfileSnapshotDocument) (EncodedProfileSnapshot, error) {
