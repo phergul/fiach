@@ -2,6 +2,7 @@ package services
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -11,8 +12,8 @@ import (
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
-func importFolderMod(service *ModService, gameID int64, name string, sourcePath string) (storage.Mod, error) {
-	result, err := service.ImportMod(ImportModInput{
+func importFolderMod(ctx context.Context, service *ModService, gameID int64, name string, sourcePath string) (storage.Mod, error) {
+	result, err := service.ImportMod(ctx, ImportModInput{
 		GameID:             gameID,
 		Name:               name,
 		SourceType:         storage.ModSourceTypeFolder,
@@ -27,8 +28,8 @@ func importFolderMod(service *ModService, gameID int64, name string, sourcePath 
 	return result.Mod, nil
 }
 
-func importArchiveMod(service *ModService, gameID int64, name string, archivePath string) (storage.Mod, error) {
-	result, err := service.ImportMod(ImportModInput{
+func importArchiveMod(ctx context.Context, service *ModService, gameID int64, name string, archivePath string) (storage.Mod, error) {
+	result, err := service.ImportMod(ctx, ImportModInput{
 		GameID:             gameID,
 		Name:               name,
 		SourceType:         storage.ModSourceTypeArchive,

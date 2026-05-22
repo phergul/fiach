@@ -46,7 +46,7 @@ func serveSteamArtwork(rw http.ResponseWriter, req *http.Request, steamSource *S
 		return
 	}
 
-	artworkRoot, err := steamSource.getArtworkRoot()
+	artworkRoot, err := steamSource.getArtworkRoot(req.Context())
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("locate Steam artwork: %v", err), http.StatusInternalServerError)
 		return

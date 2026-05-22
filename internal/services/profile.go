@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/phergul/mod-manager/internal/storage"
@@ -18,102 +17,74 @@ func NewProfileService(store *storage.Store) *ProfileService {
 	}
 }
 
-func (s *ProfileService) CreateProfile(gameID int64, name string) (profile storage.ModProfile, err error) {
+func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name string) (profile storage.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("create profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return storage.ModProfile{}, errors.New("storage is not configured")
-	}
-
-	return s.store.CreateProfile(context.Background(), gameID, name)
+	return s.store.CreateProfile(ctx, gameID, name)
 }
 
-func (s *ProfileService) ListProfiles(gameID int64) (profiles []storage.ModProfile, err error) {
+func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []storage.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list profiles: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
-
-	return s.store.ListProfiles(context.Background(), gameID)
+	return s.store.ListProfiles(ctx, gameID)
 }
 
-func (s *ProfileService) RenameProfile(profileID int64, name string) (profile storage.ModProfile, err error) {
+func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, name string) (profile storage.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("rename profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return storage.ModProfile{}, errors.New("storage is not configured")
-	}
-
-	return s.store.RenameProfile(context.Background(), profileID, name)
+	return s.store.RenameProfile(ctx, profileID, name)
 }
 
-func (s *ProfileService) DeleteProfile(profileID int64) (err error) {
+func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("delete profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return errors.New("storage is not configured")
-	}
-
-	return s.store.DeleteProfile(context.Background(), profileID)
+	return s.store.DeleteProfile(ctx, profileID)
 }
 
-func (s *ProfileService) ActivateProfile(gameID int64, profileID int64) (profile storage.ModProfile, err error) {
+func (s *ProfileService) ActivateProfile(ctx context.Context, gameID int64, profileID int64) (profile storage.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("activate profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return storage.ModProfile{}, errors.New("storage is not configured")
-	}
-
-	return s.store.ActivateProfile(context.Background(), gameID, profileID)
+	return s.store.ActivateProfile(ctx, gameID, profileID)
 }
 
-func (s *ProfileService) DeactivateProfile(gameID int64) (err error) {
+func (s *ProfileService) DeactivateProfile(ctx context.Context, gameID int64) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("deactivate profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return errors.New("storage is not configured")
-	}
-
-	return s.store.DeactivateProfile(context.Background(), gameID)
+	return s.store.DeactivateProfile(ctx, gameID)
 }
 
-func (s *ProfileService) GetActiveProfile(gameID int64) (profile *storage.ModProfile, err error) {
+func (s *ProfileService) GetActiveProfile(ctx context.Context, gameID int64) (profile *storage.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get active profile: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
-
-	active, found, err := s.store.GetActiveProfile(context.Background(), gameID)
+	active, found, err := s.store.GetActiveProfile(ctx, gameID)
 	if err != nil {
 		return nil, err
 	}

@@ -35,7 +35,7 @@ func (s *SteamSource) ScanGames(ctx context.Context) (games []storage.SourceGame
 		}
 	}()
 
-	installed, err := s.getInstalledSteamGames()
+	installed, err := s.getInstalledSteamGames(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +52,14 @@ func (s *SteamSource) ScanGames(ctx context.Context) (games []storage.SourceGame
 	return sourceGames, nil
 }
 
-func (s *SteamSource) getSteamLibraries() (libraries []string, err error) {
+func (s *SteamSource) getSteamLibraries(ctx context.Context) (libraries []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get Steam libraries: %w", err)
 		}
 	}()
 
-	paths, err := s.locateSteamInstallation()
+	paths, err := s.locateSteamInstallation(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +72,14 @@ func (s *SteamSource) getSteamLibraries() (libraries []string, err error) {
 	return libraries, nil
 }
 
-func (s *SteamSource) getInstalledSteamGames() (games []steam.Game, err error) {
+func (s *SteamSource) getInstalledSteamGames(ctx context.Context) (games []steam.Game, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get installed Steam games: %w", err)
 		}
 	}()
 
-	libraries, err := s.getSteamLibraries()
+	libraries, err := s.getSteamLibraries(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *SteamSource) getInstalledSteamGames() (games []steam.Game, err error) {
 	return games, nil
 }
 
-func (s *SteamSource) getArtworkRoot() (root string, err error) {
+func (s *SteamSource) getArtworkRoot(ctx context.Context) (root string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("resolve Steam artwork root: %w", err)
@@ -106,7 +106,7 @@ func (s *SteamSource) getArtworkRoot() (root string, err error) {
 		return s.artworkRoot, nil
 	}
 
-	paths, err := s.locateSteamInstallation()
+	paths, err := s.locateSteamInstallation(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -115,18 +115,14 @@ func (s *SteamSource) getArtworkRoot() (root string, err error) {
 	return s.artworkRoot, nil
 }
 
-func (s *SteamSource) locateSteamInstallation() (paths *steam.SteamPaths, err error) {
+func (s *SteamSource) locateSteamInstallation(ctx context.Context) (paths *steam.SteamPaths, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("locate Steam installation: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
-
-	manualPath, found, err := s.store.GetSetting(context.Background(), SteamInstallPathSettingKey)
+	manualPath, found, err := s.store.GetSetting(ctx, SteamInstallPathSettingKey)
 	if err != nil {
 		return nil, fmt.Errorf("read Steam installation setting: %w", err)
 	}

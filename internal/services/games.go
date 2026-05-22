@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/services/gamesource"
+	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -22,30 +22,23 @@ func NewGamesService(store *storage.Store, sources ...gamesource.GameSource) *Ga
 	}
 }
 
-func (s *GamesService) GetStoredGames() (games []storage.StoredGame, err error) {
+func (s *GamesService) GetStoredGames(ctx context.Context) (games []storage.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get stored games: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
-
-	return s.store.ListStoredGames(context.Background())
+	return s.store.ListStoredGames(ctx)
 }
 
-func (s *GamesService) ScanAndSaveGames() (result storage.SourceScanResult, err error) {
+func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result storage.SourceScanResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("scan and save games: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return result, errors.New("storage is not configured")
-	}
 	if len(s.sources) == 0 {
 		return result, errors.New("game sources are not configured")
 	}
@@ -60,12 +53,12 @@ func (s *GamesService) ScanAndSaveGames() (result storage.SourceScanResult, err 
 			return result, errors.New("game source identifier is required")
 		}
 
-		sourceGames, err := source.ScanGames(context.Background())
+		sourceGames, err := source.ScanGames(ctx)
 		if err != nil {
 			return result, fmt.Errorf("collect %s games: %w", sourceID, err)
 		}
 
-		sourceResult, err := s.store.SaveSourceScan(context.Background(), sourceID, sourceGames)
+		sourceResult, err := s.store.SaveSourceScan(ctx, sourceID, sourceGames)
 		if err != nil {
 			return result, fmt.Errorf("save %s games: %w", sourceID, err)
 		}

@@ -1,9 +1,9 @@
 package services
 
 import (
+	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/storage"
@@ -16,11 +16,11 @@ func TestSettingsServiceGetsAndSetsGlobalModStorageRoot(t *testing.T) {
 	defer closeStore(t, store)
 
 	service := NewSettingsService(store)
-	if err := service.SetGlobalModStorageRoot("/mods/root"); err != nil {
+	if err := service.SetGlobalModStorageRoot(context.Background(), "/mods/root"); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
 
-	root, err := service.GetGlobalModStorageRoot()
+	root, err := service.GetGlobalModStorageRoot(context.Background())
 	if err != nil {
 		t.Fatalf("GetGlobalModStorageRoot() error = %v", err)
 	}
@@ -36,11 +36,11 @@ func TestSettingsServiceGetsAndSetsThemeID(t *testing.T) {
 	defer closeStore(t, store)
 
 	service := NewSettingsService(store)
-	if err := service.SetThemeID("midnight"); err != nil {
+	if err := service.SetThemeID(context.Background(), "midnight"); err != nil {
 		t.Fatalf("SetThemeID() error = %v", err)
 	}
 
-	themeID, err := service.GetThemeID()
+	themeID, err := service.GetThemeID(context.Background())
 	if err != nil {
 		t.Fatalf("GetThemeID() error = %v", err)
 	}
@@ -56,7 +56,7 @@ func TestSettingsServiceSetThemeIDRejectsBlankValues(t *testing.T) {
 	defer closeStore(t, store)
 
 	service := NewSettingsService(store)
-	if err := service.SetThemeID("   "); err == nil {
+	if err := service.SetThemeID(context.Background(), "   "); err == nil {
 		t.Fatal("SetThemeID() error = nil, want validation error")
 	}
 }
@@ -69,14 +69,14 @@ func TestSettingsServiceResolvesGameModStoragePathWithOverride(t *testing.T) {
 
 	gameID := insertSettingsServiceTestGame(t, store, "Skyrim", "/games/skyrim")
 	service := NewSettingsService(store)
-	if err := service.SetGlobalModStorageRoot("/managed/root"); err != nil {
+	if err := service.SetGlobalModStorageRoot(context.Background(), "/managed/root"); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
-	if _, err := service.SetGameModStoragePathOverride(gameID, "/override/root"); err != nil {
+	if _, err := service.SetGameModStoragePathOverride(context.Background(), gameID, "/override/root"); err != nil {
 		t.Fatalf("SetGameModStoragePathOverride() error = %v", err)
 	}
 
-	path, err := service.ResolveGameModStoragePath(gameID)
+	path, err := service.ResolveGameModStoragePath(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
@@ -94,11 +94,11 @@ func TestSettingsServiceEnsuresGameModStoragePath(t *testing.T) {
 	gameID := insertSettingsServiceTestGame(t, store, "Skyrim", "/games/skyrim")
 	root := filepath.Join(t.TempDir(), "managed")
 	service := NewSettingsService(store)
-	if err := service.SetGlobalModStorageRoot(root); err != nil {
+	if err := service.SetGlobalModStorageRoot(context.Background(), root); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
 
-	path, err := service.EnsureGameModStoragePath(gameID)
+	path, err := service.EnsureGameModStoragePath(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("EnsureGameModStoragePath() error = %v", err)
 	}
@@ -113,32 +113,6 @@ func TestSettingsServiceEnsuresGameModStoragePath(t *testing.T) {
 	}
 	if !info.IsDir() {
 		t.Fatalf("Stat(%q).IsDir() = false, want true", want)
-	}
-}
-
-func TestSettingsServiceErrorsHaveDistinctServiceAndStorageContext(t *testing.T) {
-	t.Parallel()
-
-	service := NewSettingsService(nil)
-	_, err := service.ResolveGameModStoragePath(1)
-	if err == nil {
-		t.Fatal("ResolveGameModStoragePath() error = nil, want storage error")
-	}
-	if !strings.Contains(err.Error(), "resolve game mod storage path") || !strings.Contains(err.Error(), "storage is not configured") {
-		t.Fatalf("ResolveGameModStoragePath() error = %q, want service and storage context", err.Error())
-	}
-}
-
-func TestSettingsServiceThemeErrorsHaveDistinctServiceAndStorageContext(t *testing.T) {
-	t.Parallel()
-
-	service := NewSettingsService(nil)
-	_, err := service.GetThemeID()
-	if err == nil {
-		t.Fatal("GetThemeID() error = nil, want storage error")
-	}
-	if !strings.Contains(err.Error(), "get theme ID") || !strings.Contains(err.Error(), "storage is not configured") {
-		t.Fatalf("GetThemeID() error = %q, want service and storage context", err.Error())
 	}
 }
 

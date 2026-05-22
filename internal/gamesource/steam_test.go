@@ -28,7 +28,7 @@ func TestSteamSourceLocatesManualSteamPath(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	got, err := source.locateSteamInstallation()
+	got, err := source.locateSteamInstallation(context.Background())
 	if err != nil {
 		t.Fatalf("LocateSteamInstallation() error = %v", err)
 	}
@@ -49,7 +49,7 @@ func TestSteamSourceReturnsClearNotFoundError(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	_, err := source.locateSteamInstallation()
+	_, err := source.locateSteamInstallation(context.Background())
 	if !errors.Is(err, steam.ErrSteamNotFound) {
 		t.Fatalf("LocateSteamInstallation() error = %v, want ErrSteamNotFound", err)
 	}
@@ -84,7 +84,7 @@ func TestSteamSourceGetsSteamLibrariesFromManualPath(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	got, err := source.getSteamLibraries()
+	got, err := source.getSteamLibraries(context.Background())
 	if err != nil {
 		t.Fatalf("GetSteamLibraries() error = %v", err)
 	}
@@ -108,7 +108,7 @@ func TestSteamSourceReturnsLibraryFolderParseError(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	_, err := source.getSteamLibraries()
+	_, err := source.getSteamLibraries(context.Background())
 	if err == nil {
 		t.Fatal("GetSteamLibraries() error = nil, want error")
 	}
@@ -148,7 +148,7 @@ func TestSteamSourceGetsInstalledSteamGames(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	got, err := source.getInstalledSteamGames()
+	got, err := source.getInstalledSteamGames(context.Background())
 	if err != nil {
 		t.Fatalf("GetInstalledSteamGames() error = %v", err)
 	}
@@ -189,7 +189,7 @@ func TestSteamSourceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
 	}
 
 	source := NewSteamSource(store)
-	_, err := source.getInstalledSteamGames()
+	_, err := source.getInstalledSteamGames(context.Background())
 	if err == nil {
 		t.Fatal("GetInstalledSteamGames() error = nil, want error")
 	}

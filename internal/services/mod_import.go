@@ -33,16 +33,12 @@ type ImportModResult struct {
 	Config storage.ModInstallConfig
 }
 
-func (s *ModService) PreviewImportConfiguration(input PreviewImportConfigurationInput) (preview installconfig.Preview, err error) {
+func (s *ModService) PreviewImportConfiguration(_ context.Context, input PreviewImportConfigurationInput) (preview installconfig.Preview, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("preview import configuration: %w", err)
 		}
 	}()
-
-	if s == nil || s.store == nil {
-		return installconfig.Preview{}, errors.New("storage is not configured")
-	}
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
@@ -72,16 +68,12 @@ func (s *ModService) PreviewImportConfiguration(input PreviewImportConfiguration
 	})
 }
 
-func (s *ModService) ImportMod(input ImportModInput) (result ImportModResult, err error) {
+func (s *ModService) ImportMod(ctx context.Context, input ImportModInput) (result ImportModResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("import mod: %w", err)
 		}
 	}()
-
-	if s == nil || s.store == nil {
-		return ImportModResult{}, errors.New("storage is not configured")
-	}
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
@@ -89,7 +81,7 @@ func (s *ModService) ImportMod(input ImportModInput) (result ImportModResult, er
 	}
 
 	importResult, err := modimport.Import(
-		context.Background(),
+		ctx,
 		s.store,
 		input.GameID,
 		input.Name,

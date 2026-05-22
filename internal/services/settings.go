@@ -20,108 +20,84 @@ func NewSettingsService(store *storage.Store) *SettingsService {
 	}
 }
 
-func (s *SettingsService) GetGlobalModStorageRoot() (root string, err error) {
+func (s *SettingsService) GetGlobalModStorageRoot(ctx context.Context) (root string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get global mod storage root: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return "", errors.New("storage is not configured")
-	}
-
-	return s.store.GetGlobalModStorageRoot(context.Background())
+	return s.store.GetGlobalModStorageRoot(ctx)
 }
 
-func (s *SettingsService) SetGlobalModStorageRoot(path string) (err error) {
+func (s *SettingsService) SetGlobalModStorageRoot(ctx context.Context, path string) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("set global mod storage root: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return errors.New("storage is not configured")
-	}
-
-	return s.store.SetGlobalModStorageRoot(context.Background(), path)
+	return s.store.SetGlobalModStorageRoot(ctx, path)
 }
 
-func (s *SettingsService) GetThemeID() (themeID string, err error) {
+func (s *SettingsService) GetThemeID(ctx context.Context) (themeID string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get theme ID: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return "", errors.New("storage is not configured")
-	}
-
-	return s.store.GetThemeID(context.Background())
+	return s.store.GetThemeID(ctx)
 }
 
-func (s *SettingsService) SetThemeID(themeID string) (err error) {
+func (s *SettingsService) SetThemeID(ctx context.Context, themeID string) (err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("set theme ID: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return errors.New("storage is not configured")
-	}
-
 	themeID = strings.TrimSpace(themeID)
 	if themeID == "" {
 		return errors.New("theme ID is required")
 	}
 
-	return s.store.SetThemeID(context.Background(), themeID)
+	return s.store.SetThemeID(ctx, themeID)
 }
 
-func (s *SettingsService) SetGameModStoragePathOverride(gameID int64, path string) (game storage.StoredGame, err error) {
+func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game storage.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("set game mod storage path override: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return storage.StoredGame{}, errors.New("storage is not configured")
-	}
-
-	return s.store.SetGameModStoragePathOverride(context.Background(), gameID, path)
+	return s.store.SetGameModStoragePathOverride(ctx, gameID, path)
 }
 
-func (s *SettingsService) ResolveGameModStoragePath(gameID int64) (path string, err error) {
+func (s *SettingsService) ResolveGameModStoragePath(ctx context.Context, gameID int64) (path string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("resolve game mod storage path: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return "", errors.New("storage is not configured")
-	}
-
-	globalRoot, err := s.store.GetGlobalModStorageRoot(context.Background())
+	globalRoot, err := s.store.GetGlobalModStorageRoot(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	return s.store.ResolveGameModStoragePath(context.Background(), gameID, globalRoot)
+	return s.store.ResolveGameModStoragePath(ctx, gameID, globalRoot)
 }
 
-func (s *SettingsService) EnsureGameModStoragePath(gameID int64) (path string, err error) {
+func (s *SettingsService) EnsureGameModStoragePath(ctx context.Context, gameID int64) (path string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("ensure game mod storage path: %w", err)
 		}
 	}()
 
-	path, err = s.ResolveGameModStoragePath(gameID)
+	path, err = s.ResolveGameModStoragePath(ctx, gameID)
 	if err != nil {
 		return "", err
 	}

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -22,32 +21,24 @@ func NewModService(store *storage.Store) *ModService {
 	}
 }
 
-func (s *ModService) ListMods(gameID int64) (mods []storage.Mod, err error) {
+func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []storage.Mod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list mods: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
-
-	return s.store.ListMods(context.Background(), gameID)
+	return s.store.ListMods(ctx, gameID)
 }
 
-func (s *ModService) GetGameManagedModStorageUsage(gameID int64) (bytes int64, err error) {
+func (s *ModService) GetGameManagedModStorageUsage(ctx context.Context, gameID int64) (bytes int64, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get game managed mod storage usage: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return 0, errors.New("storage is not configured")
-	}
-
-	mods, err := s.store.ListMods(context.Background(), gameID)
+	mods, err := s.store.ListMods(ctx, gameID)
 	if err != nil {
 		return 0, err
 	}
@@ -59,16 +50,12 @@ func (s *ModService) GetGameManagedModStorageUsage(gameID int64) (bytes int64, e
 	return bytes, nil
 }
 
-func (s *ModService) ListImportStrategies() (strategies []installconfig.StrategyDescriptor, err error) {
+func (s *ModService) ListImportStrategies(_ context.Context) (strategies []installconfig.StrategyDescriptor, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list import strategies: %w", err)
 		}
 	}()
-
-	if s == nil || s.store == nil {
-		return nil, errors.New("storage is not configured")
-	}
 
 	return installconfig.SelectableStrategies(), nil
 }

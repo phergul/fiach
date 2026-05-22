@@ -34,7 +34,7 @@ func TestProfileServiceBuildsProfileOperationPlan(t *testing.T) {
 	addServiceInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
 
 	service := NewProfileService(store)
-	plan, err := service.BuildProfileOperationPlan(profileID)
+	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
 	if err != nil {
 		t.Fatalf("BuildProfileOperationPlan() error = %v", err)
 	}
@@ -59,7 +59,7 @@ func TestProfileServiceReturnsPlannerIssuesInPlanResult(t *testing.T) {
 	addServiceInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
 	service := NewProfileService(store)
-	plan, err := service.BuildProfileOperationPlan(profileID)
+	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
 	if err != nil {
 		t.Fatalf("BuildProfileOperationPlan() error = %v, want planner issue result", err)
 	}
@@ -72,20 +72,6 @@ func TestProfileServiceReturnsPlannerIssuesInPlanResult(t *testing.T) {
 	}
 }
 
-func TestProfileServiceReturnsStorageConfigurationErrorForOperationPlan(t *testing.T) {
-	t.Parallel()
-
-	service := NewProfileService(nil)
-
-	_, err := service.BuildProfileOperationPlan(1)
-	if err == nil {
-		t.Fatal("BuildProfileOperationPlan() error = nil, want error")
-	}
-	if !strings.Contains(err.Error(), "build profile operation plan") || !strings.Contains(err.Error(), "storage is not configured") {
-		t.Fatalf("BuildProfileOperationPlan() error = %q, want service context", err.Error())
-	}
-}
-
 func TestProfileServiceWrapsUnexpectedPlannerErrors(t *testing.T) {
 	t.Parallel()
 
@@ -93,7 +79,7 @@ func TestProfileServiceWrapsUnexpectedPlannerErrors(t *testing.T) {
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	_, err := service.BuildProfileOperationPlan(999)
+	_, err := service.BuildProfileOperationPlan(context.Background(), 999)
 	if err == nil {
 		t.Fatal("BuildProfileOperationPlan() error = nil, want planner error")
 	}
@@ -119,7 +105,7 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	sourceFilePath := filepath.Join(sourcePath, "Data", "modded.txt")
 
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
@@ -205,7 +191,7 @@ func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.
 	targetPath := filepath.Join(gameRoot, "Data", "missing.txt")
 
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
@@ -245,7 +231,7 @@ func TestProfileServiceApplyProfileOperationPlanReplacesExistingStateOnlyAfterSu
 	firstSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
 	firstSourcePath := filepath.Join(firstSourceRoot, "first.txt")
 	firstTargetPath := filepath.Join(gameRoot, "first.txt")
-	firstResult, err := service.ApplyProfileOperationPlan(firstProfileID, operationplan.OperationPlan{
+	firstResult, err := service.ApplyProfileOperationPlan(context.Background(), firstProfileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
@@ -267,7 +253,7 @@ func TestProfileServiceApplyProfileOperationPlanReplacesExistingStateOnlyAfterSu
 	}
 
 	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
-	failedResult, err := service.ApplyProfileOperationPlan(secondProfileID, operationplan.OperationPlan{
+	failedResult, err := service.ApplyProfileOperationPlan(context.Background(), secondProfileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
@@ -323,7 +309,7 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	sourcePath := filepath.Join(sourceRoot, "modded.txt")
 	targetPath := filepath.Join(gameRoot, "modded.txt")
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
@@ -353,19 +339,6 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	}
 }
 
-func TestProfileServiceApplyProfileOperationPlanRequiresStorage(t *testing.T) {
-	t.Parallel()
-
-	service := NewProfileService(nil)
-	_, err := service.ApplyProfileOperationPlan(1, operationplan.OperationPlan{CanApply: true})
-	if err == nil {
-		t.Fatal("ApplyProfileOperationPlan() error = nil, want storage configuration error")
-	}
-	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "storage is not configured") {
-		t.Fatalf("ApplyProfileOperationPlan() error = %q, want service context", err.Error())
-	}
-}
-
 func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing.T) {
 	t.Parallel()
 
@@ -373,7 +346,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	_, err := service.ApplyProfileOperationPlan(1, operationplan.OperationPlan{CanApply: false})
+	_, err := service.ApplyProfileOperationPlan(context.Background(), 1, operationplan.OperationPlan{CanApply: false})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want blocking issue error")
 	}
@@ -389,7 +362,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsInvalidProfileID(t *testi
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	_, err := service.ApplyProfileOperationPlan(0, operationplan.OperationPlan{CanApply: true})
+	_, err := service.ApplyProfileOperationPlan(context.Background(), 0, operationplan.OperationPlan{CanApply: true})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want invalid profile ID error")
 	}

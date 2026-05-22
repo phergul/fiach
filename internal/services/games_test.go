@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/services/gamesource"
+	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -40,7 +40,7 @@ func TestGamesServiceScansAndSavesGames(t *testing.T) {
 
 	steamSource := gamesource.NewSteamSource(store)
 	service := NewGamesService(store, steamSource)
-	result, err := service.ScanAndSaveGames()
+	result, err := service.ScanAndSaveGames(context.Background())
 	if err != nil {
 		t.Fatalf("ScanAndSaveGames() error = %v", err)
 	}
@@ -67,7 +67,7 @@ func TestGamesServiceGetsStoredGames(t *testing.T) {
 	}
 
 	service := NewGamesService(store, gamesource.NewSteamSource(store))
-	games, err := service.GetStoredGames()
+	games, err := service.GetStoredGames(context.Background())
 	if err != nil {
 		t.Fatalf("GetStoredGames() error = %v", err)
 	}
@@ -77,19 +77,6 @@ func TestGamesServiceGetsStoredGames(t *testing.T) {
 	}
 	if games[0].Name != "Portal" || games[0].InstallPath != "/games/Portal" {
 		t.Fatalf("GetStoredGames() = %+v, want Portal with install path", games[0])
-	}
-}
-
-func TestGamesServiceGetStoredGamesReturnsStorageError(t *testing.T) {
-	t.Parallel()
-
-	service := NewGamesService(nil)
-	_, err := service.GetStoredGames()
-	if err == nil {
-		t.Fatal("GetStoredGames() error = nil, want error")
-	}
-	if !strings.Contains(err.Error(), "get stored games") {
-		t.Fatalf("GetStoredGames() error = %q, want service context", err.Error())
 	}
 }
 
@@ -107,7 +94,7 @@ func TestGamesServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
 
 	steamSource := gamesource.NewSteamSource(store)
 	service := NewGamesService(store, steamSource)
-	_, err := service.ScanAndSaveGames()
+	_, err := service.ScanAndSaveGames(context.Background())
 	if err == nil {
 		t.Fatal("ScanAndSaveGames() error = nil, want error")
 	}

@@ -12,18 +12,14 @@ import (
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
-func (s *ProfileService) BuildProfileOperationPlan(profileID int64) (plan operationplan.OperationPlan, err error) {
+func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileID int64) (plan operationplan.OperationPlan, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("build profile operation plan: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return operationplan.OperationPlan{}, errors.New("storage is not configured")
-	}
-
-	resolved, err := operationplan.ResolveProfilePlan(context.Background(), s.store, profileID)
+	resolved, err := operationplan.ResolveProfilePlan(ctx, s.store, profileID)
 	if err != nil {
 		return operationplan.OperationPlan{}, err
 	}
@@ -31,16 +27,13 @@ func (s *ProfileService) BuildProfileOperationPlan(profileID int64) (plan operat
 	return operationplan.BuildOperationPlan(resolved)
 }
 
-func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operationplan.OperationPlan) (result operationplan.ApplyOperationPlanResult, err error) {
+func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan operationplan.OperationPlan) (result operationplan.ApplyOperationPlanResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("apply profile operation plan: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return operationplan.ApplyOperationPlanResult{}, errors.New("storage is not configured")
-	}
 	if profileID <= 0 {
 		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
 	}
@@ -48,7 +41,7 @@ func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operati
 		return operationplan.ApplyOperationPlanResult{}, errors.New("operation plan has blocking issues")
 	}
 
-	profile, found, err := s.store.GetProfile(context.Background(), profileID)
+	profile, found, err := s.store.GetProfile(ctx, profileID)
 	if err != nil {
 		return operationplan.ApplyOperationPlanResult{}, err
 	}
@@ -56,11 +49,11 @@ func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operati
 		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
 
-	game, err := s.store.GetStoredGame(context.Background(), profile.GameID)
+	game, err := s.store.GetStoredGame(ctx, profile.GameID)
 	if err != nil {
 		return operationplan.ApplyOperationPlanResult{}, err
 	}
-	gameModStoragePath, err := s.store.ResolveGameModStoragePath(context.Background(), profile.GameID, "")
+	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, profile.GameID, "")
 	if err != nil {
 		return operationplan.ApplyOperationPlanResult{}, err
 	}
@@ -76,32 +69,29 @@ func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operati
 		return result, nil
 	}
 
-	if err := s.saveAppliedProfileState(context.Background(), game.ID, profileID, plan, result.Manifest); err != nil {
+	if err := s.saveAppliedProfileState(ctx, game.ID, profileID, plan, result.Manifest); err != nil {
 		return result, err
 	}
 
 	return result, nil
 }
 
-func (s *ProfileService) RestoreVanillaState(gameID int64) (result restoreplan.RestoreResult, err error) {
+func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) (result restoreplan.RestoreResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("restore vanilla state: %w", err)
 		}
 	}()
 
-	if s == nil || s.store == nil {
-		return restoreplan.RestoreResult{}, errors.New("storage is not configured")
-	}
 	if gameID <= 0 {
 		return restoreplan.RestoreResult{}, errors.New("game ID must be positive")
 	}
 
-	game, err := s.store.GetStoredGame(context.Background(), gameID)
+	game, err := s.store.GetStoredGame(ctx, gameID)
 	if err != nil {
 		return restoreplan.RestoreResult{}, err
 	}
-	state, found, err := s.store.GetAppliedProfileState(context.Background(), gameID)
+	state, found, err := s.store.GetAppliedProfileState(ctx, gameID)
 	if err != nil {
 		return restoreplan.RestoreResult{}, err
 	}
@@ -113,7 +103,7 @@ func (s *ProfileService) RestoreVanillaState(gameID int64) (result restoreplan.R
 	if err != nil {
 		return restoreplan.RestoreResult{}, err
 	}
-	gameModStoragePath, err := s.store.ResolveGameModStoragePath(context.Background(), gameID, "")
+	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, gameID, "")
 	if err != nil {
 		return restoreplan.RestoreResult{}, err
 	}
@@ -129,7 +119,7 @@ func (s *ProfileService) RestoreVanillaState(gameID int64) (result restoreplan.R
 		return result, nil
 	}
 
-	if err := s.store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
+	if err := s.store.DeleteAppliedProfileState(ctx, gameID); err != nil {
 		return result, err
 	}
 
