@@ -5,7 +5,7 @@ import { ToastProvider } from '@components/Common/Toast/Toast';
 import { Layout } from '@components/Layout/Layout';
 import { GameApply, GameDetails, Library, Logs, Profiles, Settings } from '@pages';
 
-const App = () => {
+export const App = () => {
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -27,5 +27,3 @@ const App = () => {
     </ThemeProvider>
   );
 };
-
-export default App;

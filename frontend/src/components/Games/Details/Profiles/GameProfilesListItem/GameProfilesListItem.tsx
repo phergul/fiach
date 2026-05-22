@@ -2,8 +2,6 @@ import { Check, Pencil, Power, Trash2, X } from 'lucide-react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
-import { formatProfileEditedAt } from '../profileFormatting';
-
 import './GameProfilesListItem.scss';
 
 interface GameProfilesListItemProps {
@@ -22,6 +20,25 @@ interface GameProfilesListItemProps {
   onSelectProfile: (profileID: number) => void;
   onStartRename: (profile: ModProfile) => void;
 }
+
+const formatProfileEditedAt = (updatedAt: string) => {
+  if (updatedAt.trim() === '') {
+    return 'Edited time unknown';
+  }
+
+  const normalizedUpdatedAt = updatedAt.includes('T')
+    ? updatedAt
+    : `${updatedAt.replace(' ', 'T')}Z`;
+  const date = new Date(normalizedUpdatedAt);
+  if (Number.isNaN(date.getTime())) {
+    return 'Edited time unknown';
+  }
+
+  return `Edited ${new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)}`;
+};
 
 export const GameProfilesListItem = ({
   editingProfileName,

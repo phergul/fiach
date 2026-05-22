@@ -79,14 +79,14 @@ $game-details-toolbar-icon-size: 1.25rem;
 .game-details-apply-profile {
   width: $game-details-toolbar-apply-width;
   color: $color-text-primary;
-  background: rgb(88 139 139 / 26%);
-  border: $app-border-width solid rgb(88 139 139 / 72%);
+  background: color-mix(in srgb, $color-success 26%, transparent);
+  border: $app-border-width solid color-mix(in srgb, $color-success 72%, transparent);
   border-radius: $radius-sm;
 }
 
 .game-details-apply-profile:hover,
 .game-details-apply-profile:focus-visible {
-  background: rgb(88 139 139 / 36%);
+  background: color-mix(in srgb, $color-success 36%, transparent);
   border-color: $color-success;
   outline: none;
 }

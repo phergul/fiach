@@ -1,6 +1,7 @@
-import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
 import { Fragment } from 'react';
+
 import { NavLink } from 'react-router-dom';
+import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
 
 import './Navigation.scss';
 
