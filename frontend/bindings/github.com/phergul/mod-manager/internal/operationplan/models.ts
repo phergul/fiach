@@ -5,12 +5,132 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+export class AppliedDirectoryManifestEntry {
+    "OperationIndex": number;
+    "Mod": ModContext;
+    "TargetPath": string;
+
+    /** Creates a new AppliedDirectoryManifestEntry instance. */
+    constructor($$source: Partial<AppliedDirectoryManifestEntry> = {}) {
+        if (!("OperationIndex" in $$source)) {
+            this["OperationIndex"] = 0;
+        }
+        if (!("Mod" in $$source)) {
+            this["Mod"] = (new ModContext());
+        }
+        if (!("TargetPath" in $$source)) {
+            this["TargetPath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppliedDirectoryManifestEntry instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AppliedDirectoryManifestEntry {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Mod" in $$parsedSource) {
+            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
+        }
+        return new AppliedDirectoryManifestEntry($$parsedSource as Partial<AppliedDirectoryManifestEntry>);
+    }
+}
+
+export class AppliedFileManifestEntry {
+    "OperationIndex": number;
+    "Mod": ModContext;
+    "SourcePath": string;
+    "TargetPath": string;
+    "SHA256": string;
+    "SizeBytes": number;
+
+    /** Creates a new AppliedFileManifestEntry instance. */
+    constructor($$source: Partial<AppliedFileManifestEntry> = {}) {
+        if (!("OperationIndex" in $$source)) {
+            this["OperationIndex"] = 0;
+        }
+        if (!("Mod" in $$source)) {
+            this["Mod"] = (new ModContext());
+        }
+        if (!("SourcePath" in $$source)) {
+            this["SourcePath"] = "";
+        }
+        if (!("TargetPath" in $$source)) {
+            this["TargetPath"] = "";
+        }
+        if (!("SHA256" in $$source)) {
+            this["SHA256"] = "";
+        }
+        if (!("SizeBytes" in $$source)) {
+            this["SizeBytes"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppliedFileManifestEntry instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AppliedFileManifestEntry {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Mod" in $$parsedSource) {
+            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
+        }
+        return new AppliedFileManifestEntry($$parsedSource as Partial<AppliedFileManifestEntry>);
+    }
+}
+
+export class AppliedOperationManifest {
+    "AddedFiles": AppliedFileManifestEntry[];
+    "ReplacedFiles": ReplacedFileManifestEntry[];
+    "CreatedDirectories": AppliedDirectoryManifestEntry[];
+
+    /** Creates a new AppliedOperationManifest instance. */
+    constructor($$source: Partial<AppliedOperationManifest> = {}) {
+        if (!("AddedFiles" in $$source)) {
+            this["AddedFiles"] = [];
+        }
+        if (!("ReplacedFiles" in $$source)) {
+            this["ReplacedFiles"] = [];
+        }
+        if (!("CreatedDirectories" in $$source)) {
+            this["CreatedDirectories"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppliedOperationManifest instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AppliedOperationManifest {
+        const $$createField0_0 = $$createType2;
+        const $$createField1_0 = $$createType4;
+        const $$createField2_0 = $$createType6;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("AddedFiles" in $$parsedSource) {
+            $$parsedSource["AddedFiles"] = $$createField0_0($$parsedSource["AddedFiles"]);
+        }
+        if ("ReplacedFiles" in $$parsedSource) {
+            $$parsedSource["ReplacedFiles"] = $$createField1_0($$parsedSource["ReplacedFiles"]);
+        }
+        if ("CreatedDirectories" in $$parsedSource) {
+            $$parsedSource["CreatedDirectories"] = $$createField2_0($$parsedSource["CreatedDirectories"]);
+        }
+        return new AppliedOperationManifest($$parsedSource as Partial<AppliedOperationManifest>);
+    }
+}
+
 export class ApplyOperationPlanResult {
     "Success": boolean;
     "CompletedCount": number;
     "FailedCount": number;
     "SkippedCount": number;
     "Results": ApplyOperationResult[];
+    "Manifest": AppliedOperationManifest;
 
     /** Creates a new ApplyOperationPlanResult instance. */
     constructor($$source: Partial<ApplyOperationPlanResult> = {}) {
@@ -29,6 +149,9 @@ export class ApplyOperationPlanResult {
         if (!("Results" in $$source)) {
             this["Results"] = [];
         }
+        if (!("Manifest" in $$source)) {
+            this["Manifest"] = (new AppliedOperationManifest());
+        }
 
         Object.assign(this, $$source);
     }
@@ -37,10 +160,14 @@ export class ApplyOperationPlanResult {
      * Creates a new ApplyOperationPlanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ApplyOperationPlanResult {
-        const $$createField4_0 = $$createType1;
+        const $$createField4_0 = $$createType8;
+        const $$createField5_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
+        }
+        if ("Manifest" in $$parsedSource) {
+            $$parsedSource["Manifest"] = $$createField5_0($$parsedSource["Manifest"]);
         }
         return new ApplyOperationPlanResult($$parsedSource as Partial<ApplyOperationPlanResult>);
     }
@@ -78,7 +205,7 @@ export class ApplyOperationResult {
      * Creates a new ApplyOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ApplyOperationResult {
-        const $$createField1_0 = $$createType2;
+        const $$createField1_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -159,7 +286,7 @@ export class Operation {
      * Creates a new Operation instance from a string or object.
      */
     static createFrom($$source: any = {}): Operation {
-        const $$createField5_0 = $$createType3;
+        const $$createField5_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField5_0($$parsedSource["Mod"]);
@@ -192,8 +319,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType4;
-        const $$createField1_0 = $$createType6;
+        const $$createField0_0 = $$createType11;
+        const $$createField1_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -256,7 +383,7 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType7;
+        const $$createField6_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -296,12 +423,76 @@ export enum PlanIssueSeverity {
     PlanIssueSeverityWarning = "warning",
 };
 
+export class ReplacedFileManifestEntry {
+    "OperationIndex": number;
+    "Mod": ModContext;
+    "SourcePath": string;
+    "TargetPath": string;
+    "SHA256": string;
+    "SizeBytes": number;
+    "BackupPath": string;
+    "BackupSHA256": string;
+    "BackupSizeBytes": number;
+
+    /** Creates a new ReplacedFileManifestEntry instance. */
+    constructor($$source: Partial<ReplacedFileManifestEntry> = {}) {
+        if (!("OperationIndex" in $$source)) {
+            this["OperationIndex"] = 0;
+        }
+        if (!("Mod" in $$source)) {
+            this["Mod"] = (new ModContext());
+        }
+        if (!("SourcePath" in $$source)) {
+            this["SourcePath"] = "";
+        }
+        if (!("TargetPath" in $$source)) {
+            this["TargetPath"] = "";
+        }
+        if (!("SHA256" in $$source)) {
+            this["SHA256"] = "";
+        }
+        if (!("SizeBytes" in $$source)) {
+            this["SizeBytes"] = 0;
+        }
+        if (!("BackupPath" in $$source)) {
+            this["BackupPath"] = "";
+        }
+        if (!("BackupSHA256" in $$source)) {
+            this["BackupSHA256"] = "";
+        }
+        if (!("BackupSizeBytes" in $$source)) {
+            this["BackupSizeBytes"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReplacedFileManifestEntry instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReplacedFileManifestEntry {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Mod" in $$parsedSource) {
+            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
+        }
+        return new ReplacedFileManifestEntry($$parsedSource as Partial<ReplacedFileManifestEntry>);
+    }
+}
+
 // Private type creation functions
-const $$createType0 = ApplyOperationResult.createFrom;
-const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = Operation.createFrom;
-const $$createType3 = ModContext.createFrom;
-const $$createType4 = $Create.Array($$createType2);
-const $$createType5 = PlanIssue.createFrom;
+const $$createType0 = ModContext.createFrom;
+const $$createType1 = AppliedFileManifestEntry.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = ReplacedFileManifestEntry.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = AppliedDirectoryManifestEntry.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = $Create.Nullable($$createType3);
+const $$createType7 = ApplyOperationResult.createFrom;
+const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = AppliedOperationManifest.createFrom;
+const $$createType10 = Operation.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = PlanIssue.createFrom;
+const $$createType13 = $Create.Array($$createType12);
+const $$createType14 = $Create.Nullable($$createType0);

@@ -212,7 +212,7 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 	}
 
 	resultType := reflect.TypeOf(ApplyOperationPlanResult{})
-	for _, name := range []string{"Success", "CompletedCount", "FailedCount", "SkippedCount", "Results"} {
+	for _, name := range []string{"Success", "CompletedCount", "FailedCount", "SkippedCount", "Results", "Manifest"} {
 		field, ok := resultType.FieldByName(name)
 		if !ok || !field.IsExported() {
 			t.Fatalf("ApplyOperationPlanResult field %q exported = %v, want true", name, ok && field.IsExported())
@@ -230,6 +230,50 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 		}
 		if field.Tag != "" {
 			t.Fatalf("ApplyOperationResult field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	manifestType := reflect.TypeOf(AppliedOperationManifest{})
+	for _, name := range []string{"AddedFiles", "ReplacedFiles", "CreatedDirectories"} {
+		field, ok := manifestType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("AppliedOperationManifest field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("AppliedOperationManifest field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	addedFileType := reflect.TypeOf(AppliedFileManifestEntry{})
+	for _, name := range []string{"OperationIndex", "Mod", "SourcePath", "TargetPath", "SHA256", "SizeBytes"} {
+		field, ok := addedFileType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("AppliedFileManifestEntry field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("AppliedFileManifestEntry field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	replacedFileType := reflect.TypeOf(ReplacedFileManifestEntry{})
+	for _, name := range []string{"OperationIndex", "Mod", "SourcePath", "TargetPath", "SHA256", "SizeBytes", "BackupPath", "BackupSHA256", "BackupSizeBytes"} {
+		field, ok := replacedFileType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("ReplacedFileManifestEntry field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("ReplacedFileManifestEntry field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
+		}
+	}
+
+	directoryType := reflect.TypeOf(AppliedDirectoryManifestEntry{})
+	for _, name := range []string{"OperationIndex", "Mod", "TargetPath"} {
+		field, ok := directoryType.FieldByName(name)
+		if !ok || !field.IsExported() {
+			t.Fatalf("AppliedDirectoryManifestEntry field %q exported = %v, want true", name, ok && field.IsExported())
+		}
+		if field.Tag != "" {
+			t.Fatalf("AppliedDirectoryManifestEntry field %q tag = %q, want empty tag for plain Wails binding", name, string(field.Tag))
 		}
 	}
 }

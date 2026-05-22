@@ -1,6 +1,8 @@
 package applyplan
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -22,6 +24,13 @@ type resolvedContext struct {
 	gameModStoragePath string
 }
 
+type operationOutcome struct {
+	message          string
+	createdDirectory bool
+}
+
+var computeFileIntegrity = fileIntegrity
+
 func Execute(plan operationplan.OperationPlan, context Context) (result operationplan.ApplyOperationPlanResult, err error) {
 	defer func() {
 		if err != nil {
@@ -36,7 +45,10 @@ func Execute(plan operationplan.OperationPlan, context Context) (result operatio
 	result.Success = true
 	result.Results = make([]operationplan.ApplyOperationResult, 0, len(plan.Operations))
 	for index, operation := range plan.Operations {
-		message, operationErr := executeOperation(operation)
+		outcome, operationErr := executeOperation(operation)
+		if operationErr == nil {
+			operationErr = appendManifestEntry(index, operation, outcome, &result.Manifest)
+		}
 		if operationErr != nil {
 			result.Success = false
 			result.Results = append(result.Results, newFailedResult(index, operation, operationErr))
@@ -49,7 +61,7 @@ func Execute(plan operationplan.OperationPlan, context Context) (result operatio
 			OperationIndex: index,
 			Operation:      operation,
 			Status:         operationplan.ApplyOperationStatusCompleted,
-			Message:        message,
+			Message:        outcome.message,
 		})
 	}
 
@@ -142,7 +154,7 @@ func requirePathWithinRoot(name string, path string, root string) error {
 	return nil
 }
 
-func executeOperation(operation operationplan.Operation) (string, error) {
+func executeOperation(operation operationplan.Operation) (operationOutcome, error) {
 	switch operation.Type {
 	case operationplan.OperationTypeCreateDirectory:
 		return executeCreateDirectory(operation)
@@ -151,75 +163,191 @@ func executeOperation(operation operationplan.Operation) (string, error) {
 	case operationplan.OperationTypeReplace:
 		return executeReplace(operation)
 	default:
-		return "", fmt.Errorf("unsupported operation type %q", operation.Type)
+		return operationOutcome{}, fmt.Errorf("unsupported operation type %q", operation.Type)
 	}
 }
 
-func executeCreateDirectory(operation operationplan.Operation) (string, error) {
+func executeCreateDirectory(operation operationplan.Operation) (operationOutcome, error) {
 	info, err := os.Stat(operation.TargetPath)
 	if err == nil {
 		if !info.IsDir() {
-			return "", fmt.Errorf("target path %q already exists and is not a directory", operation.TargetPath)
+			return operationOutcome{}, fmt.Errorf("target path %q already exists and is not a directory", operation.TargetPath)
 		}
-		return "Directory already exists.", nil
+		return operationOutcome{message: "Directory already exists."}, nil
 	}
 	if !errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("stat target directory %q: %w", operation.TargetPath, err)
+		return operationOutcome{}, fmt.Errorf("stat target directory %q: %w", operation.TargetPath, err)
 	}
 
 	if err := os.MkdirAll(operation.TargetPath, 0o755); err != nil {
-		return "", fmt.Errorf("create target directory %q: %w", operation.TargetPath, err)
+		return operationOutcome{}, fmt.Errorf("create target directory %q: %w", operation.TargetPath, err)
 	}
-	return "Created directory.", nil
+	return operationOutcome{message: "Created directory.", createdDirectory: true}, nil
 }
 
-func executeCopy(operation operationplan.Operation) (string, error) {
+func executeCopy(operation operationplan.Operation) (operationOutcome, error) {
 	sourcePath := *operation.SourcePath
 	sourceInfo, err := statRegularFile("source file", sourcePath)
 	if err != nil {
-		return "", err
+		return operationOutcome{}, err
 	}
 
 	if _, err := os.Lstat(operation.TargetPath); err == nil {
-		return "", fmt.Errorf("target file %q already exists", operation.TargetPath)
+		return operationOutcome{}, fmt.Errorf("target file %q already exists", operation.TargetPath)
 	} else if !errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("stat target file %q: %w", operation.TargetPath, err)
+		return operationOutcome{}, fmt.Errorf("stat target file %q: %w", operation.TargetPath, err)
 	}
 
 	if err := copyFileAtomic(sourcePath, operation.TargetPath, sourceInfo.Mode().Perm(), false); err != nil {
-		return "", err
+		return operationOutcome{}, err
 	}
-	return "Copied file.", nil
+	return operationOutcome{message: "Copied file."}, nil
 }
 
-func executeReplace(operation operationplan.Operation) (string, error) {
+func executeReplace(operation operationplan.Operation) (operationOutcome, error) {
 	sourcePath := *operation.SourcePath
 	sourceInfo, err := statRegularFile("source file", sourcePath)
 	if err != nil {
-		return "", err
+		return operationOutcome{}, err
 	}
 	targetInfo, err := statRegularFile("target file", operation.TargetPath)
 	if err != nil {
-		return "", err
+		return operationOutcome{}, err
 	}
 
 	backupPath := *operation.BackupPath
 	if _, err := os.Lstat(backupPath); err == nil {
-		return "", fmt.Errorf("backup file %q already exists", backupPath)
+		return operationOutcome{}, fmt.Errorf("backup file %q already exists", backupPath)
 	} else if !errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("stat backup file %q: %w", backupPath, err)
+		return operationOutcome{}, fmt.Errorf("stat backup file %q: %w", backupPath, err)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(backupPath), 0o755); err != nil {
-		return "", fmt.Errorf("create backup directory %q: %w", filepath.Dir(backupPath), err)
+		return operationOutcome{}, fmt.Errorf("create backup directory %q: %w", filepath.Dir(backupPath), err)
 	}
 	if err := copyFileAtomic(operation.TargetPath, backupPath, targetInfo.Mode().Perm(), false); err != nil {
-		return "", fmt.Errorf("create backup file %q: %w", backupPath, err)
+		return operationOutcome{}, fmt.Errorf("create backup file %q: %w", backupPath, err)
 	}
 	if err := copyFileAtomic(sourcePath, operation.TargetPath, sourceInfo.Mode().Perm(), true); err != nil {
-		return "", err
+		return operationOutcome{}, err
 	}
-	return "Replaced file and created backup.", nil
+	return operationOutcome{message: "Replaced file and created backup."}, nil
+}
+
+func appendManifestEntry(index int, operation operationplan.Operation, outcome operationOutcome, manifest *operationplan.AppliedOperationManifest) error {
+	switch operation.Type {
+	case operationplan.OperationTypeCreateDirectory:
+		if !outcome.createdDirectory {
+			return nil
+		}
+		targetPath, err := cleanManifestPath("created directory target path", operation.TargetPath)
+		if err != nil {
+			return err
+		}
+		manifest.CreatedDirectories = append(manifest.CreatedDirectories, operationplan.AppliedDirectoryManifestEntry{
+			OperationIndex: index,
+			Mod:            operation.Mod,
+			TargetPath:     targetPath,
+		})
+	case operationplan.OperationTypeCopy:
+		entry, err := buildAppliedFileManifestEntry(index, operation)
+		if err != nil {
+			return err
+		}
+		manifest.AddedFiles = append(manifest.AddedFiles, entry)
+	case operationplan.OperationTypeReplace:
+		entry, err := buildReplacedFileManifestEntry(index, operation)
+		if err != nil {
+			return err
+		}
+		manifest.ReplacedFiles = append(manifest.ReplacedFiles, entry)
+	}
+
+	return nil
+}
+
+func buildAppliedFileManifestEntry(index int, operation operationplan.Operation) (operationplan.AppliedFileManifestEntry, error) {
+	sourcePath, err := cleanManifestPath("added file source path", *operation.SourcePath)
+	if err != nil {
+		return operationplan.AppliedFileManifestEntry{}, err
+	}
+	targetPath, err := cleanManifestPath("added file target path", operation.TargetPath)
+	if err != nil {
+		return operationplan.AppliedFileManifestEntry{}, err
+	}
+	targetSHA256, targetSize, err := computeFileIntegrity(targetPath)
+	if err != nil {
+		return operationplan.AppliedFileManifestEntry{}, fmt.Errorf("read added file integrity %q: %w", targetPath, err)
+	}
+
+	return operationplan.AppliedFileManifestEntry{
+		OperationIndex: index,
+		Mod:            operation.Mod,
+		SourcePath:     sourcePath,
+		TargetPath:     targetPath,
+		SHA256:         targetSHA256,
+		SizeBytes:      targetSize,
+	}, nil
+}
+
+func buildReplacedFileManifestEntry(index int, operation operationplan.Operation) (operationplan.ReplacedFileManifestEntry, error) {
+	sourcePath, err := cleanManifestPath("replaced file source path", *operation.SourcePath)
+	if err != nil {
+		return operationplan.ReplacedFileManifestEntry{}, err
+	}
+	targetPath, err := cleanManifestPath("replaced file target path", operation.TargetPath)
+	if err != nil {
+		return operationplan.ReplacedFileManifestEntry{}, err
+	}
+	backupPath, err := cleanManifestPath("replaced file backup path", *operation.BackupPath)
+	if err != nil {
+		return operationplan.ReplacedFileManifestEntry{}, err
+	}
+	targetSHA256, targetSize, err := computeFileIntegrity(targetPath)
+	if err != nil {
+		return operationplan.ReplacedFileManifestEntry{}, fmt.Errorf("read replaced file integrity %q: %w", targetPath, err)
+	}
+	backupSHA256, backupSize, err := computeFileIntegrity(backupPath)
+	if err != nil {
+		return operationplan.ReplacedFileManifestEntry{}, fmt.Errorf("read backup file integrity %q: %w", backupPath, err)
+	}
+
+	return operationplan.ReplacedFileManifestEntry{
+		OperationIndex:  index,
+		Mod:             operation.Mod,
+		SourcePath:      sourcePath,
+		TargetPath:      targetPath,
+		SHA256:          targetSHA256,
+		SizeBytes:       targetSize,
+		BackupPath:      backupPath,
+		BackupSHA256:    backupSHA256,
+		BackupSizeBytes: backupSize,
+	}, nil
+}
+
+func cleanManifestPath(name string, path string) (string, error) {
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("resolve %s %q: %w", name, path, err)
+	}
+
+	return filepath.Clean(absolutePath), nil
+}
+
+func fileIntegrity(path string) (string, int64, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", 0, fmt.Errorf("open file %q: %w", path, err)
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	size, err := io.Copy(hash, file)
+	if err != nil {
+		return "", 0, fmt.Errorf("hash file %q: %w", path, err)
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), size, nil
 }
 
 func statRegularFile(label string, path string) (fs.FileInfo, error) {

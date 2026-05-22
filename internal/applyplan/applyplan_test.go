@@ -1,6 +1,9 @@
 package applyplan
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,8 +14,6 @@ import (
 )
 
 func TestExecuteAppliesDirectoriesBeforeDependentFiles(t *testing.T) {
-	t.Parallel()
-
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "plugin", 0o644)
@@ -37,8 +38,6 @@ func TestExecuteAppliesDirectoriesBeforeDependentFiles(t *testing.T) {
 }
 
 func TestExecuteCopyWritesContentsAndPreservesMode(t *testing.T) {
-	t.Parallel()
-
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/tool.sh", "run", 0o754)
@@ -59,9 +58,34 @@ func TestExecuteCopyWritesContentsAndPreservesMode(t *testing.T) {
 	assertFileMode(t, targetPath, 0o754)
 }
 
-func TestExecuteCopyFailsSafelyWhenTargetNowExists(t *testing.T) {
-	t.Parallel()
+func TestExecuteCopyRecordsAddedFileManifestEntry(t *testing.T) {
+	gameRoot := t.TempDir()
+	storageRoot := t.TempDir()
+	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "plugin", 0o644)
+	targetPath := filepath.Join(gameRoot, "plugin.txt")
+	operation := copyOperation(sourcePath, targetPath)
+	operation.Mod = operationplan.ModContext{ModID: 12, ModName: "SkyUI"}
 
+	result, err := Execute(applicablePlan(operation), Context{
+		GameInstallPath:    gameRoot,
+		GameModStoragePath: storageRoot,
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if !result.Success || len(result.Manifest.AddedFiles) != 1 {
+		t.Fatalf("Execute() manifest = %+v, want one added file", result.Manifest)
+	}
+	entry := result.Manifest.AddedFiles[0]
+	if entry.OperationIndex != 0 || entry.Mod != operation.Mod || entry.SourcePath != filepath.Clean(sourcePath) || entry.TargetPath != filepath.Clean(targetPath) {
+		t.Fatalf("added file manifest entry = %+v, want operation/mod/source/target metadata", entry)
+	}
+	if entry.SHA256 != sha256String("plugin") || entry.SizeBytes != int64(len("plugin")) {
+		t.Fatalf("added file integrity = %+v, want SHA-256 and size for copied file", entry)
+	}
+}
+
+func TestExecuteCopyFailsSafelyWhenTargetNowExists(t *testing.T) {
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "plugin", 0o644)
@@ -82,8 +106,6 @@ func TestExecuteCopyFailsSafelyWhenTargetNowExists(t *testing.T) {
 }
 
 func TestExecuteReplaceCreatesBackupBeforeOverwrite(t *testing.T) {
-	t.Parallel()
-
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "modded", 0o640)
@@ -106,9 +128,38 @@ func TestExecuteReplaceCreatesBackupBeforeOverwrite(t *testing.T) {
 	assertFileMode(t, targetPath, 0o640)
 }
 
-func TestExecuteReplaceFailsWhenBackupExists(t *testing.T) {
-	t.Parallel()
+func TestExecuteReplaceRecordsReplacedFileManifestEntry(t *testing.T) {
+	gameRoot := t.TempDir()
+	storageRoot := t.TempDir()
+	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "modded", 0o640)
+	targetPath := writeApplyTestFile(t, gameRoot, "Data/plugin.txt", "vanilla", 0o644)
+	backupPath := filepath.Join(storageRoot, "operation-backups", "Data", "plugin.txt")
+	operation := replaceOperation(sourcePath, targetPath, backupPath)
+	operation.Mod = operationplan.ModContext{ModID: 12, ModName: "SkyUI"}
 
+	result, err := Execute(applicablePlan(operation), Context{
+		GameInstallPath:    gameRoot,
+		GameModStoragePath: storageRoot,
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if !result.Success || len(result.Manifest.ReplacedFiles) != 1 {
+		t.Fatalf("Execute() manifest = %+v, want one replaced file", result.Manifest)
+	}
+	entry := result.Manifest.ReplacedFiles[0]
+	if entry.OperationIndex != 0 || entry.Mod != operation.Mod || entry.SourcePath != filepath.Clean(sourcePath) || entry.TargetPath != filepath.Clean(targetPath) || entry.BackupPath != filepath.Clean(backupPath) {
+		t.Fatalf("replaced file manifest entry = %+v, want operation/mod/source/target/backup metadata", entry)
+	}
+	if entry.SHA256 != sha256String("modded") || entry.SizeBytes != int64(len("modded")) {
+		t.Fatalf("replaced file target integrity = %+v, want SHA-256 and size for modded target", entry)
+	}
+	if entry.BackupSHA256 != sha256String("vanilla") || entry.BackupSizeBytes != int64(len("vanilla")) {
+		t.Fatalf("replaced file backup integrity = %+v, want SHA-256 and size for vanilla backup", entry)
+	}
+}
+
+func TestExecuteReplaceFailsWhenBackupExists(t *testing.T) {
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	sourcePath := writeApplyTestFile(t, t.TempDir(), "mod/plugin.txt", "modded", 0o644)
@@ -130,9 +181,36 @@ func TestExecuteReplaceFailsWhenBackupExists(t *testing.T) {
 	assertFileContents(t, backupPath, "old backup")
 }
 
-func TestExecuteReportsFilesystemFailuresAsResults(t *testing.T) {
-	t.Parallel()
+func TestExecuteRecordsOnlyNewlyCreatedDirectoriesInManifest(t *testing.T) {
+	gameRoot := t.TempDir()
+	storageRoot := t.TempDir()
+	existingDirectory := filepath.Join(gameRoot, "Existing")
+	if err := os.MkdirAll(existingDirectory, 0o755); err != nil {
+		t.Fatalf("os.MkdirAll(%q) error = %v", existingDirectory, err)
+	}
+	newDirectory := filepath.Join(gameRoot, "New")
+	existingOperation := directoryOperation(existingDirectory)
+	existingOperation.Mod = operationplan.ModContext{ModID: 1, ModName: "Already There"}
+	newOperation := directoryOperation(newDirectory)
+	newOperation.Mod = operationplan.ModContext{ModID: 2, ModName: "Directory Maker"}
 
+	result, err := Execute(applicablePlan(existingOperation, newOperation), Context{
+		GameInstallPath:    gameRoot,
+		GameModStoragePath: storageRoot,
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if !result.Success || len(result.Manifest.CreatedDirectories) != 1 {
+		t.Fatalf("Execute() manifest = %+v, want one created directory", result.Manifest)
+	}
+	entry := result.Manifest.CreatedDirectories[0]
+	if entry.OperationIndex != 1 || entry.Mod != newOperation.Mod || entry.TargetPath != filepath.Clean(newDirectory) {
+		t.Fatalf("created directory manifest entry = %+v, want only newly-created directory metadata", entry)
+	}
+}
+
+func TestExecuteReportsFilesystemFailuresAsResults(t *testing.T) {
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
@@ -186,8 +264,6 @@ func TestExecuteReportsFilesystemFailuresAsResults(t *testing.T) {
 }
 
 func TestExecuteRejectsPathsOutsideRootsBeforeWriting(t *testing.T) {
-	t.Parallel()
-
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	outsideRoot := t.TempDir()
@@ -228,8 +304,6 @@ func TestExecuteRejectsPathsOutsideRootsBeforeWriting(t *testing.T) {
 }
 
 func TestExecuteStopsAtFirstFailureAndMarksRemainingSkipped(t *testing.T) {
-	t.Parallel()
-
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()
 	firstSourcePath := writeApplyTestFile(t, t.TempDir(), "mod/first.txt", "first", 0o644)
@@ -263,11 +337,12 @@ func TestExecuteStopsAtFirstFailureAndMarksRemainingSkipped(t *testing.T) {
 	if _, err := os.Stat(skippedTargetPath); !os.IsNotExist(err) {
 		t.Fatalf("os.Stat(%q) error = %v, want missing skipped target", skippedTargetPath, err)
 	}
+	if len(result.Manifest.AddedFiles) != 1 || result.Manifest.AddedFiles[0].TargetPath != filepath.Clean(firstTargetPath) {
+		t.Fatalf("Execute() manifest = %+v, want only the completed first copy", result.Manifest)
+	}
 }
 
 func TestExecuteEmptyApplicablePlanSucceedsAsNoop(t *testing.T) {
-	t.Parallel()
-
 	result, err := Execute(operationplan.OperationPlan{CanApply: true}, Context{
 		GameInstallPath:    t.TempDir(),
 		GameModStoragePath: t.TempDir(),
@@ -277,6 +352,54 @@ func TestExecuteEmptyApplicablePlanSucceedsAsNoop(t *testing.T) {
 	}
 	if !result.Success || result.CompletedCount != 0 || result.FailedCount != 0 || result.SkippedCount != 0 || len(result.Results) != 0 {
 		t.Fatalf("Execute() result = %+v, want no-op success", result)
+	}
+}
+
+func TestExecuteTreatsManifestIntegrityFailureAsOperationFailure(t *testing.T) {
+	originalComputeFileIntegrity := computeFileIntegrity
+	defer func() {
+		computeFileIntegrity = originalComputeFileIntegrity
+	}()
+
+	gameRoot := t.TempDir()
+	storageRoot := t.TempDir()
+	firstSourcePath := writeApplyTestFile(t, t.TempDir(), "mod/first.txt", "first", 0o644)
+	firstTargetPath := filepath.Join(gameRoot, "first.txt")
+	failingSourcePath := writeApplyTestFile(t, t.TempDir(), "mod/failing.txt", "failing", 0o644)
+	failingTargetPath := filepath.Join(gameRoot, "failing.txt")
+	skippedSourcePath := writeApplyTestFile(t, t.TempDir(), "mod/skipped.txt", "skipped", 0o644)
+	skippedTargetPath := filepath.Join(gameRoot, "skipped.txt")
+	forcedErr := errors.New("forced integrity failure")
+	computeFileIntegrity = func(path string) (string, int64, error) {
+		if filepath.Clean(path) == filepath.Clean(failingTargetPath) {
+			return "", 0, forcedErr
+		}
+		return originalComputeFileIntegrity(path)
+	}
+
+	result, err := Execute(applicablePlan(
+		copyOperation(firstSourcePath, firstTargetPath),
+		copyOperation(failingSourcePath, failingTargetPath),
+		copyOperation(skippedSourcePath, skippedTargetPath),
+	), Context{
+		GameInstallPath:    gameRoot,
+		GameModStoragePath: storageRoot,
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if result.Success || result.CompletedCount != 1 || result.FailedCount != 1 || result.SkippedCount != 1 {
+		t.Fatalf("Execute() result = %+v, want manifest integrity failure to stop apply", result)
+	}
+	if len(result.Manifest.AddedFiles) != 1 || result.Manifest.AddedFiles[0].TargetPath != filepath.Clean(firstTargetPath) {
+		t.Fatalf("Execute() manifest = %+v, want prior completed entries only", result.Manifest)
+	}
+	if result.Results[1].Error == nil || !strings.Contains(*result.Results[1].Error, forcedErr.Error()) {
+		t.Fatalf("failed operation = %+v, want integrity failure detail", result.Results[1])
+	}
+	assertFileContents(t, failingTargetPath, "failing")
+	if _, err := os.Stat(skippedTargetPath); !os.IsNotExist(err) {
+		t.Fatalf("os.Stat(%q) error = %v, want missing skipped target", skippedTargetPath, err)
 	}
 }
 
@@ -354,4 +477,9 @@ func assertFileMode(t *testing.T, path string, want os.FileMode) {
 	if got := info.Mode().Perm(); got != want {
 		t.Fatalf("mode(%q) = %v, want %v", path, got, want)
 	}
+}
+
+func sha256String(contents string) string {
+	sum := sha256.Sum256([]byte(contents))
+	return hex.EncodeToString(sum[:])
 }
