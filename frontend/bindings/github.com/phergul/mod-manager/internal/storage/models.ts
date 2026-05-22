@@ -203,14 +203,14 @@ export class ProfileMod {
     }
 }
 
-export class SteamScanResult {
+export class SourceScanResult {
     "Inserted": number;
     "Updated": number;
     "MarkedUnavailable": number;
     "Games": StoredGame[];
 
-    /** Creates a new SteamScanResult instance. */
-    constructor($$source: Partial<SteamScanResult> = {}) {
+    /** Creates a new SourceScanResult instance. */
+    constructor($$source: Partial<SourceScanResult> = {}) {
         if (!("Inserted" in $$source)) {
             this["Inserted"] = 0;
         }
@@ -228,15 +228,15 @@ export class SteamScanResult {
     }
 
     /**
-     * Creates a new SteamScanResult instance from a string or object.
+     * Creates a new SourceScanResult instance from a string or object.
      */
-    static createFrom($$source: any = {}): SteamScanResult {
+    static createFrom($$source: any = {}): SourceScanResult {
         const $$createField3_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
         }
-        return new SteamScanResult($$parsedSource as Partial<SteamScanResult>);
+        return new SourceScanResult($$parsedSource as Partial<SourceScanResult>);
     }
 }
 

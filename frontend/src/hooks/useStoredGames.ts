@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { GetStoredGames, ScanAndSaveSteamGames } from '@bindings/github.com/phergul/mod-manager/internal/services/steamservice';
+import { GetStoredGames, ScanAndSaveGames } from '@bindings/github.com/phergul/mod-manager/internal/services/gamesservice';
 import type {
-  SteamScanResult,
+  SourceScanResult,
   StoredGame,
 } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 
 let hasRunInitialScan = false;
-let initialScanPromise: Promise<SteamScanResult> | null = null;
+let initialScanPromise: Promise<SourceScanResult> | null = null;
 
 const ensureInitialScan = () => {
   if (hasRunInitialScan) {
@@ -17,7 +17,7 @@ const ensureInitialScan = () => {
   }
 
   if (initialScanPromise === null) {
-    initialScanPromise = ScanAndSaveSteamGames().finally(() => {
+    initialScanPromise = ScanAndSaveGames().finally(() => {
       hasRunInitialScan = true;
       initialScanPromise = null;
     });
@@ -67,11 +67,11 @@ export const useStoredGames = () => {
 
     const scanningToastID = addToast({
       duration: 0,
-      message: 'Scanning Steam library...',
+      message: 'Scanning game libraries...',
     });
 
     try {
-      const result = await ScanAndSaveSteamGames();
+      const result = await ScanAndSaveGames();
       await loadGames();
       addToast({
         message: `Scan complete. ${result.Games.length} games found.`,

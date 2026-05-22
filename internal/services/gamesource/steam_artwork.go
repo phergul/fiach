@@ -1,4 +1,4 @@
-package services
+package gamesource
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ const (
 	steamArtworkCache       = "private, no-cache"
 )
 
-func NewSteamArtworkMiddleware(steamService *SteamService) func(http.Handler) http.Handler {
+func NewSteamArtworkMiddleware(steamSource *SteamSource) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			if req.URL.Path != steamArtworkRouteRoot && !strings.HasPrefix(req.URL.Path, steamArtworkRoutePrefix) {
@@ -23,12 +23,12 @@ func NewSteamArtworkMiddleware(steamService *SteamService) func(http.Handler) ht
 				return
 			}
 
-			serveSteamArtwork(rw, req, steamService)
+			serveSteamArtwork(rw, req, steamSource)
 		})
 	}
 }
 
-func serveSteamArtwork(rw http.ResponseWriter, req *http.Request, steamService *SteamService) {
+func serveSteamArtwork(rw http.ResponseWriter, req *http.Request, steamSource *SteamSource) {
 	if req.Method != http.MethodGet && req.Method != http.MethodHead {
 		rw.Header().Set("Allow", http.MethodGet+", "+http.MethodHead)
 		http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
@@ -41,12 +41,12 @@ func serveSteamArtwork(rw http.ResponseWriter, req *http.Request, steamService *
 		return
 	}
 
-	if steamService == nil {
-		http.Error(rw, "Steam service is not configured", http.StatusInternalServerError)
+	if steamSource == nil {
+		http.Error(rw, "Steam source is not configured", http.StatusInternalServerError)
 		return
 	}
 
-	artworkRoot, err := steamService.steamArtworkRoot()
+	artworkRoot, err := steamSource.getArtworkRoot()
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("locate Steam artwork: %v", err), http.StatusInternalServerError)
 		return

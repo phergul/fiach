@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/phergul/mod-manager/internal/services"
+	"github.com/phergul/mod-manager/internal/services/gamesource"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -27,7 +28,8 @@ func main() {
 		log.Fatalf("failed to migrate storage: %v", err)
 	}
 
-	steamService := services.NewSteamService(store)
+	steamSource := gamesource.NewSteamSource(store)
+	gamesService := services.NewGamesService(store, steamSource)
 
 	app := application.New(application.Options{
 		Name:        "mod-manager",
@@ -36,7 +38,7 @@ func main() {
 			application.NewService(services.NewModService(store)),
 			application.NewService(services.NewProfileService(store)),
 			application.NewService(services.NewSettingsService(store)),
-			application.NewService(steamService),
+			application.NewService(gamesService),
 		},
 		OnShutdown: func() {
 			if err := store.Close(); err != nil {
@@ -45,7 +47,7 @@ func main() {
 		},
 		Assets: application.AssetOptions{
 			Handler:    application.AssetFileServerFS(assets),
-			Middleware: services.NewSteamArtworkMiddleware(steamService),
+			Middleware: gamesource.NewSteamArtworkMiddleware(steamSource),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,

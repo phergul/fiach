@@ -1,0 +1,147 @@
+package gamesource
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"sync"
+
+	"github.com/phergul/mod-manager/internal/steam"
+	"github.com/phergul/mod-manager/internal/storage"
+)
+
+const SteamInstallPathSettingKey = "steam.install_path"
+
+type SteamSource struct {
+	store         *storage.Store
+	artworkRootMu sync.Mutex
+	artworkRoot   string
+}
+
+func NewSteamSource(store *storage.Store) *SteamSource {
+	return &SteamSource{
+		store: store,
+	}
+}
+
+func (s *SteamSource) Source() string {
+	return storage.GameSourceSteam
+}
+
+func (s *SteamSource) ScanGames(ctx context.Context) (games []storage.SourceGame, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("scan Steam games: %w", err)
+		}
+	}()
+
+	installed, err := s.getInstalledSteamGames()
+	if err != nil {
+		return nil, err
+	}
+
+	sourceGames := make([]storage.SourceGame, 0, len(installed))
+	for _, game := range installed {
+		sourceGames = append(sourceGames, storage.SourceGame{
+			SourceID:    game.AppID,
+			Name:        game.Name,
+			InstallPath: game.InstallPath,
+		})
+	}
+
+	return sourceGames, nil
+}
+
+func (s *SteamSource) getSteamLibraries() (libraries []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get Steam libraries: %w", err)
+		}
+	}()
+
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return nil, err
+	}
+
+	libraries, err = steam.ParseLibraryFolders(paths)
+	if err != nil {
+		return nil, err
+	}
+
+	return libraries, nil
+}
+
+func (s *SteamSource) getInstalledSteamGames() (games []steam.Game, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get installed Steam games: %w", err)
+		}
+	}()
+
+	libraries, err := s.getSteamLibraries()
+	if err != nil {
+		return nil, err
+	}
+
+	games, err = steam.ScanInstalledGames(libraries)
+	if err != nil {
+		return nil, err
+	}
+
+	return games, nil
+}
+
+func (s *SteamSource) getArtworkRoot() (root string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("resolve Steam artwork root: %w", err)
+		}
+	}()
+
+	s.artworkRootMu.Lock()
+	defer s.artworkRootMu.Unlock()
+
+	if s.artworkRoot != "" {
+		return s.artworkRoot, nil
+	}
+
+	paths, err := s.locateSteamInstallation()
+	if err != nil {
+		return "", err
+	}
+
+	s.artworkRoot = paths.Artwork
+	return s.artworkRoot, nil
+}
+
+func (s *SteamSource) locateSteamInstallation() (paths *steam.SteamPaths, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("locate Steam installation: %w", err)
+		}
+	}()
+
+	if s == nil || s.store == nil {
+		return nil, errors.New("storage is not configured")
+	}
+
+	manualPath, found, err := s.store.GetSetting(context.Background(), SteamInstallPathSettingKey)
+	if err != nil {
+		return nil, fmt.Errorf("read Steam installation setting: %w", err)
+	}
+	if !found {
+		manualPath = ""
+	}
+
+	paths, err = steam.FindSteamPaths(manualPath)
+	if err != nil {
+		if errors.Is(err, steam.ErrSteamNotFound) {
+			return nil, fmt.Errorf("Steam installation could not be found. Configure a valid Steam path in settings or install Steam in a standard location: %w", err)
+		}
+
+		return nil, fmt.Errorf("find Steam installation: %w", err)
+	}
+
+	return paths, nil
+}

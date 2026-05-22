@@ -7,6 +7,6 @@ export {
     ModProfile,
     ModSourceType,
     ProfileMod,
-    SteamScanResult,
+    SourceScanResult,
     StoredGame
 } from "./models.js";

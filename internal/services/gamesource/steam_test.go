@@ -1,4 +1,4 @@
-package services
+package gamesource
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
-func TestSteamServiceLocatesManualSteamPath(t *testing.T) {
+func TestSteamSourceLocatesManualSteamPath(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -27,8 +27,8 @@ func TestSteamServiceLocatesManualSteamPath(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	got, err := service.LocateSteamInstallation()
+	source := NewSteamSource(store)
+	got, err := source.locateSteamInstallation()
 	if err != nil {
 		t.Fatalf("LocateSteamInstallation() error = %v", err)
 	}
@@ -38,7 +38,7 @@ func TestSteamServiceLocatesManualSteamPath(t *testing.T) {
 	}
 }
 
-func TestSteamServiceReturnsClearNotFoundError(t *testing.T) {
+func TestSteamSourceReturnsClearNotFoundError(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -48,8 +48,8 @@ func TestSteamServiceReturnsClearNotFoundError(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	_, err := service.LocateSteamInstallation()
+	source := NewSteamSource(store)
+	_, err := source.locateSteamInstallation()
 	if !errors.Is(err, steam.ErrSteamNotFound) {
 		t.Fatalf("LocateSteamInstallation() error = %v, want ErrSteamNotFound", err)
 	}
@@ -58,7 +58,7 @@ func TestSteamServiceReturnsClearNotFoundError(t *testing.T) {
 	}
 }
 
-func TestSteamServiceGetsSteamLibrariesFromManualPath(t *testing.T) {
+func TestSteamSourceGetsSteamLibrariesFromManualPath(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -83,8 +83,8 @@ func TestSteamServiceGetsSteamLibrariesFromManualPath(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	got, err := service.GetSteamLibraries()
+	source := NewSteamSource(store)
+	got, err := source.getSteamLibraries()
 	if err != nil {
 		t.Fatalf("GetSteamLibraries() error = %v", err)
 	}
@@ -95,7 +95,7 @@ func TestSteamServiceGetsSteamLibrariesFromManualPath(t *testing.T) {
 	}
 }
 
-func TestSteamServiceReturnsLibraryFolderParseError(t *testing.T) {
+func TestSteamSourceReturnsLibraryFolderParseError(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -107,8 +107,8 @@ func TestSteamServiceReturnsLibraryFolderParseError(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	_, err := service.GetSteamLibraries()
+	source := NewSteamSource(store)
+	_, err := source.getSteamLibraries()
 	if err == nil {
 		t.Fatal("GetSteamLibraries() error = nil, want error")
 	}
@@ -120,7 +120,7 @@ func TestSteamServiceReturnsLibraryFolderParseError(t *testing.T) {
 	}
 }
 
-func TestSteamServiceGetsInstalledSteamGames(t *testing.T) {
+func TestSteamSourceGetsInstalledSteamGames(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -147,8 +147,8 @@ func TestSteamServiceGetsInstalledSteamGames(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	got, err := service.GetInstalledSteamGames()
+	source := NewSteamSource(store)
+	got, err := source.getInstalledSteamGames()
 	if err != nil {
 		t.Fatalf("GetInstalledSteamGames() error = %v", err)
 	}
@@ -176,7 +176,7 @@ func TestSteamServiceGetsInstalledSteamGames(t *testing.T) {
 	}
 }
 
-func TestSteamServiceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
+func TestSteamSourceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -188,8 +188,8 @@ func TestSteamServiceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	service := NewSteamService(store)
-	_, err := service.GetInstalledSteamGames()
+	source := NewSteamSource(store)
+	_, err := source.getInstalledSteamGames()
 	if err == nil {
 		t.Fatal("GetInstalledSteamGames() error = nil, want error")
 	}
@@ -198,87 +198,6 @@ func TestSteamServiceReturnsInstalledGamesLibraryFolderError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "get Steam libraries") {
 		t.Fatalf("GetInstalledSteamGames() error = %q, want library context", err.Error())
-	}
-}
-
-func TestSteamServiceScansAndSavesSteamGames(t *testing.T) {
-	t.Parallel()
-
-	store := openMigratedStore(t)
-	defer closeStore(t, store)
-
-	steamRoot := createSteamRoot(t)
-	extraLibrary := filepath.Join(t.TempDir(), "SteamLibrary")
-	writeLibraryFoldersVDF(t, steamRoot, `
-"libraryfolders"
-{
-	"0"
-	{
-		"path"		"`+steamRoot+`"
-	}
-	"1"
-	{
-		"path"		"`+extraLibrary+`"
-	}
-}
-`)
-	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
-	writeAppManifest(t, extraLibrary, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
-	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
-		t.Fatalf("SetSetting() error = %v", err)
-	}
-
-	service := NewSteamService(store)
-	result, err := service.ScanAndSaveSteamGames()
-	if err != nil {
-		t.Fatalf("ScanAndSaveSteamGames() error = %v", err)
-	}
-
-	if result.Inserted != 2 || result.Updated != 0 || result.MarkedUnavailable != 0 {
-		t.Fatalf("result = %+v, want 2 inserted only", result)
-	}
-	if len(result.Games) != 2 {
-		t.Fatalf("Games length = %d, want 2", len(result.Games))
-	}
-}
-
-func TestSteamServiceGetsStoredGames(t *testing.T) {
-	t.Parallel()
-
-	store := openMigratedStore(t)
-	defer closeStore(t, store)
-
-	if _, err := store.DB().Exec(`
-		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
-		VALUES (?, ?, ?, ?, 1, ?)
-	`, "Portal", "/games/Portal", storage.GameSourceSteam, "400", "2026-05-10T00:00:00Z"); err != nil {
-		t.Fatalf("insert stored game: %v", err)
-	}
-
-	service := NewSteamService(store)
-	games, err := service.GetStoredGames()
-	if err != nil {
-		t.Fatalf("GetStoredGames() error = %v", err)
-	}
-
-	if len(games) != 1 {
-		t.Fatalf("GetStoredGames() length = %d, want 1", len(games))
-	}
-	if games[0].Name != "Portal" || games[0].InstallPath != "/games/Portal" {
-		t.Fatalf("GetStoredGames() = %+v, want Portal with install path", games[0])
-	}
-}
-
-func TestSteamServiceGetStoredGamesReturnsStorageError(t *testing.T) {
-	t.Parallel()
-
-	service := NewSteamService(nil)
-	_, err := service.GetStoredGames()
-	if err == nil {
-		t.Fatal("GetStoredGames() error = nil, want error")
-	}
-	if !strings.Contains(err.Error(), "get stored games") {
-		t.Fatalf("GetStoredGames() error = %q, want service context", err.Error())
 	}
 }
 
@@ -297,7 +216,7 @@ func TestSteamArtworkMiddlewareServesExistingArtwork(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	handler := newSteamArtworkTestHandler(NewSteamSource(store))
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
 
@@ -335,7 +254,7 @@ func TestSteamArtworkMiddlewareSupportsHead(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	handler := newSteamArtworkTestHandler(NewSteamSource(store))
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodHead, "/artwork/steam/400/banner", nil)
 
@@ -370,7 +289,7 @@ func TestSteamArtworkMiddlewareReturnsNotFoundForMissingArtwork(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	handler := newSteamArtworkTestHandler(NewSteamSource(store))
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
 
@@ -384,7 +303,7 @@ func TestSteamArtworkMiddlewareReturnsNotFoundForMissingArtwork(t *testing.T) {
 func TestSteamArtworkMiddlewareReturnsNotFoundForInvalidRoutes(t *testing.T) {
 	t.Parallel()
 
-	handler := newSteamArtworkTestHandler(NewSteamService(nil))
+	handler := newSteamArtworkTestHandler(nil)
 	tests := []string{
 		"/artwork/steam",
 		"/artwork/steam/",
@@ -414,7 +333,7 @@ func TestSteamArtworkMiddlewareReturnsNotFoundForInvalidRoutes(t *testing.T) {
 func TestSteamArtworkMiddlewareRejectsUnsupportedMethods(t *testing.T) {
 	t.Parallel()
 
-	handler := newSteamArtworkTestHandler(NewSteamService(nil))
+	handler := newSteamArtworkTestHandler(nil)
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/artwork/steam/400/banner", nil)
 
@@ -434,7 +353,7 @@ func TestSteamArtworkMiddlewarePassesThroughUnrelatedRoutes(t *testing.T) {
 	next := http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
 		rw.WriteHeader(http.StatusTeapot)
 	})
-	handler := NewSteamArtworkMiddleware(NewSteamService(nil))(next)
+	handler := NewSteamArtworkMiddleware(nil)(next)
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/assets/app.css", nil)
 
@@ -460,7 +379,7 @@ func TestSteamArtworkMiddlewareCachesSuccessfulArtworkRoot(t *testing.T) {
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	handler := newSteamArtworkTestHandler(NewSteamSource(store))
 	firstResponse := httptest.NewRecorder()
 	handler.ServeHTTP(firstResponse, httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil))
 	if firstResponse.Code != http.StatusOK {
@@ -488,7 +407,7 @@ func TestSteamArtworkMiddlewareReturnsServerErrorForSteamLookupFailure(t *testin
 		t.Fatalf("SetSetting() error = %v", err)
 	}
 
-	handler := newSteamArtworkTestHandler(NewSteamService(store))
+	handler := newSteamArtworkTestHandler(NewSteamSource(store))
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/artwork/steam/400/banner", nil)
 
@@ -499,34 +418,12 @@ func TestSteamArtworkMiddlewareReturnsServerErrorForSteamLookupFailure(t *testin
 	}
 }
 
-func TestSteamServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
-	t.Parallel()
+func newSteamArtworkTestHandler(source *SteamSource) http.Handler {
+	next := http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+		rw.WriteHeader(http.StatusNotFound)
+	})
 
-	store := openMigratedStore(t)
-	defer closeStore(t, store)
-
-	steamRoot := createSteamRoot(t)
-	writeLibraryFoldersVDF(t, steamRoot, `"libraryfolders"`)
-	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
-		t.Fatalf("SetSetting() error = %v", err)
-	}
-
-	service := NewSteamService(store)
-	_, err := service.ScanAndSaveSteamGames()
-	if err == nil {
-		t.Fatal("ScanAndSaveSteamGames() error = nil, want error")
-	}
-	if !strings.Contains(err.Error(), "scan and save Steam games") {
-		t.Fatalf("ScanAndSaveSteamGames() error = %q, want scan/save context", err.Error())
-	}
-
-	var count int
-	if err := store.DB().Get(&count, "SELECT COUNT(*) FROM games"); err != nil {
-		t.Fatalf("count games: %v", err)
-	}
-	if count != 0 {
-		t.Fatalf("game count = %d, want 0", count)
-	}
+	return NewSteamArtworkMiddleware(source)(next)
 }
 
 func openMigratedStore(t *testing.T) *storage.Store {
@@ -549,14 +446,6 @@ func closeStore(t *testing.T, store *storage.Store) {
 	if err := store.Close(); err != nil {
 		t.Fatalf("Close() error = %v", err)
 	}
-}
-
-func newSteamArtworkTestHandler(service *SteamService) http.Handler {
-	next := http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
-		rw.WriteHeader(http.StatusNotFound)
-	})
-
-	return NewSteamArtworkMiddleware(service)(next)
 }
 
 func createSteamRoot(t *testing.T) string {
