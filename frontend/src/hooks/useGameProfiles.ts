@@ -55,32 +55,44 @@ export const useGameProfiles = (gameID: number | null) => {
     return loadedProfileMods;
   }, []);
 
-  const loadProfiles = useCallback(async () => {
+  const loadProfiles = useCallback(async (isCurrent: () => boolean = () => true) => {
     if (gameID === null) {
-      setProfiles([]);
-      setProfileModsByProfileID({});
-      setIsLoading(false);
-      setLoadError(null);
+      if (isCurrent()) {
+        setProfiles([]);
+        setProfileModsByProfileID({});
+        setIsLoading(false);
+        setLoadError(null);
+      }
       return [];
     }
 
-    setIsLoading(true);
-    setLoadError(null);
+    if (isCurrent()) {
+      setIsLoading(true);
+      setLoadError(null);
+    }
 
     try {
       const loadedProfiles = await ListProfiles(gameID);
       const profileModEntries = await loadProfileModEntries(loadedProfiles);
-      setProfiles(loadedProfiles);
-      setProfileModsByProfileID(Object.fromEntries(profileModEntries));
+      if (isCurrent()) {
+        setProfiles(loadedProfiles);
+        setProfileModsByProfileID(Object.fromEntries(profileModEntries));
+      }
       return loadedProfiles;
     } catch (error) {
       const message = getErrorMessage(error);
-      setLoadError(message);
+      if (isCurrent()) {
+        setLoadError(message);
+      }
       throw error;
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+      }
     }
   }, [gameID]);
+
+  const refreshProfiles = useCallback(() => loadProfiles(), [loadProfiles]);
 
   const runProfileAction = useCallback(
     async <T,>(action: ProfileAction, operation: () => Promise<T>, successMessage: string) => {
@@ -259,42 +271,14 @@ export const useGameProfiles = (gameID: number | null) => {
   useEffect(() => {
     let isMounted = true;
 
-    const loadInitialProfiles = async () => {
-      if (gameID === null) {
-        setProfiles([]);
-        setProfileModsByProfileID({});
-        setLoadError(null);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setLoadError(null);
-
-      try {
-        const loadedProfiles = await ListProfiles(gameID);
-        const profileModEntries = await loadProfileModEntries(loadedProfiles);
-        if (isMounted) {
-          setProfiles(loadedProfiles);
-          setProfileModsByProfileID(Object.fromEntries(profileModEntries));
-        }
-      } catch (error) {
-        if (isMounted) {
-          setLoadError(getErrorMessage(error));
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadInitialProfiles();
+    loadProfiles(() => isMounted).catch(() => {
+      // Load errors are stored in hook state for the caller to render.
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [gameID]);
+  }, [loadProfiles]);
 
   return {
     activeProfile: profiles.find((profile) => profile.IsActive) ?? null,
@@ -311,7 +295,7 @@ export const useGameProfiles = (gameID: number | null) => {
     profiles,
     removeModFromProfile,
     reorderProfileMods,
-    refreshProfiles: loadProfiles,
+    refreshProfiles,
     renameProfile,
     setProfileModEnabled,
   };

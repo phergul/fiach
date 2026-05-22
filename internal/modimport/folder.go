@@ -2,10 +2,10 @@ package modimport
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/phergul/mod-manager/internal/fileops"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -133,28 +133,13 @@ func copyImportPath(sourcePath string, destinationPath string) error {
 	return copyImportFile(sourcePath, destinationPath, info.Mode().Perm())
 }
 
-func copyImportFile(sourcePath string, destinationPath string, permissions os.FileMode) (err error) {
-	source, err := os.Open(sourcePath)
-	if err != nil {
-		return fmt.Errorf("open source file %q: %w", sourcePath, err)
-	}
-	defer func() {
-		if closeErr := source.Close(); err == nil && closeErr != nil {
-			err = fmt.Errorf("close source file %q: %w", sourcePath, closeErr)
-		}
-	}()
-
-	destination, err := os.OpenFile(destinationPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, permissions)
-	if err != nil {
-		return fmt.Errorf("create destination file %q: %w", destinationPath, err)
-	}
-	defer func() {
-		if closeErr := destination.Close(); err == nil && closeErr != nil {
-			err = fmt.Errorf("close destination file %q: %w", destinationPath, closeErr)
-		}
-	}()
-
-	if _, err := io.Copy(destination, source); err != nil {
+func copyImportFile(sourcePath string, destinationPath string, permissions os.FileMode) error {
+	if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
+		SourcePath: sourcePath,
+		TargetPath: destinationPath,
+		Mode:       permissions,
+		OpenLabel:  "source file",
+	}); err != nil {
 		return fmt.Errorf("copy source file %q: %w", sourcePath, err)
 	}
 

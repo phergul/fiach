@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
+	"github.com/phergul/mod-manager/internal/fileops"
 )
 
 func TestExecuteRestoresFilesRemovesSafeDirectoriesAndDeletesBackups(t *testing.T) {
@@ -288,9 +289,9 @@ func restoreTestIntegrityForContent(t *testing.T, content string) (string, int64
 	t.Helper()
 
 	path := writeRestoreTestFile(t, t.TempDir(), "file.txt", content)
-	hash, size, err := fileIntegrity(path)
+	hash, size, err := fileops.FileIntegrity(path)
 	if err != nil {
-		t.Fatalf("fileIntegrity() error = %v", err)
+		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 
 	return hash, size
@@ -299,9 +300,9 @@ func restoreTestIntegrityForContent(t *testing.T, content string) (string, int64
 func restoreTestSHA(t *testing.T, path string) string {
 	t.Helper()
 
-	hash, _, err := fileIntegrity(path)
+	hash, _, err := fileops.FileIntegrity(path)
 	if err != nil {
-		t.Fatalf("fileIntegrity() error = %v", err)
+		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 
 	return hash
