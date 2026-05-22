@@ -1,11 +1,16 @@
 package services
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/operationplan"
 	"github.com/phergul/mod-manager/internal/storage"
@@ -146,6 +151,45 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	if string(contents) != "modded" {
 		t.Fatalf("ApplyProfileOperationPlan() wrote %q, want modded", contents)
 	}
+
+	state, found, err := store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", err)
+	}
+	if !found {
+		t.Fatal("GetAppliedProfileState() found = false, want persisted apply state")
+	}
+	if state.GameID != gameID || state.ProfileID != profileID || state.AppliedAt == "" {
+		t.Fatalf("applied profile state = %+v, want game/profile linkage and applied timestamp", state)
+	}
+
+	var manifest appliedstate.ManifestDocument
+	if err := json.Unmarshal([]byte(state.ManifestJSON), &manifest); err != nil {
+		t.Fatalf("unmarshal manifest JSON: %v", err)
+	}
+	if manifest.Version != appliedstate.DocumentVersion || len(manifest.CreatedDirectories) != 1 || len(manifest.AddedFiles) != 1 {
+		t.Fatalf("manifest JSON = %+v, want created directory and added file", manifest)
+	}
+	if manifest.AddedFiles[0].TargetPath != targetPath || manifest.AddedFiles[0].SHA256 == "" || manifest.AddedFiles[0].SizeBytes != int64(len("modded")) {
+		t.Fatalf("manifest added file = %+v, want target integrity", manifest.AddedFiles[0])
+	}
+	if manifest.AddedFiles[0].Mod.ID != 1 || manifest.AddedFiles[0].Mod.Name != "SkyUI" {
+		t.Fatalf("manifest added file mod = %+v, want tagged mod document", manifest.AddedFiles[0].Mod)
+	}
+
+	var snapshot appliedstate.ProfileSnapshotDocument
+	if err := json.Unmarshal([]byte(state.ProfileSnapshotJSON), &snapshot); err != nil {
+		t.Fatalf("unmarshal profile snapshot JSON: %v", err)
+	}
+	if snapshot.Version != appliedstate.DocumentVersion || !snapshot.CanApply || len(snapshot.Operations) != 2 {
+		t.Fatalf("profile snapshot JSON = %+v, want two applicable operations", snapshot)
+	}
+	if snapshot.Operations[1].Mod.ID != 1 || snapshot.Operations[1].Mod.Name != "SkyUI" {
+		t.Fatalf("profile snapshot operation mod = %+v, want tagged mod document", snapshot.Operations[1].Mod)
+	}
+	if state.ProfileSnapshotHash != sha256Hex(state.ProfileSnapshotJSON) {
+		t.Fatalf("profile snapshot hash = %q, want SHA-256 of snapshot JSON", state.ProfileSnapshotHash)
+	}
 }
 
 func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.T) {
@@ -176,6 +220,136 @@ func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.
 	}
 	if result.Success || result.FailedCount != 1 || result.Results[0].Error == nil {
 		t.Fatalf("ApplyProfileOperationPlan() = %+v, want failed result", result)
+	}
+	_, found, err := store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", err)
+	}
+	if found {
+		t.Fatal("GetAppliedProfileState() found = true, want failed apply to leave no state")
+	}
+}
+
+func TestProfileServiceApplyProfileOperationPlanReplacesExistingStateOnlyAfterSuccess(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	firstProfileID := insertServiceProfileTestProfile(t, store, gameID, "First")
+	secondProfileID := insertServiceProfileTestProfile(t, store, gameID, "Second")
+	service := NewProfileService(store)
+
+	firstSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
+	firstSourcePath := filepath.Join(firstSourceRoot, "first.txt")
+	firstTargetPath := filepath.Join(gameRoot, "first.txt")
+	firstResult, err := service.ApplyProfileOperationPlan(firstProfileID, operationplan.OperationPlan{
+		CanApply: true,
+		Operations: []operationplan.Operation{
+			{
+				Type:       operationplan.OperationTypeCopy,
+				SourcePath: &firstSourcePath,
+				TargetPath: firstTargetPath,
+				Mod: operationplan.ModContext{
+					ModID:   1,
+					ModName: "First Mod",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ApplyProfileOperationPlan() first error = %v", err)
+	}
+	if !firstResult.Success {
+		t.Fatalf("ApplyProfileOperationPlan() first = %+v, want success", firstResult)
+	}
+
+	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
+	failedResult, err := service.ApplyProfileOperationPlan(secondProfileID, operationplan.OperationPlan{
+		CanApply: true,
+		Operations: []operationplan.Operation{
+			{
+				Type:       operationplan.OperationTypeCopy,
+				SourcePath: &missingSourcePath,
+				TargetPath: filepath.Join(gameRoot, "missing.txt"),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ApplyProfileOperationPlan() failed apply error = %v, want partial result only", err)
+	}
+	if failedResult.Success {
+		t.Fatalf("ApplyProfileOperationPlan() failed apply = %+v, want failure", failedResult)
+	}
+
+	state, found, err := store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", err)
+	}
+	if !found || state.ProfileID != firstProfileID {
+		t.Fatalf("applied profile state = %+v found=%v, want original first profile state", state, found)
+	}
+}
+
+func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenceFails(t *testing.T) {
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        `{"version":1}`,
+		ProfileSnapshotJSON: `{"version":1}`,
+		ProfileSnapshotHash: "previous",
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
+	}
+	if _, err := store.DB().Exec(`
+		CREATE TRIGGER fail_applied_profile_state_update
+		BEFORE UPDATE ON applied_profile_states
+		BEGIN
+			SELECT RAISE(ABORT, 'forced applied state failure');
+		END
+	`); err != nil {
+		t.Fatalf("create failing trigger: %v", err)
+	}
+
+	sourceRoot := makeProfilePlanSourceTree(t, map[string]string{"modded.txt": "modded"})
+	sourcePath := filepath.Join(sourceRoot, "modded.txt")
+	targetPath := filepath.Join(gameRoot, "modded.txt")
+	service := NewProfileService(store)
+	result, err := service.ApplyProfileOperationPlan(profileID, operationplan.OperationPlan{
+		CanApply: true,
+		Operations: []operationplan.Operation{
+			{
+				Type:       operationplan.OperationTypeCopy,
+				SourcePath: &sourcePath,
+				TargetPath: targetPath,
+			},
+		},
+	})
+	if err == nil {
+		t.Fatal("ApplyProfileOperationPlan() error = nil, want persistence error")
+	}
+	if !result.Success || result.CompletedCount != 1 {
+		t.Fatalf("ApplyProfileOperationPlan() result = %+v, want populated successful apply result", result)
+	}
+	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "save applied profile state") || !strings.Contains(err.Error(), "forced applied state failure") {
+		t.Fatalf("ApplyProfileOperationPlan() error = %q, want service and persistence detail", err.Error())
+	}
+	assertServiceFileContents(t, targetPath, "modded")
+
+	state, found, readErr := store.GetAppliedProfileState(context.Background(), gameID)
+	if readErr != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", readErr)
+	}
+	if !found || state.ProfileSnapshotHash != "previous" {
+		t.Fatalf("applied profile state = %+v found=%v, want previous state unchanged", state, found)
 	}
 }
 
@@ -278,6 +452,23 @@ func servicePlanHasIssueKind(issues []operationplan.PlanIssue, kind operationpla
 	}
 
 	return false
+}
+
+func sha256Hex(value string) string {
+	sum := sha256.Sum256([]byte(value))
+	return hex.EncodeToString(sum[:])
+}
+
+func assertServiceFileContents(t *testing.T, path string, want string) {
+	t.Helper()
+
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("os.ReadFile(%q) error = %v", path, err)
+	}
+	if string(contents) != want {
+		t.Fatalf("os.ReadFile(%q) = %q, want %q", path, contents, want)
+	}
 }
 
 func makeProfilePlanSourceTree(t *testing.T, files map[string]string) string {

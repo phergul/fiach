@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/applyplan"
 	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/mod-manager/internal/storage"
 )
 
 func (s *ProfileService) BuildProfileOperationPlan(profileID int64) (plan operationplan.OperationPlan, err error) {
@@ -62,8 +64,45 @@ func (s *ProfileService) ApplyProfileOperationPlan(profileID int64, plan operati
 		return operationplan.ApplyOperationPlanResult{}, err
 	}
 
-	return applyplan.Execute(plan, applyplan.Context{
+	result, err = applyplan.Execute(plan, applyplan.Context{
 		GameInstallPath:    game.InstallPath,
 		GameModStoragePath: gameModStoragePath,
 	})
+	if err != nil {
+		return operationplan.ApplyOperationPlanResult{}, err
+	}
+	if !result.Success {
+		return result, nil
+	}
+
+	if err := s.saveAppliedProfileState(context.Background(), game.ID, profileID, plan, result.Manifest); err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int64, profileID int64, plan operationplan.OperationPlan, manifest operationplan.AppliedOperationManifest) error {
+	manifestJSON, err := appliedstate.EncodeManifest(appliedstate.BuildManifestDocument(manifest))
+	if err != nil {
+		return fmt.Errorf("encode applied manifest: %w", err)
+	}
+
+	snapshot, err := appliedstate.EncodeProfileSnapshot(appliedstate.BuildProfileSnapshotDocument(plan))
+	if err != nil {
+		return fmt.Errorf("encode profile snapshot: %w", err)
+	}
+
+	_, err = s.store.SaveAppliedProfileState(ctx, storage.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        manifestJSON,
+		ProfileSnapshotJSON: snapshot.JSON,
+		ProfileSnapshotHash: snapshot.Hash,
+	})
+	if err != nil {
+		return fmt.Errorf("save applied profile state: %w", err)
+	}
+
+	return nil
 }

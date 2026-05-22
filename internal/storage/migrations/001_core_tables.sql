@@ -62,17 +62,13 @@ CREATE TABLE profile_mods (
     PRIMARY KEY(profile_id, mod_id)
 );
 
-CREATE TABLE applied_manifests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    profile_id INTEGER NOT NULL,
-    mod_id INTEGER NOT NULL,
-    source_path TEXT NOT NULL,
-    destination_path TEXT NOT NULL,
-    checksum TEXT,
-    file_size INTEGER,
-    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(profile_id, mod_id) REFERENCES profile_mods(profile_id, mod_id) ON DELETE CASCADE,
-    UNIQUE(profile_id, destination_path)
+CREATE TABLE applied_profile_states (
+    game_id INTEGER PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
+    profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    manifest_json TEXT NOT NULL,
+    profile_snapshot_json TEXT NOT NULL,
+    profile_snapshot_hash TEXT NOT NULL,
+    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE settings (
@@ -91,10 +87,10 @@ CREATE UNIQUE INDEX idx_profiles_active_game_id
 ON profiles(game_id)
 WHERE is_active = 1;
 CREATE INDEX idx_profile_mods_mod_id ON profile_mods(mod_id);
-CREATE INDEX idx_applied_manifests_profile_mod ON applied_manifests(profile_id, mod_id);
+CREATE INDEX idx_applied_profile_states_profile_id ON applied_profile_states(profile_id);
 
 -- +goose Down
-DROP INDEX IF EXISTS idx_applied_manifests_profile_mod;
+DROP INDEX IF EXISTS idx_applied_profile_states_profile_id;
 DROP INDEX IF EXISTS idx_profile_mods_mod_id;
 DROP INDEX IF EXISTS idx_profiles_active_game_id;
 DROP INDEX IF EXISTS idx_profiles_game_id;
@@ -103,7 +99,7 @@ DROP INDEX IF EXISTS idx_mods_game_original_source_path;
 DROP INDEX IF EXISTS idx_mods_game_id;
 
 DROP TABLE IF EXISTS settings;
-DROP TABLE IF EXISTS applied_manifests;
+DROP TABLE IF EXISTS applied_profile_states;
 DROP TABLE IF EXISTS profile_mods;
 DROP TABLE IF EXISTS profiles;
 DROP TABLE IF EXISTS mod_install_configs;

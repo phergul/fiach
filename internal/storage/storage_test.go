@@ -76,7 +76,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"mod_install_configs",
 		"profiles",
 		"profile_mods",
-		"applied_manifests",
+		"applied_profile_states",
 		"settings",
 	} {
 		if !tableExists(t, store, table) {
@@ -189,7 +189,7 @@ func TestMigrateDownDropsCoreTables(t *testing.T) {
 		"mods",
 		"profiles",
 		"profile_mods",
-		"applied_manifests",
+		"applied_profile_states",
 		"settings",
 	} {
 		if tableExists(t, store, table) {
@@ -468,17 +468,17 @@ func TestDeletingGameCascadesDependents(t *testing.T) {
 	}
 
 	if _, err := store.DB().Exec(`
-		INSERT INTO applied_manifests (profile_id, mod_id, source_path, destination_path, checksum, file_size)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`, profileID, modID, "/mods/skyui/file.esp", "/games/skyrim/Data/file.esp", "abc123", 42); err != nil {
-		t.Fatalf("insert applied_manifest: %v", err)
+		INSERT INTO applied_profile_states (game_id, profile_id, manifest_json, profile_snapshot_json, profile_snapshot_hash)
+		VALUES (?, ?, ?, ?, ?)
+	`, gameID, profileID, `{"version":1}`, `{"version":1}`, "abc123"); err != nil {
+		t.Fatalf("insert applied_profile_state: %v", err)
 	}
 
 	if _, err := store.DB().Exec("DELETE FROM games WHERE id = ?", gameID); err != nil {
 		t.Fatalf("delete game: %v", err)
 	}
 
-	for _, table := range []string{"games", "mods", "profiles", "profile_mods", "applied_manifests"} {
+	for _, table := range []string{"games", "mods", "profiles", "profile_mods", "applied_profile_states"} {
 		var count int
 		if err := store.DB().Get(&count, "SELECT COUNT(*) FROM "+table); err != nil {
 			t.Fatalf("count %s: %v", table, err)
