@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/installpath"
 )
 
@@ -72,6 +73,12 @@ func BuildPreview(input PreviewInput) (preview Preview, err error) {
 		}
 
 		if sourceFilePath == input.SourcePath {
+			return nil
+		}
+		if fileignore.Has(entry.Name()) {
+			if entry.IsDir() {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 

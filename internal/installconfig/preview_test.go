@@ -12,6 +12,8 @@ func TestBuildPreviewMapsGenericCopyTargetPaths(t *testing.T) {
 
 	sourcePath := makePreviewSource(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
+		"Data/.DS_Store": "metadata",
+		".DS_Store":      "metadata",
 		"readme.txt":     "hello",
 	})
 

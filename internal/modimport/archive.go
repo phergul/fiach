@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -161,6 +162,9 @@ func archiveLayout(files []*zip.File) (archiveImportLayout, error) {
 		if err != nil {
 			return archiveImportLayout{}, err
 		}
+		if archiveEntryIgnored(cleanName) {
+			continue
+		}
 
 		mode := file.FileInfo().Mode()
 		isDir := file.FileInfo().IsDir()
@@ -238,6 +242,16 @@ func topLevelArchiveName(name string) (root string, hasChild bool) {
 	}
 
 	return parts[0], true
+}
+
+func archiveEntryIgnored(name string) bool {
+	for _, part := range strings.Split(name, "/") {
+		if fileignore.Has(part) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func safeDestinationPath(root string, entryName string) (string, error) {

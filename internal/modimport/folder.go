@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/fileops"
 	"github.com/phergul/mod-manager/internal/storage"
 )
@@ -59,7 +60,7 @@ func (s FolderSource) Validate() error {
 	if err != nil {
 		return fmt.Errorf("read source folder entries: %w", err)
 	}
-	if len(entries) == 0 {
+	if !hasImportableEntry(entries) {
 		return fmt.Errorf("source folder %q is empty", s.originalPath)
 	}
 
@@ -91,6 +92,10 @@ func copyImportFolder(sourcePath string, destinationPath string) error {
 	}
 
 	for _, entry := range entries {
+		if fileignore.Has(entry.Name()) {
+			continue
+		}
+
 		sourceEntryPath := filepath.Join(sourcePath, entry.Name())
 		destinationEntryPath := filepath.Join(destinationPath, entry.Name())
 		if err := copyImportPath(sourceEntryPath, destinationEntryPath); err != nil {
@@ -118,6 +123,10 @@ func copyImportPath(sourcePath string, destinationPath string) error {
 		}
 
 		for _, entry := range entries {
+			if fileignore.Has(entry.Name()) {
+				continue
+			}
+
 			if err := copyImportPath(filepath.Join(sourcePath, entry.Name()), filepath.Join(destinationPath, entry.Name())); err != nil {
 				return err
 			}
@@ -131,6 +140,16 @@ func copyImportPath(sourcePath string, destinationPath string) error {
 	}
 
 	return copyImportFile(sourcePath, destinationPath, info.Mode().Perm())
+}
+
+func hasImportableEntry(entries []os.DirEntry) bool {
+	for _, entry := range entries {
+		if !fileignore.Has(entry.Name()) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func copyImportFile(sourcePath string, destinationPath string, permissions os.FileMode) error {

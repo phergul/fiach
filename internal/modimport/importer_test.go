@@ -160,6 +160,14 @@ func TestFolderSourceValidation(t *testing.T) {
 	if err := fileSource.Validate(); err == nil || !strings.Contains(err.Error(), "is not a folder") {
 		t.Fatalf("Validate() file error = %v, want not folder context", err)
 	}
+
+	ignoredOnlySource, err := NewFolderSource(makeSourceFolder(t, map[string]string{".DS_Store": "metadata"}))
+	if err != nil {
+		t.Fatalf("NewFolderSource() ignored-only error = %v", err)
+	}
+	if err := ignoredOnlySource.Validate(); err == nil || !strings.Contains(err.Error(), "is empty") {
+		t.Fatalf("Validate() ignored-only error = %v, want empty context", err)
+	}
 }
 
 func TestFolderSourceCopiesNestedFiles(t *testing.T) {
@@ -167,6 +175,8 @@ func TestFolderSourceCopiesNestedFiles(t *testing.T) {
 
 	sourcePath := makeSourceFolder(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
+		"Data/.DS_Store": "metadata",
+		".DS_Store":      "metadata",
 		"readme.txt":     "hello",
 	})
 	source, err := NewFolderSource(sourcePath)
@@ -181,6 +191,12 @@ func TestFolderSourceCopiesNestedFiles(t *testing.T) {
 
 	assertFileContents(t, filepath.Join(destinationPath, "Data", "SkyUI.esp"), "plugin")
 	assertFileContents(t, filepath.Join(destinationPath, "readme.txt"), "hello")
+	if _, err := os.Stat(filepath.Join(destinationPath, ".DS_Store")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ignored root file stat error = %v, want not exist", err)
+	}
+	if _, err := os.Stat(filepath.Join(destinationPath, "Data", ".DS_Store")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ignored nested file stat error = %v, want not exist", err)
+	}
 }
 
 func TestFolderSourceFollowsSymlinkTargets(t *testing.T) {
@@ -215,6 +231,8 @@ func TestArchiveSourceExtractsAndStripsSingleRoot(t *testing.T) {
 
 	archivePath := makeZipArchive(t, map[string]string{
 		"SkyUI/Data/SkyUI.esp": "plugin",
+		"SkyUI/Data/.DS_Store": "metadata",
+		"SkyUI/.DS_Store":      "metadata",
 		"SkyUI/readme.txt":     "hello",
 	})
 	source, err := NewArchiveSource(archivePath)
@@ -229,6 +247,12 @@ func TestArchiveSourceExtractsAndStripsSingleRoot(t *testing.T) {
 
 	assertFileContents(t, filepath.Join(destinationPath, "Data", "SkyUI.esp"), "plugin")
 	assertFileContents(t, filepath.Join(destinationPath, "readme.txt"), "hello")
+	if _, err := os.Stat(filepath.Join(destinationPath, ".DS_Store")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ignored archive root file stat error = %v, want not exist", err)
+	}
+	if _, err := os.Stat(filepath.Join(destinationPath, "Data", ".DS_Store")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ignored archive nested file stat error = %v, want not exist", err)
+	}
 	if _, err := os.Stat(filepath.Join(destinationPath, "SkyUI")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("wrapper folder stat error = %v, want not exist", err)
 	}

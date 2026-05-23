@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/storage"
 )
@@ -69,6 +70,9 @@ func managedModPathSize(path string) int64 {
 	}
 
 	for _, entry := range entries {
+		if fileignore.Has(entry.Name()) {
+			continue
+		}
 		if entry.Type()&fs.ModeSymlink != 0 {
 			continue
 		}

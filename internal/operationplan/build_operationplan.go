@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/installpath"
 )
@@ -204,6 +205,12 @@ func (b *modPlanBuilder) walkSourceRoot(sourceRoot string) error {
 			return walkErr
 		}
 		if sourceFilePath == sourceRoot {
+			return nil
+		}
+		if fileignore.Has(entry.Name()) {
+			if entry.IsDir() {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 

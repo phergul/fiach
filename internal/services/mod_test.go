@@ -41,6 +41,8 @@ func TestModServiceGetsManagedModStorageUsage(t *testing.T) {
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	firstModPath := makeSourceFolder(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
+		"Data/.DS_Store": "metadata",
+		".DS_Store":      "metadata",
 		"readme.txt":     "hello",
 	})
 	secondModPath := makeSourceFolder(t, map[string]string{

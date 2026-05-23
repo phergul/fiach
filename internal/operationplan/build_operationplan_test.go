@@ -87,6 +87,48 @@ func TestBuildOperationPlanCreatesDirectoriesAndFilesInStableOrder(t *testing.T)
 	}
 }
 
+func TestBuildOperationPlanIgnoresConfiguredFileNames(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Skyrim", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+
+	sourcePath := makePlannerSourceTree(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+		"Data/.DS_Store": "metadata",
+		".DS_Store":      "metadata",
+	})
+	modID := insertPlannerMod(t, store, gameID, "SkyUI", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, ".", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if !plan.CanApply || len(plan.Issues) != 0 {
+		t.Fatalf("BuildOperationPlan() plan metadata = %+v, want applicable plan", plan)
+	}
+	if len(plan.Operations) != 2 {
+		t.Fatalf("BuildOperationPlan() operation count = %d, want directory plus real file: %+v", len(plan.Operations), plan.Operations)
+	}
+	for _, operation := range plan.Operations {
+		if strings.Contains(operation.TargetPath, ".DS_Store") {
+			t.Fatalf("BuildOperationPlan() operation = %+v, want ignored file omitted", operation)
+		}
+	}
+}
+
 func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithWarningAndManagedBackupPath(t *testing.T) {
 	t.Parallel()
 
