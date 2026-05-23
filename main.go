@@ -6,8 +6,8 @@ import (
 	_ "embed"
 	"log"
 
-	"github.com/phergul/mod-manager/internal/services"
 	"github.com/phergul/mod-manager/internal/gamesource"
+	"github.com/phergul/mod-manager/internal/services"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )

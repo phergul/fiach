@@ -15,59 +15,53 @@ import * as restoreplan$0 from "../restoreplan/models.js";
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
-export function ActivateProfile(gameID: number, profileID: number): $CancellablePromise<storage$0.ModProfile> {
-    return $Call.ByID(1277552771, gameID, profileID).then(($result: any) => {
-        return $$createType0($result);
-    });
-}
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as $models from "./models.js";
 
 export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<storage$0.ProfileMod> {
     return $Call.ByID(2973118192, profileID, modID).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType0($result);
     });
 }
 
 export function ApplyProfileOperationPlan(profileID: number, plan: operationplan$0.OperationPlan): $CancellablePromise<operationplan$0.ApplyOperationPlanResult> {
     return $Call.ByID(3906686572, profileID, plan).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType1($result);
     });
 }
 
 export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<operationplan$0.OperationPlan> {
     return $Call.ByID(1803445544, profileID).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType2($result);
     });
 }
 
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
     return $Call.ByID(4253656700, gameID, name).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType3($result);
     });
-}
-
-export function DeactivateProfile(gameID: number): $CancellablePromise<void> {
-    return $Call.ByID(2619307730, gameID);
 }
 
 export function DeleteProfile(profileID: number): $CancellablePromise<void> {
     return $Call.ByID(3036503493, profileID);
 }
 
-export function GetActiveProfile(gameID: number): $CancellablePromise<storage$0.ModProfile | null> {
-    return $Call.ByID(4123009592, gameID).then(($result: any) => {
-        return $$createType4($result);
+export function GetAppliedProfileSummary(gameID: number): $CancellablePromise<$models.AppliedProfileSummary | null> {
+    return $Call.ByID(3870728601, gameID).then(($result: any) => {
+        return $$createType5($result);
     });
 }
 
 export function ListProfileMods(profileID: number): $CancellablePromise<storage$0.ProfileMod[]> {
     return $Call.ByID(1055361377, profileID).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<storage$0.ModProfile[]> {
     return $Call.ByID(3489323205, gameID).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType7($result);
     });
 }
 
@@ -77,34 +71,35 @@ export function RemoveModFromProfile(profileID: number, modID: number): $Cancell
 
 export function RenameProfile(profileID: number, name: string): $CancellablePromise<storage$0.ModProfile> {
     return $Call.ByID(1972408074, profileID, name).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType3($result);
     });
 }
 
 export function ReorderProfileMods(profileID: number, modIDs: number[]): $CancellablePromise<storage$0.ProfileMod[]> {
     return $Call.ByID(3311644578, profileID, modIDs).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
 }
 
 export function RestoreVanillaState(gameID: number): $CancellablePromise<restoreplan$0.RestoreResult> {
     return $Call.ByID(969457823, gameID).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType8($result);
     });
 }
 
 export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<storage$0.ProfileMod> {
     return $Call.ByID(734528755, profileID, modID, enabled).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType0($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = storage$0.ModProfile.createFrom;
-const $$createType1 = storage$0.ProfileMod.createFrom;
-const $$createType2 = operationplan$0.ApplyOperationPlanResult.createFrom;
-const $$createType3 = operationplan$0.OperationPlan.createFrom;
-const $$createType4 = $Create.Nullable($$createType0);
-const $$createType5 = $Create.Array($$createType1);
+const $$createType0 = storage$0.ProfileMod.createFrom;
+const $$createType1 = operationplan$0.ApplyOperationPlanResult.createFrom;
+const $$createType2 = operationplan$0.OperationPlan.createFrom;
+const $$createType3 = storage$0.ModProfile.createFrom;
+const $$createType4 = $models.AppliedProfileSummary.createFrom;
+const $$createType5 = $Create.Nullable($$createType4);
 const $$createType6 = $Create.Array($$createType0);
-const $$createType7 = restoreplan$0.RestoreResult.createFrom;
+const $$createType7 = $Create.Array($$createType3);
+const $$createType8 = restoreplan$0.RestoreResult.createFrom;

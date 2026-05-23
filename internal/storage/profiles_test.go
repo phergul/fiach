@@ -20,8 +20,8 @@ func TestCreateProfileForGame(t *testing.T) {
 		t.Fatalf("CreateProfile() error = %v", err)
 	}
 
-	if profile.ID == 0 || profile.GameID != gameID || profile.Name != "Default" || profile.IsActive {
-		t.Fatalf("CreateProfile() = %+v, want inactive profile for game", profile)
+	if profile.ID == 0 || profile.GameID != gameID || profile.Name != "Default" {
+		t.Fatalf("CreateProfile() = %+v, want profile for game", profile)
 	}
 	if profile.CreatedAt == "" || profile.UpdatedAt == "" {
 		t.Fatalf("CreateProfile() timestamps are empty: %+v", profile)
@@ -60,7 +60,7 @@ func TestCreateProfileRejectsEmptyAndDuplicateNames(t *testing.T) {
 	}
 }
 
-func TestListProfilesOrdersActiveFirstThenName(t *testing.T) {
+func TestListProfilesOrdersByName(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -68,11 +68,8 @@ func TestListProfilesOrdersActiveFirstThenName(t *testing.T) {
 
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	zeta := mustCreateProfile(t, store, gameID, "Zeta")
-	mustCreateProfile(t, store, gameID, "alpha")
-	active := mustCreateProfile(t, store, gameID, "Middle")
-	if _, err := store.ActivateProfile(context.Background(), gameID, active.ID); err != nil {
-		t.Fatalf("ActivateProfile() error = %v", err)
-	}
+	alpha := mustCreateProfile(t, store, gameID, "alpha")
+	middle := mustCreateProfile(t, store, gameID, "Middle")
 	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
 	mustCreateProfile(t, store, otherGameID, "Other")
 
@@ -84,11 +81,8 @@ func TestListProfilesOrdersActiveFirstThenName(t *testing.T) {
 	if len(profiles) != 3 {
 		t.Fatalf("ListProfiles() length = %d, want 3: %+v", len(profiles), profiles)
 	}
-	if profiles[0].ID != active.ID || !profiles[0].IsActive {
-		t.Fatalf("ListProfiles() first = %+v, want active profile", profiles[0])
-	}
-	if profiles[1].Name != "alpha" || profiles[2].ID != zeta.ID {
-		t.Fatalf("ListProfiles() order = %+v, want active, alpha, Zeta", profiles)
+	if profiles[0].ID != alpha.ID || profiles[1].ID != middle.ID || profiles[2].ID != zeta.ID {
+		t.Fatalf("ListProfiles() order = %+v, want alpha, Middle, Zeta", profiles)
 	}
 }
 
@@ -132,7 +126,7 @@ func TestRenameProfileRejectsEmptyDuplicateAndMissingProfiles(t *testing.T) {
 	}
 }
 
-func TestDeleteProfileCanLeaveNoActiveProfile(t *testing.T) {
+func TestDeleteProfileDeletesRow(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -140,90 +134,17 @@ func TestDeleteProfileCanLeaveNoActiveProfile(t *testing.T) {
 
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	profile := mustCreateProfile(t, store, gameID, "Default")
-	if _, err := store.ActivateProfile(context.Background(), gameID, profile.ID); err != nil {
-		t.Fatalf("ActivateProfile() error = %v", err)
-	}
 
 	if err := store.DeleteProfile(context.Background(), profile.ID); err != nil {
 		t.Fatalf("DeleteProfile() error = %v", err)
-	}
-
-	active, found, err := store.GetActiveProfile(context.Background(), gameID)
-	if err != nil {
-		t.Fatalf("GetActiveProfile() error = %v", err)
-	}
-	if found {
-		t.Fatalf("GetActiveProfile() found %+v, want none", active)
-	}
-}
-
-func TestActivateProfileEnforcesSingleActiveProfilePerGame(t *testing.T) {
-	t.Parallel()
-
-	store := openMigratedStore(t)
-	defer closeStore(t, store)
-
-	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	first := mustCreateProfile(t, store, gameID, "Default")
-	second := mustCreateProfile(t, store, gameID, "Survival")
-	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
-	otherProfile := mustCreateProfile(t, store, otherGameID, "Other")
-
-	if _, err := store.ActivateProfile(context.Background(), gameID, first.ID); err != nil {
-		t.Fatalf("ActivateProfile() first error = %v", err)
-	}
-	active, err := store.ActivateProfile(context.Background(), gameID, second.ID)
-	if err != nil {
-		t.Fatalf("ActivateProfile() second error = %v", err)
-	}
-	if !active.IsActive || active.ID != second.ID {
-		t.Fatalf("ActivateProfile() = %+v, want active second profile", active)
-	}
-	if _, err := store.ActivateProfile(context.Background(), gameID, otherProfile.ID); err == nil {
-		t.Fatal("ActivateProfile() cross-game error = nil, want error")
 	}
 
 	profiles, err := store.ListProfiles(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("ListProfiles() error = %v", err)
 	}
-
-	activeCount := 0
-	for _, profile := range profiles {
-		if profile.IsActive {
-			activeCount++
-			if profile.ID != second.ID {
-				t.Fatalf("active profile = %+v, want second", profile)
-			}
-		}
-	}
-	if activeCount != 1 {
-		t.Fatalf("active count = %d, want 1 in %+v", activeCount, profiles)
-	}
-}
-
-func TestDeactivateProfileLeavesNoActiveProfile(t *testing.T) {
-	t.Parallel()
-
-	store := openMigratedStore(t)
-	defer closeStore(t, store)
-
-	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	profile := mustCreateProfile(t, store, gameID, "Default")
-	if _, err := store.ActivateProfile(context.Background(), gameID, profile.ID); err != nil {
-		t.Fatalf("ActivateProfile() error = %v", err)
-	}
-
-	if err := store.DeactivateProfile(context.Background(), gameID); err != nil {
-		t.Fatalf("DeactivateProfile() error = %v", err)
-	}
-
-	_, found, err := store.GetActiveProfile(context.Background(), gameID)
-	if err != nil {
-		t.Fatalf("GetActiveProfile() error = %v", err)
-	}
-	if found {
-		t.Fatal("GetActiveProfile() found = true, want false")
+	if len(profiles) != 0 {
+		t.Fatalf("ListProfiles() after delete = %+v, want empty", profiles)
 	}
 }
 

@@ -5,28 +5,33 @@ import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameProfileModsPanel } from '@components/Games/Details/Profiles/GameProfileModsPanel/GameProfileModsPanel';
-import { GameProfilesActiveSummary } from '@components/Games/Details/Profiles/GameProfilesActiveSummary/GameProfilesActiveSummary';
+import { GameProfilesAppliedSummary } from '@components/Games/Details/Profiles/GameProfilesAppliedSummary/GameProfilesAppliedSummary';
 import { GameProfilesCreateForm } from '@components/Games/Details/Profiles/GameProfilesCreateForm/GameProfilesCreateForm';
 import { GameProfilesList } from '@components/Games/Details/Profiles/GameProfilesList/GameProfilesList';
-import type { UseGameModsResult, UseGameProfilesResult } from '@hooks';
+import type { UseAppliedProfileResult, UseGameModsResult, UseGameProfilesResult } from '@hooks';
 
 import './GameProfilesSection.scss';
 
 interface GameProfilesSectionProps {
+  appliedProfileManager: UseAppliedProfileResult;
   applyProfilePath: string;
   gameModManager: UseGameModsResult;
   profileManager: UseGameProfilesResult;
+  onRestoreVanilla: () => void;
 }
 
-export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileManager }: GameProfilesSectionProps) => {
+export const GameProfilesSection = ({
+  appliedProfileManager,
+  applyProfilePath,
+  gameModManager,
+  profileManager,
+  onRestoreVanilla,
+}: GameProfilesSectionProps) => {
   const { addToast } = useToast();
   const { isLoading: isGameModsLoading, mods: gameMods } = gameModManager;
   const {
-    activeProfile,
-    activateProfile,
     addModsToProfile,
     createProfile,
-    deactivateProfile,
     deleteProfile,
     isLoading,
     loadError,
@@ -39,16 +44,17 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
     renameProfile,
     setProfileModEnabled,
   } = profileManager;
+  const { appliedProfile } = appliedProfileManager;
   const [newProfileName, setNewProfileName] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProfileID, setEditingProfileID] = useState<number | null>(null);
   const [editingProfileName, setEditingProfileName] = useState('');
   const [deleteCandidate, setDeleteCandidate] = useState<ModProfile | null>(null);
   const [selectedProfileID, setSelectedProfileID] = useState<number | null>(null);
-  const isBusy = pendingAction !== null;
+  const isBusy = pendingAction !== null || appliedProfileManager.pendingAction !== null;
   const selectedProfile = useMemo(
-    () => profiles.find((profile) => profile.ID === selectedProfileID) ?? activeProfile ?? profiles[0] ?? null,
-    [activeProfile, profiles, selectedProfileID],
+    () => profiles.find((profile) => profile.ID === selectedProfileID) ?? profiles[0] ?? null,
+    [profiles, selectedProfileID],
   );
   const selectedProfileMods = selectedProfile === null ? [] : profileModsByProfileID[selectedProfile.ID] ?? [];
 
@@ -57,8 +63,8 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
       return;
     }
 
-    setSelectedProfileID(activeProfile?.ID ?? profiles[0]?.ID ?? null);
-  }, [activeProfile, profiles, selectedProfileID]);
+    setSelectedProfileID(profiles[0]?.ID ?? null);
+  }, [profiles, selectedProfileID]);
 
   const handleCreateProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,14 +137,6 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
     setNewProfileName('');
   };
 
-  const handleActivateProfile = (profileID: number) => {
-    activateProfile(profileID).catch(() => undefined);
-  };
-
-  const handleDeactivateProfile = () => {
-    deactivateProfile().catch(() => undefined);
-  };
-
   const handleAddModsToProfile = (profileID: number, modIDs: number[]) => {
     return addModsToProfile(profileID, modIDs);
   };
@@ -172,11 +170,10 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
       {loadError === null && (
         <div className="game-profiles-section-workspace">
           <aside className="game-profiles-section-sidebar" aria-label="Profile list">
-            <GameProfilesActiveSummary
-              activeProfile={activeProfile}
-              applyProfilePath={applyProfilePath}
+            <GameProfilesAppliedSummary
+              appliedProfile={appliedProfile}
               isBusy={isBusy}
-              onDeactivateProfile={handleDeactivateProfile}
+              onRestoreVanilla={onRestoreVanilla}
             />
 
             <GameProfilesCreateForm
@@ -192,13 +189,13 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
             <GameProfilesList
               editingProfileID={editingProfileID}
               editingProfileName={editingProfileName}
+              appliedProfileID={appliedProfile?.ProfileID ?? null}
               isBusy={isBusy}
               isLoading={isLoading}
               pendingAction={pendingAction}
               profileModsByProfileID={profileModsByProfileID}
               profiles={profiles}
               selectedProfileID={selectedProfile?.ID ?? null}
-              onActivateProfile={handleActivateProfile}
               onCancelRename={cancelRename}
               onDeleteProfile={setDeleteCandidate}
               onEditingProfileNameChange={setEditingProfileName}
@@ -210,6 +207,8 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
 
           <div className="game-profiles-section-detail">
             <GameProfileModsPanel
+              appliedProfile={appliedProfile}
+              applyProfilePath={applyProfilePath}
               gameMods={gameMods}
               isBusy={isBusy}
               isGameModsLoading={isGameModsLoading}
@@ -219,6 +218,7 @@ export const GameProfilesSection = ({ applyProfilePath, gameModManager, profileM
               onAddModsToProfile={handleAddModsToProfile}
               onRemoveModFromProfile={handleRemoveModFromProfile}
               onReorderProfileMods={handleReorderProfileMods}
+              onRestoreVanilla={onRestoreVanilla}
               onSetProfileModEnabled={handleSetProfileModEnabled}
             />
           </div>

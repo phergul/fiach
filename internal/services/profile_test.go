@@ -113,7 +113,7 @@ func TestProfileServiceReordersProfileMods(t *testing.T) {
 	}
 }
 
-func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
+func TestProfileServiceRenamesAndDeletesProfile(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -134,33 +134,6 @@ func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
 		t.Fatalf("RenameProfile() name = %q, want Survival", renamed.Name)
 	}
 
-	active, err := service.ActivateProfile(context.Background(), gameID, profile.ID)
-	if err != nil {
-		t.Fatalf("ActivateProfile() error = %v", err)
-	}
-	if !active.IsActive {
-		t.Fatalf("ActivateProfile() = %+v, want active", active)
-	}
-
-	activePtr, err := service.GetActiveProfile(context.Background(), gameID)
-	if err != nil {
-		t.Fatalf("GetActiveProfile() error = %v", err)
-	}
-	if activePtr == nil || activePtr.ID != profile.ID {
-		t.Fatalf("GetActiveProfile() = %+v, want active profile", activePtr)
-	}
-
-	if err := service.DeactivateProfile(context.Background(), gameID); err != nil {
-		t.Fatalf("DeactivateProfile() error = %v", err)
-	}
-	activePtr, err = service.GetActiveProfile(context.Background(), gameID)
-	if err != nil {
-		t.Fatalf("GetActiveProfile() after clear error = %v", err)
-	}
-	if activePtr != nil {
-		t.Fatalf("GetActiveProfile() after clear = %+v, want nil", activePtr)
-	}
-
 	if err := service.DeleteProfile(context.Background(), profile.ID); err != nil {
 		t.Fatalf("DeleteProfile() error = %v", err)
 	}
@@ -170,6 +143,86 @@ func TestProfileServiceRenamesActivatesClearsAndDeletesProfile(t *testing.T) {
 	}
 	if len(profiles) != 0 {
 		t.Fatalf("ListProfiles() after delete = %+v, want empty", profiles)
+	}
+}
+
+func TestProfileServiceRejectsDeletingAppliedProfile(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	service := NewProfileService(store)
+	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
+	if err != nil {
+		t.Fatalf("CreateProfile() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profile.ID,
+		ManifestJSON:        `{"version":1}`,
+		ProfileSnapshotJSON: `{"version":1}`,
+		ProfileSnapshotHash: "snapshot",
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
+	}
+
+	err = service.DeleteProfile(context.Background(), profile.ID)
+	if err == nil {
+		t.Fatal("DeleteProfile() error = nil, want applied profile guard")
+	}
+	if !strings.Contains(err.Error(), "delete profile") || !strings.Contains(err.Error(), "restore vanilla before deleting") {
+		t.Fatalf("DeleteProfile() error = %q, want applied guard detail", err.Error())
+	}
+
+	profiles, err := service.ListProfiles(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListProfiles() error = %v", err)
+	}
+	if len(profiles) != 1 || profiles[0].ID != profile.ID {
+		t.Fatalf("ListProfiles() after rejected delete = %+v, want applied profile preserved", profiles)
+	}
+}
+
+func TestProfileServiceGetsAppliedProfileSummary(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	service := NewProfileService(store)
+	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
+	if err != nil {
+		t.Fatalf("CreateProfile() error = %v", err)
+	}
+
+	summary, err := service.GetAppliedProfileSummary(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileSummary() empty error = %v", err)
+	}
+	if summary != nil {
+		t.Fatalf("GetAppliedProfileSummary() empty = %+v, want nil", summary)
+	}
+
+	state, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profile.ID,
+		ManifestJSON:        `{"version":1}`,
+		ProfileSnapshotJSON: `{"version":1}`,
+		ProfileSnapshotHash: "snapshot",
+	})
+	if err != nil {
+		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
+	}
+
+	summary, err = service.GetAppliedProfileSummary(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileSummary() error = %v", err)
+	}
+	if summary == nil || summary.GameID != gameID || summary.ProfileID != profile.ID || summary.ProfileName != profile.Name || summary.AppliedAt != state.AppliedAt {
+		t.Fatalf("GetAppliedProfileSummary() = %+v, want applied profile summary", summary)
 	}
 }
 

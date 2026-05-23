@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
-import { Archive, ArrowLeft, CheckCircle2, FolderOpen, Menu, Plus } from 'lucide-react';
+import { Archive, ArrowLeft, FolderOpen, Menu, Plus, RotateCcw } from 'lucide-react';
 
 import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
@@ -15,6 +15,7 @@ import { GameModImportWizard } from '@components/Games/Details/Mods/GameModImpor
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import {
+  useAppliedProfile,
   useGameArtwork,
   useGameModImportFlow,
   useGameMods,
@@ -42,10 +43,12 @@ export const GameDetails = () => {
   const { gameId } = useParams();
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
   const { games, isLoading, isScanning, loadError, retryLoadGames, updateStoredGame } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
+  const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
@@ -74,9 +77,35 @@ export const GameDetails = () => {
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const applyProfilePath = game === undefined ? '/library' : `/library/${game.ID}/apply`;
-  const applyProfileTitle = profileManager.activeProfile === null
-    ? 'Select an active profile before applying.'
-    : `Preview apply for ${profileManager.activeProfile.Name}.`;
+  const isRestorePending = appliedProfileManager.pendingAction === 'restore';
+  const canRestoreVanilla = game !== undefined && appliedProfileManager.appliedProfile !== null && !isRestorePending;
+
+  const openRestoreConfirm = () => {
+    if (canRestoreVanilla) {
+      setIsRestoreConfirmOpen(true);
+    }
+  };
+
+  const closeRestoreConfirm = () => {
+    if (!isRestorePending) {
+      setIsRestoreConfirmOpen(false);
+    }
+  };
+
+  const confirmRestoreVanilla = async () => {
+    if (!canRestoreVanilla) {
+      return;
+    }
+
+    try {
+      const result = await appliedProfileManager.restoreVanilla();
+      if (result.Success) {
+        setIsRestoreConfirmOpen(false);
+      }
+    } catch {
+      setIsRestoreConfirmOpen(false);
+    }
+  };
 
   return (
     <section
@@ -89,24 +118,20 @@ export const GameDetails = () => {
           Back
         </Link>
         <div className="game-details-toolbar-actions">
-          <Link
-            className={
-              game === undefined || profileManager.activeProfile === null
-                ? 'game-details-toolbar-button game-details-apply-profile game-details-toolbar-link-disabled'
-                : 'game-details-toolbar-button game-details-apply-profile'
+          <button
+            className="game-details-toolbar-button game-details-restore-vanilla"
+            disabled={!canRestoreVanilla}
+            onClick={openRestoreConfirm}
+            title={
+              appliedProfileManager.appliedProfile === null
+                ? 'No profile is applied.'
+                : `Restore vanilla from ${appliedProfileManager.appliedProfile.ProfileName}.`
             }
-            to={applyProfilePath}
-            onClick={(event) => {
-              if (game === undefined || profileManager.activeProfile === null) {
-                event.preventDefault();
-              }
-            }}
-            title={applyProfileTitle}
-            aria-disabled={game === undefined || profileManager.activeProfile === null}
+            type="button"
           >
-            <CheckCircle2 className="game-details-toolbar-icon" aria-hidden="true" />
-            <span>Apply Profile</span>
-          </Link>
+            <RotateCcw className="game-details-toolbar-icon" aria-hidden="true" />
+            <span>Restore Vanilla</span>
+          </button>
 
           <div className="game-details-menu-anchor">
             <button
@@ -224,8 +249,10 @@ export const GameDetails = () => {
             />
           ) : (
             <GameProfilesSection
+              appliedProfileManager={appliedProfileManager}
               applyProfilePath={applyProfilePath}
               gameModManager={gameModManager}
+              onRestoreVanilla={openRestoreConfirm}
               profileManager={profileManager}
             />
           )}
@@ -255,6 +282,22 @@ export const GameDetails = () => {
         onCancel={storageOverride.cancelStorageOverride}
         onConfirm={storageOverride.applyStorageOverride}
         title={storageOverride.pendingStorageOverride?.title ?? 'Confirm Storage Change'}
+      />
+
+      <ConfirmDialog
+        cancelLabel="Cancel"
+        confirmLabel="Restore Vanilla"
+        confirmTone="default"
+        isBusy={isRestorePending}
+        isOpen={isRestoreConfirmOpen}
+        message={
+          appliedProfileManager.appliedProfile === null
+            ? 'No profile is currently applied.'
+            : `Restore vanilla files for ${game?.Name ?? 'this game'}? This will revert ${appliedProfileManager.appliedProfile.ProfileName}.`
+        }
+        onCancel={closeRestoreConfirm}
+        onConfirm={confirmRestoreVanilla}
+        title="Restore Vanilla"
       />
     </section>
   );

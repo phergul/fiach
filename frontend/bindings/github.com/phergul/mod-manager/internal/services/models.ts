@@ -12,6 +12,39 @@ import * as installconfig$0 from "../installconfig/models.js";
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
+export class AppliedProfileSummary {
+    "GameID": number;
+    "ProfileID": number;
+    "ProfileName": string;
+    "AppliedAt": string;
+
+    /** Creates a new AppliedProfileSummary instance. */
+    constructor($$source: Partial<AppliedProfileSummary> = {}) {
+        if (!("GameID" in $$source)) {
+            this["GameID"] = 0;
+        }
+        if (!("ProfileID" in $$source)) {
+            this["ProfileID"] = 0;
+        }
+        if (!("ProfileName" in $$source)) {
+            this["ProfileName"] = "";
+        }
+        if (!("AppliedAt" in $$source)) {
+            this["AppliedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppliedProfileSummary instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AppliedProfileSummary {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AppliedProfileSummary($$parsedSource as Partial<AppliedProfileSummary>);
+    }
+}
+
 export class ImportModInput {
     "GameID": number;
     "Name": string;

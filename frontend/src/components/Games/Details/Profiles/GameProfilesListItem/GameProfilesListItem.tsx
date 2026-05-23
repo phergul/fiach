@@ -1,4 +1,4 @@
-import { Check, Pencil, Power, Trash2, X } from 'lucide-react';
+import { Check, Pencil, Trash2, X } from 'lucide-react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 
@@ -8,11 +8,11 @@ interface GameProfilesListItemProps {
   editingProfileName: string;
   isBusy: boolean;
   isEditing: boolean;
+  isApplied: boolean;
   isSelected: boolean;
   modCount: number;
   pendingAction: string | null;
   profile: ModProfile;
-  onActivateProfile: (profileID: number) => void;
   onCancelRename: () => void;
   onDeleteProfile: (profile: ModProfile) => void;
   onEditingProfileNameChange: (name: string) => void;
@@ -44,11 +44,11 @@ export const GameProfilesListItem = ({
   editingProfileName,
   isBusy,
   isEditing,
+  isApplied,
   isSelected,
   modCount,
   pendingAction,
   profile,
-  onActivateProfile,
   onCancelRename,
   onDeleteProfile,
   onEditingProfileNameChange,
@@ -58,6 +58,7 @@ export const GameProfilesListItem = ({
 }: GameProfilesListItemProps) => {
   const modSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
   const editedSummary = formatProfileEditedAt(profile.UpdatedAt);
+  const appliedSummary = isApplied ? 'Applied' : 'Not applied';
 
   return (
     <li
@@ -94,6 +95,7 @@ export const GameProfilesListItem = ({
             <span className="game-profiles-list-item-meta">
               <span className="game-profiles-list-item-meta-part">{modSummary}</span>
               <span className="game-profiles-list-item-meta-part">{editedSummary}</span>
+              <span className="game-profiles-list-item-meta-part">{appliedSummary}</span>
             </span>
           </button>
         )}
@@ -123,22 +125,6 @@ export const GameProfilesListItem = ({
           </>
         ) : (
           <>
-            {profile.IsActive ? (
-              <span className="game-profiles-list-item-action-spacer" aria-hidden="true" />
-            ) : (
-              <button
-                className="game-profiles-list-item-icon-button"
-                disabled={isBusy}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onActivateProfile(profile.ID);
-                }}
-                title="Activate profile"
-                type="button"
-              >
-                <Power className="game-profiles-list-item-icon" aria-hidden="true" />
-              </button>
-            )}
             <button
               className="game-profiles-list-item-icon-button"
               disabled={isBusy}

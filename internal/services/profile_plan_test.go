@@ -216,7 +216,7 @@ func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.
 	}
 }
 
-func TestProfileServiceApplyProfileOperationPlanReplacesExistingStateOnlyAfterSuccess(t *testing.T) {
+func TestProfileServiceApplyProfileOperationPlanRejectsWhenProfileAlreadyApplied(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -252,22 +252,30 @@ func TestProfileServiceApplyProfileOperationPlanReplacesExistingStateOnlyAfterSu
 		t.Fatalf("ApplyProfileOperationPlan() first = %+v, want success", firstResult)
 	}
 
-	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
-	failedResult, err := service.ApplyProfileOperationPlan(context.Background(), secondProfileID, operationplan.OperationPlan{
+	secondSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"second.txt": "second"})
+	secondSourcePath := filepath.Join(secondSourceRoot, "second.txt")
+	secondTargetPath := filepath.Join(gameRoot, "second.txt")
+	blockedResult, err := service.ApplyProfileOperationPlan(context.Background(), secondProfileID, operationplan.OperationPlan{
 		CanApply: true,
 		Operations: []operationplan.Operation{
 			{
 				Type:       operationplan.OperationTypeCopy,
-				SourcePath: &missingSourcePath,
-				TargetPath: filepath.Join(gameRoot, "missing.txt"),
+				SourcePath: &secondSourcePath,
+				TargetPath: secondTargetPath,
 			},
 		},
 	})
-	if err != nil {
-		t.Fatalf("ApplyProfileOperationPlan() failed apply error = %v, want partial result only", err)
+	if err == nil {
+		t.Fatal("ApplyProfileOperationPlan() second error = nil, want applied-state guard")
 	}
-	if failedResult.Success {
-		t.Fatalf("ApplyProfileOperationPlan() failed apply = %+v, want failure", failedResult)
+	if blockedResult.Success || blockedResult.CompletedCount != 0 {
+		t.Fatalf("ApplyProfileOperationPlan() blocked result = %+v, want empty failure result", blockedResult)
+	}
+	if !strings.Contains(err.Error(), "restore vanilla before applying another profile") {
+		t.Fatalf("ApplyProfileOperationPlan() second error = %q, want applied-state guard", err.Error())
+	}
+	if _, err := os.Stat(secondTargetPath); !os.IsNotExist(err) {
+		t.Fatalf("second target stat error = %v, want no file written", err)
 	}
 
 	state, found, err := store.GetAppliedProfileState(context.Background(), gameID)
@@ -286,18 +294,9 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "previous",
-	}); err != nil {
-		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
-	}
 	if _, err := store.DB().Exec(`
-		CREATE TRIGGER fail_applied_profile_state_update
-		BEFORE UPDATE ON applied_profile_states
+		CREATE TRIGGER fail_applied_profile_state_insert
+		BEFORE INSERT ON applied_profile_states
 		BEGIN
 			SELECT RAISE(ABORT, 'forced applied state failure');
 		END
@@ -330,12 +329,12 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	}
 	assertServiceFileContents(t, targetPath, "modded")
 
-	state, found, readErr := store.GetAppliedProfileState(context.Background(), gameID)
+	_, found, readErr := store.GetAppliedProfileState(context.Background(), gameID)
 	if readErr != nil {
 		t.Fatalf("GetAppliedProfileState() error = %v", readErr)
 	}
-	if !found || state.ProfileSnapshotHash != "previous" {
-		t.Fatalf("applied profile state = %+v found=%v, want previous state unchanged", state, found)
+	if found {
+		t.Fatal("GetAppliedProfileState() found = true, want no state after persistence failure")
 	}
 }
 

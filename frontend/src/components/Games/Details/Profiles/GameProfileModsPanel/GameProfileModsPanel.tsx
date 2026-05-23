@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 
+import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/models';
 import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
@@ -10,6 +12,8 @@ import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/
 import './GameProfileModsPanel.scss';
 
 interface GameProfileModsPanelProps {
+  appliedProfile: AppliedProfileSummary | null;
+  applyProfilePath: string;
   gameMods: Mod[];
   isBusy: boolean;
   isGameModsLoading: boolean;
@@ -19,10 +23,13 @@ interface GameProfileModsPanelProps {
   onAddModsToProfile: (profileID: number, modIDs: number[]) => Promise<void> | void;
   onRemoveModFromProfile: (profileID: number, modID: number) => void;
   onReorderProfileMods: (profileID: number, orderedModIDs: number[]) => void;
+  onRestoreVanilla: () => void;
   onSetProfileModEnabled: (profileID: number, modID: number, enabled: boolean) => void;
 }
 
 export const GameProfileModsPanel = ({
+  appliedProfile,
+  applyProfilePath,
   gameMods,
   isBusy,
   isGameModsLoading,
@@ -32,6 +39,7 @@ export const GameProfileModsPanel = ({
   onAddModsToProfile,
   onRemoveModFromProfile,
   onReorderProfileMods,
+  onRestoreVanilla,
   onSetProfileModEnabled,
 }: GameProfileModsPanelProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -41,6 +49,11 @@ export const GameProfileModsPanel = ({
     [assignedModIDs, gameMods],
   );
   const canOpenAddModal = !isBusy && !isGameModsLoading && availableMods.length > 0;
+  const isSelectedProfileApplied = profile !== null && appliedProfile?.ProfileID === profile.ID;
+  const isAnotherProfileApplied = profile !== null && appliedProfile !== null && !isSelectedProfileApplied;
+  const blockedApplyTitle = appliedProfile === null
+    ? undefined
+    : `${appliedProfile.ProfileName} is applied. Restore vanilla before applying another profile.`;
 
   useEffect(() => {
     setIsAddModalOpen(false);
@@ -130,6 +143,42 @@ export const GameProfileModsPanel = ({
           <Plus className="game-profile-mods-panel-icon" aria-hidden="true" />
           <span>Add Mods from Library</span>
         </button>
+
+        {isSelectedProfileApplied ? (
+          <button
+            className="game-profile-mods-panel-restore-button"
+            disabled={isBusy}
+            onClick={onRestoreVanilla}
+            type="button"
+          >
+            <RotateCcw className="game-profile-mods-panel-icon" aria-hidden="true" />
+            <span>Restore Vanilla</span>
+          </button>
+        ) : isAnotherProfileApplied ? (
+          <button
+            className="game-profile-mods-panel-apply-button"
+            disabled
+            title={blockedApplyTitle}
+            type="button"
+          >
+            <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
+            <span>Another Profile Applied</span>
+          </button>
+        ) : (
+          <Link
+            className={isBusy ? 'game-profile-mods-panel-apply-button game-profile-mods-panel-link-disabled' : 'game-profile-mods-panel-apply-button'}
+            to={`${applyProfilePath}/${profile.ID}`}
+            onClick={(event) => {
+              if (isBusy) {
+                event.preventDefault();
+              }
+            }}
+            aria-disabled={isBusy}
+          >
+            <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
+            <span>Apply Profile</span>
+          </Link>
+        )}
       </div>
 
       <GameProfileAddModsModal

@@ -48,6 +48,11 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 	if !found {
 		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
+	if appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID); err != nil {
+		return operationplan.ApplyOperationPlanResult{}, err
+	} else if appliedFound {
+		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d is already applied for game %d; restore vanilla before applying another profile", appliedState.ProfileID, profile.GameID)
+	}
 
 	game, err := s.store.GetStoredGame(ctx, profile.GameID)
 	if err != nil {

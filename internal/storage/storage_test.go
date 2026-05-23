@@ -106,25 +106,6 @@ func TestMigrateUpAddsSteamGameDetectionColumns(t *testing.T) {
 	}
 }
 
-func TestMigrateUpAddsProfileActiveState(t *testing.T) {
-	t.Parallel()
-
-	store := openStore(t)
-	defer closeStore(t, store)
-
-	if err := store.MigrateUp(); err != nil {
-		t.Fatalf("MigrateUp() error = %v", err)
-	}
-
-	if !columnExists(t, store, "profiles", "is_active") {
-		t.Fatal("expected profiles.is_active column to exist")
-	}
-
-	if !indexExists(t, store, "idx_profiles_active_game_id") {
-		t.Fatal("expected idx_profiles_active_game_id to exist")
-	}
-}
-
 func TestMigrateUpAddsModStorageConfiguration(t *testing.T) {
 	t.Parallel()
 

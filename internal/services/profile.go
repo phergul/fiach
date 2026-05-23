@@ -11,6 +11,13 @@ type ProfileService struct {
 	store *storage.Store
 }
 
+type AppliedProfileSummary struct {
+	GameID      int64
+	ProfileID   int64
+	ProfileName string
+	AppliedAt   string
+}
+
 func NewProfileService(store *storage.Store) *ProfileService {
 	return &ProfileService{
 		store: store,
@@ -54,37 +61,31 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 		}
 	}()
 
+	profile, found, err := s.store.GetProfile(ctx, profileID)
+	if err != nil {
+		return err
+	}
+	if found {
+		appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID)
+		if err != nil {
+			return err
+		}
+		if appliedFound && appliedState.ProfileID == profileID {
+			return fmt.Errorf("profile %d is currently applied; restore vanilla before deleting it", profileID)
+		}
+	}
+
 	return s.store.DeleteProfile(ctx, profileID)
 }
 
-func (s *ProfileService) ActivateProfile(ctx context.Context, gameID int64, profileID int64) (profile storage.ModProfile, err error) {
+func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID int64) (summary *AppliedProfileSummary, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("activate profile: %w", err)
+			err = fmt.Errorf("get applied profile summary: %w", err)
 		}
 	}()
 
-	return s.store.ActivateProfile(ctx, gameID, profileID)
-}
-
-func (s *ProfileService) DeactivateProfile(ctx context.Context, gameID int64) (err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("deactivate profile: %w", err)
-		}
-	}()
-
-	return s.store.DeactivateProfile(ctx, gameID)
-}
-
-func (s *ProfileService) GetActiveProfile(ctx context.Context, gameID int64) (profile *storage.ModProfile, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("get active profile: %w", err)
-		}
-	}()
-
-	active, found, err := s.store.GetActiveProfile(ctx, gameID)
+	state, found, err := s.store.GetAppliedProfileState(ctx, gameID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,5 +93,19 @@ func (s *ProfileService) GetActiveProfile(ctx context.Context, gameID int64) (pr
 		return nil, nil
 	}
 
-	return &active, nil
+	profileName := fmt.Sprintf("Profile %d unavailable", state.ProfileID)
+	profile, profileFound, err := s.store.GetProfile(ctx, state.ProfileID)
+	if err != nil {
+		return nil, err
+	}
+	if profileFound {
+		profileName = profile.Name
+	}
+
+	return &AppliedProfileSummary{
+		GameID:      state.GameID,
+		ProfileID:   state.ProfileID,
+		ProfileName: profileName,
+		AppliedAt:   state.AppliedAt,
+	}, nil
 }

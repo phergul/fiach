@@ -8,13 +8,13 @@ import './GameProfilesList.scss';
 interface GameProfilesListProps {
   editingProfileID: number | null;
   editingProfileName: string;
+  appliedProfileID: number | null;
   isBusy: boolean;
   isLoading: boolean;
   pendingAction: string | null;
   profileModsByProfileID: Record<number, ProfileMod[]>;
   profiles: ModProfile[];
   selectedProfileID: number | null;
-  onActivateProfile: (profileID: number) => void;
   onCancelRename: () => void;
   onDeleteProfile: (profile: ModProfile) => void;
   onEditingProfileNameChange: (name: string) => void;
@@ -26,13 +26,13 @@ interface GameProfilesListProps {
 export const GameProfilesList = ({
   editingProfileID,
   editingProfileName,
+  appliedProfileID,
   isBusy,
   isLoading,
   pendingAction,
   profileModsByProfileID,
   profiles,
   selectedProfileID,
-  onActivateProfile,
   onCancelRename,
   onDeleteProfile,
   onEditingProfileNameChange,
@@ -54,13 +54,13 @@ export const GameProfilesList = ({
             <GameProfilesListItem
               editingProfileName={editingProfileName}
               isBusy={isBusy}
+              isApplied={appliedProfileID === profile.ID}
               isEditing={editingProfileID === profile.ID}
               isSelected={selectedProfileID === profile.ID}
               key={profile.ID}
               modCount={profileModsByProfileID[profile.ID]?.length ?? 0}
               pendingAction={pendingAction}
               profile={profile}
-              onActivateProfile={onActivateProfile}
               onCancelRename={onCancelRename}
               onDeleteProfile={onDeleteProfile}
               onEditingProfileNameChange={onEditingProfileNameChange}

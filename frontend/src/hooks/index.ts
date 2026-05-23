@@ -1,3 +1,5 @@
+export { useAppliedProfile } from './useAppliedProfile';
+export type { UseAppliedProfileResult } from './useAppliedProfile';
 export { useGameArtwork } from './useGameArtwork';
 export { useGameMods } from './useGameMods';
 export type { UseGameModsResult } from './useGameMods';

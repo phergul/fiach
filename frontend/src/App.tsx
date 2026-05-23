@@ -14,6 +14,7 @@ export const App = () => {
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/library" replace />} />
               <Route path="library" element={<Library />} />
+              <Route path="library/:gameId/apply/:profileId" element={<GameApply />} />
               <Route path="library/:gameId/apply" element={<GameApply />} />
               <Route path="library/:gameId" element={<GameDetails />} />
               <Route path="profiles" element={<Profiles />} />

@@ -1,0 +1,41 @@
+@use '@styles' as *;
+
+.game-profiles-applied-summary {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+  background: rgb(#{$color-surface-rgb} / 42%);
+}
+
+.game-profiles-applied-summary-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.game-profiles-applied-summary-label {
+  color: $color-text-subtle;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-applied-summary-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-applied-summary-meta {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-profiles-applied-summary-button {
+  width: 100%;
+  min-height: $input-height;
+  white-space: nowrap;
+}

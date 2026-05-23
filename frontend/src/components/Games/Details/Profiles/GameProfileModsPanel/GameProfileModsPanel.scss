@@ -36,12 +36,64 @@ $game-profile-mods-panel-icon-size: 1rem;
 }
 
 .game-profile-mods-panel-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem);
+  align-items: center;
+  gap: $spacing-sm;
   padding: $spacing-md $spacing-xl;
   border-top: $app-border;
 }
 
-.game-profile-mods-panel-add-button {
+.game-profile-mods-panel-add-button,
+.game-profile-mods-panel-apply-button,
+.game-profile-mods-panel-restore-button {
   width: 100%;
   min-height: $game-profile-mods-panel-control-height;
+  text-decoration: none;
+}
+
+.game-profile-mods-panel-add-button {
   color: $color-text-subtle;
+}
+
+.game-profile-mods-panel-apply-button,
+.game-profile-mods-panel-restore-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  color: $color-text-primary;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.game-profile-mods-panel-apply-button {
+  background: color-mix(in srgb, $color-success 26%, transparent);
+  border-color: color-mix(in srgb, $color-success 72%, transparent);
+}
+
+.game-profile-mods-panel-apply-button:hover:not(:disabled),
+.game-profile-mods-panel-apply-button:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-success 36%, transparent);
+  border-color: $color-success;
+  outline: none;
+}
+
+.game-profile-mods-panel-restore-button {
+  background: color-mix(in srgb, $color-warning 18%, transparent);
+  border-color: color-mix(in srgb, $color-warning 54%, transparent);
+}
+
+.game-profile-mods-panel-restore-button:hover:not(:disabled),
+.game-profile-mods-panel-restore-button:focus-visible:not(:disabled) {
+  border-color: $color-warning;
+}
+
+.game-profile-mods-panel-link-disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }

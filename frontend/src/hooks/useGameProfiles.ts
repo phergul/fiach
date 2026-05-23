@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  ActivateProfile,
   AddModToProfile,
   CreateProfile,
-  DeactivateProfile,
   DeleteProfile,
   ListProfileMods,
   ListProfiles,
@@ -18,11 +16,9 @@ import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 
 type ProfileAction =
-  | 'activate'
   | 'add-mod'
   | 'add-mods'
   | 'create'
-  | 'deactivate'
   | 'delete'
   | 'remove-mod'
   | 'reorder-mods'
@@ -238,36 +234,6 @@ export const useGameProfiles = (gameID: number | null) => {
     [addToast],
   );
 
-  const activateProfile = useCallback(
-    (profileID: number) => {
-      if (gameID === null) {
-        return Promise.reject(new Error('game is not selected'));
-      }
-
-      return runProfileAction(
-        'activate',
-        () => ActivateProfile(gameID, profileID),
-        'Active profile updated.',
-      );
-    },
-    [gameID, runProfileAction],
-  );
-
-  const deactivateProfile = useCallback(
-    () => {
-      if (gameID === null) {
-        return Promise.reject(new Error('game is not selected'));
-      }
-
-      return runProfileAction(
-        'deactivate',
-        () => DeactivateProfile(gameID),
-        'Profile deactivated.',
-      );
-    },
-    [gameID, runProfileAction],
-  );
-
   useEffect(() => {
     let isMounted = true;
 
@@ -281,12 +247,9 @@ export const useGameProfiles = (gameID: number | null) => {
   }, [loadProfiles]);
 
   return {
-    activeProfile: profiles.find((profile) => profile.IsActive) ?? null,
-    activateProfile,
     addModToProfile,
     addModsToProfile,
     createProfile,
-    deactivateProfile,
     deleteProfile,
     isLoading,
     loadError,

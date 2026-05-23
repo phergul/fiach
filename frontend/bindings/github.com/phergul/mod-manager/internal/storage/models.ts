@@ -107,7 +107,6 @@ export class ModProfile {
     "ID": number;
     "GameID": number;
     "Name": string;
-    "IsActive": boolean;
     "CreatedAt": string;
     "UpdatedAt": string;
 
@@ -121,9 +120,6 @@ export class ModProfile {
         }
         if (!("Name" in $$source)) {
             this["Name"] = "";
-        }
-        if (!("IsActive" in $$source)) {
-            this["IsActive"] = false;
         }
         if (!("CreatedAt" in $$source)) {
             this["CreatedAt"] = "";

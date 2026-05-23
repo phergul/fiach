@@ -13,6 +13,7 @@ export {
 };
 
 export {
+    AppliedProfileSummary,
     ImportModInput,
     ImportModResult,
     PreviewImportConfigurationInput
