@@ -6,17 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type ModProfile struct {
-	ID        int64  `db:"id"`
-	GameID    int64  `db:"game_id"`
-	Name      string `db:"name"`
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at"`
-}
-
-func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (profile ModProfile, err error) {
+func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (profile dbtypes.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("insert profile row: %w", err)
@@ -24,12 +18,12 @@ func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (p
 	}()
 
 	if s == nil || s.db == nil {
-		return ModProfile{}, errors.New("store is not open")
+		return dbtypes.ModProfile{}, errors.New("store is not open")
 	}
 
 	name, err = normalizeProfileName(name)
 	if err != nil {
-		return ModProfile{}, err
+		return dbtypes.ModProfile{}, err
 	}
 
 	result, err := s.db.ExecContext(ctx, `
@@ -37,18 +31,18 @@ func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (p
 		VALUES (?, ?)
 	`, gameID, name)
 	if err != nil {
-		return ModProfile{}, err
+		return dbtypes.ModProfile{}, err
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return ModProfile{}, fmt.Errorf("get created profile id: %w", err)
+		return dbtypes.ModProfile{}, fmt.Errorf("get created profile id: %w", err)
 	}
 
 	return getProfileByID(ctx, s.db, id)
 }
 
-func (s *Store) ListProfiles(ctx context.Context, gameID int64) (profiles []ModProfile, err error) {
+func (s *Store) ListProfiles(ctx context.Context, gameID int64) (profiles []dbtypes.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select profiles: %w", err)
@@ -72,7 +66,7 @@ func (s *Store) ListProfiles(ctx context.Context, gameID int64) (profiles []ModP
 	return profiles, nil
 }
 
-func (s *Store) RenameProfile(ctx context.Context, profileID int64, name string) (profile ModProfile, err error) {
+func (s *Store) RenameProfile(ctx context.Context, profileID int64, name string) (profile dbtypes.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("update profile name: %w", err)
@@ -80,12 +74,12 @@ func (s *Store) RenameProfile(ctx context.Context, profileID int64, name string)
 	}()
 
 	if s == nil || s.db == nil {
-		return ModProfile{}, errors.New("store is not open")
+		return dbtypes.ModProfile{}, errors.New("store is not open")
 	}
 
 	name, err = normalizeProfileName(name)
 	if err != nil {
-		return ModProfile{}, err
+		return dbtypes.ModProfile{}, err
 	}
 
 	result, err := s.db.ExecContext(ctx, `
@@ -95,15 +89,15 @@ func (s *Store) RenameProfile(ctx context.Context, profileID int64, name string)
 		WHERE id = ?
 	`, name, profileID)
 	if err != nil {
-		return ModProfile{}, err
+		return dbtypes.ModProfile{}, err
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return ModProfile{}, fmt.Errorf("get renamed profile count: %w", err)
+		return dbtypes.ModProfile{}, fmt.Errorf("get renamed profile count: %w", err)
 	}
 	if affected == 0 {
-		return ModProfile{}, sql.ErrNoRows
+		return dbtypes.ModProfile{}, sql.ErrNoRows
 	}
 
 	return getProfileByID(ctx, s.db, profileID)
@@ -127,7 +121,7 @@ func (s *Store) DeleteProfile(ctx context.Context, profileID int64) (err error) 
 	return err
 }
 
-func (s *Store) GetProfile(ctx context.Context, profileID int64) (profile ModProfile, found bool, err error) {
+func (s *Store) GetProfile(ctx context.Context, profileID int64) (profile dbtypes.ModProfile, found bool, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select profile row: %w", err)
@@ -135,16 +129,16 @@ func (s *Store) GetProfile(ctx context.Context, profileID int64) (profile ModPro
 	}()
 
 	if s == nil || s.db == nil {
-		return ModProfile{}, false, errors.New("store is not open")
+		return dbtypes.ModProfile{}, false, errors.New("store is not open")
 	}
 
 	profile, err = getProfileByID(ctx, s.db, profileID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ModProfile{}, false, nil
+			return dbtypes.ModProfile{}, false, nil
 		}
 
-		return ModProfile{}, false, err
+		return dbtypes.ModProfile{}, false, err
 	}
 
 	return profile, true, nil
@@ -154,15 +148,15 @@ type profileGetter interface {
 	GetContext(context.Context, any, string, ...any) error
 }
 
-func getProfileByID(ctx context.Context, db profileGetter, profileID int64) (ModProfile, error) {
-	var profile ModProfile
+func getProfileByID(ctx context.Context, db profileGetter, profileID int64) (dbtypes.ModProfile, error) {
+	var profile dbtypes.ModProfile
 	err := db.GetContext(ctx, &profile, `
 		SELECT id, game_id, name, created_at, updated_at
 		FROM profiles
 		WHERE id = ?
 	`, profileID)
 	if err != nil {
-		return ModProfile{}, err
+		return dbtypes.ModProfile{}, err
 	}
 
 	return profile, nil

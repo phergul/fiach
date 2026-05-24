@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestMigrateUpAddsAppliedProfileStateTable(t *testing.T) {
@@ -47,7 +49,7 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 	secondCompositionJSON := `{"version":1,"profileId":2,"mods":[{"modId":1,"enabled":true,"loadOrder":0}]}`
 	secondCompositionHash := "second-composition-hash"
 
-	first, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
+	first, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      firstProfile.ID,
 		ManifestJSON:                   `{"version":1,"addedFiles":[]}`,
@@ -63,7 +65,7 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 		t.Fatalf("inserted applied profile state = %+v, want first profile state", first)
 	}
 
-	replaced, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
+	replaced, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      secondProfile.ID,
 		ManifestJSON:                   `{"version":1,"addedFiles":[{"targetPath":"Data/SkyUI.esp"}]}`,
@@ -130,7 +132,7 @@ func TestDeleteAppliedProfileStateClearsStateAndIsIdempotent(t *testing.T) {
 
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	profile := mustCreateProfile(t, store, gameID, "Default")
-	if _, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              gameID,
 		ProfileID:           profile.ID,
 		ManifestJSON:        `{"version":1}`,
@@ -186,12 +188,12 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		input SaveAppliedProfileStateInput
+		input dbtypes.SaveAppliedProfileStateInput
 		want  string
 	}{
 		{
 			name: "missing game",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				ProfileID:           1,
 				ManifestJSON:        `{"version":1}`,
 				ProfileSnapshotJSON: `{"version":1}`,
@@ -201,7 +203,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "missing profile",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:              1,
 				ManifestJSON:        `{"version":1}`,
 				ProfileSnapshotJSON: `{"version":1}`,
@@ -211,7 +213,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "invalid manifest JSON",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:              1,
 				ProfileID:           1,
 				ManifestJSON:        `{`,
@@ -222,7 +224,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "invalid snapshot JSON",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:              1,
 				ProfileID:           1,
 				ManifestJSON:        `{"version":1}`,
@@ -233,7 +235,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "missing hash",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:              1,
 				ProfileID:           1,
 				ManifestJSON:        `{"version":1}`,
@@ -243,7 +245,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "invalid composition snapshot JSON",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:                         1,
 				ProfileID:                      1,
 				ManifestJSON:                   `{"version":1}`,
@@ -256,7 +258,7 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		},
 		{
 			name: "composition snapshot JSON without hash",
-			input: SaveAppliedProfileStateInput{
+			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:                         1,
 				ProfileID:                      1,
 				ManifestJSON:                   `{"version":1}`,
@@ -295,7 +297,7 @@ func TestSaveAppliedProfileStateRejectsProfileFromAnotherGame(t *testing.T) {
 	secondGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
 	profile := mustCreateProfile(t, store, secondGameID, "Default")
 
-	_, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
+	_, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              firstGameID,
 		ProfileID:           profile.ID,
 		ManifestJSON:        `{"version":1}`,

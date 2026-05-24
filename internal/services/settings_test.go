@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestSettingsServiceGetsAndSetsGlobalModStorageRoot(t *testing.T) {
@@ -103,7 +104,7 @@ func TestSettingsServiceEnsuresGameModStoragePath(t *testing.T) {
 		t.Fatalf("EnsureGameModStoragePath() error = %v", err)
 	}
 
-	want := filepath.Join(root, storage.DefaultGameModStorageFolderName(storage.StoredGame{ID: gameID}))
+	want := filepath.Join(root, storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
 	if path != want {
 		t.Fatalf("EnsureGameModStoragePath() = %q, want %q", path, want)
 	}

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 
-import type { Preview, StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
-import type { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { Preview, StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { ListImportStrategies, PreviewImportConfiguration } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import { Modal } from '@components/Common/Modal/Modal';
 import { GameModImportWizardDetailsStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardDetailsStep/GameModImportWizardDetailsStep';

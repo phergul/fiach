@@ -11,7 +11,7 @@ import {
   ReorderProfileMods,
   SetProfileModEnabled,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
-import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

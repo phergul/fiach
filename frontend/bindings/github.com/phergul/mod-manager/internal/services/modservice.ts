@@ -7,47 +7,40 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import * as installconfig$0 from "../installconfig/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as storage$0 from "../storage/models.js";
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as $models from "./models.js";
+import * as dto$0 from "./dto/models.js";
 
 export function GetGameManagedModStorageUsage(gameID: number): $CancellablePromise<number> {
     return $Call.ByID(1476392311, gameID);
 }
 
-export function ImportMod(input: $models.ImportModInput): $CancellablePromise<$models.ImportModResult> {
+export function ImportMod(input: dto$0.ImportModInput): $CancellablePromise<dto$0.ImportModResult> {
     return $Call.ByID(2313069445, input).then(($result: any) => {
         return $$createType0($result);
     });
 }
 
-export function ListImportStrategies(): $CancellablePromise<installconfig$0.StrategyDescriptor[]> {
+export function ListImportStrategies(): $CancellablePromise<dto$0.StrategyDescriptor[]> {
     return $Call.ByID(1013940886).then(($result: any) => {
         return $$createType2($result);
     });
 }
 
-export function ListMods(gameID: number): $CancellablePromise<storage$0.Mod[]> {
+export function ListMods(gameID: number): $CancellablePromise<dto$0.Mod[]> {
     return $Call.ByID(2000775995, gameID).then(($result: any) => {
         return $$createType4($result);
     });
 }
 
-export function PreviewImportConfiguration(input: $models.PreviewImportConfigurationInput): $CancellablePromise<installconfig$0.Preview> {
+export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurationInput): $CancellablePromise<dto$0.Preview> {
     return $Call.ByID(1144919971, input).then(($result: any) => {
         return $$createType5($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = $models.ImportModResult.createFrom;
-const $$createType1 = installconfig$0.StrategyDescriptor.createFrom;
+const $$createType0 = dto$0.ImportModResult.createFrom;
+const $$createType1 = dto$0.StrategyDescriptor.createFrom;
 const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = storage$0.Mod.createFrom;
+const $$createType3 = dto$0.Mod.createFrom;
 const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = installconfig$0.Preview.createFrom;
+const $$createType5 = dto$0.Preview.createFrom;

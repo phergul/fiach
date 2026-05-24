@@ -1,4 +1,4 @@
-import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 
 import { GameProfilesListItem } from '../GameProfilesListItem/GameProfilesListItem';

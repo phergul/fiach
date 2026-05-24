@@ -7,20 +7,10 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type ProfileMod struct {
-	ProfileID  int64  `db:"profile_id"`
-	ModID      int64  `db:"mod_id"`
-	Name       string `db:"name"`
-	SourcePath string `db:"source_path"`
-	Enabled    bool   `db:"enabled"`
-	LoadOrder  int64  `db:"load_order"`
-	CreatedAt  string `db:"created_at"`
-	UpdatedAt  string `db:"updated_at"`
-}
-
-func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []ProfileMod, err error) {
+func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []dbtypes.ProfileMod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select profile mods: %w", err)
@@ -39,7 +29,7 @@ func (s *Store) ListProfileMods(ctx context.Context, profileID int64) (mods []Pr
 	return mods, nil
 }
 
-func (s *Store) AddModToProfile(ctx context.Context, profileID int64, modID int64) (profileMod ProfileMod, err error) {
+func (s *Store) AddModToProfile(ctx context.Context, profileID int64, modID int64) (profileMod dbtypes.ProfileMod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("insert profile mod row: %w", err)
@@ -47,7 +37,7 @@ func (s *Store) AddModToProfile(ctx context.Context, profileID int64, modID int6
 	}()
 
 	if s == nil || s.db == nil {
-		return ProfileMod{}, errors.New("store is not open")
+		return dbtypes.ProfileMod{}, errors.New("store is not open")
 	}
 
 	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
@@ -100,7 +90,7 @@ func (s *Store) AddModToProfile(ctx context.Context, profileID int64, modID int6
 		return nil
 	})
 	if err != nil {
-		return ProfileMod{}, err
+		return dbtypes.ProfileMod{}, err
 	}
 
 	return profileMod, nil
@@ -125,7 +115,7 @@ func (s *Store) RemoveModFromProfile(ctx context.Context, profileID int64, modID
 	return err
 }
 
-func (s *Store) SetProfileModEnabled(ctx context.Context, profileID int64, modID int64, enabled bool) (profileMod ProfileMod, err error) {
+func (s *Store) SetProfileModEnabled(ctx context.Context, profileID int64, modID int64, enabled bool) (profileMod dbtypes.ProfileMod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("update profile mod enabled: %w", err)
@@ -133,7 +123,7 @@ func (s *Store) SetProfileModEnabled(ctx context.Context, profileID int64, modID
 	}()
 
 	if s == nil || s.db == nil {
-		return ProfileMod{}, errors.New("store is not open")
+		return dbtypes.ProfileMod{}, errors.New("store is not open")
 	}
 
 	result, err := s.db.ExecContext(ctx, `
@@ -144,29 +134,29 @@ func (s *Store) SetProfileModEnabled(ctx context.Context, profileID int64, modID
 			AND mod_id = ?
 	`, enabled, profileID, modID)
 	if err != nil {
-		return ProfileMod{}, err
+		return dbtypes.ProfileMod{}, err
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return ProfileMod{}, fmt.Errorf("get updated profile mod count: %w", err)
+		return dbtypes.ProfileMod{}, fmt.Errorf("get updated profile mod count: %w", err)
 	}
 	if affected == 0 {
-		return ProfileMod{}, sql.ErrNoRows
+		return dbtypes.ProfileMod{}, sql.ErrNoRows
 	}
 
 	profileMod, found, err := getProfileMod(ctx, s.db, profileID, modID)
 	if err != nil {
-		return ProfileMod{}, err
+		return dbtypes.ProfileMod{}, err
 	}
 	if !found {
-		return ProfileMod{}, sql.ErrNoRows
+		return dbtypes.ProfileMod{}, sql.ErrNoRows
 	}
 
 	return profileMod, nil
 }
 
-func (s *Store) ReorderProfileMods(ctx context.Context, profileID int64, modIDs []int64) (mods []ProfileMod, err error) {
+func (s *Store) ReorderProfileMods(ctx context.Context, profileID int64, modIDs []int64) (mods []dbtypes.ProfileMod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("reorder profile mod rows: %w", err)
@@ -259,8 +249,8 @@ type profileModSelector interface {
 	SelectContext(context.Context, any, string, ...any) error
 }
 
-func listProfileMods(ctx context.Context, db profileModSelector, profileID int64) ([]ProfileMod, error) {
-	var mods []ProfileMod
+func listProfileMods(ctx context.Context, db profileModSelector, profileID int64) ([]dbtypes.ProfileMod, error) {
+	var mods []dbtypes.ProfileMod
 	err := db.SelectContext(ctx, &mods, profileModsSelectSQL+`
 		WHERE pm.profile_id = ?
 		ORDER BY pm.load_order, LOWER(m.name), m.id
@@ -272,18 +262,18 @@ func listProfileMods(ctx context.Context, db profileModSelector, profileID int64
 	return mods, nil
 }
 
-func getProfileMod(ctx context.Context, db modGetter, profileID int64, modID int64) (ProfileMod, bool, error) {
-	var profileMod ProfileMod
+func getProfileMod(ctx context.Context, db modGetter, profileID int64, modID int64) (dbtypes.ProfileMod, bool, error) {
+	var profileMod dbtypes.ProfileMod
 	err := db.GetContext(ctx, &profileMod, profileModsSelectSQL+`
 		WHERE pm.profile_id = ?
 			AND pm.mod_id = ?
 	`, profileID, modID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ProfileMod{}, false, nil
+			return dbtypes.ProfileMod{}, false, nil
 		}
 
-		return ProfileMod{}, false, err
+		return dbtypes.ProfileMod{}, false, err
 	}
 
 	return profileMod, true, nil

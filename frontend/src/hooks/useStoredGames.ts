@@ -4,7 +4,7 @@ import { GetStoredGames, ScanAndSaveGames } from '@bindings/github.com/phergul/m
 import type {
   SourceScanResult,
   StoredGame,
-} from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

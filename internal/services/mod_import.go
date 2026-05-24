@@ -8,32 +8,11 @@ import (
 
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/modimport"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type PreviewImportConfigurationInput struct {
-	GameID             int64
-	SourceType         storage.ModSourceType
-	SourcePath         string
-	StrategyType       installconfig.StrategyType
-	TargetRelativePath string
-}
-
-type ImportModInput struct {
-	GameID             int64
-	Name               string
-	SourceType         storage.ModSourceType
-	SourcePath         string
-	StrategyType       installconfig.StrategyType
-	TargetRelativePath string
-}
-
-type ImportModResult struct {
-	Mod    storage.Mod
-	Config storage.ModInstallConfig
-}
-
-func (s *ModService) PreviewImportConfiguration(_ context.Context, input PreviewImportConfigurationInput) (preview installconfig.Preview, err error) {
+func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("preview import configuration: %w", err)
@@ -42,33 +21,38 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input Preview
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
-		return installconfig.Preview{}, err
+		return dto.Preview{}, err
 	}
 	if err := source.Validate(); err != nil {
-		return installconfig.Preview{}, err
+		return dto.Preview{}, err
 	}
 
 	tempPath, err := os.MkdirTemp("", "mod-manager-import-preview-*")
 	if err != nil {
-		return installconfig.Preview{}, fmt.Errorf("create import preview folder: %w", err)
+		return dto.Preview{}, fmt.Errorf("create import preview folder: %w", err)
 	}
 	defer func() {
 		_ = os.RemoveAll(tempPath)
 	}()
 
 	if err := source.Materialize(tempPath); err != nil {
-		return installconfig.Preview{}, err
+		return dto.Preview{}, err
 	}
 
-	return installconfig.BuildPreview(installconfig.PreviewInput{
+	previewResult, err := installconfig.BuildPreview(installconfig.PreviewInput{
 		SourcePath:         tempPath,
-		StrategyType:       input.StrategyType,
+		StrategyType:       toInstallStrategyType(input.StrategyType),
 		TargetRelativePath: input.TargetRelativePath,
 		FileCap:            installconfig.DefaultPreviewFileCap,
 	})
+	if err != nil {
+		return dto.Preview{}, err
+	}
+
+	return toDTOPreview(previewResult), nil
 }
 
-func (s *ModService) ImportMod(ctx context.Context, input ImportModInput) (result ImportModResult, err error) {
+func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (result dto.ImportModResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("import mod: %w", err)
@@ -77,7 +61,7 @@ func (s *ModService) ImportMod(ctx context.Context, input ImportModInput) (resul
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
-		return ImportModResult{}, err
+		return dto.ImportModResult{}, err
 	}
 
 	importResult, err := modimport.Import(
@@ -86,24 +70,24 @@ func (s *ModService) ImportMod(ctx context.Context, input ImportModInput) (resul
 		input.GameID,
 		input.Name,
 		source,
-		input.StrategyType,
+		toInstallStrategyType(input.StrategyType),
 		input.TargetRelativePath,
 	)
 	if err != nil {
-		return ImportModResult{}, err
+		return dto.ImportModResult{}, err
 	}
 
-	return ImportModResult{
-		Mod:    importResult.Mod,
-		Config: importResult.Config,
+	return dto.ImportModResult{
+		Mod:    toDTOMod(importResult.Mod),
+		Config: toDTOModInstallConfig(importResult.Config),
 	}, nil
 }
 
-func importSource(sourceType storage.ModSourceType, sourcePath string) (modimport.Source, error) {
-	switch sourceType {
-	case storage.ModSourceTypeFolder:
+func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.Source, error) {
+	switch toDBModSourceType(sourceType) {
+	case dbtypes.ModSourceTypeFolder:
 		return modimport.NewFolderSource(sourcePath)
-	case storage.ModSourceTypeArchive:
+	case dbtypes.ModSourceTypeArchive:
 		return modimport.NewArchiveSource(sourcePath)
 	case "":
 		return nil, errors.New("import source type is required")

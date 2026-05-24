@@ -1,4 +1,4 @@
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 
 import './GameDetailsHeader.scss';
 

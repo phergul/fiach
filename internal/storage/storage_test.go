@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestOpenCreatesDatabaseFile(t *testing.T) {
@@ -294,9 +296,9 @@ func TestListStoredGamesReturnsAvailableGamesOrderedByName(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	insertStoredGame(t, store, "Zoo Game", "/games/zoo", GameSourceSteam, "30", true)
-	insertStoredGame(t, store, "alpha Game", "/games/alpha", GameSourceSteam, "10", true)
-	insertStoredGame(t, store, "Missing Game", "/games/missing", GameSourceSteam, "20", false)
+	insertStoredGame(t, store, "Zoo Game", "/games/zoo", dbtypes.GameSourceSteam, "30", true)
+	insertStoredGame(t, store, "alpha Game", "/games/alpha", dbtypes.GameSourceSteam, "10", true)
+	insertStoredGame(t, store, "Missing Game", "/games/missing", dbtypes.GameSourceSteam, "20", false)
 
 	games, err := store.ListStoredGames(context.Background())
 	if err != nil {
@@ -548,7 +550,7 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", dbtypes.GameSourceManual, "", true)
 	if _, err := store.SetGameModStoragePathOverride(context.Background(), gameID, "/custom/skyrim"); err != nil {
 		t.Fatalf("SetGameModStoragePathOverride() error = %v", err)
 	}
@@ -568,7 +570,7 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 	if game.ModStoragePathOverride != nil {
 		t.Fatalf("ModStoragePathOverride = %q, want nil after clear", *game.ModStoragePathOverride)
 	}
-	wantPath := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	wantPath := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
 	if game.ModStoragePath == nil || *game.ModStoragePath != wantPath {
 		t.Fatalf("ModStoragePath = %v, want refreshed global path", game.ModStoragePath)
 	}
@@ -584,7 +586,7 @@ func TestSetGlobalModStorageRootRefreshesGameModStoragePaths(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", dbtypes.GameSourceManual, "", true)
 	if err := store.SetGlobalModStorageRoot(context.Background(), "/managed/root"); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
@@ -594,7 +596,7 @@ func TestSetGlobalModStorageRootRefreshesGameModStoragePaths(t *testing.T) {
 		t.Fatalf("GetStoredGame() error = %v", err)
 	}
 
-	want := filepath.Join("/managed/root", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	want := filepath.Join("/managed/root", DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
 	if game.ModStoragePath == nil || *game.ModStoragePath != want {
 		t.Fatalf("ModStoragePath = %v, want %q", game.ModStoragePath, want)
 	}
@@ -610,7 +612,7 @@ func TestResolveGameModStoragePathUsesNumericGameID(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	gameID := insertStoredGameWithID(t, store, `  Skyrim: Special/Edition?  `, "/games/skyrim", GameSourceManual, "", true)
+	gameID := insertStoredGameWithID(t, store, `  Skyrim: Special/Edition?  `, "/games/skyrim", dbtypes.GameSourceManual, "", true)
 	root := filepath.Join(t.TempDir(), "managed")
 
 	path, err := store.ResolveGameModStoragePath(context.Background(), gameID, root)
@@ -618,7 +620,7 @@ func TestResolveGameModStoragePathUsesNumericGameID(t *testing.T) {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
 
-	want := filepath.Join(root, DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	want := filepath.Join(root, DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
 	if path != want {
 		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, want)
 	}
@@ -634,14 +636,14 @@ func TestResolveGameModStoragePathUsesDefaultRootWithoutGlobalRoot(t *testing.T)
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", dbtypes.GameSourceManual, "", true)
 
 	path, err := store.ResolveGameModStoragePath(context.Background(), gameID, "")
 	if err != nil {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
 
-	want := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(StoredGame{ID: gameID}))
+	want := filepath.Join(filepath.Dir(store.Path()), "mods", DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
 	if path != want {
 		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, want)
 	}
@@ -657,7 +659,7 @@ func TestChangingGlobalModStorageRootDoesNotMoveExistingModRows(t *testing.T) {
 		t.Fatalf("MigrateUp() error = %v", err)
 	}
 
-	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", GameSourceManual, "", true)
+	gameID := insertStoredGameWithID(t, store, "Skyrim", "/games/skyrim", dbtypes.GameSourceManual, "", true)
 	if _, err := store.DB().Exec(`
 		INSERT INTO mods (game_id, name, source_path, original_source_path)
 		VALUES (?, ?, ?, ?)

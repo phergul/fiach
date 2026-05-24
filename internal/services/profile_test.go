@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestProfileServiceCreatesAndListsProfiles(t *testing.T) {
@@ -158,7 +159,7 @@ func TestProfileServiceRejectsDeletingAppliedProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
 	}
-	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              gameID,
 		ProfileID:           profile.ID,
 		ManifestJSON:        `{"version":1}`,
@@ -206,7 +207,7 @@ func TestProfileServiceGetsAppliedProfileSummary(t *testing.T) {
 		t.Fatalf("GetAppliedProfileSummary() empty = %+v, want nil", summary)
 	}
 
-	state, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+	state, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              gameID,
 		ProfileID:           profile.ID,
 		ManifestJSON:        `{"version":1}`,
@@ -338,7 +339,7 @@ func saveServiceAppliedStateWithCurrentComposition(t *testing.T, store *storage.
 	if err != nil {
 		t.Fatalf("encodeProfileCompositionSnapshot() setup error = %v", err)
 	}
-	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      profileID,
 		ManifestJSON:                   `{"version":1}`,

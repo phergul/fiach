@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 
-import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import type { UseGameModsResult } from '@hooks';

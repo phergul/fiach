@@ -79,12 +79,7 @@ type Mod struct {
 	Name string `json:"name"`
 }
 
-type EncodedProfileSnapshot struct {
-	JSON string
-	Hash string
-}
-
-type EncodedProfileCompositionSnapshot struct {
+type EncodedSnapshot struct {
 	JSON string
 	Hash string
 }
@@ -206,20 +201,20 @@ func DecodeManifest(documentJSON string) (ManifestDocument, error) {
 	return document, nil
 }
 
-func EncodeProfileSnapshot(document ProfileSnapshotDocument) (EncodedProfileSnapshot, error) {
+func EncodeProfileSnapshot(document ProfileSnapshotDocument) (EncodedSnapshot, error) {
 	encoded, err := json.Marshal(document)
 	if err != nil {
-		return EncodedProfileSnapshot{}, err
+		return EncodedSnapshot{}, err
 	}
 
 	sum := sha256.Sum256(encoded)
-	return EncodedProfileSnapshot{
+	return EncodedSnapshot{
 		JSON: string(encoded),
 		Hash: hex.EncodeToString(sum[:]),
 	}, nil
 }
 
-func EncodeProfileCompositionSnapshot(document ProfileCompositionDocument) (snapshot EncodedProfileCompositionSnapshot, err error) {
+func EncodeProfileCompositionSnapshot(document ProfileCompositionDocument) (snapshot EncodedSnapshot, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("marshal profile composition snapshot: %w", err)
@@ -228,11 +223,11 @@ func EncodeProfileCompositionSnapshot(document ProfileCompositionDocument) (snap
 
 	encoded, err := json.Marshal(document)
 	if err != nil {
-		return EncodedProfileCompositionSnapshot{}, err
+		return EncodedSnapshot{}, err
 	}
 
 	sum := sha256.Sum256(encoded)
-	return EncodedProfileCompositionSnapshot{
+	return EncodedSnapshot{
 		JSON: string(encoded),
 		Hash: hex.EncodeToString(sum[:]),
 	}, nil

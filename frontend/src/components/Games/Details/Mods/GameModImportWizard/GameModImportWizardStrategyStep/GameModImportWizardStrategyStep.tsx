@@ -1,6 +1,6 @@
 import { Check, Loader2 } from 'lucide-react';
 
-import type { StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/installconfig/models';
+import type { StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 
 import './GameModImportWizardStrategyStep.scss';
 

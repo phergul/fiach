@@ -8,7 +8,7 @@ import {
   PlanIssueSeverity,
   type ApplyOperationPlanResult,
   type OperationPlan,
-} from '@bindings/github.com/phergul/mod-manager/internal/operationplan/models';
+} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';

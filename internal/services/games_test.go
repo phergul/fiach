@@ -9,6 +9,7 @@ import (
 
 	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestGamesServiceScansAndSavesGames(t *testing.T) {
@@ -62,7 +63,7 @@ func TestGamesServiceGetsStoredGames(t *testing.T) {
 	if _, err := store.DB().Exec(`
 		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
 		VALUES (?, ?, ?, ?, 1, ?)
-	`, "Portal", "/games/Portal", storage.GameSourceSteam, "400", "2026-05-10T00:00:00Z"); err != nil {
+	`, "Portal", "/games/Portal", dbtypes.GameSourceSteam, "400", "2026-05-10T00:00:00Z"); err != nil {
 		t.Fatalf("insert stored game: %v", err)
 	}
 

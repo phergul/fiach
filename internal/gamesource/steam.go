@@ -8,6 +8,7 @@ import (
 
 	"github.com/phergul/mod-manager/internal/steam"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 const SteamInstallPathSettingKey = "steam.install_path"
@@ -25,10 +26,10 @@ func NewSteamSource(store *storage.Store) *SteamSource {
 }
 
 func (s *SteamSource) Source() string {
-	return storage.GameSourceSteam
+	return dbtypes.GameSourceSteam
 }
 
-func (s *SteamSource) ScanGames(ctx context.Context) (games []storage.SourceGame, err error) {
+func (s *SteamSource) ScanGames(ctx context.Context) (games []dbtypes.SourceGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("scan Steam games: %w", err)
@@ -40,9 +41,9 @@ func (s *SteamSource) ScanGames(ctx context.Context) (games []storage.SourceGame
 		return nil, err
 	}
 
-	sourceGames := make([]storage.SourceGame, 0, len(installed))
+	sourceGames := make([]dbtypes.SourceGame, 0, len(installed))
 	for _, game := range installed {
-		sourceGames = append(sourceGames, storage.SourceGame{
+		sourceGames = append(sourceGames, dbtypes.SourceGame{
 			SourceID:    game.AppID,
 			Name:        game.Name,
 			InstallPath: game.InstallPath,

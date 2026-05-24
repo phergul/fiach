@@ -9,30 +9,10 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type AppliedProfileState struct {
-	GameID                         int64   `db:"game_id"`
-	ProfileID                      int64   `db:"profile_id"`
-	ManifestJSON                   string  `db:"manifest_json"`
-	ProfileSnapshotJSON            string  `db:"profile_snapshot_json"`
-	ProfileSnapshotHash            string  `db:"profile_snapshot_hash"`
-	ProfileCompositionSnapshotJSON *string `db:"profile_composition_snapshot_json"`
-	ProfileCompositionSnapshotHash *string `db:"profile_composition_snapshot_hash"`
-	AppliedAt                      string  `db:"applied_at"`
-}
-
-type SaveAppliedProfileStateInput struct {
-	GameID                         int64
-	ProfileID                      int64
-	ManifestJSON                   string
-	ProfileSnapshotJSON            string
-	ProfileSnapshotHash            string
-	ProfileCompositionSnapshotJSON *string
-	ProfileCompositionSnapshotHash *string
-}
-
-func (s *Store) SaveAppliedProfileState(ctx context.Context, input SaveAppliedProfileStateInput) (state AppliedProfileState, err error) {
+func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveAppliedProfileStateInput) (state dbtypes.AppliedProfileState, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("upsert applied profile state row: %w", err)
@@ -40,10 +20,10 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input SaveAppliedPr
 	}()
 
 	if s == nil || s.db == nil {
-		return AppliedProfileState{}, errors.New("store is not open")
+		return dbtypes.AppliedProfileState{}, errors.New("store is not open")
 	}
 	if err := validateSaveAppliedProfileStateInput(input); err != nil {
-		return AppliedProfileState{}, err
+		return dbtypes.AppliedProfileState{}, err
 	}
 
 	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
@@ -87,13 +67,13 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input SaveAppliedPr
 		return nil
 	})
 	if err != nil {
-		return AppliedProfileState{}, err
+		return dbtypes.AppliedProfileState{}, err
 	}
 
 	return state, nil
 }
 
-func (s *Store) GetAppliedProfileState(ctx context.Context, gameID int64) (state AppliedProfileState, found bool, err error) {
+func (s *Store) GetAppliedProfileState(ctx context.Context, gameID int64) (state dbtypes.AppliedProfileState, found bool, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select applied profile state: %w", err)
@@ -101,15 +81,15 @@ func (s *Store) GetAppliedProfileState(ctx context.Context, gameID int64) (state
 	}()
 
 	if s == nil || s.db == nil {
-		return AppliedProfileState{}, false, errors.New("store is not open")
+		return dbtypes.AppliedProfileState{}, false, errors.New("store is not open")
 	}
 	if gameID <= 0 {
-		return AppliedProfileState{}, false, errors.New("game ID must be positive")
+		return dbtypes.AppliedProfileState{}, false, errors.New("game ID must be positive")
 	}
 
 	state, found, err = getAppliedProfileState(ctx, s.db, gameID)
 	if err != nil {
-		return AppliedProfileState{}, false, err
+		return dbtypes.AppliedProfileState{}, false, err
 	}
 
 	return state, found, nil
@@ -140,7 +120,7 @@ func (s *Store) DeleteAppliedProfileState(ctx context.Context, gameID int64) (er
 	return nil
 }
 
-func validateSaveAppliedProfileStateInput(input SaveAppliedProfileStateInput) error {
+func validateSaveAppliedProfileStateInput(input dbtypes.SaveAppliedProfileStateInput) error {
 	if input.GameID <= 0 {
 		return errors.New("game ID must be positive")
 	}
@@ -204,8 +184,8 @@ type appliedProfileStateGetter interface {
 	GetContext(context.Context, any, string, ...any) error
 }
 
-func getAppliedProfileState(ctx context.Context, db appliedProfileStateGetter, gameID int64) (AppliedProfileState, bool, error) {
-	var state AppliedProfileState
+func getAppliedProfileState(ctx context.Context, db appliedProfileStateGetter, gameID int64) (dbtypes.AppliedProfileState, bool, error) {
+	var state dbtypes.AppliedProfileState
 	err := db.GetContext(ctx, &state, `
 		SELECT
 			game_id,
@@ -221,9 +201,9 @@ func getAppliedProfileState(ctx context.Context, db appliedProfileStateGetter, g
 	`, gameID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return AppliedProfileState{}, false, nil
+			return dbtypes.AppliedProfileState{}, false, nil
 		}
-		return AppliedProfileState{}, false, err
+		return dbtypes.AppliedProfileState{}, false, err
 	}
 
 	return state, true, nil

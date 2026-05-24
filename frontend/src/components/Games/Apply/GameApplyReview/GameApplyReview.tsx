@@ -8,7 +8,7 @@ import {
   type Operation,
   type OperationPlan,
   type PlanIssue,
-} from '@bindings/github.com/phergul/mod-manager/internal/operationplan/models';
+} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 
 import './GameApplyReview.scss';
 

@@ -18,7 +18,7 @@ func Execute(plan operationplan.OperationPlan, context Context) (result operatio
 		}
 	}()
 
-	if _, err := validatePlan(plan, context); err != nil {
+	if err := validatePlan(plan, context); err != nil {
 		return operationplan.ApplyOperationPlanResult{}, err
 	}
 
@@ -49,54 +49,49 @@ func Execute(plan operationplan.OperationPlan, context Context) (result operatio
 	return result, nil
 }
 
-func validatePlan(plan operationplan.OperationPlan, context Context) (resolvedContext, error) {
+func validatePlan(plan operationplan.OperationPlan, context Context) error {
 	if !plan.CanApply {
-		return resolvedContext{}, errors.New("operation plan has blocking issues")
+		return errors.New("operation plan has blocking issues")
 	}
 
 	gameInstallPath, err := fileops.CleanRequiredAbsPath("game install path", context.GameInstallPath)
 	if err != nil {
-		return resolvedContext{}, err
+		return err
 	}
 	gameModStoragePath, err := fileops.CleanRequiredAbsPath("game mod storage path", context.GameModStoragePath)
 	if err != nil {
-		return resolvedContext{}, err
-	}
-
-	resolved := resolvedContext{
-		gameInstallPath:    gameInstallPath,
-		gameModStoragePath: gameModStoragePath,
+		return err
 	}
 	for index, operation := range plan.Operations {
 		if strings.TrimSpace(operation.TargetPath) == "" {
-			return resolvedContext{}, fmt.Errorf("operation %d target path is required", index)
+			return fmt.Errorf("operation %d target path is required", index)
 		}
 		if err := fileops.RequirePathWithinRoot("operation target path", operation.TargetPath, gameInstallPath); err != nil {
-			return resolvedContext{}, fmt.Errorf("operation %d: %w", index, err)
+			return fmt.Errorf("operation %d: %w", index, err)
 		}
 
 		switch operation.Type {
 		case operationplan.OperationTypeCreateDirectory:
 		case operationplan.OperationTypeCopy:
 			if operation.SourcePath == nil || strings.TrimSpace(*operation.SourcePath) == "" {
-				return resolvedContext{}, fmt.Errorf("operation %d source path is required", index)
+				return fmt.Errorf("operation %d source path is required", index)
 			}
 		case operationplan.OperationTypeReplace:
 			if operation.SourcePath == nil || strings.TrimSpace(*operation.SourcePath) == "" {
-				return resolvedContext{}, fmt.Errorf("operation %d source path is required", index)
+				return fmt.Errorf("operation %d source path is required", index)
 			}
 			if operation.BackupPath == nil || strings.TrimSpace(*operation.BackupPath) == "" {
-				return resolvedContext{}, fmt.Errorf("operation %d backup path is required", index)
+				return fmt.Errorf("operation %d backup path is required", index)
 			}
 			if err := fileops.RequirePathWithinRoot("operation backup path", *operation.BackupPath, gameModStoragePath); err != nil {
-				return resolvedContext{}, fmt.Errorf("operation %d: %w", index, err)
+				return fmt.Errorf("operation %d: %w", index, err)
 			}
 		default:
-			return resolvedContext{}, fmt.Errorf("operation %d has unsupported type %q", index, operation.Type)
+			return fmt.Errorf("operation %d has unsupported type %q", index, operation.Type)
 		}
 	}
 
-	return resolved, nil
+	return nil
 }
 
 func executeOperation(operation operationplan.Operation) (operationOutcome, error) {

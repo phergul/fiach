@@ -9,16 +9,10 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type SourceScanResult struct {
-	Inserted          int
-	Updated           int
-	MarkedUnavailable int
-	Games             []StoredGame
-}
-
-func (s *Store) SaveSourceScan(ctx context.Context, source string, games []SourceGame) (result SourceScanResult, err error) {
+func (s *Store) SaveSourceScan(ctx context.Context, source string, games []dbtypes.SourceGame) (result dbtypes.SourceScanResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("save source scan: %w", err)
@@ -27,13 +21,13 @@ func (s *Store) SaveSourceScan(ctx context.Context, source string, games []Sourc
 
 	result, err = s.saveSourceScan(ctx, source, games)
 	if err != nil {
-		return SourceScanResult{}, err
+		return dbtypes.SourceScanResult{}, err
 	}
 
 	return result, nil
 }
 
-func (s *Store) saveSourceScan(ctx context.Context, source string, games []SourceGame) (result SourceScanResult, err error) {
+func (s *Store) saveSourceScan(ctx context.Context, source string, games []dbtypes.SourceGame) (result dbtypes.SourceScanResult, err error) {
 	if s == nil || s.db == nil {
 		return result, errors.New("store is not open")
 	}
@@ -45,7 +39,7 @@ func (s *Store) saveSourceScan(ctx context.Context, source string, games []Sourc
 
 	globalRoot, err := s.GetGlobalModStorageRoot(ctx)
 	if err != nil {
-		return SourceScanResult{}, fmt.Errorf("read managed mod storage root: %w", err)
+		return dbtypes.SourceScanResult{}, fmt.Errorf("read managed mod storage root: %w", err)
 	}
 	defaultRoot := s.defaultModStorageRoot()
 
@@ -84,7 +78,7 @@ func (s *Store) saveSourceScan(ctx context.Context, source string, games []Sourc
 		return nil
 	})
 	if err != nil {
-		return SourceScanResult{}, err
+		return dbtypes.SourceScanResult{}, err
 	}
 
 	return result, nil
@@ -104,31 +98,31 @@ func withTransaction(ctx context.Context, db *sqlx.DB, fn func(*sqlx.Tx) error) 
 	return tx.Commit()
 }
 
-func upsertSourceGame(ctx context.Context, tx *sqlx.Tx, source string, game SourceGame, seenAt string, globalRoot string, defaultRoot string) (StoredGame, string, error) {
+func upsertSourceGame(ctx context.Context, tx *sqlx.Tx, source string, game dbtypes.SourceGame, seenAt string, globalRoot string, defaultRoot string) (dbtypes.StoredGame, string, error) {
 	sourceID := strings.TrimSpace(game.SourceID)
 	name := strings.TrimSpace(game.Name)
 	installPath := filepath.Clean(strings.TrimSpace(game.InstallPath))
 	if sourceID == "" || name == "" || installPath == "." {
-		return StoredGame{}, "", fmt.Errorf("source game is missing source ID, name, or install path")
+		return dbtypes.StoredGame{}, "", fmt.Errorf("source game is missing source ID, name, or install path")
 	}
 
 	stored, found, err := getStoredGameBySource(ctx, tx, source, sourceID)
 	if err != nil {
-		return StoredGame{}, "", err
+		return dbtypes.StoredGame{}, "", err
 	}
 
 	action := "updated"
 	if !found {
 		stored, found, err = getStoredGameByInstallPath(ctx, tx, installPath)
 		if err != nil {
-			return StoredGame{}, "", err
+			return dbtypes.StoredGame{}, "", err
 		}
 	}
 
 	if found {
 		updated, err := updateStoredGameSource(ctx, tx, stored.ID, name, installPath, source, sourceID, seenAt, globalRoot, defaultRoot)
 		if err != nil {
-			return StoredGame{}, "", err
+			return dbtypes.StoredGame{}, "", err
 		}
 
 		return updated, action, nil
@@ -136,21 +130,21 @@ func upsertSourceGame(ctx context.Context, tx *sqlx.Tx, source string, game Sour
 
 	inserted, err := insertSourceGame(ctx, tx, name, installPath, source, sourceID, seenAt, globalRoot, defaultRoot)
 	if err != nil {
-		return StoredGame{}, "", err
+		return dbtypes.StoredGame{}, "", err
 	}
 
 	return inserted, "inserted", nil
 }
 
-func updateStoredGameSource(ctx context.Context, tx *sqlx.Tx, id int64, name string, installPath string, source string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (StoredGame, error) {
+func updateStoredGameSource(ctx context.Context, tx *sqlx.Tx, id int64, name string, installPath string, source string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (dbtypes.StoredGame, error) {
 	stored, err := getStoredGameByID(ctx, tx, id)
 	if err != nil {
-		return StoredGame{}, err
+		return dbtypes.StoredGame{}, err
 	}
 	stored.Name = name
 	modStoragePath, err := resolveStoredGameModStoragePath(stored, globalRoot, defaultRoot)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("resolve source game mod storage path: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("resolve source game mod storage path: %w", err)
 	}
 
 	_, err = tx.ExecContext(ctx, `
@@ -166,33 +160,33 @@ func updateStoredGameSource(ctx context.Context, tx *sqlx.Tx, id int64, name str
 		WHERE id = ?
 	`, name, installPath, source, sourceID, seenAt, modStoragePath, id)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("update source game: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("update source game: %w", err)
 	}
 
 	return getStoredGameByID(ctx, tx, id)
 }
 
-func insertSourceGame(ctx context.Context, tx *sqlx.Tx, name string, installPath string, source string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (StoredGame, error) {
+func insertSourceGame(ctx context.Context, tx *sqlx.Tx, name string, installPath string, source string, sourceID string, seenAt string, globalRoot string, defaultRoot string) (dbtypes.StoredGame, error) {
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO games (name, install_path, source, source_id, available, last_seen_at)
 		VALUES (?, ?, ?, ?, 1, ?)
 	`, name, installPath, source, sourceID, seenAt)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("insert source game: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("insert source game: %w", err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("insert source game id: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("insert source game id: %w", err)
 	}
 
-	stored := StoredGame{
+	stored := dbtypes.StoredGame{
 		ID:   id,
 		Name: name,
 	}
 	modStoragePath, err := resolveStoredGameModStoragePath(stored, globalRoot, defaultRoot)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("resolve source game mod storage path: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("resolve source game mod storage path: %w", err)
 	}
 	if _, err := tx.ExecContext(ctx, `
 		UPDATE games
@@ -200,7 +194,7 @@ func insertSourceGame(ctx context.Context, tx *sqlx.Tx, name string, installPath
 			updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`, modStoragePath, id); err != nil {
-		return StoredGame{}, fmt.Errorf("update source game mod storage path: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("update source game mod storage path: %w", err)
 	}
 
 	return getStoredGameByID(ctx, tx, id)
@@ -238,9 +232,9 @@ func markUnavailableSourceGames(ctx context.Context, tx *sqlx.Tx, source string,
 	return int(count), nil
 }
 
-func dedupeSourceGames(games []SourceGame) []SourceGame {
+func dedupeSourceGames(games []dbtypes.SourceGame) []dbtypes.SourceGame {
 	seen := make(map[string]struct{}, len(games))
-	result := make([]SourceGame, 0, len(games))
+	result := make([]dbtypes.SourceGame, 0, len(games))
 
 	for _, game := range games {
 		sourceID := strings.TrimSpace(game.SourceID)

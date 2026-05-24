@@ -12,8 +12,9 @@ import (
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestProfileServiceBuildsProfileOperationPlan(t *testing.T) {
@@ -31,7 +32,7 @@ func TestProfileServiceBuildsProfileOperationPlan(t *testing.T) {
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
 
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
-	addServiceInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
 
 	service := NewProfileService(store)
 	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
@@ -56,7 +57,7 @@ func TestProfileServiceReturnsPlannerIssuesInPlanResult(t *testing.T) {
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", filepath.Join(t.TempDir(), "missing"))
 
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
-	addServiceInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
 	service := NewProfileService(store)
 	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
@@ -67,7 +68,7 @@ func TestProfileServiceReturnsPlannerIssuesInPlanResult(t *testing.T) {
 	if plan.CanApply {
 		t.Fatalf("BuildProfileOperationPlan() CanApply = true, want false: %+v", plan)
 	}
-	if !servicePlanHasIssueKind(plan.Issues, operationplan.PlanIssueMissingSourceRoot) {
+	if !servicePlanHasIssueKind(plan.Issues, dto.PlanIssueMissingSourceRoot) {
 		t.Fatalf("BuildProfileOperationPlan() issues = %+v, want missing source root issue", plan.Issues)
 	}
 }
@@ -103,23 +104,23 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 		"Data/modded.txt": "modded",
 	})
 	targetPath := filepath.Join(gameRoot, "Data", "modded.txt")
-	backupPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(storage.StoredGame{ID: gameID}), "operation-backups", "Data", "modded.txt")
+	backupPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}), "operation-backups", "Data", "modded.txt")
 	sourceFilePath := filepath.Join(sourcePath, "Data", "modded.txt")
 
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
-		Operations: []operationplan.Operation{
+		Operations: []dto.Operation{
 			{
-				Type:       operationplan.OperationTypeCreateDirectory,
+				Type:       dto.OperationTypeCreateDirectory,
 				TargetPath: filepath.Dir(targetPath),
 			},
 			{
-				Type:       operationplan.OperationTypeCopy,
+				Type:       dto.OperationTypeCopy,
 				SourcePath: &sourceFilePath,
 				TargetPath: targetPath,
 				BackupPath: &backupPath,
-				Mod: operationplan.ModContext{
+				Mod: dto.ModContext{
 					ModID:   modID,
 					ModName: "SkyUI",
 				},
@@ -210,11 +211,11 @@ func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.
 	targetPath := filepath.Join(gameRoot, "Data", "missing.txt")
 
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
-		Operations: []operationplan.Operation{
+		Operations: []dto.Operation{
 			{
-				Type:       operationplan.OperationTypeCopy,
+				Type:       dto.OperationTypeCopy,
 				SourcePath: &missingSourcePath,
 				TargetPath: targetPath,
 			},
@@ -250,14 +251,14 @@ func TestProfileServiceApplyProfileOperationPlanRejectsWhenProfileAlreadyApplied
 	firstSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
 	firstSourcePath := filepath.Join(firstSourceRoot, "first.txt")
 	firstTargetPath := filepath.Join(gameRoot, "first.txt")
-	firstResult, err := service.ApplyProfileOperationPlan(context.Background(), firstProfileID, operationplan.OperationPlan{
+	firstResult, err := service.ApplyProfileOperationPlan(context.Background(), firstProfileID, dto.OperationPlan{
 		CanApply: true,
-		Operations: []operationplan.Operation{
+		Operations: []dto.Operation{
 			{
-				Type:       operationplan.OperationTypeCopy,
+				Type:       dto.OperationTypeCopy,
 				SourcePath: &firstSourcePath,
 				TargetPath: firstTargetPath,
-				Mod: operationplan.ModContext{
+				Mod: dto.ModContext{
 					ModID:   1,
 					ModName: "First Mod",
 				},
@@ -274,11 +275,11 @@ func TestProfileServiceApplyProfileOperationPlanRejectsWhenProfileAlreadyApplied
 	secondSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"second.txt": "second"})
 	secondSourcePath := filepath.Join(secondSourceRoot, "second.txt")
 	secondTargetPath := filepath.Join(gameRoot, "second.txt")
-	blockedResult, err := service.ApplyProfileOperationPlan(context.Background(), secondProfileID, operationplan.OperationPlan{
+	blockedResult, err := service.ApplyProfileOperationPlan(context.Background(), secondProfileID, dto.OperationPlan{
 		CanApply: true,
-		Operations: []operationplan.Operation{
+		Operations: []dto.Operation{
 			{
-				Type:       operationplan.OperationTypeCopy,
+				Type:       dto.OperationTypeCopy,
 				SourcePath: &secondSourcePath,
 				TargetPath: secondTargetPath,
 			},
@@ -327,11 +328,11 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	sourcePath := filepath.Join(sourceRoot, "modded.txt")
 	targetPath := filepath.Join(gameRoot, "modded.txt")
 	service := NewProfileService(store)
-	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, operationplan.OperationPlan{
+	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
-		Operations: []operationplan.Operation{
+		Operations: []dto.Operation{
 			{
-				Type:       operationplan.OperationTypeCopy,
+				Type:       dto.OperationTypeCopy,
 				SourcePath: &sourcePath,
 				TargetPath: targetPath,
 			},
@@ -364,7 +365,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	_, err := service.ApplyProfileOperationPlan(context.Background(), 1, operationplan.OperationPlan{CanApply: false})
+	_, err := service.ApplyProfileOperationPlan(context.Background(), 1, dto.OperationPlan{CanApply: false})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want blocking issue error")
 	}
@@ -380,7 +381,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsInvalidProfileID(t *testi
 	defer closeStore(t, store)
 
 	service := NewProfileService(store)
-	_, err := service.ApplyProfileOperationPlan(context.Background(), 0, operationplan.OperationPlan{CanApply: true})
+	_, err := service.ApplyProfileOperationPlan(context.Background(), 0, dto.OperationPlan{CanApply: true})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want invalid profile ID error")
 	}
@@ -435,7 +436,7 @@ func addServiceInstallConfig(t *testing.T, store *storage.Store, modID int64, st
 	}
 }
 
-func servicePlanHasIssueKind(issues []operationplan.PlanIssue, kind operationplan.PlanIssueKind) bool {
+func servicePlanHasIssueKind(issues []dto.PlanIssue, kind dto.PlanIssueKind) bool {
 	for _, issue := range issues {
 		if issue.Kind == kind {
 			return true

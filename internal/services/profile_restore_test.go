@@ -8,8 +8,9 @@ import (
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/restoreplan"
+	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestProfileServiceRestoreVanillaStateRestoresFilesClearsStateAndDeletesBackups(t *testing.T) {
@@ -169,7 +170,7 @@ func saveServiceRestoreAppliedState(t *testing.T, store *storage.Store, gameID i
 	if err != nil {
 		t.Fatalf("EncodeManifest() error = %v", err)
 	}
-	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              gameID,
 		ProfileID:           profileID,
 		ManifestJSON:        manifestJSON,
@@ -228,7 +229,7 @@ func writeServiceRestoreFile(t *testing.T, root string, relativePath string, con
 	return path
 }
 
-func serviceRestoreResultContainsError(result restoreplan.RestoreResult, substring string) bool {
+func serviceRestoreResultContainsError(result dto.RestoreResult, substring string) bool {
 	for _, operationResult := range result.Results {
 		if operationResult.Error != nil && strings.Contains(*operationResult.Error, substring) {
 			return true

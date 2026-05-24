@@ -4,8 +4,8 @@ import {
   GetAppliedProfileSummary,
   RestoreVanillaState,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
-import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/models';
-import type { RestoreResult } from '@bindings/github.com/phergul/mod-manager/internal/restoreplan/models';
+import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { RestoreResult } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

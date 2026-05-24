@@ -7,7 +7,7 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import * as storage$0 from "../storage/models.js";
+import * as dto$0 from "./dto/models.js";
 
 export function EnsureGameModStoragePath(gameID: number): $CancellablePromise<string> {
     return $Call.ByID(606713683, gameID);
@@ -25,7 +25,7 @@ export function ResolveGameModStoragePath(gameID: number): $CancellablePromise<s
     return $Call.ByID(2190485991, gameID);
 }
 
-export function SetGameModStoragePathOverride(gameID: number, path: string): $CancellablePromise<storage$0.StoredGame> {
+export function SetGameModStoragePathOverride(gameID: number, path: string): $CancellablePromise<dto$0.StoredGame> {
     return $Call.ByID(2381929503, gameID, path).then(($result: any) => {
         return $$createType0($result);
     });
@@ -40,4 +40,4 @@ export function SetThemeID(themeID: string): $CancellablePromise<void> {
 }
 
 // Private type creation functions
-const $$createType0 = storage$0.StoredGame.createFrom;
+const $$createType0 = dto$0.StoredGame.createFrom;

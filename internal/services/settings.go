@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -65,14 +66,19 @@ func (s *SettingsService) SetThemeID(ctx context.Context, themeID string) (err e
 	return s.store.SetThemeID(ctx, themeID)
 }
 
-func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game storage.StoredGame, err error) {
+func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game dto.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("set game mod storage path override: %w", err)
 		}
 	}()
 
-	return s.store.SetGameModStoragePathOverride(ctx, gameID, path)
+	storedGame, err := s.store.SetGameModStoragePathOverride(ctx, gameID, path)
+	if err != nil {
+		return dto.StoredGame{}, err
+	}
+
+	return toDTOStoredGame(storedGame), nil
 }
 
 func (s *SettingsService) ResolveGameModStoragePath(ctx context.Context, gameID int64) (path string, err error) {

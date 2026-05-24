@@ -6,33 +6,11 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-const (
-	GameSourceManual = "manual"
-	GameSourceSteam  = "steam"
-)
-
-type StoredGame struct {
-	ID                     int64   `db:"id"`
-	Name                   string  `db:"name"`
-	InstallPath            string  `db:"install_path"`
-	Source                 string  `db:"source"`
-	SourceID               *string `db:"source_id"`
-	Available              bool    `db:"available"`
-	LastSeenAt             *string `db:"last_seen_at"`
-	ModStoragePath         *string `db:"mod_storage_path"`
-	ModStoragePathOverride *string `db:"mod_storage_path_override"`
-}
-
-type SourceGame struct {
-	SourceID    string
-	Name        string
-	InstallPath string
-}
-
-func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sourceID string) (StoredGame, bool, error) {
-	var game StoredGame
+func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sourceID string) (dbtypes.StoredGame, bool, error) {
+	var game dbtypes.StoredGame
 	err := tx.GetContext(ctx, &game, `
 		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
@@ -41,17 +19,17 @@ func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sour
 	`, source, sourceID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return StoredGame{}, false, nil
+			return dbtypes.StoredGame{}, false, nil
 		}
 
-		return StoredGame{}, false, fmt.Errorf("find game by source: %w", err)
+		return dbtypes.StoredGame{}, false, fmt.Errorf("find game by source: %w", err)
 	}
 
 	return game, true, nil
 }
 
-func getStoredGameByInstallPath(ctx context.Context, tx *sqlx.Tx, installPath string) (StoredGame, bool, error) {
-	var game StoredGame
+func getStoredGameByInstallPath(ctx context.Context, tx *sqlx.Tx, installPath string) (dbtypes.StoredGame, bool, error) {
+	var game dbtypes.StoredGame
 	err := tx.GetContext(ctx, &game, `
 		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
@@ -59,24 +37,24 @@ func getStoredGameByInstallPath(ctx context.Context, tx *sqlx.Tx, installPath st
 	`, installPath)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return StoredGame{}, false, nil
+			return dbtypes.StoredGame{}, false, nil
 		}
 
-		return StoredGame{}, false, fmt.Errorf("find game by install path: %w", err)
+		return dbtypes.StoredGame{}, false, fmt.Errorf("find game by install path: %w", err)
 	}
 
 	return game, true, nil
 }
 
-func getStoredGameByID(ctx context.Context, tx *sqlx.Tx, id int64) (StoredGame, error) {
-	var game StoredGame
+func getStoredGameByID(ctx context.Context, tx *sqlx.Tx, id int64) (dbtypes.StoredGame, error) {
+	var game dbtypes.StoredGame
 	err := tx.GetContext(ctx, &game, `
 		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games
 		WHERE id = ?
 	`, id)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("get stored game: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("get stored game: %w", err)
 	}
 
 	return game, nil

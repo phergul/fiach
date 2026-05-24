@@ -8,6 +8,7 @@ import (
 	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/fileops"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 type FolderSource struct {
@@ -31,8 +32,8 @@ func NewFolderSource(sourceFolderPath string) (source FolderSource, err error) {
 	}, nil
 }
 
-func (s FolderSource) Type() storage.ModSourceType {
-	return storage.ModSourceTypeFolder
+func (s FolderSource) Type() dbtypes.ModSourceType {
+	return dbtypes.ModSourceTypeFolder
 }
 
 func (s FolderSource) OriginalPath() string {

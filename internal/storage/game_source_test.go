@@ -4,6 +4,8 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestSaveSourceScanInsertsNewGames(t *testing.T) {
@@ -12,7 +14,7 @@ func TestSaveSourceScanInsertsNewGames(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	result, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	result, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal", "/games/Portal"),
 		sourceGame("20", "Half-Life", "/games/Half-Life"),
 	})
@@ -28,7 +30,7 @@ func TestSaveSourceScanInsertsNewGames(t *testing.T) {
 	}
 
 	for _, game := range result.Games {
-		if game.Source != GameSourceSteam {
+		if game.Source != dbtypes.GameSourceSteam {
 			t.Fatalf("Source = %q, want steam", game.Source)
 		}
 		if !game.Available {
@@ -71,13 +73,13 @@ func TestSaveSourceScanUpdatesExistingGameBySourceID(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	if _, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	if _, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Old Portal", "/games/OldPortal"),
 	}); err != nil {
 		t.Fatalf("first SaveSourceScan() error = %v", err)
 	}
 
-	result, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	result, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal", "/games/Portal"),
 	})
 	if err != nil {
@@ -103,7 +105,7 @@ func TestSaveSourceScanAttachesExistingInstallPathToSource(t *testing.T) {
 
 	insertManualGame(t, store, "Portal", "/games/Portal")
 
-	result, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	result, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal Updated", "/games/Portal"),
 	})
 	if err != nil {
@@ -118,7 +120,7 @@ func TestSaveSourceScanAttachesExistingInstallPathToSource(t *testing.T) {
 	}
 
 	game := result.Games[0]
-	if game.Source != GameSourceSteam || game.SourceID == nil || *game.SourceID != "10" || !game.Available {
+	if game.Source != dbtypes.GameSourceSteam || game.SourceID == nil || *game.SourceID != "10" || !game.Available {
 		t.Fatalf("game metadata = %+v, want attached Steam metadata", game)
 	}
 }
@@ -130,14 +132,14 @@ func TestSaveSourceScanMarksMissingSourceGamesUnavailable(t *testing.T) {
 	defer closeStore(t, store)
 
 	insertManualGame(t, store, "Manual", "/games/Manual")
-	if _, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	if _, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal", "/games/Portal"),
 		sourceGame("20", "Half-Life", "/games/Half-Life"),
 	}); err != nil {
 		t.Fatalf("first SaveSourceScan() error = %v", err)
 	}
 
-	result, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	result, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal", "/games/Portal"),
 	})
 	if err != nil {
@@ -147,10 +149,10 @@ func TestSaveSourceScanMarksMissingSourceGamesUnavailable(t *testing.T) {
 	if result.MarkedUnavailable != 1 {
 		t.Fatalf("MarkedUnavailable = %d, want 1", result.MarkedUnavailable)
 	}
-	if !storedGameAvailable(t, store, GameSourceSteam, "10") {
+	if !storedGameAvailable(t, store, dbtypes.GameSourceSteam, "10") {
 		t.Fatal("Steam app 10 available = false, want true")
 	}
-	if storedGameAvailable(t, store, GameSourceSteam, "20") {
+	if storedGameAvailable(t, store, dbtypes.GameSourceSteam, "20") {
 		t.Fatal("Steam app 20 available = true, want false")
 	}
 	if !storedGameByInstallPathAvailable(t, store, "/games/Manual") {
@@ -164,13 +166,13 @@ func TestSaveSourceScanEmptyScanMarksAllSourceGamesUnavailable(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	if _, err := store.SaveSourceScan(context.Background(), GameSourceSteam, []SourceGame{
+	if _, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
 		sourceGame("10", "Portal", "/games/Portal"),
 	}); err != nil {
 		t.Fatalf("first SaveSourceScan() error = %v", err)
 	}
 
-	result, err := store.SaveSourceScan(context.Background(), GameSourceSteam, nil)
+	result, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, nil)
 	if err != nil {
 		t.Fatalf("empty SaveSourceScan() error = %v", err)
 	}
@@ -178,13 +180,13 @@ func TestSaveSourceScanEmptyScanMarksAllSourceGamesUnavailable(t *testing.T) {
 	if result.MarkedUnavailable != 1 {
 		t.Fatalf("MarkedUnavailable = %d, want 1", result.MarkedUnavailable)
 	}
-	if storedGameAvailable(t, store, GameSourceSteam, "10") {
+	if storedGameAvailable(t, store, dbtypes.GameSourceSteam, "10") {
 		t.Fatal("Steam app 10 available = true, want false")
 	}
 }
 
-func sourceGame(sourceID string, name string, installPath string) SourceGame {
-	return SourceGame{
+func sourceGame(sourceID string, name string, installPath string) dbtypes.SourceGame {
+	return dbtypes.SourceGame{
 		SourceID:    sourceID,
 		Name:        name,
 		InstallPath: installPath,

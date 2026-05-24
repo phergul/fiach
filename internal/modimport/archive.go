@@ -9,10 +9,12 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 var windowsVolumePath = regexp.MustCompile(`^[A-Za-z]:`)
@@ -40,8 +42,8 @@ func NewArchiveSource(archiveFilePath string) (source ArchiveSource, err error) 
 	}, nil
 }
 
-func (s ArchiveSource) Type() storage.ModSourceType {
-	return storage.ModSourceTypeArchive
+func (s ArchiveSource) Type() dbtypes.ModSourceType {
+	return dbtypes.ModSourceTypeArchive
 }
 
 func (s ArchiveSource) OriginalPath() string {
@@ -245,13 +247,7 @@ func topLevelArchiveName(name string) (root string, hasChild bool) {
 }
 
 func archiveEntryIgnored(name string) bool {
-	for _, part := range strings.Split(name, "/") {
-		if fileignore.Has(part) {
-			return true
-		}
-	}
-
-	return false
+	return slices.ContainsFunc(strings.Split(name, "/"), fileignore.Has)
 }
 
 func safeDestinationPath(root string, entryName string) (string, error) {

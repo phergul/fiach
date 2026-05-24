@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { BuildProfileOperationPlan } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
-import type { OperationPlan } from '@bindings/github.com/phergul/mod-manager/internal/operationplan/models';
+import type { OperationPlan } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
 export const useProfileOperationPlan = (profileID: number | null) => {

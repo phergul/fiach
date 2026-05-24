@@ -8,37 +8,36 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/services/dto"
 )
 
-func importFolderMod(ctx context.Context, service *ModService, gameID int64, name string, sourcePath string) (storage.Mod, error) {
-	result, err := service.ImportMod(ctx, ImportModInput{
+func importFolderMod(ctx context.Context, service *ModService, gameID int64, name string, sourcePath string) (dto.Mod, error) {
+	result, err := service.ImportMod(ctx, dto.ImportModInput{
 		GameID:             gameID,
 		Name:               name,
-		SourceType:         storage.ModSourceTypeFolder,
+		SourceType:         dto.ModSourceTypeFolder,
 		SourcePath:         sourcePath,
-		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		StrategyType:       dto.StrategyTypeGenericCopy,
 		TargetRelativePath: ".",
 	})
 	if err != nil {
-		return storage.Mod{}, err
+		return dto.Mod{}, err
 	}
 
 	return result.Mod, nil
 }
 
-func importArchiveMod(ctx context.Context, service *ModService, gameID int64, name string, archivePath string) (storage.Mod, error) {
-	result, err := service.ImportMod(ctx, ImportModInput{
+func importArchiveMod(ctx context.Context, service *ModService, gameID int64, name string, archivePath string) (dto.Mod, error) {
+	result, err := service.ImportMod(ctx, dto.ImportModInput{
 		GameID:             gameID,
 		Name:               name,
-		SourceType:         storage.ModSourceTypeArchive,
+		SourceType:         dto.ModSourceTypeArchive,
 		SourcePath:         archivePath,
-		StrategyType:       installconfig.StrategyTypeGenericCopy,
+		StrategyType:       dto.StrategyTypeGenericCopy,
 		TargetRelativePath: ".",
 	})
 	if err != nil {
-		return storage.Mod{}, err
+		return dto.Mod{}, err
 	}
 
 	return result.Mod, nil

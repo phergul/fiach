@@ -7,21 +7,21 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import * as storage$0 from "../storage/models.js";
+import * as dto$0 from "./dto/models.js";
 
-export function GetStoredGames(): $CancellablePromise<storage$0.StoredGame[]> {
+export function GetStoredGames(): $CancellablePromise<dto$0.StoredGame[]> {
     return $Call.ByID(3350881315).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
-export function ScanAndSaveGames(): $CancellablePromise<storage$0.SourceScanResult> {
+export function ScanAndSaveGames(): $CancellablePromise<dto$0.SourceScanResult> {
     return $Call.ByID(3143372107).then(($result: any) => {
         return $$createType2($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = storage$0.StoredGame.createFrom;
+const $$createType0 = dto$0.StoredGame.createFrom;
 const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = storage$0.SourceScanResult.createFrom;
+const $$createType2 = dto$0.SourceScanResult.createFrom;

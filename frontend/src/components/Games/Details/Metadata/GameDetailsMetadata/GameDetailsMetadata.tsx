@@ -1,6 +1,6 @@
 import { CheckCircle2, CircleSlash2, Database, Package, Users } from 'lucide-react';
 
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 
 import './GameDetailsMetadata.scss';
 

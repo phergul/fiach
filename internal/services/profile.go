@@ -5,19 +5,13 @@ import (
 	"fmt"
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
+	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 type ProfileService struct {
 	store *storage.Store
-}
-
-type AppliedProfileSummary struct {
-	GameID                   int64
-	ProfileID                int64
-	ProfileName              string
-	AppliedAt                string
-	HasAppliedProfileChanged *bool
 }
 
 func NewProfileService(store *storage.Store) *ProfileService {
@@ -26,34 +20,49 @@ func NewProfileService(store *storage.Store) *ProfileService {
 	}
 }
 
-func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name string) (profile storage.ModProfile, err error) {
+func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name string) (profile dto.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("create profile: %w", err)
 		}
 	}()
 
-	return s.store.CreateProfile(ctx, gameID, name)
+	storedProfile, err := s.store.CreateProfile(ctx, gameID, name)
+	if err != nil {
+		return dto.ModProfile{}, err
+	}
+
+	return toDTOModProfile(storedProfile), nil
 }
 
-func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []storage.ModProfile, err error) {
+func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []dto.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list profiles: %w", err)
 		}
 	}()
 
-	return s.store.ListProfiles(ctx, gameID)
+	storedProfiles, err := s.store.ListProfiles(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+
+	return toDTOModProfiles(storedProfiles), nil
 }
 
-func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, name string) (profile storage.ModProfile, err error) {
+func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, name string) (profile dto.ModProfile, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("rename profile: %w", err)
 		}
 	}()
 
-	return s.store.RenameProfile(ctx, profileID, name)
+	storedProfile, err := s.store.RenameProfile(ctx, profileID, name)
+	if err != nil {
+		return dto.ModProfile{}, err
+	}
+
+	return toDTOModProfile(storedProfile), nil
 }
 
 func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (err error) {
@@ -80,7 +89,7 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 	return s.store.DeleteProfile(ctx, profileID)
 }
 
-func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID int64) (summary *AppliedProfileSummary, err error) {
+func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID int64) (summary *dto.AppliedProfileSummary, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get applied profile summary: %w", err)
@@ -109,7 +118,7 @@ func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID in
 		return nil, err
 	}
 
-	return &AppliedProfileSummary{
+	return &dto.AppliedProfileSummary{
 		GameID:                   state.GameID,
 		ProfileID:                state.ProfileID,
 		ProfileName:              profileName,
@@ -118,7 +127,7 @@ func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID in
 	}, nil
 }
 
-func (s *ProfileService) hasAppliedProfileCompositionChanged(ctx context.Context, state storage.AppliedProfileState) (*bool, error) {
+func (s *ProfileService) hasAppliedProfileCompositionChanged(ctx context.Context, state dbtypes.AppliedProfileState) (*bool, error) {
 	if state.ProfileCompositionSnapshotJSON == nil || state.ProfileCompositionSnapshotHash == nil {
 		return nil, nil
 	}
@@ -139,7 +148,7 @@ func (s *ProfileService) hasAppliedProfileCompositionChanged(ctx context.Context
 	return &changed, nil
 }
 
-func encodeProfileCompositionSnapshot(profileID int64, profileMods []storage.ProfileMod) (appliedstate.EncodedProfileCompositionSnapshot, error) {
+func encodeProfileCompositionSnapshot(profileID int64, profileMods []dbtypes.ProfileMod) (appliedstate.EncodedSnapshot, error) {
 	mods := make([]appliedstate.ProfileCompositionMod, 0, len(profileMods))
 	for _, profileMod := range profileMods {
 		mods = append(mods, appliedstate.ProfileCompositionMod{

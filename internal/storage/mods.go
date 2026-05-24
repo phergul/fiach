@@ -7,37 +7,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type Mod struct {
-	ID                 int64         `db:"id"`
-	GameID             int64         `db:"game_id"`
-	Name               string        `db:"name"`
-	SourceType         ModSourceType `db:"source_type"`
-	SourcePath         string        `db:"source_path"`
-	OriginalSourcePath string        `db:"original_source_path"`
-	OriginalSourceName *string       `db:"original_source_name"`
-	CreatedAt          string        `db:"created_at"`
-	UpdatedAt          string        `db:"updated_at"`
-}
-
-type ModSourceType string
-
-const (
-	ModSourceTypeFolder  ModSourceType = "folder"
-	ModSourceTypeArchive ModSourceType = "archive"
-)
-
-type CreateModInput struct {
-	GameID             int64
-	Name               string
-	SourceType         ModSourceType
-	SourcePath         string
-	OriginalSourcePath string
-	OriginalSourceName *string
-}
-
-func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err error) {
+func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []dbtypes.Mod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select game mods: %w", err)
@@ -61,7 +35,7 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []Mod, err err
 	return mods, nil
 }
 
-func (s *Store) CreateMod(ctx context.Context, input CreateModInput) (mod Mod, err error) {
+func (s *Store) CreateMod(ctx context.Context, input dbtypes.CreateModInput) (mod dbtypes.Mod, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("insert mod row: %w", err)
@@ -69,18 +43,18 @@ func (s *Store) CreateMod(ctx context.Context, input CreateModInput) (mod Mod, e
 	}()
 
 	if s == nil || s.db == nil {
-		return Mod{}, errors.New("store is not open")
+		return dbtypes.Mod{}, errors.New("store is not open")
 	}
 
 	mod, err = insertMod(ctx, s.db, input)
 	if err != nil {
-		return Mod{}, err
+		return dbtypes.Mod{}, err
 	}
 
 	return mod, nil
 }
 
-func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod Mod, found bool, err error) {
+func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod dbtypes.Mod, found bool, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("find mod by original source path: %w", err)
@@ -88,12 +62,12 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	}()
 
 	if s == nil || s.db == nil {
-		return Mod{}, false, errors.New("store is not open")
+		return dbtypes.Mod{}, false, errors.New("store is not open")
 	}
 
 	originalSourcePath, err = CanonicalModOriginalSourcePath(originalSourcePath)
 	if err != nil {
-		return Mod{}, false, err
+		return dbtypes.Mod{}, false, err
 	}
 
 	err = s.db.GetContext(ctx, &mod, `
@@ -104,10 +78,10 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	`, gameID, originalSourcePath)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Mod{}, false, nil
+			return dbtypes.Mod{}, false, nil
 		}
 
-		return Mod{}, false, err
+		return dbtypes.Mod{}, false, err
 	}
 
 	return mod, true, nil
@@ -116,28 +90,28 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 func insertMod(ctx context.Context, db interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 	GetContext(context.Context, any, string, ...any) error
-}, input CreateModInput) (Mod, error) {
+}, input dbtypes.CreateModInput) (dbtypes.Mod, error) {
 	name := strings.TrimSpace(input.Name)
 	if name == "" {
-		return Mod{}, errors.New("mod name is required")
+		return dbtypes.Mod{}, errors.New("mod name is required")
 	}
 
 	sourceType := input.SourceType
 	if sourceType == "" {
-		sourceType = ModSourceTypeFolder
+		sourceType = dbtypes.ModSourceTypeFolder
 	}
-	if sourceType != ModSourceTypeFolder && sourceType != ModSourceTypeArchive {
-		return Mod{}, fmt.Errorf("unsupported mod source type %q", sourceType)
+	if sourceType != dbtypes.ModSourceTypeFolder && sourceType != dbtypes.ModSourceTypeArchive {
+		return dbtypes.Mod{}, fmt.Errorf("unsupported mod source type %q", sourceType)
 	}
 
 	sourcePath := cleanOptionalPath(input.SourcePath)
 	if sourcePath == "" {
-		return Mod{}, errors.New("managed mod source path is required")
+		return dbtypes.Mod{}, errors.New("managed mod source path is required")
 	}
 
 	originalSourcePath, err := CanonicalModOriginalSourcePath(input.OriginalSourcePath)
 	if err != nil {
-		return Mod{}, err
+		return dbtypes.Mod{}, err
 	}
 
 	originalSourceName := cleanOptionalString(input.OriginalSourceName)
@@ -146,12 +120,12 @@ func insertMod(ctx context.Context, db interface {
 		VALUES (?, ?, ?, ?, ?, ?)
 	`, input.GameID, name, sourceType, sourcePath, originalSourcePath, nullableText(originalSourceName))
 	if err != nil {
-		return Mod{}, err
+		return dbtypes.Mod{}, err
 	}
 
 	modID, err := result.LastInsertId()
 	if err != nil {
-		return Mod{}, fmt.Errorf("get created mod id: %w", err)
+		return dbtypes.Mod{}, fmt.Errorf("get created mod id: %w", err)
 	}
 
 	return getModByID(ctx, db, modID)
@@ -161,15 +135,15 @@ type modGetter interface {
 	GetContext(context.Context, any, string, ...any) error
 }
 
-func getModByID(ctx context.Context, db modGetter, modID int64) (Mod, error) {
-	var mod Mod
+func getModByID(ctx context.Context, db modGetter, modID int64) (dbtypes.Mod, error) {
+	var mod dbtypes.Mod
 	err := db.GetContext(ctx, &mod, `
 		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
 		FROM mods
 		WHERE id = ?
 	`, modID)
 	if err != nil {
-		return Mod{}, err
+		return dbtypes.Mod{}, err
 	}
 
 	return mod, nil

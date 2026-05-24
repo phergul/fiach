@@ -6,6 +6,8 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestListModsReturnsGameModsOrderedByName(t *testing.T) {
@@ -81,10 +83,10 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 	}
 
 	originalName := "SkyUI.zip"
-	mod, err := store.CreateMod(context.Background(), CreateModInput{
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
 		GameID:             gameID,
 		Name:               " SkyUI ",
-		SourceType:         ModSourceTypeArchive,
+		SourceType:         dbtypes.ModSourceTypeArchive,
 		SourcePath:         "/managed/skyui",
 		OriginalSourcePath: originalPath,
 		OriginalSourceName: &originalName,
@@ -93,7 +95,7 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 		t.Fatalf("CreateMod() error = %v", err)
 	}
 
-	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != ModSourceTypeArchive || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
+	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != dbtypes.ModSourceTypeArchive || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
 		t.Fatalf("CreateMod() = %+v, want persisted mod fields", mod)
 	}
 }
@@ -133,7 +135,7 @@ func TestCreateModRequiresNameAndPaths(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := store.CreateMod(context.Background(), CreateModInput{
+			_, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
 				GameID:             gameID,
 				Name:               tt.modName,
 				SourcePath:         tt.sourcePath,
@@ -154,7 +156,7 @@ func TestCreateOrReplaceModInstallConfigPersistsNullableSourceSubpath(t *testing
 
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
-	config, err := store.CreateOrReplaceModInstallConfig(context.Background(), CreateModInstallConfigInput{
+	config, err := store.CreateOrReplaceModInstallConfig(context.Background(), dbtypes.CreateModInstallConfigInput{
 		ModID:              modID,
 		StrategyType:       "generic_copy",
 		TargetBase:         "game_root",
@@ -168,7 +170,7 @@ func TestCreateOrReplaceModInstallConfigPersistsNullableSourceSubpath(t *testing
 	}
 
 	sourceSubpath := "plugin"
-	replaced, err := store.CreateOrReplaceModInstallConfig(context.Background(), CreateModInstallConfigInput{
+	replaced, err := store.CreateOrReplaceModInstallConfig(context.Background(), dbtypes.CreateModInstallConfigInput{
 		ModID:              modID,
 		StrategyType:       "generic_copy",
 		TargetBase:         "game_root",
@@ -193,7 +195,7 @@ func TestGetModInstallConfigReportsMissingConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetModInstallConfig() error = %v", err)
 	}
-	if found || config != (ModInstallConfig{}) {
+	if found || config != (dbtypes.ModInstallConfig{}) {
 		t.Fatalf("GetModInstallConfig() = %+v, %v; want missing", config, found)
 	}
 }
@@ -205,14 +207,14 @@ func TestCreateModWithInstallConfigIsTransactional(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	result, err := store.CreateModWithInstallConfig(context.Background(), CreateModWithInstallConfigInput{
-		Mod: CreateModInput{
+	result, err := store.CreateModWithInstallConfig(context.Background(), dbtypes.CreateModWithInstallConfigInput{
+		Mod: dbtypes.CreateModInput{
 			GameID:             gameID,
 			Name:               "SkyUI",
 			SourcePath:         "/managed/skyui",
 			OriginalSourcePath: "/imports/skyui",
 		},
-		Config: CreateModInstallConfigInput{
+		Config: dbtypes.CreateModInstallConfigInput{
 			StrategyType:       "generic_copy",
 			TargetBase:         "game_root",
 			TargetRelativePath: "Data",
@@ -225,14 +227,14 @@ func TestCreateModWithInstallConfigIsTransactional(t *testing.T) {
 		t.Fatalf("CreateModWithInstallConfig() = %+v, want mod and config", result)
 	}
 
-	_, err = store.CreateModWithInstallConfig(context.Background(), CreateModWithInstallConfigInput{
-		Mod: CreateModInput{
+	_, err = store.CreateModWithInstallConfig(context.Background(), dbtypes.CreateModWithInstallConfigInput{
+		Mod: dbtypes.CreateModInput{
 			GameID:             gameID,
 			Name:               "Broken",
 			SourcePath:         "/managed/broken",
 			OriginalSourcePath: "/imports/broken",
 		},
-		Config: CreateModInstallConfigInput{
+		Config: dbtypes.CreateModInstallConfigInput{
 			StrategyType:       "unsupported",
 			TargetBase:         "game_root",
 			TargetRelativePath: "Data",
@@ -494,7 +496,7 @@ func TestReorderProfileModsAcceptsEmptyOrderForEmptyProfile(t *testing.T) {
 	}
 }
 
-func assertProfileModOrder(t *testing.T, profileMods []ProfileMod, modIDs []int64) {
+func assertProfileModOrder(t *testing.T, profileMods []dbtypes.ProfileMod, modIDs []int64) {
 	t.Helper()
 
 	if len(profileMods) != len(modIDs) {

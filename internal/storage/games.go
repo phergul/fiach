@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 const gameModsDirName = "mods"
 
-func (s *Store) ListStoredGames(ctx context.Context) (games []StoredGame, err error) {
+func (s *Store) ListStoredGames(ctx context.Context) (games []dbtypes.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list stored games: %w", err)
@@ -35,7 +37,7 @@ func (s *Store) ListStoredGames(ctx context.Context) (games []StoredGame, err er
 	return games, nil
 }
 
-func (s *Store) GetStoredGame(ctx context.Context, gameID int64) (game StoredGame, err error) {
+func (s *Store) GetStoredGame(ctx context.Context, gameID int64) (game dbtypes.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get stored game: %w", err)
@@ -43,7 +45,7 @@ func (s *Store) GetStoredGame(ctx context.Context, gameID int64) (game StoredGam
 	}()
 
 	if s == nil || s.db == nil {
-		return StoredGame{}, errors.New("store is not open")
+		return dbtypes.StoredGame{}, errors.New("store is not open")
 	}
 
 	err = s.db.GetContext(ctx, &game, `
@@ -52,13 +54,13 @@ func (s *Store) GetStoredGame(ctx context.Context, gameID int64) (game StoredGam
 		WHERE id = ?
 	`, gameID)
 	if err != nil {
-		return StoredGame{}, err
+		return dbtypes.StoredGame{}, err
 	}
 
 	return game, nil
 }
 
-func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game StoredGame, err error) {
+func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game dbtypes.StoredGame, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("update game mod storage path override: %w", err)
@@ -66,12 +68,12 @@ func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64,
 	}()
 
 	if s == nil || s.db == nil {
-		return StoredGame{}, errors.New("store is not open")
+		return dbtypes.StoredGame{}, errors.New("store is not open")
 	}
 
 	globalRoot, err := s.GetGlobalModStorageRoot(ctx)
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("read managed mod storage root: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("read managed mod storage root: %w", err)
 	}
 
 	path = cleanOptionalPath(path)
@@ -79,12 +81,12 @@ func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64,
 	if modStoragePath == "" {
 		game, err = s.GetStoredGame(ctx, gameID)
 		if err != nil {
-			return StoredGame{}, err
+			return dbtypes.StoredGame{}, err
 		}
 		game.ModStoragePathOverride = nil
 		modStoragePath, err = resolveStoredGameModStoragePath(game, globalRoot, s.defaultModStorageRoot())
 		if err != nil {
-			return StoredGame{}, fmt.Errorf("resolve cleared game mod storage path: %w", err)
+			return dbtypes.StoredGame{}, fmt.Errorf("resolve cleared game mod storage path: %w", err)
 		}
 	}
 
@@ -96,15 +98,15 @@ func (s *Store) SetGameModStoragePathOverride(ctx context.Context, gameID int64,
 		WHERE id = ?
 	`, nullableText(path), modStoragePath, gameID)
 	if err != nil {
-		return StoredGame{}, err
+		return dbtypes.StoredGame{}, err
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return StoredGame{}, fmt.Errorf("get updated game count: %w", err)
+		return dbtypes.StoredGame{}, fmt.Errorf("get updated game count: %w", err)
 	}
 	if affected == 0 {
-		return StoredGame{}, sql.ErrNoRows
+		return dbtypes.StoredGame{}, sql.ErrNoRows
 	}
 
 	return s.GetStoredGame(ctx, gameID)
@@ -135,7 +137,7 @@ func (s *Store) ResolveGameModStoragePath(ctx context.Context, gameID int64, glo
 	return resolveStoredGameModStoragePath(game, globalRoot, defaultRoot)
 }
 
-func DefaultGameModStorageFolderName(game StoredGame) string {
+func DefaultGameModStorageFolderName(game dbtypes.StoredGame) string {
 	return strconv.FormatInt(game.ID, 10)
 }
 
@@ -147,7 +149,7 @@ func (s *Store) defaultModStorageRoot() string {
 	return filepath.Join(filepath.Dir(s.path), gameModsDirName)
 }
 
-func resolveStoredGameModStoragePath(game StoredGame, globalRoot string, defaultRoot string) (string, error) {
+func resolveStoredGameModStoragePath(game dbtypes.StoredGame, globalRoot string, defaultRoot string) (string, error) {
 	override := cleanOptionalStringPath(game.ModStoragePathOverride)
 	if override != "" {
 		return override, nil
@@ -185,7 +187,7 @@ func (s *Store) RefreshGameModStoragePaths(ctx context.Context) (err error) {
 		return err
 	}
 
-	games := []StoredGame{}
+	games := []dbtypes.StoredGame{}
 	if err := s.db.SelectContext(ctx, &games, `
 		SELECT id, name, install_path, source, source_id, available, last_seen_at, mod_storage_path, mod_storage_path_override
 		FROM games

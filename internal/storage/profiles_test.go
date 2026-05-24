@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
 func TestCreateProfileForGame(t *testing.T) {
@@ -167,7 +169,7 @@ func insertProfileTestGame(t *testing.T, store *Store, name string, installPath 
 	return id
 }
 
-func mustCreateProfile(t *testing.T, store *Store, gameID int64, name string) ModProfile {
+func mustCreateProfile(t *testing.T, store *Store, gameID int64, name string) dbtypes.ModProfile {
 	t.Helper()
 
 	profile, err := store.CreateProfile(context.Background(), gameID, name)

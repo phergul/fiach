@@ -22,6 +22,67 @@ type AtomicCopyOptions struct {
 	OpenLabel  string
 }
 
+func CopyFileAtomic(options AtomicCopyOptions) error {
+	source, err := os.Open(options.SourcePath)
+	if err != nil {
+		label := strings.TrimSpace(options.OpenLabel)
+		if label == "" {
+			label = "source file"
+		}
+		return fmt.Errorf("open %s %q: %w", label, options.SourcePath, err)
+	}
+	defer source.Close()
+
+	targetDirectory := filepath.Dir(options.TargetPath)
+	tempPrefix := options.TempPrefix
+	if tempPrefix == "" {
+		tempPrefix = ".mod-manager-*"
+	}
+	tempFile, err := os.CreateTemp(targetDirectory, tempPrefix)
+	if err != nil {
+		return fmt.Errorf("create temporary file in %q: %w", targetDirectory, err)
+	}
+	tempPath := tempFile.Name()
+	shouldRemoveTemp := true
+	defer func() {
+		if shouldRemoveTemp {
+			_ = os.Remove(tempPath)
+		}
+	}()
+
+	if _, err := io.Copy(tempFile, source); err != nil {
+		_ = tempFile.Close()
+		return fmt.Errorf("copy %q to temporary file %q: %w", options.SourcePath, tempPath, err)
+	}
+	if err := tempFile.Chmod(options.Mode); err != nil {
+		_ = tempFile.Close()
+		return fmt.Errorf("set temporary file mode %q: %w", tempPath, err)
+	}
+	if err := tempFile.Close(); err != nil {
+		return fmt.Errorf("close temporary file %q: %w", tempPath, err)
+	}
+
+	if options.Replace {
+		if err := os.Rename(tempPath, options.TargetPath); err == nil {
+			shouldRemoveTemp = false
+			return nil
+		}
+		if err := os.Remove(options.TargetPath); err != nil {
+			return fmt.Errorf("remove existing target file %q: %w", options.TargetPath, err)
+		}
+	} else if _, err := os.Lstat(options.TargetPath); err == nil {
+		return fmt.Errorf("target file %q already exists", options.TargetPath)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("stat target file %q: %w", options.TargetPath, err)
+	}
+
+	if err := os.Rename(tempPath, options.TargetPath); err != nil {
+		return fmt.Errorf("move temporary file %q to %q: %w", tempPath, options.TargetPath, err)
+	}
+	shouldRemoveTemp = false
+	return nil
+}
+
 func CleanRequiredAbsPath(name string, path string) (string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
@@ -104,67 +165,6 @@ func StatRegularFile(label string, path string) (fs.FileInfo, error) {
 	}
 
 	return info, nil
-}
-
-func CopyFileAtomic(options AtomicCopyOptions) error {
-	source, err := os.Open(options.SourcePath)
-	if err != nil {
-		label := strings.TrimSpace(options.OpenLabel)
-		if label == "" {
-			label = "source file"
-		}
-		return fmt.Errorf("open %s %q: %w", label, options.SourcePath, err)
-	}
-	defer source.Close()
-
-	targetDirectory := filepath.Dir(options.TargetPath)
-	tempPrefix := options.TempPrefix
-	if tempPrefix == "" {
-		tempPrefix = ".mod-manager-*"
-	}
-	tempFile, err := os.CreateTemp(targetDirectory, tempPrefix)
-	if err != nil {
-		return fmt.Errorf("create temporary file in %q: %w", targetDirectory, err)
-	}
-	tempPath := tempFile.Name()
-	shouldRemoveTemp := true
-	defer func() {
-		if shouldRemoveTemp {
-			_ = os.Remove(tempPath)
-		}
-	}()
-
-	if _, err := io.Copy(tempFile, source); err != nil {
-		_ = tempFile.Close()
-		return fmt.Errorf("copy %q to temporary file %q: %w", options.SourcePath, tempPath, err)
-	}
-	if err := tempFile.Chmod(options.Mode); err != nil {
-		_ = tempFile.Close()
-		return fmt.Errorf("set temporary file mode %q: %w", tempPath, err)
-	}
-	if err := tempFile.Close(); err != nil {
-		return fmt.Errorf("close temporary file %q: %w", tempPath, err)
-	}
-
-	if options.Replace {
-		if err := os.Rename(tempPath, options.TargetPath); err == nil {
-			shouldRemoveTemp = false
-			return nil
-		}
-		if err := os.Remove(options.TargetPath); err != nil {
-			return fmt.Errorf("remove existing target file %q: %w", options.TargetPath, err)
-		}
-	} else if _, err := os.Lstat(options.TargetPath); err == nil {
-		return fmt.Errorf("target file %q already exists", options.TargetPath)
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("stat target file %q: %w", options.TargetPath, err)
-	}
-
-	if err := os.Rename(tempPath, options.TargetPath); err != nil {
-		return fmt.Errorf("move temporary file %q to %q: %w", tempPath, options.TargetPath, err)
-	}
-	shouldRemoveTemp = false
-	return nil
 }
 
 func RemoveEmptyParentDirectories(startPath string, root string) error {

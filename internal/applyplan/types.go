@@ -9,11 +9,6 @@ type Context struct {
 	GameModStoragePath string
 }
 
-type resolvedContext struct {
-	gameInstallPath    string
-	gameModStoragePath string
-}
-
 type operationOutcome struct {
 	message          string
 	createdDirectory bool

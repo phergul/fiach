@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Search } from 'lucide-react';
 
-import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { Modal } from '@components/Common/Modal/Modal';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 

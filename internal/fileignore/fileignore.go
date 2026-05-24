@@ -1,10 +1,10 @@
 package fileignore
 
-var IgnoredNames = map[string]struct{}{
+var ignoredRegistry = map[string]struct{}{
 	".DS_Store": {},
 }
 
 func Has(name string) bool {
-	_, ignored := IgnoredNames[name]
+	_, ignored := ignoredRegistry[name]
 	return ignored
 }

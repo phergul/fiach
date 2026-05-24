@@ -1,4 +1,4 @@
-import type { ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { GameProfileAssignedModRow } from '@components/Games/Details/Profiles/GameProfileAssignedModRow/GameProfileAssignedModRow';
 
 import './GameProfileAssignedModsList.scss';

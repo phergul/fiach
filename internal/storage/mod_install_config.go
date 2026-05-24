@@ -8,37 +8,10 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-type ModInstallConfig struct {
-	ModID              int64   `db:"mod_id"`
-	StrategyType       string  `db:"strategy_type"`
-	TargetBase         string  `db:"target_base"`
-	TargetRelativePath string  `db:"target_relative_path"`
-	SourceSubpath      *string `db:"source_subpath"`
-	CreatedAt          string  `db:"created_at"`
-	UpdatedAt          string  `db:"updated_at"`
-}
-
-type CreateModInstallConfigInput struct {
-	ModID              int64
-	StrategyType       string
-	TargetBase         string
-	TargetRelativePath string
-	SourceSubpath      *string
-}
-
-type CreateModWithInstallConfigInput struct {
-	Mod    CreateModInput
-	Config CreateModInstallConfigInput
-}
-
-type CreateModWithInstallConfigResult struct {
-	Mod    Mod
-	Config ModInstallConfig
-}
-
-func (s *Store) CreateOrReplaceModInstallConfig(ctx context.Context, input CreateModInstallConfigInput) (config ModInstallConfig, err error) {
+func (s *Store) CreateOrReplaceModInstallConfig(ctx context.Context, input dbtypes.CreateModInstallConfigInput) (config dbtypes.ModInstallConfig, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("upsert mod install config row: %w", err)
@@ -46,22 +19,22 @@ func (s *Store) CreateOrReplaceModInstallConfig(ctx context.Context, input Creat
 	}()
 
 	if s == nil || s.db == nil {
-		return ModInstallConfig{}, errors.New("store is not open")
+		return dbtypes.ModInstallConfig{}, errors.New("store is not open")
 	}
 
 	if err := validateModInstallConfigInput(input); err != nil {
-		return ModInstallConfig{}, err
+		return dbtypes.ModInstallConfig{}, err
 	}
 
 	config, err = upsertModInstallConfig(ctx, s.db, input)
 	if err != nil {
-		return ModInstallConfig{}, err
+		return dbtypes.ModInstallConfig{}, err
 	}
 
 	return config, nil
 }
 
-func (s *Store) GetModInstallConfig(ctx context.Context, modID int64) (config ModInstallConfig, found bool, err error) {
+func (s *Store) GetModInstallConfig(ctx context.Context, modID int64) (config dbtypes.ModInstallConfig, found bool, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("select mod install config: %w", err)
@@ -69,18 +42,18 @@ func (s *Store) GetModInstallConfig(ctx context.Context, modID int64) (config Mo
 	}()
 
 	if s == nil || s.db == nil {
-		return ModInstallConfig{}, false, errors.New("store is not open")
+		return dbtypes.ModInstallConfig{}, false, errors.New("store is not open")
 	}
 
 	config, found, err = getModInstallConfig(ctx, s.db, modID)
 	if err != nil {
-		return ModInstallConfig{}, false, err
+		return dbtypes.ModInstallConfig{}, false, err
 	}
 
 	return config, found, nil
 }
 
-func (s *Store) CreateModWithInstallConfig(ctx context.Context, input CreateModWithInstallConfigInput) (result CreateModWithInstallConfigResult, err error) {
+func (s *Store) CreateModWithInstallConfig(ctx context.Context, input dbtypes.CreateModWithInstallConfigInput) (result dbtypes.CreateModWithInstallConfigResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("insert mod with install config rows: %w", err)
@@ -88,7 +61,7 @@ func (s *Store) CreateModWithInstallConfig(ctx context.Context, input CreateModW
 	}()
 
 	if s == nil || s.db == nil {
-		return CreateModWithInstallConfigResult{}, errors.New("store is not open")
+		return dbtypes.CreateModWithInstallConfigResult{}, errors.New("store is not open")
 	}
 
 	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
@@ -104,14 +77,14 @@ func (s *Store) CreateModWithInstallConfig(ctx context.Context, input CreateModW
 			return err
 		}
 
-		result = CreateModWithInstallConfigResult{
+		result = dbtypes.CreateModWithInstallConfigResult{
 			Mod:    mod,
 			Config: config,
 		}
 		return nil
 	})
 	if err != nil {
-		return CreateModWithInstallConfigResult{}, err
+		return dbtypes.CreateModWithInstallConfigResult{}, err
 	}
 
 	return result, nil
@@ -120,9 +93,9 @@ func (s *Store) CreateModWithInstallConfig(ctx context.Context, input CreateModW
 func upsertModInstallConfig(ctx context.Context, db interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 	GetContext(context.Context, any, string, ...any) error
-}, input CreateModInstallConfigInput) (ModInstallConfig, error) {
+}, input dbtypes.CreateModInstallConfigInput) (dbtypes.ModInstallConfig, error) {
 	if err := validateModInstallConfigInput(input); err != nil {
-		return ModInstallConfig{}, err
+		return dbtypes.ModInstallConfig{}, err
 	}
 
 	sourceSubpath := cleanOptionalString(input.SourceSubpath)
@@ -142,21 +115,21 @@ func upsertModInstallConfig(ctx context.Context, db interface {
 			source_subpath = excluded.source_subpath,
 			updated_at = CURRENT_TIMESTAMP
 	`, input.ModID, strings.TrimSpace(input.StrategyType), strings.TrimSpace(input.TargetBase), strings.TrimSpace(input.TargetRelativePath), nullableText(sourceSubpath)); err != nil {
-		return ModInstallConfig{}, err
+		return dbtypes.ModInstallConfig{}, err
 	}
 
 	config, found, err := getModInstallConfig(ctx, db, input.ModID)
 	if err != nil {
-		return ModInstallConfig{}, err
+		return dbtypes.ModInstallConfig{}, err
 	}
 	if !found {
-		return ModInstallConfig{}, sql.ErrNoRows
+		return dbtypes.ModInstallConfig{}, sql.ErrNoRows
 	}
 
 	return config, nil
 }
 
-func validateModInstallConfigInput(input CreateModInstallConfigInput) error {
+func validateModInstallConfigInput(input dbtypes.CreateModInstallConfigInput) error {
 	if input.ModID <= 0 {
 		return errors.New("mod id is required")
 	}
@@ -173,8 +146,8 @@ func validateModInstallConfigInput(input CreateModInstallConfigInput) error {
 	return nil
 }
 
-func getModInstallConfig(ctx context.Context, db modGetter, modID int64) (ModInstallConfig, bool, error) {
-	var config ModInstallConfig
+func getModInstallConfig(ctx context.Context, db modGetter, modID int64) (dbtypes.ModInstallConfig, bool, error) {
+	var config dbtypes.ModInstallConfig
 	err := db.GetContext(ctx, &config, `
 		SELECT mod_id, strategy_type, target_base, target_relative_path, source_subpath, created_at, updated_at
 		FROM mod_install_configs
@@ -182,10 +155,10 @@ func getModInstallConfig(ctx context.Context, db modGetter, modID int64) (ModIns
 	`, modID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ModInstallConfig{}, false, nil
+			return dbtypes.ModInstallConfig{}, false, nil
 		}
 
-		return ModInstallConfig{}, false, err
+		return dbtypes.ModInstallConfig{}, false, err
 	}
 
 	return config, true, nil

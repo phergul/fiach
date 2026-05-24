@@ -9,10 +9,11 @@ import (
 	"github.com/phergul/mod-manager/internal/applyplan"
 	"github.com/phergul/mod-manager/internal/operationplan"
 	"github.com/phergul/mod-manager/internal/restoreplan"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
-func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileID int64) (plan operationplan.OperationPlan, err error) {
+func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileID int64) (plan dto.OperationPlan, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("build profile operation plan: %w", err)
@@ -21,13 +22,18 @@ func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileI
 
 	resolved, err := operationplan.ResolveProfilePlan(ctx, s.store, profileID)
 	if err != nil {
-		return operationplan.OperationPlan{}, err
+		return dto.OperationPlan{}, err
 	}
 
-	return operationplan.BuildOperationPlan(resolved)
+	operationPlan, err := operationplan.BuildOperationPlan(resolved)
+	if err != nil {
+		return dto.OperationPlan{}, err
+	}
+
+	return toDTOOperationPlan(operationPlan), nil
 }
 
-func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan operationplan.OperationPlan) (result operationplan.ApplyOperationPlanResult, err error) {
+func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan dto.OperationPlan) (result dto.ApplyOperationPlanResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("apply profile operation plan: %w", err)
@@ -35,53 +41,55 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 	}()
 
 	if profileID <= 0 {
-		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
+		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
 	}
 	if !plan.CanApply {
-		return operationplan.ApplyOperationPlanResult{}, errors.New("operation plan has blocking issues")
+		return dto.ApplyOperationPlanResult{}, errors.New("operation plan has blocking issues")
 	}
 
 	profile, found, err := s.store.GetProfile(ctx, profileID)
 	if err != nil {
-		return operationplan.ApplyOperationPlanResult{}, err
+		return dto.ApplyOperationPlanResult{}, err
 	}
 	if !found {
-		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
+		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
 	if appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID); err != nil {
-		return operationplan.ApplyOperationPlanResult{}, err
+		return dto.ApplyOperationPlanResult{}, err
 	} else if appliedFound {
-		return operationplan.ApplyOperationPlanResult{}, fmt.Errorf("profile %d is already applied for game %d; restore vanilla before applying another profile", appliedState.ProfileID, profile.GameID)
+		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile %d is already applied for game %d; restore vanilla before applying another profile", appliedState.ProfileID, profile.GameID)
 	}
 
 	game, err := s.store.GetStoredGame(ctx, profile.GameID)
 	if err != nil {
-		return operationplan.ApplyOperationPlanResult{}, err
+		return dto.ApplyOperationPlanResult{}, err
 	}
 	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, profile.GameID, "")
 	if err != nil {
-		return operationplan.ApplyOperationPlanResult{}, err
+		return dto.ApplyOperationPlanResult{}, err
 	}
 
-	result, err = applyplan.Execute(plan, applyplan.Context{
+	internalPlan := toInternalOperationPlan(plan)
+	applyResult, err := applyplan.Execute(internalPlan, applyplan.Context{
 		GameInstallPath:    game.InstallPath,
 		GameModStoragePath: gameModStoragePath,
 	})
 	if err != nil {
-		return operationplan.ApplyOperationPlanResult{}, err
+		return dto.ApplyOperationPlanResult{}, err
 	}
-	if !result.Success {
+	result = toDTOApplyOperationPlanResult(applyResult)
+	if !applyResult.Success {
 		return result, nil
 	}
 
-	if err := s.saveAppliedProfileState(ctx, game.ID, profileID, plan, result.Manifest); err != nil {
+	if err := s.saveAppliedProfileState(ctx, game.ID, profileID, internalPlan, applyResult.Manifest); err != nil {
 		return result, err
 	}
 
 	return result, nil
 }
 
-func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) (result restoreplan.RestoreResult, err error) {
+func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) (result dto.RestoreResult, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("restore vanilla state: %w", err)
@@ -89,38 +97,39 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 	}()
 
 	if gameID <= 0 {
-		return restoreplan.RestoreResult{}, errors.New("game ID must be positive")
+		return dto.RestoreResult{}, errors.New("game ID must be positive")
 	}
 
 	game, err := s.store.GetStoredGame(ctx, gameID)
 	if err != nil {
-		return restoreplan.RestoreResult{}, err
+		return dto.RestoreResult{}, err
 	}
 	state, found, err := s.store.GetAppliedProfileState(ctx, gameID)
 	if err != nil {
-		return restoreplan.RestoreResult{}, err
+		return dto.RestoreResult{}, err
 	}
 	if !found {
-		return restoreplan.RestoreResult{}, fmt.Errorf("no applied profile state found for game %d", gameID)
+		return dto.RestoreResult{}, fmt.Errorf("no applied profile state found for game %d", gameID)
 	}
 
 	manifest, err := appliedstate.DecodeManifest(state.ManifestJSON)
 	if err != nil {
-		return restoreplan.RestoreResult{}, err
+		return dto.RestoreResult{}, err
 	}
 	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, gameID, "")
 	if err != nil {
-		return restoreplan.RestoreResult{}, err
+		return dto.RestoreResult{}, err
 	}
 
-	result, err = restoreplan.Execute(manifest, restoreplan.Context{
+	restoreResult, err := restoreplan.Execute(manifest, restoreplan.Context{
 		GameInstallPath:    game.InstallPath,
 		GameModStoragePath: gameModStoragePath,
 	})
 	if err != nil {
-		return restoreplan.RestoreResult{}, err
+		return dto.RestoreResult{}, err
 	}
-	if !result.Success {
+	result = toDTORestoreResult(restoreResult)
+	if !restoreResult.Success {
 		return result, nil
 	}
 
@@ -151,7 +160,7 @@ func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int
 		return fmt.Errorf("encode profile composition snapshot: %w", err)
 	}
 
-	_, err = s.store.SaveAppliedProfileState(ctx, storage.SaveAppliedProfileStateInput{
+	_, err = s.store.SaveAppliedProfileState(ctx, dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      profileID,
 		ManifestJSON:                   manifestJSON,

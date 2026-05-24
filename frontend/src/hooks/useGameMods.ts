@@ -4,7 +4,7 @@ import {
   GetGameManagedModStorageUsage,
   ListMods,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
-import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/storage/models';
+import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
 export const useGameMods = (gameID: number | null) => {
