@@ -97,6 +97,8 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/managed/skyui")
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
 	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
 		"Data/modded.txt": "modded",
 	})
@@ -118,7 +120,7 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 				TargetPath: targetPath,
 				BackupPath: &backupPath,
 				Mod: operationplan.ModContext{
-					ModID:   1,
+					ModID:   modID,
 					ModName: "SkyUI",
 				},
 			},
@@ -159,7 +161,7 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	if manifest.AddedFiles[0].TargetPath != targetPath || manifest.AddedFiles[0].SHA256 == "" || manifest.AddedFiles[0].SizeBytes != int64(len("modded")) {
 		t.Fatalf("manifest added file = %+v, want target integrity", manifest.AddedFiles[0])
 	}
-	if manifest.AddedFiles[0].Mod.ID != 1 || manifest.AddedFiles[0].Mod.Name != "SkyUI" {
+	if manifest.AddedFiles[0].Mod.ID != modID || manifest.AddedFiles[0].Mod.Name != "SkyUI" {
 		t.Fatalf("manifest added file mod = %+v, want tagged mod document", manifest.AddedFiles[0].Mod)
 	}
 
@@ -170,11 +172,28 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	if snapshot.Version != appliedstate.DocumentVersion || !snapshot.CanApply || len(snapshot.Operations) != 2 {
 		t.Fatalf("profile snapshot JSON = %+v, want two applicable operations", snapshot)
 	}
-	if snapshot.Operations[1].Mod.ID != 1 || snapshot.Operations[1].Mod.Name != "SkyUI" {
+	if snapshot.Operations[1].Mod.ID != modID || snapshot.Operations[1].Mod.Name != "SkyUI" {
 		t.Fatalf("profile snapshot operation mod = %+v, want tagged mod document", snapshot.Operations[1].Mod)
 	}
 	if state.ProfileSnapshotHash != sha256Hex(state.ProfileSnapshotJSON) {
 		t.Fatalf("profile snapshot hash = %q, want SHA-256 of snapshot JSON", state.ProfileSnapshotHash)
+	}
+
+	var compositionSnapshot appliedstate.ProfileCompositionDocument
+	if state.ProfileCompositionSnapshotJSON == nil {
+		t.Fatal("profile composition snapshot JSON = nil, want persisted composition snapshot")
+	}
+	if err := json.Unmarshal([]byte(*state.ProfileCompositionSnapshotJSON), &compositionSnapshot); err != nil {
+		t.Fatalf("unmarshal profile composition snapshot JSON: %v", err)
+	}
+	if compositionSnapshot.Version != appliedstate.DocumentVersion || compositionSnapshot.ProfileID != profileID || len(compositionSnapshot.Mods) != 1 {
+		t.Fatalf("profile composition snapshot JSON = %+v, want applied profile composition", compositionSnapshot)
+	}
+	if compositionSnapshot.Mods[0].ModID != modID || !compositionSnapshot.Mods[0].Enabled || compositionSnapshot.Mods[0].LoadOrder != 0 {
+		t.Fatalf("profile composition snapshot mod = %+v, want profile mod state", compositionSnapshot.Mods[0])
+	}
+	if state.ProfileCompositionSnapshotHash == nil || *state.ProfileCompositionSnapshotHash != sha256Hex(*state.ProfileCompositionSnapshotJSON) {
+		t.Fatalf("profile composition snapshot hash = %v, want SHA-256 of snapshot JSON", state.ProfileCompositionSnapshotHash)
 	}
 }
 

@@ -224,6 +224,45 @@ func TestProfileServiceGetsAppliedProfileSummary(t *testing.T) {
 	if summary == nil || summary.GameID != gameID || summary.ProfileID != profile.ID || summary.ProfileName != profile.Name || summary.AppliedAt != state.AppliedAt {
 		t.Fatalf("GetAppliedProfileSummary() = %+v, want applied profile summary", summary)
 	}
+	if summary.HasAppliedProfileChanged != nil {
+		t.Fatalf("GetAppliedProfileSummary() HasAppliedProfileChanged = %v, want nil without composition snapshot", *summary.HasAppliedProfileChanged)
+	}
+}
+
+func TestProfileServiceReportsAppliedProfileCompositionChangedState(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	firstModID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/managed/skyui")
+	secondModID := insertServiceProfileTestMod(t, store, gameID, "Patch", "/managed/patch")
+	addServiceProfileMod(t, store, profileID, firstModID, true, 0)
+	addServiceProfileMod(t, store, profileID, secondModID, false, 1)
+	saveServiceAppliedStateWithCurrentComposition(t, store, gameID, profileID)
+
+	service := NewProfileService(store)
+	summary, err := service.GetAppliedProfileSummary(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileSummary() unchanged error = %v", err)
+	}
+	if summary == nil || summary.HasAppliedProfileChanged == nil || *summary.HasAppliedProfileChanged {
+		t.Fatalf("GetAppliedProfileSummary() unchanged = %+v, want changed=false", summary)
+	}
+
+	if _, err := store.SetProfileModEnabled(context.Background(), profileID, secondModID, true); err != nil {
+		t.Fatalf("SetProfileModEnabled() error = %v", err)
+	}
+
+	summary, err = service.GetAppliedProfileSummary(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileSummary() changed error = %v", err)
+	}
+	if summary == nil || summary.HasAppliedProfileChanged == nil || !*summary.HasAppliedProfileChanged {
+		t.Fatalf("GetAppliedProfileSummary() changed = %+v, want changed=true", summary)
+	}
 }
 
 func TestProfileServiceWrapsStorageErrors(t *testing.T) {
@@ -286,4 +325,28 @@ func insertServiceProfileTestMod(t *testing.T, store *storage.Store, gameID int6
 	}
 
 	return id
+}
+
+func saveServiceAppliedStateWithCurrentComposition(t *testing.T, store *storage.Store, gameID int64, profileID int64) {
+	t.Helper()
+
+	profileMods, err := store.ListProfileMods(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() setup error = %v", err)
+	}
+	compositionSnapshot, err := encodeProfileCompositionSnapshot(profileID, profileMods)
+	if err != nil {
+		t.Fatalf("encodeProfileCompositionSnapshot() setup error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), storage.SaveAppliedProfileStateInput{
+		GameID:                         gameID,
+		ProfileID:                      profileID,
+		ManifestJSON:                   `{"version":1}`,
+		ProfileSnapshotJSON:            `{"version":1}`,
+		ProfileSnapshotHash:            "snapshot",
+		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
+		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
+	}
 }

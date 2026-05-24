@@ -1,3 +1,5 @@
+import { CircleAlert } from 'lucide-react';
+
 import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/models';
 
 import './GameProfilesAppliedSummary.scss';
@@ -32,16 +34,30 @@ export const GameProfilesAppliedSummary = ({
   isBusy,
   onRestoreVanilla,
 }: GameProfilesAppliedSummaryProps) => {
+  const hasAppliedProfileChanged = appliedProfile?.HasAppliedProfileChanged === true;
+
   return (
     <div className="game-profiles-applied-summary">
-      <div className="game-profiles-applied-summary-copy">
-        <span className="game-profiles-applied-summary-label">Applied profile</span>
-        <strong className="game-profiles-applied-summary-name">
-          {appliedProfile === null ? 'Vanilla' : appliedProfile.ProfileName}
-        </strong>
-        <span className="game-profiles-applied-summary-meta">
-          {appliedProfile === null ? 'No profile applied' : formatAppliedAt(appliedProfile.AppliedAt)}
-        </span>
+      <div className="game-profiles-applied-summary-header">
+        <div className="game-profiles-applied-summary-copy">
+          <span className="game-profiles-applied-summary-label">Applied profile</span>
+          <strong className="game-profiles-applied-summary-name">
+            {appliedProfile === null ? 'Vanilla' : appliedProfile.ProfileName}
+          </strong>
+          <span className="game-profiles-applied-summary-meta">
+            {appliedProfile === null ? 'No profile applied' : formatAppliedAt(appliedProfile.AppliedAt)}
+          </span>
+        </div>
+
+        {hasAppliedProfileChanged && (
+          <span
+            className="game-profiles-applied-summary-modified"
+            title="Profile changed since it was applied."
+          >
+            <CircleAlert className="game-profiles-applied-summary-modified-icon" aria-hidden="true" />
+            <span>Modified</span>
+          </span>
+        )}
       </div>
 
       {appliedProfile !== null && (

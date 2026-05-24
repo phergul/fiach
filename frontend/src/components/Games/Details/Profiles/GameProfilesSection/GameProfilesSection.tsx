@@ -137,20 +137,44 @@ export const GameProfilesSection = ({
     setNewProfileName('');
   };
 
-  const handleAddModsToProfile = (profileID: number, modIDs: number[]) => {
-    return addModsToProfile(profileID, modIDs);
+  const refreshAppliedProfileIfChanged = async (profileID: number) => {
+    if (appliedProfile?.ProfileID !== profileID) {
+      return;
+    }
+
+    await appliedProfileManager.refreshAppliedProfile().catch(() => undefined);
   };
 
-  const handleRemoveModFromProfile = (profileID: number, modID: number) => {
-    removeModFromProfile(profileID, modID).catch(() => undefined);
+  const handleAddModsToProfile = async (profileID: number, modIDs: number[]) => {
+    await addModsToProfile(profileID, modIDs);
+    await refreshAppliedProfileIfChanged(profileID);
   };
 
-  const handleSetProfileModEnabled = (profileID: number, modID: number, enabled: boolean) => {
-    setProfileModEnabled(profileID, modID, enabled).catch(() => undefined);
+  const handleRemoveModFromProfile = async (profileID: number, modID: number) => {
+    try {
+      await removeModFromProfile(profileID, modID);
+      await refreshAppliedProfileIfChanged(profileID);
+    } catch {
+      // error toast is handled by useGameProfiles
+    }
   };
 
-  const handleReorderProfileMods = (profileID: number, orderedModIDs: number[]) => {
-    reorderProfileMods(profileID, orderedModIDs).catch(() => undefined);
+  const handleSetProfileModEnabled = async (profileID: number, modID: number, enabled: boolean) => {
+    try {
+      await setProfileModEnabled(profileID, modID, enabled);
+      await refreshAppliedProfileIfChanged(profileID);
+    } catch {
+      // error toast is handled by useGameProfiles
+    }
+  };
+
+  const handleReorderProfileMods = async (profileID: number, orderedModIDs: number[]) => {
+    try {
+      await reorderProfileMods(profileID, orderedModIDs);
+      await refreshAppliedProfileIfChanged(profileID);
+    } catch {
+      // error toast is handled by useGameProfiles
+    }
   };
 
   return (

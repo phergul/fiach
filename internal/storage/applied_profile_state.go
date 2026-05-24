@@ -12,20 +12,24 @@ import (
 )
 
 type AppliedProfileState struct {
-	GameID              int64  `db:"game_id"`
-	ProfileID           int64  `db:"profile_id"`
-	ManifestJSON        string `db:"manifest_json"`
-	ProfileSnapshotJSON string `db:"profile_snapshot_json"`
-	ProfileSnapshotHash string `db:"profile_snapshot_hash"`
-	AppliedAt           string `db:"applied_at"`
+	GameID                         int64   `db:"game_id"`
+	ProfileID                      int64   `db:"profile_id"`
+	ManifestJSON                   string  `db:"manifest_json"`
+	ProfileSnapshotJSON            string  `db:"profile_snapshot_json"`
+	ProfileSnapshotHash            string  `db:"profile_snapshot_hash"`
+	ProfileCompositionSnapshotJSON *string `db:"profile_composition_snapshot_json"`
+	ProfileCompositionSnapshotHash *string `db:"profile_composition_snapshot_hash"`
+	AppliedAt                      string  `db:"applied_at"`
 }
 
 type SaveAppliedProfileStateInput struct {
-	GameID              int64
-	ProfileID           int64
-	ManifestJSON        string
-	ProfileSnapshotJSON string
-	ProfileSnapshotHash string
+	GameID                         int64
+	ProfileID                      int64
+	ManifestJSON                   string
+	ProfileSnapshotJSON            string
+	ProfileSnapshotHash            string
+	ProfileCompositionSnapshotJSON *string
+	ProfileCompositionSnapshotHash *string
 }
 
 func (s *Store) SaveAppliedProfileState(ctx context.Context, input SaveAppliedProfileStateInput) (state AppliedProfileState, err error) {
@@ -53,16 +57,20 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input SaveAppliedPr
 				profile_id,
 				manifest_json,
 				profile_snapshot_json,
-				profile_snapshot_hash
+				profile_snapshot_hash,
+				profile_composition_snapshot_json,
+				profile_composition_snapshot_hash
 			)
-			VALUES (?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(game_id) DO UPDATE SET
 				profile_id = excluded.profile_id,
 				manifest_json = excluded.manifest_json,
 				profile_snapshot_json = excluded.profile_snapshot_json,
 				profile_snapshot_hash = excluded.profile_snapshot_hash,
+				profile_composition_snapshot_json = excluded.profile_composition_snapshot_json,
+				profile_composition_snapshot_hash = excluded.profile_composition_snapshot_hash,
 				applied_at = CURRENT_TIMESTAMP
-		`, input.GameID, input.ProfileID, strings.TrimSpace(input.ManifestJSON), strings.TrimSpace(input.ProfileSnapshotJSON), strings.TrimSpace(input.ProfileSnapshotHash)); err != nil {
+		`, input.GameID, input.ProfileID, strings.TrimSpace(input.ManifestJSON), strings.TrimSpace(input.ProfileSnapshotJSON), strings.TrimSpace(input.ProfileSnapshotHash), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotJSON)), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotHash))); err != nil {
 			return err
 		}
 
@@ -154,6 +162,23 @@ func validateSaveAppliedProfileStateInput(input SaveAppliedProfileStateInput) er
 	if strings.TrimSpace(input.ProfileSnapshotHash) == "" {
 		return errors.New("profile snapshot hash is required")
 	}
+	if (input.ProfileCompositionSnapshotJSON == nil) != (input.ProfileCompositionSnapshotHash == nil) {
+		return errors.New("profile composition snapshot JSON and hash must be provided together")
+	}
+	if input.ProfileCompositionSnapshotJSON != nil {
+		compositionJSON := strings.TrimSpace(*input.ProfileCompositionSnapshotJSON)
+		if compositionJSON == "" {
+			return errors.New("profile composition snapshot JSON is required when provided")
+		}
+		if !json.Valid([]byte(compositionJSON)) {
+			return errors.New("profile composition snapshot JSON is invalid")
+		}
+	}
+	if input.ProfileCompositionSnapshotHash != nil {
+		if strings.TrimSpace(*input.ProfileCompositionSnapshotHash) == "" {
+			return errors.New("profile composition snapshot hash is required when provided")
+		}
+	}
 
 	return nil
 }
@@ -182,7 +207,15 @@ type appliedProfileStateGetter interface {
 func getAppliedProfileState(ctx context.Context, db appliedProfileStateGetter, gameID int64) (AppliedProfileState, bool, error) {
 	var state AppliedProfileState
 	err := db.GetContext(ctx, &state, `
-		SELECT game_id, profile_id, manifest_json, profile_snapshot_json, profile_snapshot_hash, applied_at
+		SELECT
+			game_id,
+			profile_id,
+			manifest_json,
+			profile_snapshot_json,
+			profile_snapshot_hash,
+			profile_composition_snapshot_json,
+			profile_composition_snapshot_hash,
+			applied_at
 		FROM applied_profile_states
 		WHERE game_id = ?
 	`, gameID)

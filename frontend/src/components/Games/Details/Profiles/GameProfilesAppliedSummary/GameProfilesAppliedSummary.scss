@@ -1,5 +1,7 @@
 @use '@styles' as *;
 
+$game-profiles-applied-summary-modified-icon-size: 1rem;
+
 .game-profiles-applied-summary {
   display: flex;
   align-items: stretch;
@@ -8,6 +10,14 @@
   padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
   background: rgb(#{$color-surface-rgb} / 42%);
+}
+
+.game-profiles-applied-summary-header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
 }
 
 .game-profiles-applied-summary-copy {
@@ -32,6 +42,22 @@
 .game-profiles-applied-summary-meta {
   color: $color-text-muted;
   font-size: $font-size-sm;
+}
+
+.game-profiles-applied-summary-modified {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex: 0 0 auto;
+  color: $color-warning;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-profiles-applied-summary-modified-icon {
+  width: $game-profiles-applied-summary-modified-icon-size;
+  height: $game-profiles-applied-summary-modified-icon-size;
+  flex: 0 0 $game-profiles-applied-summary-modified-icon-size;
 }
 
 .game-profiles-applied-summary-button {

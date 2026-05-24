@@ -17,6 +17,7 @@ export class AppliedProfileSummary {
     "ProfileID": number;
     "ProfileName": string;
     "AppliedAt": string;
+    "HasAppliedProfileChanged": boolean | null;
 
     /** Creates a new AppliedProfileSummary instance. */
     constructor($$source: Partial<AppliedProfileSummary> = {}) {
@@ -31,6 +32,9 @@ export class AppliedProfileSummary {
         }
         if (!("AppliedAt" in $$source)) {
             this["AppliedAt"] = "";
+        }
+        if (!("HasAppliedProfileChanged" in $$source)) {
+            this["HasAppliedProfileChanged"] = null;
         }
 
         Object.assign(this, $$source);

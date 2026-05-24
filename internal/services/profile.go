@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -12,10 +13,11 @@ type ProfileService struct {
 }
 
 type AppliedProfileSummary struct {
-	GameID      int64
-	ProfileID   int64
-	ProfileName string
-	AppliedAt   string
+	GameID                   int64
+	ProfileID                int64
+	ProfileName              string
+	AppliedAt                string
+	HasAppliedProfileChanged *bool
 }
 
 func NewProfileService(store *storage.Store) *ProfileService {
@@ -102,10 +104,50 @@ func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID in
 		profileName = profile.Name
 	}
 
+	hasChanged, err := s.hasAppliedProfileCompositionChanged(ctx, state)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AppliedProfileSummary{
-		GameID:      state.GameID,
-		ProfileID:   state.ProfileID,
-		ProfileName: profileName,
-		AppliedAt:   state.AppliedAt,
+		GameID:                   state.GameID,
+		ProfileID:                state.ProfileID,
+		ProfileName:              profileName,
+		AppliedAt:                state.AppliedAt,
+		HasAppliedProfileChanged: hasChanged,
 	}, nil
+}
+
+func (s *ProfileService) hasAppliedProfileCompositionChanged(ctx context.Context, state storage.AppliedProfileState) (*bool, error) {
+	if state.ProfileCompositionSnapshotJSON == nil || state.ProfileCompositionSnapshotHash == nil {
+		return nil, nil
+	}
+	if *state.ProfileCompositionSnapshotJSON == "" || *state.ProfileCompositionSnapshotHash == "" {
+		return nil, nil
+	}
+
+	profileMods, err := s.store.ListProfileMods(ctx, state.ProfileID)
+	if err != nil {
+		return nil, err
+	}
+	currentSnapshot, err := encodeProfileCompositionSnapshot(state.ProfileID, profileMods)
+	if err != nil {
+		return nil, err
+	}
+
+	changed := currentSnapshot.Hash != *state.ProfileCompositionSnapshotHash
+	return &changed, nil
+}
+
+func encodeProfileCompositionSnapshot(profileID int64, profileMods []storage.ProfileMod) (appliedstate.EncodedProfileCompositionSnapshot, error) {
+	mods := make([]appliedstate.ProfileCompositionMod, 0, len(profileMods))
+	for _, profileMod := range profileMods {
+		mods = append(mods, appliedstate.ProfileCompositionMod{
+			ModID:     profileMod.ModID,
+			Enabled:   profileMod.Enabled,
+			LoadOrder: profileMod.LoadOrder,
+		})
+	}
+
+	return appliedstate.EncodeProfileCompositionSnapshot(appliedstate.BuildProfileCompositionDocument(profileID, mods))
 }

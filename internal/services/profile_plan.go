@@ -142,12 +142,23 @@ func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int
 		return fmt.Errorf("encode profile snapshot: %w", err)
 	}
 
+	profileMods, err := s.store.ListProfileMods(ctx, profileID)
+	if err != nil {
+		return err
+	}
+	compositionSnapshot, err := encodeProfileCompositionSnapshot(profileID, profileMods)
+	if err != nil {
+		return fmt.Errorf("encode profile composition snapshot: %w", err)
+	}
+
 	_, err = s.store.SaveAppliedProfileState(ctx, storage.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        manifestJSON,
-		ProfileSnapshotJSON: snapshot.JSON,
-		ProfileSnapshotHash: snapshot.Hash,
+		GameID:                         gameID,
+		ProfileID:                      profileID,
+		ManifestJSON:                   manifestJSON,
+		ProfileSnapshotJSON:            snapshot.JSON,
+		ProfileSnapshotHash:            snapshot.Hash,
+		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
+		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
 	})
 	if err != nil {
 		return fmt.Errorf("save applied profile state: %w", err)

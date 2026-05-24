@@ -19,7 +19,7 @@ func TestMigrateUpAddsAppliedProfileStateTable(t *testing.T) {
 	if !tableExists(t, store, "applied_profile_states") {
 		t.Fatal("expected applied_profile_states table to exist")
 	}
-	for _, column := range []string{"game_id", "profile_id", "manifest_json", "profile_snapshot_json", "profile_snapshot_hash", "applied_at"} {
+	for _, column := range []string{"game_id", "profile_id", "manifest_json", "profile_snapshot_json", "profile_snapshot_hash", "profile_composition_snapshot_json", "profile_composition_snapshot_hash", "applied_at"} {
 		if !columnExists(t, store, "applied_profile_states", column) {
 			t.Fatalf("expected applied_profile_states.%s column to exist", column)
 		}
@@ -42,27 +42,35 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	firstProfile := mustCreateProfile(t, store, gameID, "First")
 	secondProfile := mustCreateProfile(t, store, gameID, "Second")
+	firstCompositionJSON := `{"version":1,"profileId":1,"mods":[]}`
+	firstCompositionHash := "first-composition-hash"
+	secondCompositionJSON := `{"version":1,"profileId":2,"mods":[{"modId":1,"enabled":true,"loadOrder":0}]}`
+	secondCompositionHash := "second-composition-hash"
 
 	first, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           firstProfile.ID,
-		ManifestJSON:        `{"version":1,"addedFiles":[]}`,
-		ProfileSnapshotJSON: `{"version":1,"operations":[{"operationIndex":0}]}`,
-		ProfileSnapshotHash: "first-hash",
+		GameID:                         gameID,
+		ProfileID:                      firstProfile.ID,
+		ManifestJSON:                   `{"version":1,"addedFiles":[]}`,
+		ProfileSnapshotJSON:            `{"version":1,"operations":[{"operationIndex":0}]}`,
+		ProfileSnapshotHash:            "first-hash",
+		ProfileCompositionSnapshotJSON: &firstCompositionJSON,
+		ProfileCompositionSnapshotHash: &firstCompositionHash,
 	})
 	if err != nil {
 		t.Fatalf("SaveAppliedProfileState() insert error = %v", err)
 	}
-	if first.GameID != gameID || first.ProfileID != firstProfile.ID || first.ProfileSnapshotHash != "first-hash" || first.AppliedAt == "" {
+	if first.GameID != gameID || first.ProfileID != firstProfile.ID || first.ProfileSnapshotHash != "first-hash" || first.ProfileCompositionSnapshotJSON == nil || *first.ProfileCompositionSnapshotJSON != firstCompositionJSON || first.ProfileCompositionSnapshotHash == nil || *first.ProfileCompositionSnapshotHash != firstCompositionHash || first.AppliedAt == "" {
 		t.Fatalf("inserted applied profile state = %+v, want first profile state", first)
 	}
 
 	replaced, err := store.SaveAppliedProfileState(context.Background(), SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           secondProfile.ID,
-		ManifestJSON:        `{"version":1,"addedFiles":[{"targetPath":"Data/SkyUI.esp"}]}`,
-		ProfileSnapshotJSON: `{"version":1,"operations":[{"operationIndex":1}]}`,
-		ProfileSnapshotHash: "second-hash",
+		GameID:                         gameID,
+		ProfileID:                      secondProfile.ID,
+		ManifestJSON:                   `{"version":1,"addedFiles":[{"targetPath":"Data/SkyUI.esp"}]}`,
+		ProfileSnapshotJSON:            `{"version":1,"operations":[{"operationIndex":1}]}`,
+		ProfileSnapshotHash:            "second-hash",
+		ProfileCompositionSnapshotJSON: &secondCompositionJSON,
+		ProfileCompositionSnapshotHash: &secondCompositionHash,
 	})
 	if err != nil {
 		t.Fatalf("SaveAppliedProfileState() replace error = %v", err)
@@ -78,7 +86,7 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 	if !found {
 		t.Fatal("GetAppliedProfileState() found = false, want true")
 	}
-	if read.ProfileID != secondProfile.ID || read.ManifestJSON != replaced.ManifestJSON || read.ProfileSnapshotJSON != replaced.ProfileSnapshotJSON || read.ProfileSnapshotHash != "second-hash" {
+	if read.ProfileID != secondProfile.ID || read.ManifestJSON != replaced.ManifestJSON || read.ProfileSnapshotJSON != replaced.ProfileSnapshotJSON || read.ProfileSnapshotHash != "second-hash" || read.ProfileCompositionSnapshotJSON == nil || *read.ProfileCompositionSnapshotJSON != secondCompositionJSON || read.ProfileCompositionSnapshotHash == nil || *read.ProfileCompositionSnapshotHash != secondCompositionHash {
 		t.Fatalf("GetAppliedProfileState() = %+v, want replaced state", read)
 	}
 
@@ -233,6 +241,31 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 			},
 			want: "profile snapshot hash is required",
 		},
+		{
+			name: "invalid composition snapshot JSON",
+			input: SaveAppliedProfileStateInput{
+				GameID:                         1,
+				ProfileID:                      1,
+				ManifestJSON:                   `{"version":1}`,
+				ProfileSnapshotJSON:            `{"version":1}`,
+				ProfileSnapshotHash:            "hash",
+				ProfileCompositionSnapshotJSON: stringPtr("{"),
+				ProfileCompositionSnapshotHash: stringPtr("composition-hash"),
+			},
+			want: "profile composition snapshot JSON is invalid",
+		},
+		{
+			name: "composition snapshot JSON without hash",
+			input: SaveAppliedProfileStateInput{
+				GameID:                         1,
+				ProfileID:                      1,
+				ManifestJSON:                   `{"version":1}`,
+				ProfileSnapshotJSON:            `{"version":1}`,
+				ProfileSnapshotHash:            "hash",
+				ProfileCompositionSnapshotJSON: stringPtr(`{"version":1}`),
+			},
+			want: "profile composition snapshot JSON and hash must be provided together",
+		},
 	}
 
 	for _, tt := range tests {
@@ -275,4 +308,8 @@ func TestSaveAppliedProfileStateRejectsProfileFromAnotherGame(t *testing.T) {
 	if !strings.Contains(err.Error(), "profile") || !strings.Contains(err.Error(), "does not belong to game") {
 		t.Fatalf("SaveAppliedProfileState() error = %q, want profile/game mismatch detail", err.Error())
 	}
+}
+
+func stringPtr(value string) *string {
+	return &value
 }

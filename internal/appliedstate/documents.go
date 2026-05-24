@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/phergul/mod-manager/internal/operationplan"
@@ -52,6 +53,18 @@ type ProfileSnapshotDocument struct {
 	Operations []SnapshotOperation `json:"operations"`
 }
 
+type ProfileCompositionDocument struct {
+	Version   int                     `json:"version"`
+	ProfileID int64                   `json:"profileId"`
+	Mods      []ProfileCompositionMod `json:"mods"`
+}
+
+type ProfileCompositionMod struct {
+	ModID     int64 `json:"modId"`
+	Enabled   bool  `json:"enabled"`
+	LoadOrder int64 `json:"loadOrder"`
+}
+
 type SnapshotOperation struct {
 	OperationIndex int                         `json:"operationIndex"`
 	Type           operationplan.OperationType `json:"type"`
@@ -67,6 +80,11 @@ type Mod struct {
 }
 
 type EncodedProfileSnapshot struct {
+	JSON string
+	Hash string
+}
+
+type EncodedProfileCompositionSnapshot struct {
 	JSON string
 	Hash string
 }
@@ -134,6 +152,24 @@ func BuildProfileSnapshotDocument(plan operationplan.OperationPlan) ProfileSnaps
 	return document
 }
 
+func BuildProfileCompositionDocument(profileID int64, mods []ProfileCompositionMod) ProfileCompositionDocument {
+	copiedMods := make([]ProfileCompositionMod, len(mods))
+	copy(copiedMods, mods)
+	sort.SliceStable(copiedMods, func(i int, j int) bool {
+		if copiedMods[i].LoadOrder != copiedMods[j].LoadOrder {
+			return copiedMods[i].LoadOrder < copiedMods[j].LoadOrder
+		}
+
+		return copiedMods[i].ModID < copiedMods[j].ModID
+	})
+
+	return ProfileCompositionDocument{
+		Version:   DocumentVersion,
+		ProfileID: profileID,
+		Mods:      copiedMods,
+	}
+}
+
 func EncodeManifest(document ManifestDocument) (string, error) {
 	encoded, err := json.Marshal(document)
 	if err != nil {
@@ -178,6 +214,25 @@ func EncodeProfileSnapshot(document ProfileSnapshotDocument) (EncodedProfileSnap
 
 	sum := sha256.Sum256(encoded)
 	return EncodedProfileSnapshot{
+		JSON: string(encoded),
+		Hash: hex.EncodeToString(sum[:]),
+	}, nil
+}
+
+func EncodeProfileCompositionSnapshot(document ProfileCompositionDocument) (snapshot EncodedProfileCompositionSnapshot, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("marshal profile composition snapshot: %w", err)
+		}
+	}()
+
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		return EncodedProfileCompositionSnapshot{}, err
+	}
+
+	sum := sha256.Sum256(encoded)
+	return EncodedProfileCompositionSnapshot{
 		JSON: string(encoded),
 		Hash: hex.EncodeToString(sum[:]),
 	}, nil
