@@ -2,7 +2,7 @@
 
 .toast {
   position: fixed;
-  right: $spacing-lg;
+  left: $spacing-lg;
   bottom: $spacing-lg;
   z-index: $z-index-toast;
   display: flex;

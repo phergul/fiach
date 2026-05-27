@@ -54,13 +54,6 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		}
 	}()
 
-	s.logger.InfoContext(ctx, "Profile apply started",
-		slog.String("operation", diagnostics.OperationApplyProfile),
-		slog.String("event", diagnostics.EventStarted),
-		slog.Int64("profile_id", profileID),
-		slog.Int("operation_count", len(plan.Operations)),
-	)
-
 	if profileID <= 0 {
 		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
 	}
@@ -91,6 +84,16 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		return dto.ApplyOperationPlanResult{}, err
 	}
 
+	s.logger.InfoContext(ctx, "Profile apply started",
+		slog.String("operation", diagnostics.OperationApplyProfile),
+		slog.String("event", diagnostics.EventStarted),
+		slog.Int64("profile_id", profileID),
+		slog.String("profile_name", profile.Name),
+		slog.Int64("game_id", profile.GameID),
+		slog.String("game_name", game.Name),
+		slog.Int("operation_count", len(plan.Operations)),
+	)
+
 	internalPlan := toInternalOperationPlan(plan)
 	applyResult, err := applyplan.Execute(internalPlan, applyplan.Context{
 		GameInstallPath:    game.InstallPath,
@@ -106,7 +109,9 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 			slog.String("event", diagnostics.EventCompleted),
 			slog.Bool("success", false),
 			slog.Int64("profile_id", profileID),
+			slog.String("profile_name", profile.Name),
 			slog.Int64("game_id", profile.GameID),
+			slog.String("game_name", game.Name),
 			slog.Int("completed_count", applyResult.CompletedCount),
 			slog.Int("failed_count", applyResult.FailedCount),
 			slog.Int("skipped_count", applyResult.SkippedCount),
@@ -125,7 +130,9 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		slog.String("event", diagnostics.EventCompleted),
 		slog.Bool("success", true),
 		slog.Int64("profile_id", profileID),
+		slog.String("profile_name", profile.Name),
 		slog.Int64("game_id", profile.GameID),
+		slog.String("game_name", game.Name),
 		slog.Int("completed_count", applyResult.CompletedCount),
 		slog.Int("failed_count", applyResult.FailedCount),
 		slog.Int("skipped_count", applyResult.SkippedCount),
@@ -152,12 +159,6 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 		}
 	}()
 
-	s.logger.InfoContext(ctx, "Vanilla restore started",
-		slog.String("operation", diagnostics.OperationRestoreVanilla),
-		slog.String("event", diagnostics.EventStarted),
-		slog.Int64("game_id", gameID),
-	)
-
 	if gameID <= 0 {
 		return dto.RestoreResult{}, errors.New("game ID must be positive")
 	}
@@ -183,6 +184,14 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 	if err != nil {
 		return dto.RestoreResult{}, err
 	}
+
+	s.logger.InfoContext(ctx, "Vanilla restore started",
+		slog.String("operation", diagnostics.OperationRestoreVanilla),
+		slog.String("event", diagnostics.EventStarted),
+		slog.Int64("game_id", gameID),
+		slog.String("game_name", game.Name),
+		slog.Int64("profile_id", profileID),
+	)
 
 	restoreResult, err := restoreplan.Execute(manifest, restoreplan.Context{
 		GameInstallPath:    game.InstallPath,
@@ -217,6 +226,7 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 		slog.String("event", diagnostics.EventCompleted),
 		slog.Bool("success", true),
 		slog.Int64("game_id", gameID),
+		slog.String("game_name", game.Name),
 		slog.Int64("profile_id", profileID),
 		slog.Int("completed_count", restoreResult.CompletedCount),
 		slog.Int("failed_count", restoreResult.FailedCount),

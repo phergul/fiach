@@ -31,6 +31,10 @@ export function ListMods(gameID: number): $CancellablePromise<dto$0.Mod[]> {
     });
 }
 
+export function PreValidateImport(input: dto$0.PreValidateImportInput): $CancellablePromise<void> {
+    return $Call.ByID(472290668, input);
+}
+
 export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurationInput): $CancellablePromise<dto$0.Preview> {
     return $Call.ByID(1144919971, input).then(($result: any) => {
         return $$createType5($result);

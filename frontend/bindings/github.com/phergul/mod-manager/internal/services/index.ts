@@ -6,10 +6,12 @@ import * as GamesService from "./gamesservice.js";
 import * as ModService from "./modservice.js";
 import * as ProfileService from "./profileservice.js";
 import * as SettingsService from "./settingsservice.js";
+import * as WindowService from "./windowservice.js";
 export {
     DiagnosticsService,
     GamesService,
     ModService,
     ProfileService,
-    SettingsService
+    SettingsService,
+    WindowService
 };

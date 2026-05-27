@@ -1,0 +1,75 @@
+@use '@styles' as *;
+
+$logs-toolbar-button-size: 2.25rem;
+$logs-toolbar-select-width: 11rem;
+$logs-toolbar-height: 3rem;
+
+.logs-toolbar {
+  display: flex;
+  min-height: $logs-toolbar-height;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-sm $spacing-lg;
+  border-bottom: $app-border;
+  background: $color-surface;
+}
+
+.logs-toolbar-title {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: $spacing-md;
+}
+
+.logs-toolbar-title h1 {
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.logs-toolbar-title span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.logs-toolbar-controls {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  gap: $spacing-md;
+}
+
+.logs-toolbar-field {
+  display: grid;
+  gap: $spacing-xs;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.logs-toolbar-field select {
+  width: $logs-toolbar-select-width;
+  height: $input-height;
+  padding: 0 $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.logs-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.logs-toolbar-actions button {
+  width: $input-height;
+  height: $input-height;
+  padding: 0;
+  background: $color-surface-elevated;
+}
+
+.logs-toolbar-actions svg {
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  stroke-width: 1.8;
+}

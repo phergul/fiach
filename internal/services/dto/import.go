@@ -1,5 +1,10 @@
 package dto
 
+type PreValidateImportInput struct {
+	SourceType ModSourceType
+	SourcePath string
+}
+
 type PreviewImportConfigurationInput struct {
 	GameID             int64
 	SourceType         ModSourceType

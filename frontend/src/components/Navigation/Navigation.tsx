@@ -3,13 +3,14 @@ import { Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
 
+import { OpenLogsWindow } from '@bindings/github.com/phergul/mod-manager/internal/services/windowservice';
+
 import './Navigation.scss';
 
 const navigationItems = [
   { Icon: BookOpen, label: 'Library', path: '/library' },
   { Icon: Users, label: 'Profiles', path: '/profiles' },
   { Icon: Settings, label: 'Settings', path: '/settings' },
-  { Icon: ScrollText, label: 'Logs', path: '/logs' },
 ];
 
 export const Navigation = () => {
@@ -35,6 +36,22 @@ export const Navigation = () => {
           </NavLink>
         </Fragment>
       ))}
+      <span className="navigation-separator" aria-hidden="true" />
+      <button
+        className="navigation-link navigation-button"
+        onClick={(event) => {
+          void OpenLogsWindow();
+
+          if (event.detail > 0) {
+            event.currentTarget.blur();
+          }
+        }}
+        title="Logs"
+        type="button"
+      >
+        <ScrollText className="navigation-link-icon" aria-hidden="true" />
+        <span className="navigation-link-label">Logs</span>
+      </button>
     </nav>
   );
 };

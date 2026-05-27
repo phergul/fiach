@@ -15,6 +15,21 @@ import (
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
+func (s *ModService) PreValidateImport(_ context.Context, input dto.PreValidateImportInput) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("pre-validate import: %w", err)
+		}
+	}()
+
+	source, err := importSource(input.SourceType, input.SourcePath)
+	if err != nil {
+		return err
+	}
+
+	return source.Validate()
+}
+
 func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
 	defer func() {
 		if err != nil {

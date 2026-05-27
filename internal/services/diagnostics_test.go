@@ -3,7 +3,9 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/diagnostics"
@@ -164,6 +166,51 @@ func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	}
 	if restoreCompleted.Details["Profile id"] != int64String(profileID) || restoreCompleted.Details["Game id"] != int64String(gameID) {
 		t.Fatalf("restore completed details = %+v, want game/profile IDs", restoreCompleted.Details)
+	}
+}
+
+func TestDiagnosticsServiceExportLogsWritesVisibleEntries(t *testing.T) {
+	t.Parallel()
+
+	manager, err := diagnostics.NewManager(diagnostics.Options{
+		LogPath: filepath.Join(t.TempDir(), diagnostics.DefaultLogFileName),
+	})
+	if err != nil {
+		t.Fatalf("NewManager() error = %v", err)
+	}
+	defer closeServiceTestDiagnostics(t, manager)
+
+	service := NewDiagnosticsService(manager)
+	exportPath := filepath.Join(t.TempDir(), "logs.txt")
+	err = service.ExportLogs(context.Background(), dto.ExportDiagnosticLogsInput{
+		Path: exportPath,
+		Entries: []dto.DiagnosticLogEntry{
+			{
+				Timestamp: "2026-05-27T12:01:00Z",
+				Level:     "error",
+				Operation: diagnostics.OperationImportMod,
+				Message:   "Mod import failed",
+				Details: map[string]string{
+					"Error": "permission denied",
+					"Event": diagnostics.EventFailed,
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ExportLogs() error = %v", err)
+	}
+
+	contents, err := os.ReadFile(exportPath)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+
+	got := string(contents)
+	if !strings.Contains(got, "2026-05-27T12:01:00Z ERROR [import_mod] Mod import failed") ||
+		!strings.Contains(got, "  Error: permission denied") ||
+		!strings.Contains(got, "  Event: failed") {
+		t.Fatalf("exported logs = %q, want formatted entry and details", got)
 	}
 }
 

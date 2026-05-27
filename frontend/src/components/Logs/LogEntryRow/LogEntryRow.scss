@@ -1,0 +1,119 @@
+@use '@styles' as *;
+
+$log-row-time-width: 13rem;
+$log-row-level-width: 5rem;
+$log-row-operation-width: 9rem;
+$log-row-toggle-size: 1rem;
+
+.log-entry-row {
+  border-bottom: $app-border;
+}
+
+.log-entry-row-summary {
+  display: grid;
+  width: 100%;
+  min-height: 2.75rem;
+  grid-template-columns:
+    minmax($log-row-time-width, $log-row-time-width) minmax($log-row-level-width, $log-row-level-width) minmax($log-row-operation-width, $log-row-operation-width) minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-lg;
+  color: $color-text-primary;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.log-entry-row-summary:hover:not(:disabled),
+.log-entry-row-summary:focus-visible:not(:disabled) {
+  background: $color-surface;
+}
+
+.log-entry-row-summary:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.log-entry-row-time,
+.log-entry-row-operation,
+.log-entry-row-message {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-entry-row-time,
+.log-entry-row-operation {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.log-entry-row-level {
+  font-family: $font-family-monospace;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.log-entry-row-level-debug {
+  color: $color-text-muted;
+}
+
+.log-entry-row-level-error {
+  color: $color-danger;
+}
+
+.log-entry-row-level-info {
+  color: $color-info;
+}
+
+.log-entry-row-level-warn {
+  color: $color-warning;
+}
+
+.log-entry-row-message {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+}
+
+.log-entry-row-toggle {
+  display: inline-flex;
+  width: $log-row-toggle-size;
+  height: $log-row-toggle-size;
+  flex: 0 0 $log-row-toggle-size;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-muted;
+}
+
+.log-entry-row-toggle svg {
+  width: $log-row-toggle-size;
+  height: $log-row-toggle-size;
+}
+
+.log-entry-row-details {
+  display: grid;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-lg $spacing-sm calc($spacing-lg + $log-row-time-width + $log-row-level-width + $log-row-operation-width + ($spacing-md * 3));
+  color: $color-text-subtle;
+  font-family: $font-family-monospace;
+  font-size: $font-size-xs;
+}
+
+.log-entry-row-detail {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: $spacing-md;
+}
+
+.log-entry-row-detail dt {
+  color: $color-text-muted;
+}
+
+.log-entry-row-detail dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

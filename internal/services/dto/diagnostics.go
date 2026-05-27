@@ -6,6 +6,11 @@ type ListDiagnosticLogsInput struct {
 	Level     string
 }
 
+type ExportDiagnosticLogsInput struct {
+	Path    string
+	Entries []DiagnosticLogEntry
+}
+
 type DiagnosticLogEntry struct {
 	Timestamp string
 	Level     string

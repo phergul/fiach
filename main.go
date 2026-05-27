@@ -11,6 +11,7 @@ import (
 	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/services"
+	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -45,7 +46,8 @@ func main() {
 	steamSource := gamesource.NewSteamSource(store)
 	gamesService := services.NewGamesService(store, logger, steamSource)
 
-	app := application.New(application.Options{
+	var app *application.App
+	app = application.New(application.Options{
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
 		Services: []application.Service{
@@ -53,7 +55,9 @@ func main() {
 			application.NewService(services.NewProfileService(store, logger)),
 			application.NewService(services.NewSettingsService(store, logger)),
 			application.NewService(gamesService),
+
 			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),
+			application.NewService(services.NewWindowService(&app)),
 		},
 		OnShutdown: func() {
 			closeStoreWithLog(store, logger, "Failed to close storage")
@@ -70,7 +74,12 @@ func main() {
 		},
 	})
 
+	diagnosticLogEntries, unsubscribeDiagnosticLogEntries := diagnosticsManager.Subscribe()
+	defer unsubscribeDiagnosticLogEntries()
+	go emitDiagnosticLogEntries(app, diagnosticLogEntries)
+
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Name:  "main",
 		Title: "Manager",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
@@ -96,5 +105,22 @@ func main() {
 func closeStoreWithLog(store *storage.Store, logger *slog.Logger, message string) {
 	if err := store.Close(); err != nil {
 		logger.Error(message, diagnostics.ErrorAttr(err))
+	}
+}
+
+func emitDiagnosticLogEntries(app *application.App, entries <-chan diagnostics.LogEntry) {
+	for entry := range entries {
+		window, ok := app.Window.GetByName("logs")
+		if !ok {
+			continue
+		}
+
+		window.EmitEvent("diagnostics:log-entry", dto.DiagnosticLogEntry{
+			Timestamp: entry.Timestamp,
+			Level:     entry.Level,
+			Operation: entry.Operation,
+			Message:   entry.Message,
+			Details:   entry.Details,
+		})
 	}
 }

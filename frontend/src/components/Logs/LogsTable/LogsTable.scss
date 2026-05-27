@@ -1,0 +1,42 @@
+@use '@styles' as *;
+
+$logs-time-column-width: 13rem;
+$logs-level-column-width: 5rem;
+$logs-operation-column-width: 9rem;
+
+.logs-table {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.logs-table-header {
+  display: grid;
+  grid-template-columns:
+    minmax($logs-time-column-width, $logs-time-column-width)
+    minmax($logs-level-column-width, $logs-level-column-width)
+    minmax($logs-operation-column-width, $logs-operation-column-width)
+    minmax(0, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-lg;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  border-bottom: $app-border;
+  background: $color-background;
+}
+
+.logs-table-body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.logs-table-state {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  place-items: center;
+  padding: $spacing-xl;
+}

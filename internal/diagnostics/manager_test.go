@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestManagerRotatesLogsAndReadsNewestEntries(t *testing.T) {
@@ -84,6 +85,39 @@ func TestRecentLogsSkipsMalformedLinesAndCleansDetails(t *testing.T) {
 	}
 	if entries[1].Details["Game id"] != "42" {
 		t.Fatalf("RecentLogs() details = %+v, want game id", entries[1].Details)
+	}
+}
+
+func TestManagerBroadcastsSanitizedWrittenLogs(t *testing.T) {
+	t.Parallel()
+
+	manager, err := NewManager(Options{
+		LogPath: filepath.Join(t.TempDir(), DefaultLogFileName),
+	})
+	if err != nil {
+		t.Fatalf("NewManager() error = %v", err)
+	}
+	defer closeManager(t, manager)
+
+	entries, unsubscribe := manager.Subscribe()
+	defer unsubscribe()
+
+	manager.Logger().Error("Mod import failed",
+		slog.String("operation", OperationImportMod),
+		slog.String("event", EventFailed),
+		slog.String("error", `copy source "/Users/fergal/Games/Mod.zip": permission denied`),
+	)
+
+	select {
+	case entry := <-entries:
+		if entry.Level != "error" || entry.Operation != OperationImportMod {
+			t.Fatalf("broadcast entry = %+v, want error import entry", entry)
+		}
+		if entry.Details["Error"] != `copy source "Games/Mod.zip": permission denied` {
+			t.Fatalf("broadcast details = %+v, want sanitized error path", entry.Details)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for broadcast log entry")
 	}
 }
 

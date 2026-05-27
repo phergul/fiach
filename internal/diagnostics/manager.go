@@ -49,6 +49,10 @@ type Options struct {
 type Manager struct {
 	writer *rotatingWriter
 	logger *slog.Logger
+
+	subscribers      map[int]chan LogEntry
+	subscribersLock  sync.RWMutex
+	nextSubscriberID int
 }
 
 type RecentLogsInput struct {
@@ -81,14 +85,17 @@ func NewManager(opts Options) (*Manager, error) {
 		return nil, err
 	}
 
-	handler := slog.NewJSONHandler(writer, &slog.HandlerOptions{
+	manager := &Manager{
+		writer:      writer,
+		subscribers: map[int]chan LogEntry{},
+	}
+
+	handler := slog.NewJSONHandler(managerLogWriter{manager: manager}, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
+	manager.logger = slog.New(handler)
 
-	return &Manager{
-		writer: writer,
-		logger: slog.New(handler),
-	}, nil
+	return manager, nil
 }
 
 func (m *Manager) Logger() *slog.Logger {
@@ -104,7 +111,37 @@ func (m *Manager) Close() error {
 		return nil
 	}
 
+	m.closeSubscribers()
+
 	return m.writer.Close()
+}
+
+func (m *Manager) Subscribe() (<-chan LogEntry, func()) {
+	if m == nil {
+		closed := make(chan LogEntry)
+		close(closed)
+		return closed, func() {}
+	}
+
+	m.subscribersLock.Lock()
+	defer m.subscribersLock.Unlock()
+
+	m.nextSubscriberID++
+	id := m.nextSubscriberID
+	entries := make(chan LogEntry, 64)
+	m.subscribers[id] = entries
+
+	unsubscribe := func() {
+		m.subscribersLock.Lock()
+		defer m.subscribersLock.Unlock()
+
+		if existing, ok := m.subscribers[id]; ok {
+			delete(m.subscribers, id)
+			close(existing)
+		}
+	}
+
+	return entries, unsubscribe
 }
 
 func (m *Manager) RecentLogs(_ context.Context, input RecentLogsInput) ([]LogEntry, error) {
@@ -248,6 +285,49 @@ func reverseEntries(entries []LogEntry) {
 	for left, right := 0, len(entries)-1; left < right; left, right = left+1, right-1 {
 		entries[left], entries[right] = entries[right], entries[left]
 	}
+}
+
+func (m *Manager) publish(entry LogEntry) {
+	m.subscribersLock.RLock()
+	defer m.subscribersLock.RUnlock()
+
+	for _, subscriber := range m.subscribers {
+		select {
+		case subscriber <- entry:
+		default:
+		}
+	}
+}
+
+func (m *Manager) closeSubscribers() {
+	m.subscribersLock.Lock()
+	defer m.subscribersLock.Unlock()
+
+	for id, subscriber := range m.subscribers {
+		delete(m.subscribers, id)
+		close(subscriber)
+	}
+}
+
+type managerLogWriter struct {
+	manager *Manager
+}
+
+func (w managerLogWriter) Write(p []byte) (int, error) {
+	if w.manager == nil || w.manager.writer == nil {
+		return 0, errors.New("diagnostics manager is not configured")
+	}
+
+	n, err := w.manager.writer.Write(p)
+	if err != nil {
+		return n, err
+	}
+
+	if entry, ok := parseLogLine(p[:n]); ok {
+		w.manager.publish(entry)
+	}
+
+	return n, nil
 }
 
 func stringValue(value any) string {

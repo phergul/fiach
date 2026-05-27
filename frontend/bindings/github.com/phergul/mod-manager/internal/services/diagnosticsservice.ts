@@ -9,6 +9,10 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
+export function ExportLogs(input: dto$0.ExportDiagnosticLogsInput): $CancellablePromise<void> {
+    return $Call.ByID(2264324867, input);
+}
+
 export function ListRecentLogs(input: dto$0.ListDiagnosticLogsInput): $CancellablePromise<dto$0.DiagnosticLogEntry[]> {
     return $Call.ByID(702039462, input).then(($result: any) => {
         return $$createType1($result);

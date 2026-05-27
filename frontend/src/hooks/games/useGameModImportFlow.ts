@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import { ImportMod } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import { ImportMod, PreValidateImport } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
 import { useToast } from '@components/Common/Toast/Toast';
@@ -80,6 +80,11 @@ export const useGameModImportFlow = ({
       if (sourcePath === null) {
         return;
       }
+
+      await PreValidateImport({
+        SourceType: sourceType,
+        SourcePath: sourcePath,
+      });
 
       const targetPath = await ResolveGameModStoragePath(gameID);
       setImportWizard({

@@ -17,12 +17,18 @@
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
+  border: 0;
   border-radius: $radius-sm;
   text-decoration: none;
   white-space: nowrap;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
+}
+
+.navigation-button {
+  margin: 0;
+  text-align: left;
 }
 
 .navigation-link:hover,
