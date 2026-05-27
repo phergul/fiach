@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,7 +42,7 @@ func TestGamesServiceScansAndSavesGames(t *testing.T) {
 	}
 
 	steamSource := gamesource.NewSteamSource(store)
-	service := NewGamesService(store, steamSource)
+	service := NewGamesService(store, testLogger(), steamSource)
 	result, err := service.ScanAndSaveGames(context.Background())
 	if err != nil {
 		t.Fatalf("ScanAndSaveGames() error = %v", err)
@@ -67,7 +69,7 @@ func TestGamesServiceGetsStoredGames(t *testing.T) {
 		t.Fatalf("insert stored game: %v", err)
 	}
 
-	service := NewGamesService(store, gamesource.NewSteamSource(store))
+	service := NewGamesService(store, testLogger(), gamesource.NewSteamSource(store))
 	games, err := service.GetStoredGames(context.Background())
 	if err != nil {
 		t.Fatalf("GetStoredGames() error = %v", err)
@@ -94,7 +96,7 @@ func TestGamesServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
 	}
 
 	steamSource := gamesource.NewSteamSource(store)
-	service := NewGamesService(store, steamSource)
+	service := NewGamesService(store, testLogger(), steamSource)
 	_, err := service.ScanAndSaveGames(context.Background())
 	if err == nil {
 		t.Fatal("ScanAndSaveGames() error = nil, want error")
@@ -132,6 +134,10 @@ func closeStore(t *testing.T, store *storage.Store) {
 	if err := store.Close(); err != nil {
 		t.Fatalf("Close() error = %v", err)
 	}
+}
+
+func testLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 func createSteamRoot(t *testing.T) string {

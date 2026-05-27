@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -14,12 +15,14 @@ import (
 )
 
 type ModService struct {
-	store *storage.Store
+	store  *storage.Store
+	logger *slog.Logger
 }
 
-func NewModService(store *storage.Store) *ModService {
+func NewModService(store *storage.Store, logger *slog.Logger) *ModService {
 	return &ModService{
-		store: store,
+		store:  store,
+		logger: logger,
 	}
 }
 

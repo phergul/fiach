@@ -52,6 +52,55 @@ func TestFileIntegrityAndMatches(t *testing.T) {
 	}
 }
 
+func TestFileExists(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "file.txt")
+	exists, err := FileExists(path)
+	if err != nil {
+		t.Fatalf("FileExists(missing) error = %v", err)
+	}
+	if exists {
+		t.Fatal("FileExists(missing) = true, want false")
+	}
+
+	if err := os.WriteFile(path, []byte("hello"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	exists, err = FileExists(path)
+	if err != nil {
+		t.Fatalf("FileExists(existing) error = %v", err)
+	}
+	if !exists {
+		t.Fatal("FileExists(existing) = false, want true")
+	}
+}
+
+func TestRenameIfExists(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	missingPath := filepath.Join(root, "missing.txt")
+	targetPath := filepath.Join(root, "target.txt")
+	if err := RenameIfExists(missingPath, targetPath); err != nil {
+		t.Fatalf("RenameIfExists(missing) error = %v", err)
+	}
+
+	sourcePath := filepath.Join(root, "source.txt")
+	if err := os.WriteFile(sourcePath, []byte("hello"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	if err := RenameIfExists(sourcePath, targetPath); err != nil {
+		t.Fatalf("RenameIfExists(existing) error = %v", err)
+	}
+	assertFileopsContents(t, targetPath, "hello")
+	if exists, err := FileExists(sourcePath); err != nil {
+		t.Fatalf("FileExists(source) error = %v", err)
+	} else if exists {
+		t.Fatal("source exists after RenameIfExists, want moved")
+	}
+}
+
 func TestCopyFileAtomicCreateOnlyAndReplace(t *testing.T) {
 	t.Parallel()
 

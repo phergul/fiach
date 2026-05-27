@@ -34,7 +34,7 @@ func TestProfileServiceBuildsProfileOperationPlan(t *testing.T) {
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
 	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
 	if err != nil {
 		t.Fatalf("BuildProfileOperationPlan() error = %v", err)
@@ -59,7 +59,7 @@ func TestProfileServiceReturnsPlannerIssuesInPlanResult(t *testing.T) {
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
 	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	plan, err := service.BuildProfileOperationPlan(context.Background(), profileID)
 	if err != nil {
 		t.Fatalf("BuildProfileOperationPlan() error = %v, want planner issue result", err)
@@ -79,7 +79,7 @@ func TestProfileServiceWrapsUnexpectedPlannerErrors(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	_, err := service.BuildProfileOperationPlan(context.Background(), 999)
 	if err == nil {
 		t.Fatal("BuildProfileOperationPlan() error = nil, want planner error")
@@ -107,7 +107,7 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	backupPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}), "operation-backups", "Data", "modded.txt")
 	sourceFilePath := filepath.Join(sourcePath, "Data", "modded.txt")
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
 		Operations: []dto.Operation{
@@ -210,7 +210,7 @@ func TestProfileServiceApplyProfileOperationPlanReturnsPartialResult(t *testing.
 	missingSourcePath := filepath.Join(t.TempDir(), "missing.txt")
 	targetPath := filepath.Join(gameRoot, "Data", "missing.txt")
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
 		Operations: []dto.Operation{
@@ -246,7 +246,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsWhenProfileAlreadyApplied
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	firstProfileID := insertServiceProfileTestProfile(t, store, gameID, "First")
 	secondProfileID := insertServiceProfileTestProfile(t, store, gameID, "Second")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 
 	firstSourceRoot := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
 	firstSourcePath := filepath.Join(firstSourceRoot, "first.txt")
@@ -327,7 +327,7 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	sourceRoot := makeProfilePlanSourceTree(t, map[string]string{"modded.txt": "modded"})
 	sourcePath := filepath.Join(sourceRoot, "modded.txt")
 	targetPath := filepath.Join(gameRoot, "modded.txt")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	result, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
 		CanApply: true,
 		Operations: []dto.Operation{
@@ -364,7 +364,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	_, err := service.ApplyProfileOperationPlan(context.Background(), 1, dto.OperationPlan{CanApply: false})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want blocking issue error")
@@ -380,7 +380,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsInvalidProfileID(t *testi
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	_, err := service.ApplyProfileOperationPlan(context.Background(), 0, dto.OperationPlan{CanApply: true})
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want invalid profile ID error")

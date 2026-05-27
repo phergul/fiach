@@ -152,6 +152,29 @@ func FileMatchesIntegrity(path string, sha256Hex string, sizeBytes int64) (bool,
 	return strings.EqualFold(hash, sha256Hex) && size == sizeBytes, nil
 }
 
+func FileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("stat file %q: %w", path, err)
+}
+
+func RenameIfExists(from string, to string) error {
+	if err := os.Rename(from, to); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("rename %q to %q: %w", from, to, err)
+	}
+
+	return nil
+}
+
 func StatRegularFile(label string, path string) (fs.FileInfo, error) {
 	info, err := os.Stat(path)
 	if err != nil {

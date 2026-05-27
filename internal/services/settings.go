@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -12,12 +13,14 @@ import (
 )
 
 type SettingsService struct {
-	store *storage.Store
+	store  *storage.Store
+	logger *slog.Logger
 }
 
-func NewSettingsService(store *storage.Store) *SettingsService {
+func NewSettingsService(store *storage.Store, logger *slog.Logger) *SettingsService {
 	return &SettingsService{
-		store: store,
+		store:  store,
+		logger: logger,
 	}
 }
 

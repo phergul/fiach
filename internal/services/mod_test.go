@@ -23,7 +23,7 @@ func TestModServiceListsMods(t *testing.T) {
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	mods, err := service.ListMods(context.Background(), gameID)
 	if err != nil {
@@ -53,7 +53,7 @@ func TestModServiceGetsManagedModStorageUsage(t *testing.T) {
 	insertServiceProfileTestMod(t, store, gameID, "SkyUI", firstModPath)
 	insertServiceProfileTestMod(t, store, gameID, "Config", secondModPath)
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	got, err := service.GetGameManagedModStorageUsage(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
@@ -92,7 +92,7 @@ func TestModServiceManagedStorageUsageIgnoresMissingAndUnreadablePaths(t *testin
 		insertServiceProfileTestMod(t, store, gameID, "Unreadable", unreadablePath)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	got, err := service.GetGameManagedModStorageUsage(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
@@ -129,7 +129,7 @@ func TestModServiceManagedStorageUsageDoesNotFollowSymlinks(t *testing.T) {
 	}
 	insertServiceProfileTestMod(t, store, gameID, "SkyUI", modPath)
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	got, err := service.GetGameManagedModStorageUsage(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("GetGameManagedModStorageUsage() error = %v", err)
@@ -147,7 +147,7 @@ func TestModServiceListsImportStrategies(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	strategies, err := service.ListImportStrategies(context.Background())
 	if err != nil {
 		t.Fatalf("ListImportStrategies() error = %v", err)
@@ -173,7 +173,7 @@ func TestModServiceImportsModFolder(t *testing.T) {
 		"readme.txt":     "hello",
 	})
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	mod, err := importFolderMod(context.Background(), service, gameID, " SkyUI ", sourcePath)
 	if err != nil {
 		t.Fatalf("ImportMod() error = %v", err)
@@ -203,7 +203,7 @@ func TestModServiceImportsModArchive(t *testing.T) {
 		"SkyUI/readme.txt":     "hello",
 	})
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	mod, err := importArchiveMod(context.Background(), service, gameID, " SkyUI ", archivePath)
 	if err != nil {
 		t.Fatalf("ImportMod() error = %v", err)
@@ -237,7 +237,7 @@ func TestModServicePreviewsFolderImportConfiguration(t *testing.T) {
 		"Data/SkyUI.esp": "plugin",
 		"readme.txt":     "hello",
 	})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	preview, err := service.PreviewImportConfiguration(context.Background(), dto.PreviewImportConfigurationInput{
 		SourceType:         dto.ModSourceTypeFolder,
@@ -265,7 +265,7 @@ func TestModServicePreviewsArchiveWithImportLayout(t *testing.T) {
 		"SkyUI/Data/SkyUI.esp": "plugin",
 		"SkyUI/readme.txt":     "hello",
 	})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	preview, err := service.PreviewImportConfiguration(context.Background(), dto.PreviewImportConfigurationInput{
 		SourceType:         dto.ModSourceTypeArchive,
@@ -291,7 +291,7 @@ func TestModServiceImportsMod(t *testing.T) {
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "plugin"})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	result, err := service.ImportMod(context.Background(), dto.ImportModInput{
 		GameID:             gameID,
@@ -319,7 +319,7 @@ func TestModServiceImportReturnsExistingModAndConfig(t *testing.T) {
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "one"})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	first, err := service.ImportMod(context.Background(), dto.ImportModInput{
 		GameID:             gameID,
@@ -370,7 +370,7 @@ func TestModServiceImportAddsConfigToExistingUnconfiguredMod(t *testing.T) {
 		t.Fatalf("CreateMod() error = %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	result, err := service.ImportMod(context.Background(), dto.ImportModInput{
 		GameID:             gameID,
 		Name:               "Renamed",
@@ -396,7 +396,7 @@ func TestModServiceImportReturnsExistingModForRepeatedArchivePath(t *testing.T) 
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	archivePath := makeZipArchive(t, map[string]string{"SkyUI/mod.esp": "one"})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	first, err := importArchiveMod(context.Background(), service, gameID, "SkyUI", archivePath)
 	if err != nil {
@@ -424,7 +424,7 @@ func TestModServiceImportReturnsExistingModForRepeatedOriginalSource(t *testing.
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "one"})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	first, err := importFolderMod(context.Background(), service, gameID, "SkyUI", sourcePath)
 	if err != nil {
@@ -456,7 +456,7 @@ func TestModServiceImportCreatesUniqueManagedFolderNames(t *testing.T) {
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	firstSourcePath := makeSourceFolder(t, map[string]string{"first.esp": "one"})
 	secondSourcePath := makeSourceFolder(t, map[string]string{"second.esp": "two"})
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 
 	first, err := importFolderMod(context.Background(), service, gameID, "SkyUI", firstSourcePath)
 	if err != nil {
@@ -494,7 +494,7 @@ func TestModServiceImportFollowsSymlinkTargets(t *testing.T) {
 		t.Fatalf("create symlink: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	mod, err := importFolderMod(context.Background(), service, gameID, "Linked Mod", sourcePath)
 	if err != nil {
 		t.Fatalf("ImportMod() error = %v", err)
@@ -518,7 +518,7 @@ func TestModServiceImportBrokenSymlinkFailsAndCleansTempFolder(t *testing.T) {
 		t.Fatalf("create broken symlink: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := importFolderMod(context.Background(), service, gameID, "Broken Link", sourcePath)
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want broken symlink error")
@@ -538,7 +538,7 @@ func TestModServiceImportValidationErrors(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	filePath := filepath.Join(t.TempDir(), "mod.zip")
 	if err := os.WriteFile(filePath, []byte("zip"), 0o644); err != nil {
 		t.Fatalf("write file source: %v", err)
@@ -596,7 +596,7 @@ func TestModServiceImportArchiveValidationErrorsCleanManagedStorage(t *testing.T
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	archivePath := filepath.Join(t.TempDir(), "bad.zip")
 	if err := os.WriteFile(archivePath, []byte("not zip"), 0o644); err != nil {
 		t.Fatalf("write corrupt archive: %v", err)
@@ -632,7 +632,7 @@ func TestModServiceImportUnreadableFolderReturnsClearError(t *testing.T) {
 		_ = os.Chmod(sourcePath, 0o755)
 	}()
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := importFolderMod(context.Background(), service, gameID, "Unreadable", sourcePath)
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want unreadable folder error")
@@ -661,7 +661,7 @@ func TestModServiceImportDatabaseFailureCleansManagedFolder(t *testing.T) {
 		t.Fatalf("create failing insert trigger: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := importFolderMod(context.Background(), service, gameID, "DB Fail", sourcePath)
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want database error")
@@ -693,7 +693,7 @@ func TestModServiceImportArchiveDatabaseFailureCleansManagedFolder(t *testing.T)
 		t.Fatalf("create failing insert trigger: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := importArchiveMod(context.Background(), service, gameID, "DB Fail", archivePath)
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want database error")
@@ -725,7 +725,7 @@ func TestModServiceImportConfigFailureCleansManagedFolder(t *testing.T) {
 		t.Fatalf("create failing config insert trigger: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := service.ImportMod(context.Background(), dto.ImportModInput{
 		GameID:             gameID,
 		Name:               "Config Fail",
@@ -763,7 +763,7 @@ func TestModServiceWrapsStorageErrors(t *testing.T) {
 		t.Fatalf("drop mods table: %v", err)
 	}
 
-	service := NewModService(store)
+	service := NewModService(store, testLogger())
 	_, err := service.ListMods(context.Background(), 1)
 	if err == nil {
 		t.Fatal("ListMods() error = nil, want storage error")

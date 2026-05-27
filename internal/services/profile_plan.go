@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/applyplan"
+	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/operationplan"
 	"github.com/phergul/mod-manager/internal/restoreplan"
 	"github.com/phergul/mod-manager/internal/services/dto"
@@ -34,11 +37,29 @@ func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileI
 }
 
 func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan dto.OperationPlan) (result dto.ApplyOperationPlanResult, err error) {
+	startedAt := time.Now()
+	var gameID int64
 	defer func() {
 		if err != nil {
+			s.logger.ErrorContext(ctx, "Profile apply failed",
+				slog.String("operation", diagnostics.OperationApplyProfile),
+				slog.String("event", diagnostics.EventFailed),
+				slog.Int64("profile_id", profileID),
+				slog.Int64("game_id", gameID),
+				slog.Int("operation_count", len(plan.Operations)),
+				diagnostics.DurationAttr(startedAt),
+				diagnostics.ErrorAttr(err),
+			)
 			err = fmt.Errorf("apply profile operation plan: %w", err)
 		}
 	}()
+
+	s.logger.InfoContext(ctx, "Profile apply started",
+		slog.String("operation", diagnostics.OperationApplyProfile),
+		slog.String("event", diagnostics.EventStarted),
+		slog.Int64("profile_id", profileID),
+		slog.Int("operation_count", len(plan.Operations)),
+	)
 
 	if profileID <= 0 {
 		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile ID must be positive")
@@ -54,6 +75,7 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 	if !found {
 		return dto.ApplyOperationPlanResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
+	gameID = profile.GameID
 	if appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID); err != nil {
 		return dto.ApplyOperationPlanResult{}, err
 	} else if appliedFound {
@@ -79,6 +101,18 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 	}
 	result = toDTOApplyOperationPlanResult(applyResult)
 	if !applyResult.Success {
+		s.logger.WarnContext(ctx, "Profile apply completed with failures",
+			slog.String("operation", diagnostics.OperationApplyProfile),
+			slog.String("event", diagnostics.EventCompleted),
+			slog.Bool("success", false),
+			slog.Int64("profile_id", profileID),
+			slog.Int64("game_id", profile.GameID),
+			slog.Int("completed_count", applyResult.CompletedCount),
+			slog.Int("failed_count", applyResult.FailedCount),
+			slog.Int("skipped_count", applyResult.SkippedCount),
+			slog.String("failure_summary", applyFailureSummary(applyResult)),
+			diagnostics.DurationAttr(startedAt),
+		)
 		return result, nil
 	}
 
@@ -86,15 +120,43 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		return result, err
 	}
 
+	s.logger.InfoContext(ctx, "Profile apply completed",
+		slog.String("operation", diagnostics.OperationApplyProfile),
+		slog.String("event", diagnostics.EventCompleted),
+		slog.Bool("success", true),
+		slog.Int64("profile_id", profileID),
+		slog.Int64("game_id", profile.GameID),
+		slog.Int("completed_count", applyResult.CompletedCount),
+		slog.Int("failed_count", applyResult.FailedCount),
+		slog.Int("skipped_count", applyResult.SkippedCount),
+		diagnostics.DurationAttr(startedAt),
+	)
+
 	return result, nil
 }
 
 func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) (result dto.RestoreResult, err error) {
+	startedAt := time.Now()
+	var profileID int64
 	defer func() {
 		if err != nil {
+			s.logger.ErrorContext(ctx, "Vanilla restore failed",
+				slog.String("operation", diagnostics.OperationRestoreVanilla),
+				slog.String("event", diagnostics.EventFailed),
+				slog.Int64("game_id", gameID),
+				slog.Int64("profile_id", profileID),
+				diagnostics.DurationAttr(startedAt),
+				diagnostics.ErrorAttr(err),
+			)
 			err = fmt.Errorf("restore vanilla state: %w", err)
 		}
 	}()
+
+	s.logger.InfoContext(ctx, "Vanilla restore started",
+		slog.String("operation", diagnostics.OperationRestoreVanilla),
+		slog.String("event", diagnostics.EventStarted),
+		slog.Int64("game_id", gameID),
+	)
 
 	if gameID <= 0 {
 		return dto.RestoreResult{}, errors.New("game ID must be positive")
@@ -111,6 +173,7 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 	if !found {
 		return dto.RestoreResult{}, fmt.Errorf("no applied profile state found for game %d", gameID)
 	}
+	profileID = state.ProfileID
 
 	manifest, err := appliedstate.DecodeManifest(state.ManifestJSON)
 	if err != nil {
@@ -130,6 +193,18 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 	}
 	result = toDTORestoreResult(restoreResult)
 	if !restoreResult.Success {
+		s.logger.WarnContext(ctx, "Vanilla restore completed with failures",
+			slog.String("operation", diagnostics.OperationRestoreVanilla),
+			slog.String("event", diagnostics.EventCompleted),
+			slog.Bool("success", false),
+			slog.Int64("game_id", gameID),
+			slog.Int64("profile_id", profileID),
+			slog.Int("completed_count", restoreResult.CompletedCount),
+			slog.Int("failed_count", restoreResult.FailedCount),
+			slog.Int("skipped_count", restoreResult.SkippedCount),
+			slog.String("failure_summary", restoreFailureSummary(restoreResult)),
+			diagnostics.DurationAttr(startedAt),
+		)
 		return result, nil
 	}
 
@@ -137,7 +212,39 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 		return result, err
 	}
 
+	s.logger.InfoContext(ctx, "Vanilla restore completed",
+		slog.String("operation", diagnostics.OperationRestoreVanilla),
+		slog.String("event", diagnostics.EventCompleted),
+		slog.Bool("success", true),
+		slog.Int64("game_id", gameID),
+		slog.Int64("profile_id", profileID),
+		slog.Int("completed_count", restoreResult.CompletedCount),
+		slog.Int("failed_count", restoreResult.FailedCount),
+		slog.Int("skipped_count", restoreResult.SkippedCount),
+		diagnostics.DurationAttr(startedAt),
+	)
+
 	return result, nil
+}
+
+func applyFailureSummary(result operationplan.ApplyOperationPlanResult) string {
+	for _, operationResult := range result.Results {
+		if operationResult.Error != nil && *operationResult.Error != "" {
+			return *operationResult.Error
+		}
+	}
+
+	return ""
+}
+
+func restoreFailureSummary(result restoreplan.RestoreResult) string {
+	for _, operationResult := range result.Results {
+		if operationResult.Error != nil && *operationResult.Error != "" {
+			return *operationResult.Error
+		}
+	}
+
+	return ""
 }
 
 func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int64, profileID int64, plan operationplan.OperationPlan, manifest operationplan.AppliedOperationManifest) error {

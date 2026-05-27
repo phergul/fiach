@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
+	"time"
 
+	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/modimport"
 	"github.com/phergul/mod-manager/internal/services/dto"
@@ -53,11 +56,31 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.Pre
 }
 
 func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (result dto.ImportModResult, err error) {
+	startedAt := time.Now()
 	defer func() {
 		if err != nil {
+			s.logger.ErrorContext(ctx, "Mod import failed",
+				slog.String("operation", diagnostics.OperationImportMod),
+				slog.String("event", diagnostics.EventFailed),
+				slog.Int64("game_id", input.GameID),
+				slog.String("source_type", string(input.SourceType)),
+				slog.String("strategy_type", string(input.StrategyType)),
+				diagnostics.PathAttr("source_path", input.SourcePath),
+				diagnostics.DurationAttr(startedAt),
+				diagnostics.ErrorAttr(err),
+			)
 			err = fmt.Errorf("import mod: %w", err)
 		}
 	}()
+
+	s.logger.InfoContext(ctx, "Mod import started",
+		slog.String("operation", diagnostics.OperationImportMod),
+		slog.String("event", diagnostics.EventStarted),
+		slog.Int64("game_id", input.GameID),
+		slog.String("source_type", string(input.SourceType)),
+		slog.String("strategy_type", string(input.StrategyType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+	)
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
@@ -76,6 +99,17 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	if err != nil {
 		return dto.ImportModResult{}, err
 	}
+
+	s.logger.InfoContext(ctx, "Mod import completed",
+		slog.String("operation", diagnostics.OperationImportMod),
+		slog.String("event", diagnostics.EventCompleted),
+		slog.Int64("game_id", input.GameID),
+		slog.Int64("mod_id", importResult.Mod.ID),
+		slog.String("source_type", string(input.SourceType)),
+		slog.String("strategy_type", string(input.StrategyType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+		diagnostics.DurationAttr(startedAt),
+	)
 
 	return dto.ImportModResult{
 		Mod:    toDTOMod(importResult.Mod),

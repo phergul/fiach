@@ -4,8 +4,11 @@ import (
 	"context"
 	"embed"
 	_ "embed"
-	"log"
+	"log/slog"
+	"os"
+	"path/filepath"
 
+	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/services"
 	"github.com/phergul/mod-manager/internal/storage"
@@ -16,33 +19,46 @@ import (
 var assets embed.FS
 
 func main() {
+	diagnosticsManager, err := diagnostics.NewManager(diagnostics.Options{
+		LogPath: filepath.Join(application.Path(application.PathDataHome), "mod-manager", "logs", diagnostics.DefaultLogFileName),
+	})
+	if err != nil {
+		slog.Error("Failed to initialize diagnostics", "error", err)
+		os.Exit(1)
+	}
+	logger := diagnosticsManager.Logger()
+
 	store, err := storage.Open(context.Background(), storage.Options{})
 	if err != nil {
-		log.Fatalf("failed to open storage: %v", err)
+		logger.Error("Failed to open storage", diagnostics.ErrorAttr(err))
+		_ = diagnosticsManager.Close()
+		os.Exit(1)
 	}
 
 	if err := store.MigrateUp(); err != nil {
-		if closeErr := store.Close(); closeErr != nil {
-			log.Printf("failed to close storage after migration error: %v", closeErr)
-		}
-		log.Fatalf("failed to migrate storage: %v", err)
+		closeStoreWithLog(store, logger, "Failed to close storage after migration error")
+		logger.Error("Failed to migrate storage", diagnostics.ErrorAttr(err))
+		_ = diagnosticsManager.Close()
+		os.Exit(1)
 	}
 
 	steamSource := gamesource.NewSteamSource(store)
-	gamesService := services.NewGamesService(store, steamSource)
+	gamesService := services.NewGamesService(store, logger, steamSource)
 
 	app := application.New(application.Options{
 		Name:        "mod-manager",
 		Description: "General Mod Manager",
 		Services: []application.Service{
-			application.NewService(services.NewModService(store)),
-			application.NewService(services.NewProfileService(store)),
-			application.NewService(services.NewSettingsService(store)),
+			application.NewService(services.NewModService(store, logger)),
+			application.NewService(services.NewProfileService(store, logger)),
+			application.NewService(services.NewSettingsService(store, logger)),
 			application.NewService(gamesService),
+			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),
 		},
 		OnShutdown: func() {
-			if err := store.Close(); err != nil {
-				log.Printf("failed to close storage: %v", err)
+			closeStoreWithLog(store, logger, "Failed to close storage")
+			if err := diagnosticsManager.Close(); err != nil {
+				slog.Error("Failed to close diagnostics", "error", err)
 			}
 		},
 		Assets: application.AssetOptions{
@@ -70,9 +86,15 @@ func main() {
 	err = app.Run()
 
 	if err != nil {
-		if closeErr := store.Close(); closeErr != nil {
-			log.Printf("failed to close storage after app error: %v", closeErr)
-		}
-		log.Fatal(err)
+		closeStoreWithLog(store, logger, "Failed to close storage after app error")
+		logger.Error("Application failed", diagnostics.ErrorAttr(err))
+		_ = diagnosticsManager.Close()
+		os.Exit(1)
+	}
+}
+
+func closeStoreWithLog(store *storage.Store, logger *slog.Logger, message string) {
+	if err := store.Close(); err != nil {
+		logger.Error(message, diagnostics.ErrorAttr(err))
 	}
 }

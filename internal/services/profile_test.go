@@ -16,7 +16,7 @@ func TestProfileServiceCreatesAndListsProfiles(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
@@ -40,7 +40,7 @@ func TestProfileServiceManagesProfileMods(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
@@ -90,7 +90,7 @@ func TestProfileServiceReordersProfileMods(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
@@ -121,7 +121,7 @@ func TestProfileServiceRenamesAndDeletesProfile(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
@@ -154,7 +154,7 @@ func TestProfileServiceRejectsDeletingAppliedProfile(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
@@ -193,7 +193,7 @@ func TestProfileServiceGetsAppliedProfileSummary(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	profile, err := service.CreateProfile(context.Background(), gameID, "Default")
 	if err != nil {
 		t.Fatalf("CreateProfile() error = %v", err)
@@ -244,7 +244,7 @@ func TestProfileServiceReportsAppliedProfileCompositionChangedState(t *testing.T
 	addServiceProfileMod(t, store, profileID, secondModID, false, 1)
 	saveServiceAppliedStateWithCurrentComposition(t, store, gameID, profileID)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	summary, err := service.GetAppliedProfileSummary(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("GetAppliedProfileSummary() unchanged error = %v", err)
@@ -272,7 +272,7 @@ func TestProfileServiceWrapsStorageErrors(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewProfileService(store)
+	service := NewProfileService(store, testLogger())
 	_, err := service.CreateProfile(context.Background(), 999, "Default")
 	if err == nil {
 		t.Fatal("CreateProfile() error = nil, want storage error")

@@ -47,7 +47,7 @@ func TestProfileServiceRestoreVanillaStateRestoresFilesClearsStateAndDeletesBack
 		},
 	})
 
-	result, err := NewProfileService(store).RestoreVanillaState(context.Background(), gameID)
+	result, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("RestoreVanillaState() error = %v", err)
 	}
@@ -75,7 +75,7 @@ func TestProfileServiceRestoreVanillaStateReturnsClearErrorWithoutAppliedState(t
 	defer closeStore(t, store)
 
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", t.TempDir())
-	_, err := NewProfileService(store).RestoreVanillaState(context.Background(), gameID)
+	_, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err == nil {
 		t.Fatal("RestoreVanillaState() error = nil, want no applied state error")
 	}
@@ -103,7 +103,7 @@ func TestProfileServiceRestoreVanillaStatePreservesStateAndFilesOnPreflightFailu
 		},
 	})
 
-	result, err := NewProfileService(store).RestoreVanillaState(context.Background(), gameID)
+	result, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("RestoreVanillaState() error = %v, want result failure", err)
 	}
@@ -146,7 +146,7 @@ func TestProfileServiceRestoreVanillaStatePreservesStateWhenBackupCleanupFails(t
 		},
 	})
 
-	result, err := NewProfileService(store).RestoreVanillaState(context.Background(), gameID)
+	result, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("RestoreVanillaState() error = %v, want result failure", err)
 	}

@@ -262,6 +262,47 @@ export enum ApplyOperationStatus {
     ApplyOperationStatusSkipped = "skipped",
 };
 
+export class DiagnosticLogEntry {
+    "Timestamp": string;
+    "Level": string;
+    "Operation": string;
+    "Message": string;
+    "Details": { [_ in string]?: string };
+
+    /** Creates a new DiagnosticLogEntry instance. */
+    constructor($$source: Partial<DiagnosticLogEntry> = {}) {
+        if (!("Timestamp" in $$source)) {
+            this["Timestamp"] = "";
+        }
+        if (!("Level" in $$source)) {
+            this["Level"] = "";
+        }
+        if (!("Operation" in $$source)) {
+            this["Operation"] = "";
+        }
+        if (!("Message" in $$source)) {
+            this["Message"] = "";
+        }
+        if (!("Details" in $$source)) {
+            this["Details"] = {};
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DiagnosticLogEntry instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DiagnosticLogEntry {
+        const $$createField4_0 = $$createType11;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Details" in $$parsedSource) {
+            $$parsedSource["Details"] = $$createField4_0($$parsedSource["Details"]);
+        }
+        return new DiagnosticLogEntry($$parsedSource as Partial<DiagnosticLogEntry>);
+    }
+}
+
 export class ImportModInput {
     "GameID": number;
     "Name": string;
@@ -323,8 +364,8 @@ export class ImportModResult {
      * Creates a new ImportModResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportModResult {
-        const $$createField0_0 = $$createType11;
-        const $$createField1_0 = $$createType12;
+        const $$createField0_0 = $$createType12;
+        const $$createField1_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -333,6 +374,35 @@ export class ImportModResult {
             $$parsedSource["Config"] = $$createField1_0($$parsedSource["Config"]);
         }
         return new ImportModResult($$parsedSource as Partial<ImportModResult>);
+    }
+}
+
+export class ListDiagnosticLogsInput {
+    "Limit": number;
+    "Operation": string;
+    "Level": string;
+
+    /** Creates a new ListDiagnosticLogsInput instance. */
+    constructor($$source: Partial<ListDiagnosticLogsInput> = {}) {
+        if (!("Limit" in $$source)) {
+            this["Limit"] = 0;
+        }
+        if (!("Operation" in $$source)) {
+            this["Operation"] = "";
+        }
+        if (!("Level" in $$source)) {
+            this["Level"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ListDiagnosticLogsInput instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ListDiagnosticLogsInput {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ListDiagnosticLogsInput($$parsedSource as Partial<ListDiagnosticLogsInput>);
     }
 }
 
@@ -575,8 +645,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType13;
-        const $$createField1_0 = $$createType15;
+        const $$createField0_0 = $$createType14;
+        const $$createField1_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -643,8 +713,8 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType16;
-        const $$createField7_0 = $$createType17;
+        const $$createField6_0 = $$createType17;
+        const $$createField7_0 = $$createType18;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -739,8 +809,8 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField6_0 = $$createType18;
-        const $$createField9_0 = $$createType18;
+        const $$createField6_0 = $$createType19;
+        const $$createField9_0 = $$createType19;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
             $$parsedSource["TargetFilePaths"] = $$createField6_0($$parsedSource["TargetFilePaths"]);
@@ -952,7 +1022,7 @@ export class RestoreOperation {
      * Creates a new RestoreOperation instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperation {
-        const $$createField2_0 = $$createType19;
+        const $$createField2_0 = $$createType20;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField2_0($$parsedSource["Mod"]);
@@ -993,7 +1063,7 @@ export class RestoreOperationResult {
      * Creates a new RestoreOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperationResult {
-        const $$createField1_0 = $$createType20;
+        const $$createField1_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -1057,7 +1127,7 @@ export class RestoreResult {
      * Creates a new RestoreResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreResult {
-        const $$createField4_0 = $$createType22;
+        const $$createField4_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
@@ -1094,7 +1164,7 @@ export class SourceScanResult {
      * Creates a new SourceScanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): SourceScanResult {
-        const $$createField3_0 = $$createType24;
+        const $$createField3_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
@@ -1228,17 +1298,18 @@ const $$createType7 = ApplyOperationResult.createFrom;
 const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = AppliedOperationManifest.createFrom;
 const $$createType10 = Operation.createFrom;
-const $$createType11 = Mod.createFrom;
-const $$createType12 = ModInstallConfig.createFrom;
-const $$createType13 = $Create.Array($$createType10);
-const $$createType14 = PlanIssue.createFrom;
-const $$createType15 = $Create.Array($$createType14);
-const $$createType16 = $Create.Nullable($$createType0);
-const $$createType17 = $Create.Array($Create.Any);
+const $$createType11 = $Create.Map($Create.Any, $Create.Any);
+const $$createType12 = Mod.createFrom;
+const $$createType13 = ModInstallConfig.createFrom;
+const $$createType14 = $Create.Array($$createType10);
+const $$createType15 = PlanIssue.createFrom;
+const $$createType16 = $Create.Array($$createType15);
+const $$createType17 = $Create.Nullable($$createType0);
 const $$createType18 = $Create.Array($Create.Any);
-const $$createType19 = RestoreMod.createFrom;
-const $$createType20 = RestoreOperation.createFrom;
-const $$createType21 = RestoreOperationResult.createFrom;
-const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = StoredGame.createFrom;
-const $$createType24 = $Create.Array($$createType23);
+const $$createType19 = $Create.Array($Create.Any);
+const $$createType20 = RestoreMod.createFrom;
+const $$createType21 = RestoreOperation.createFrom;
+const $$createType22 = RestoreOperationResult.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = StoredGame.createFrom;
+const $$createType25 = $Create.Array($$createType24);

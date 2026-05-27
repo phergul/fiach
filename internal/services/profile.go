@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/services/dto"
@@ -11,12 +12,14 @@ import (
 )
 
 type ProfileService struct {
-	store *storage.Store
+	store  *storage.Store
+	logger *slog.Logger
 }
 
-func NewProfileService(store *storage.Store) *ProfileService {
+func NewProfileService(store *storage.Store, logger *slog.Logger) *ProfileService {
 	return &ProfileService{
-		store: store,
+		store:  store,
+		logger: logger,
 	}
 }
 
