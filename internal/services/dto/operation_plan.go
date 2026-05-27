@@ -39,13 +39,14 @@ type ModContext struct {
 }
 
 type PlanIssue struct {
-	Severity   PlanIssueSeverity
-	Kind       PlanIssueKind
-	Message    string
-	ProfileID  int64
-	SourcePath *string
-	TargetPath *string
-	Mod        *ModContext
+	Severity                    PlanIssueSeverity
+	Kind                        PlanIssueKind
+	Message                     string
+	ProfileID                   int64
+	SourcePath                  *string
+	TargetPath                  *string
+	Mod                         *ModContext
+	ConflictingOperationIndexes []int
 }
 
 type Operation struct {

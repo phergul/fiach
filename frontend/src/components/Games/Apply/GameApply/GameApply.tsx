@@ -191,7 +191,7 @@ export const GameApply = () => {
     );
   const confirmMessage = selectedProfile === null || plan === null
     ? 'Review the operation plan before applying this profile.'
-    : `This will alter game files for the installed game. Are you sure you want to apply ${selectedProfile.Name}?`;
+    : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
 
   const openApplyConfirm = () => {
     if (canStartApply) {

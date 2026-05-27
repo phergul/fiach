@@ -190,7 +190,7 @@ func TestOperationPlanUsesPlainExportedStructs(t *testing.T) {
 	}
 
 	issueType := reflect.TypeOf(PlanIssue{})
-	for _, name := range []string{"Severity", "Kind", "Message", "ProfileID", "SourcePath", "TargetPath", "Mod"} {
+	for _, name := range []string{"Severity", "Kind", "Message", "ProfileID", "SourcePath", "TargetPath", "Mod", "ConflictingOperationIndexes"} {
 		field, ok := issueType.FieldByName(name)
 		if !ok || !field.IsExported() {
 			t.Fatalf("PlanIssue field %q exported = %v, want true", name, ok && field.IsExported())

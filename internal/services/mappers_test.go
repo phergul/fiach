@@ -29,13 +29,14 @@ func TestOperationPlanDTORoundTrip(t *testing.T) {
 		},
 		Issues: []operationplan.PlanIssue{
 			{
-				Severity:   operationplan.PlanIssueSeverityWarning,
-				Kind:       operationplan.PlanIssueReplaceExistingTarget,
-				Message:    "Target exists.",
-				ProfileID:  3,
-				SourcePath: &sourcePath,
-				TargetPath: &targetPath,
-				Mod:        &operationplan.ModContext{ModID: 7, ModName: "SkyUI"},
+				Severity:                    operationplan.PlanIssueSeverityWarning,
+				Kind:                        operationplan.PlanIssueReplaceExistingTarget,
+				Message:                     "Target exists.",
+				ProfileID:                   3,
+				SourcePath:                  &sourcePath,
+				TargetPath:                  &targetPath,
+				Mod:                         &operationplan.ModContext{ModID: 7, ModName: "SkyUI"},
+				ConflictingOperationIndexes: []int{0, 2},
 			},
 		},
 	}
@@ -45,7 +46,10 @@ func TestOperationPlanDTORoundTrip(t *testing.T) {
 		*roundTrip.Operations[0].SourcePath != sourcePath ||
 		*roundTrip.Operations[0].BackupPath != backupPath ||
 		roundTrip.Issues[0].Kind != plan.Issues[0].Kind ||
-		roundTrip.Issues[0].Mod.ModID != 7 {
+		roundTrip.Issues[0].Mod.ModID != 7 ||
+		len(roundTrip.Issues[0].ConflictingOperationIndexes) != 2 ||
+		roundTrip.Issues[0].ConflictingOperationIndexes[0] != 0 ||
+		roundTrip.Issues[0].ConflictingOperationIndexes[1] != 2 {
 		t.Fatalf("operation plan round trip = %+v, want preserved plan", roundTrip)
 	}
 }

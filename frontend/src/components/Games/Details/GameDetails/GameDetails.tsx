@@ -293,7 +293,7 @@ export const GameDetails = () => {
         message={
           appliedProfileManager.appliedProfile === null
             ? 'No profile is currently applied.'
-            : `Restore vanilla files for ${game?.Name ?? 'this game'}? This will revert ${appliedProfileManager.appliedProfile.ProfileName}.`
+            : `Restore vanilla files for ${game?.Name ?? 'this game'}? This will change the installed game files directly and revert ${appliedProfileManager.appliedProfile.ProfileName}.`
         }
         onCancel={closeRestoreConfirm}
         onConfirm={confirmRestoreVanilla}

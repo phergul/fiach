@@ -3,10 +3,9 @@ package operationplan
 import (
 	"fmt"
 	"sort"
-	"strings"
 )
 
-func appendTargetPathConflictIssues(profileID int64, fileOperations []Operation, issues *[]PlanIssue) {
+func appendTargetPathConflictIssues(profileID int64, fileOperationOffset int, fileOperations []Operation, issues *[]PlanIssue) {
 	targets := make(map[string][]int)
 	for index := range fileOperations {
 		targets[fileOperations[index].TargetPath] = append(targets[fileOperations[index].TargetPath], index)
@@ -22,28 +21,36 @@ func appendTargetPathConflictIssues(profileID int64, fileOperations []Operation,
 
 	for _, targetPath := range conflictingTargets {
 		indexes := targets[targetPath]
-		modNames := markConflictingOperations(fileOperations, indexes)
+		markConflictingOperations(fileOperations, indexes)
+		conflictingOperationIndexes := finalOperationIndexes(fileOperationOffset, indexes)
 
-		*issues = append(*issues, newPlanIssue(
+		issue := newPlanIssue(
 			PlanIssueSeverityError,
 			PlanIssueTargetPathConflict,
 			profileID,
-			fmt.Sprintf("multiple planned operations target %q (mods: %s)", targetPath, strings.Join(modNames, ", ")),
+			fmt.Sprintf("multiple planned operations target %q", targetPath),
 			nil,
 			nil,
 			stringPtr(targetPath),
-		))
+		)
+		issue.ConflictingOperationIndexes = conflictingOperationIndexes
+		*issues = append(*issues, issue)
 	}
 }
 
-func markConflictingOperations(fileOperations []Operation, indexes []int) []string {
-	modNames := make([]string, 0, len(indexes))
+func markConflictingOperations(fileOperations []Operation, indexes []int) {
 	for _, index := range indexes {
 		fileOperations[index].Conflict = true
-		modNames = append(modNames, fmt.Sprintf("%q", fileOperations[index].Mod.ModName))
 	}
-	sort.Strings(modNames)
-	return modNames
+}
+
+func finalOperationIndexes(fileOperationOffset int, fileOperationIndexes []int) []int {
+	indexes := make([]int, 0, len(fileOperationIndexes))
+	for _, index := range fileOperationIndexes {
+		indexes = append(indexes, fileOperationOffset+index)
+	}
+	sort.Ints(indexes)
+	return indexes
 }
 
 func canApplyPlan(issues []PlanIssue) bool {

@@ -101,24 +101,26 @@ func toInternalPlanIssues(issues []dto.PlanIssue) []operationplan.PlanIssue {
 
 func toDTOPlanIssue(issue operationplan.PlanIssue) dto.PlanIssue {
 	return dto.PlanIssue{
-		Severity:   dto.PlanIssueSeverity(issue.Severity),
-		Kind:       dto.PlanIssueKind(issue.Kind),
-		Message:    issue.Message,
-		ProfileID:  issue.ProfileID,
-		SourcePath: issue.SourcePath,
-		TargetPath: issue.TargetPath,
-		Mod:        toDTOModContextPtr(issue.Mod),
+		Severity:                    dto.PlanIssueSeverity(issue.Severity),
+		Kind:                        dto.PlanIssueKind(issue.Kind),
+		Message:                     issue.Message,
+		ProfileID:                   issue.ProfileID,
+		SourcePath:                  issue.SourcePath,
+		TargetPath:                  issue.TargetPath,
+		Mod:                         toDTOModContextPtr(issue.Mod),
+		ConflictingOperationIndexes: append([]int{}, issue.ConflictingOperationIndexes...),
 	}
 }
 
 func toInternalPlanIssue(issue dto.PlanIssue) operationplan.PlanIssue {
 	return operationplan.PlanIssue{
-		Severity:   operationplan.PlanIssueSeverity(issue.Severity),
-		Kind:       operationplan.PlanIssueKind(issue.Kind),
-		Message:    issue.Message,
-		ProfileID:  issue.ProfileID,
-		SourcePath: issue.SourcePath,
-		TargetPath: issue.TargetPath,
-		Mod:        toInternalModContextPtr(issue.Mod),
+		Severity:                    operationplan.PlanIssueSeverity(issue.Severity),
+		Kind:                        operationplan.PlanIssueKind(issue.Kind),
+		Message:                     issue.Message,
+		ProfileID:                   issue.ProfileID,
+		SourcePath:                  issue.SourcePath,
+		TargetPath:                  issue.TargetPath,
+		Mod:                         toInternalModContextPtr(issue.Mod),
+		ConflictingOperationIndexes: append([]int{}, issue.ConflictingOperationIndexes...),
 	}
 }

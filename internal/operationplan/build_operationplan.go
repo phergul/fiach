@@ -65,7 +65,7 @@ func BuildOperationPlan(resolved ResolveProfilePlanResult) (plan OperationPlan, 
 	}
 
 	plan.Issues = append(plan.Issues, issues...)
-	appendTargetPathConflictIssues(resolved.ProfileID, fileOperations, &plan.Issues)
+	appendTargetPathConflictIssues(resolved.ProfileID, len(directoryOperations), fileOperations, &plan.Issues)
 
 	sortDirectoryOperations(directoryOperations)
 
@@ -358,7 +358,7 @@ func (b *modPlanBuilder) result() StrategyBuildResult {
 	}
 
 	if b.blockingIssue != nil {
-		if !slices.Contains(result.Issues, *b.blockingIssue) {
+		if !containsPlanIssue(result.Issues, *b.blockingIssue) {
 			result.Issues = append(result.Issues, *b.blockingIssue)
 		}
 		return result
@@ -368,4 +368,41 @@ func (b *modPlanBuilder) result() StrategyBuildResult {
 	result.Operations = append(result.Operations, b.directoryOperations...)
 	result.Operations = append(result.Operations, b.fileOperations...)
 	return result
+}
+
+func containsPlanIssue(issues []PlanIssue, target PlanIssue) bool {
+	for _, issue := range issues {
+		if planIssuesEqual(issue, target) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func planIssuesEqual(left PlanIssue, right PlanIssue) bool {
+	return left.Severity == right.Severity &&
+		left.Kind == right.Kind &&
+		left.Message == right.Message &&
+		left.ProfileID == right.ProfileID &&
+		stringPtrsEqual(left.SourcePath, right.SourcePath) &&
+		stringPtrsEqual(left.TargetPath, right.TargetPath) &&
+		modContextPtrsEqual(left.Mod, right.Mod) &&
+		slices.Equal(left.ConflictingOperationIndexes, right.ConflictingOperationIndexes)
+}
+
+func stringPtrsEqual(left *string, right *string) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+
+	return *left == *right
+}
+
+func modContextPtrsEqual(left *ModContext, right *ModContext) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+
+	return *left == *right
 }

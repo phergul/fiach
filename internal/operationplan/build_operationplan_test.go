@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -408,8 +409,13 @@ func TestBuildOperationPlanMarksSameTargetOperationsAsConflicts(t *testing.T) {
 	if !hasIssueKind(plan.Issues, PlanIssueTargetPathConflict) {
 		t.Fatalf("BuildOperationPlan() issues = %+v, want target path conflict issue", plan.Issues)
 	}
+	conflictIssue := findIssueKind(plan.Issues, PlanIssueTargetPathConflict)
+	if conflictIssue == nil {
+		t.Fatalf("BuildOperationPlan() issues = %+v, want target path conflict issue", plan.Issues)
+	}
 
 	conflictingCount := 0
+	conflictingIndexes := make([]int, 0)
 	for _, operation := range plan.Operations {
 		if operation.Type != OperationTypeCreateDirectory && operation.Conflict {
 			conflictingCount++
@@ -417,6 +423,14 @@ func TestBuildOperationPlanMarksSameTargetOperationsAsConflicts(t *testing.T) {
 	}
 	if conflictingCount != 2 {
 		t.Fatalf("conflicting file operation count = %d, want 2: %+v", conflictingCount, plan.Operations)
+	}
+	for index, operation := range plan.Operations {
+		if operation.Conflict {
+			conflictingIndexes = append(conflictingIndexes, index)
+		}
+	}
+	if !slices.Equal(conflictIssue.ConflictingOperationIndexes, conflictingIndexes) {
+		t.Fatalf("conflict issue indexes = %v, want final operation indexes %v", conflictIssue.ConflictingOperationIndexes, conflictingIndexes)
 	}
 }
 
@@ -460,13 +474,17 @@ func TestBuildOperationPlanReportsPartialOperationsAndAccumulatedIssues(t *testi
 }
 
 func hasIssueKind(issues []PlanIssue, kind PlanIssueKind) bool {
+	return findIssueKind(issues, kind) != nil
+}
+
+func findIssueKind(issues []PlanIssue, kind PlanIssueKind) *PlanIssue {
 	for _, issue := range issues {
 		if issue.Kind == kind {
-			return true
+			return &issue
 		}
 	}
 
-	return false
+	return nil
 }
 
 func makePlannerSourceTree(t *testing.T, files map[string]string) string {
