@@ -11,6 +11,7 @@ import (
 	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/gamesource"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -40,7 +41,7 @@ func (s *GamesService) GetStoredGames(ctx context.Context) (games []dto.StoredGa
 		return nil, err
 	}
 
-	return toDTOStoredGames(storedGames), nil
+	return mappers.ToDTOStoredGames(storedGames), nil
 }
 
 func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceScanResult, err error) {
@@ -87,7 +88,7 @@ func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceS
 			return dto.SourceScanResult{}, fmt.Errorf("save %s games: %w", sourceID, err)
 		}
 
-		s.logger.InfoContext(ctx, "Game source scan saved",
+		s.logger.InfoContext(ctx, fmt.Sprintf("%s scan saved", sourceID),
 			slog.String("operation", diagnostics.OperationScanGames),
 			slog.String("event", "source_saved"),
 			slog.String("source", sourceID),
@@ -100,7 +101,7 @@ func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceS
 		result.Inserted += sourceResult.Inserted
 		result.Updated += sourceResult.Updated
 		result.MarkedUnavailable += sourceResult.MarkedUnavailable
-		result.Games = append(result.Games, toDTOStoredGames(sourceResult.Games)...)
+		result.Games = append(result.Games, mappers.ToDTOStoredGames(sourceResult.Games)...)
 	}
 
 	s.logger.InfoContext(ctx, "Game scan completed",

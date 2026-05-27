@@ -12,6 +12,7 @@ import (
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/modimport"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
@@ -59,7 +60,7 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.Pre
 
 	previewResult, err := installconfig.BuildPreview(installconfig.PreviewInput{
 		SourcePath:         tempPath,
-		StrategyType:       toInstallStrategyType(input.StrategyType),
+		StrategyType:       mappers.ToInstallStrategyType(input.StrategyType),
 		TargetRelativePath: input.TargetRelativePath,
 		FileCap:            installconfig.DefaultPreviewFileCap,
 	})
@@ -67,7 +68,7 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.Pre
 		return dto.Preview{}, err
 	}
 
-	return toDTOPreview(previewResult), nil
+	return mappers.ToDTOPreview(previewResult), nil
 }
 
 func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (result dto.ImportModResult, err error) {
@@ -108,7 +109,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		input.GameID,
 		input.Name,
 		source,
-		toInstallStrategyType(input.StrategyType),
+		mappers.ToInstallStrategyType(input.StrategyType),
 		input.TargetRelativePath,
 	)
 	if err != nil {
@@ -127,13 +128,13 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	)
 
 	return dto.ImportModResult{
-		Mod:    toDTOMod(importResult.Mod),
-		Config: toDTOModInstallConfig(importResult.Config),
+		Mod:    mappers.ToDTOMod(importResult.Mod),
+		Config: mappers.ToDTOModInstallConfig(importResult.Config),
 	}, nil
 }
 
 func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.Source, error) {
-	switch toDBModSourceType(sourceType) {
+	switch mappers.ToDBModSourceType(sourceType) {
 	case dbtypes.ModSourceTypeFolder:
 		return modimport.NewFolderSource(sourcePath)
 	case dbtypes.ModSourceTypeArchive:

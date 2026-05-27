@@ -1,105 +1,105 @@
-package services
+package mappers
 
 import (
 	"github.com/phergul/mod-manager/internal/operationplan"
 	"github.com/phergul/mod-manager/internal/services/dto"
 )
 
-func toDTOOperationPlan(plan operationplan.OperationPlan) dto.OperationPlan {
+func ToDTOOperationPlan(plan operationplan.OperationPlan) dto.OperationPlan {
 	return dto.OperationPlan{
-		Operations: toDTOOperations(plan.Operations),
-		Issues:     toDTOPlanIssues(plan.Issues),
+		Operations: ToDTOOperations(plan.Operations),
+		Issues:     ToDTOPlanIssues(plan.Issues),
 		CanApply:   plan.CanApply,
 	}
 }
 
-func toInternalOperationPlan(plan dto.OperationPlan) operationplan.OperationPlan {
+func ToInternalOperationPlan(plan dto.OperationPlan) operationplan.OperationPlan {
 	return operationplan.OperationPlan{
-		Operations: toInternalOperations(plan.Operations),
-		Issues:     toInternalPlanIssues(plan.Issues),
+		Operations: ToInternalOperations(plan.Operations),
+		Issues:     ToInternalPlanIssues(plan.Issues),
 		CanApply:   plan.CanApply,
 	}
 }
 
-func toDTOOperations(operations []operationplan.Operation) []dto.Operation {
+func ToDTOOperations(operations []operationplan.Operation) []dto.Operation {
 	result := make([]dto.Operation, 0, len(operations))
 	for _, operation := range operations {
-		result = append(result, toDTOOperation(operation))
+		result = append(result, ToDTOOperation(operation))
 	}
 	return result
 }
 
-func toInternalOperations(operations []dto.Operation) []operationplan.Operation {
+func ToInternalOperations(operations []dto.Operation) []operationplan.Operation {
 	result := make([]operationplan.Operation, 0, len(operations))
 	for _, operation := range operations {
-		result = append(result, toInternalOperation(operation))
+		result = append(result, ToInternalOperation(operation))
 	}
 	return result
 }
 
-func toDTOOperation(operation operationplan.Operation) dto.Operation {
+func ToDTOOperation(operation operationplan.Operation) dto.Operation {
 	return dto.Operation{
 		Type:       dto.OperationType(operation.Type),
 		SourcePath: operation.SourcePath,
 		TargetPath: operation.TargetPath,
 		BackupPath: operation.BackupPath,
 		Conflict:   operation.Conflict,
-		Mod:        toDTOModContext(operation.Mod),
+		Mod:        ToDTOModContext(operation.Mod),
 	}
 }
 
-func toInternalOperation(operation dto.Operation) operationplan.Operation {
+func ToInternalOperation(operation dto.Operation) operationplan.Operation {
 	return operationplan.Operation{
 		Type:       operationplan.OperationType(operation.Type),
 		SourcePath: operation.SourcePath,
 		TargetPath: operation.TargetPath,
 		BackupPath: operation.BackupPath,
 		Conflict:   operation.Conflict,
-		Mod:        toInternalModContext(operation.Mod),
+		Mod:        ToInternalModContext(operation.Mod),
 	}
 }
 
-func toDTOModContext(mod operationplan.ModContext) dto.ModContext {
+func ToDTOModContext(mod operationplan.ModContext) dto.ModContext {
 	return dto.ModContext(mod)
 }
 
-func toInternalModContext(mod dto.ModContext) operationplan.ModContext {
+func ToInternalModContext(mod dto.ModContext) operationplan.ModContext {
 	return operationplan.ModContext(mod)
 }
 
-func toDTOModContextPtr(mod *operationplan.ModContext) *dto.ModContext {
+func ToDTOModContextPtr(mod *operationplan.ModContext) *dto.ModContext {
 	if mod == nil {
 		return nil
 	}
-	result := toDTOModContext(*mod)
+	result := ToDTOModContext(*mod)
 	return &result
 }
 
-func toInternalModContextPtr(mod *dto.ModContext) *operationplan.ModContext {
+func ToInternalModContextPtr(mod *dto.ModContext) *operationplan.ModContext {
 	if mod == nil {
 		return nil
 	}
-	result := toInternalModContext(*mod)
+	result := ToInternalModContext(*mod)
 	return &result
 }
 
-func toDTOPlanIssues(issues []operationplan.PlanIssue) []dto.PlanIssue {
+func ToDTOPlanIssues(issues []operationplan.PlanIssue) []dto.PlanIssue {
 	result := make([]dto.PlanIssue, 0, len(issues))
 	for _, issue := range issues {
-		result = append(result, toDTOPlanIssue(issue))
+		result = append(result, ToDTOPlanIssue(issue))
 	}
 	return result
 }
 
-func toInternalPlanIssues(issues []dto.PlanIssue) []operationplan.PlanIssue {
+func ToInternalPlanIssues(issues []dto.PlanIssue) []operationplan.PlanIssue {
 	result := make([]operationplan.PlanIssue, 0, len(issues))
 	for _, issue := range issues {
-		result = append(result, toInternalPlanIssue(issue))
+		result = append(result, ToInternalPlanIssue(issue))
 	}
 	return result
 }
 
-func toDTOPlanIssue(issue operationplan.PlanIssue) dto.PlanIssue {
+func ToDTOPlanIssue(issue operationplan.PlanIssue) dto.PlanIssue {
 	return dto.PlanIssue{
 		Severity:                    dto.PlanIssueSeverity(issue.Severity),
 		Kind:                        dto.PlanIssueKind(issue.Kind),
@@ -107,12 +107,12 @@ func toDTOPlanIssue(issue operationplan.PlanIssue) dto.PlanIssue {
 		ProfileID:                   issue.ProfileID,
 		SourcePath:                  issue.SourcePath,
 		TargetPath:                  issue.TargetPath,
-		Mod:                         toDTOModContextPtr(issue.Mod),
+		Mod:                         ToDTOModContextPtr(issue.Mod),
 		ConflictingOperationIndexes: append([]int{}, issue.ConflictingOperationIndexes...),
 	}
 }
 
-func toInternalPlanIssue(issue dto.PlanIssue) operationplan.PlanIssue {
+func ToInternalPlanIssue(issue dto.PlanIssue) operationplan.PlanIssue {
 	return operationplan.PlanIssue{
 		Severity:                    operationplan.PlanIssueSeverity(issue.Severity),
 		Kind:                        operationplan.PlanIssueKind(issue.Kind),
@@ -120,7 +120,7 @@ func toInternalPlanIssue(issue dto.PlanIssue) operationplan.PlanIssue {
 		ProfileID:                   issue.ProfileID,
 		SourcePath:                  issue.SourcePath,
 		TargetPath:                  issue.TargetPath,
-		Mod:                         toInternalModContextPtr(issue.Mod),
+		Mod:                         ToInternalModContextPtr(issue.Mod),
 		ConflictingOperationIndexes: append([]int{}, issue.ConflictingOperationIndexes...),
 	}
 }

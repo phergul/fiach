@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 )
 
 func (s *ProfileService) ListProfileMods(ctx context.Context, profileID int64) (mods []dto.ProfileMod, err error) {
@@ -19,7 +20,7 @@ func (s *ProfileService) ListProfileMods(ctx context.Context, profileID int64) (
 		return nil, err
 	}
 
-	return toDTOProfileMods(profileMods), nil
+	return mappers.ToDTOProfileMods(profileMods), nil
 }
 
 func (s *ProfileService) AddModToProfile(ctx context.Context, profileID int64, modID int64) (profileMod dto.ProfileMod, err error) {
@@ -34,7 +35,7 @@ func (s *ProfileService) AddModToProfile(ctx context.Context, profileID int64, m
 		return dto.ProfileMod{}, err
 	}
 
-	return toDTOProfileMod(storedProfileMod), nil
+	return mappers.ToDTOProfileMod(storedProfileMod), nil
 }
 
 func (s *ProfileService) RemoveModFromProfile(ctx context.Context, profileID int64, modID int64) (err error) {
@@ -59,7 +60,7 @@ func (s *ProfileService) SetProfileModEnabled(ctx context.Context, profileID int
 		return dto.ProfileMod{}, err
 	}
 
-	return toDTOProfileMod(storedProfileMod), nil
+	return mappers.ToDTOProfileMod(storedProfileMod), nil
 }
 
 func (s *ProfileService) ReorderProfileMods(ctx context.Context, profileID int64, modIDs []int64) (mods []dto.ProfileMod, err error) {
@@ -74,5 +75,5 @@ func (s *ProfileService) ReorderProfileMods(ctx context.Context, profileID int64
 		return nil, err
 	}
 
-	return toDTOProfileMods(profileMods), nil
+	return mappers.ToDTOProfileMods(profileMods), nil
 }

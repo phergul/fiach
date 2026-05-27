@@ -11,6 +11,7 @@ import (
 	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/installconfig"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -38,7 +39,7 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 		return nil, err
 	}
 
-	return toDTOMods(storedMods), nil
+	return mappers.ToDTOMods(storedMods), nil
 }
 
 func (s *ModService) GetGameManagedModStorageUsage(ctx context.Context, gameID int64) (bytes int64, err error) {
@@ -67,7 +68,7 @@ func (s *ModService) ListImportStrategies(_ context.Context) (strategies []dto.S
 		}
 	}()
 
-	return toDTOStrategyDescriptors(installconfig.SelectableStrategies()), nil
+	return mappers.ToDTOStrategyDescriptors(installconfig.SelectableStrategies()), nil
 }
 
 func managedModPathSize(path string) int64 {

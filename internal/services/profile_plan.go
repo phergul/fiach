@@ -13,6 +13,7 @@ import (
 	"github.com/phergul/mod-manager/internal/operationplan"
 	"github.com/phergul/mod-manager/internal/restoreplan"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
@@ -33,7 +34,7 @@ func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileI
 		return dto.OperationPlan{}, err
 	}
 
-	return toDTOOperationPlan(operationPlan), nil
+	return mappers.ToDTOOperationPlan(operationPlan), nil
 }
 
 func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan dto.OperationPlan) (result dto.ApplyOperationPlanResult, err error) {
@@ -94,7 +95,7 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		slog.Int("operation_count", len(plan.Operations)),
 	)
 
-	internalPlan := toInternalOperationPlan(plan)
+	internalPlan := mappers.ToInternalOperationPlan(plan)
 	applyResult, err := applyplan.Execute(internalPlan, applyplan.Context{
 		GameInstallPath:    game.InstallPath,
 		GameModStoragePath: gameModStoragePath,
@@ -102,7 +103,7 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 	if err != nil {
 		return dto.ApplyOperationPlanResult{}, err
 	}
-	result = toDTOApplyOperationPlanResult(applyResult)
+	result = mappers.ToDTOApplyOperationPlanResult(applyResult)
 	if !applyResult.Success {
 		s.logger.WarnContext(ctx, "Profile apply completed with failures",
 			slog.String("operation", diagnostics.OperationApplyProfile),
@@ -200,7 +201,7 @@ func (s *ProfileService) RestoreVanillaState(ctx context.Context, gameID int64) 
 	if err != nil {
 		return dto.RestoreResult{}, err
 	}
-	result = toDTORestoreResult(restoreResult)
+	result = mappers.ToDTORestoreResult(restoreResult)
 	if !restoreResult.Success {
 		s.logger.WarnContext(ctx, "Vanilla restore completed with failures",
 			slog.String("operation", diagnostics.OperationRestoreVanilla),

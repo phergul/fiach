@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
@@ -81,7 +82,7 @@ func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gam
 		return dto.StoredGame{}, err
 	}
 
-	return toDTOStoredGame(storedGame), nil
+	return mappers.ToDTOStoredGame(storedGame), nil
 }
 
 func (s *SettingsService) ResolveGameModStoragePath(ctx context.Context, gameID int64) (path string, err error) {

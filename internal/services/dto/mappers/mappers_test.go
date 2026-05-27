@@ -1,4 +1,4 @@
-package services
+package mappers
 
 import (
 	"testing"
@@ -41,7 +41,7 @@ func TestOperationPlanDTORoundTrip(t *testing.T) {
 		},
 	}
 
-	roundTrip := toInternalOperationPlan(toDTOOperationPlan(plan))
+	roundTrip := ToInternalOperationPlan(ToDTOOperationPlan(plan))
 	if roundTrip.Operations[0].Type != plan.Operations[0].Type ||
 		*roundTrip.Operations[0].SourcePath != sourcePath ||
 		*roundTrip.Operations[0].BackupPath != backupPath ||
@@ -86,11 +86,11 @@ func TestApplyResultDTOIncludesManifest(t *testing.T) {
 		},
 	}
 
-	dtoResult := toDTOApplyOperationPlanResult(result)
+	dtoResult := ToDTOApplyOperationPlanResult(result)
 	if dtoResult.Results[0].Status != dto.ApplyOperationStatusCompleted ||
 		dtoResult.Manifest.AddedFiles[0].Mod.ModID != 9 ||
 		dtoResult.Manifest.AddedFiles[0].SHA256 != "abc" {
-		t.Fatalf("toDTOApplyOperationPlanResult() = %+v, want result and manifest fields", dtoResult)
+		t.Fatalf("ToDTOApplyOperationPlanResult() = %+v, want result and manifest fields", dtoResult)
 	}
 }
 
@@ -117,11 +117,11 @@ func TestRestoreResultDTOConversion(t *testing.T) {
 		},
 	}
 
-	dtoResult := toDTORestoreResult(result)
+	dtoResult := ToDTORestoreResult(result)
 	if dtoResult.Results[0].Status != dto.RestoreOperationStatusFailed ||
 		dtoResult.Results[0].Operation.Mod.ID != 4 ||
 		*dtoResult.Results[0].Error != message {
-		t.Fatalf("toDTORestoreResult() = %+v, want restore operation fields", dtoResult)
+		t.Fatalf("ToDTORestoreResult() = %+v, want restore operation fields", dtoResult)
 	}
 }
 
@@ -139,10 +139,10 @@ func TestStorageDTOConversionPreservesNullableFields(t *testing.T) {
 		ModStoragePathOverride: &overridePath,
 	}
 
-	dtoGame := toDTOStoredGame(game)
+	dtoGame := ToDTOStoredGame(game)
 	if dtoGame.SourceID == nil || *dtoGame.SourceID != sourceID ||
 		dtoGame.LastSeenAt == nil || *dtoGame.LastSeenAt != lastSeenAt ||
 		dtoGame.ModStoragePathOverride == nil || *dtoGame.ModStoragePathOverride != overridePath {
-		t.Fatalf("toDTOStoredGame() = %+v, want nullable pointers preserved", dtoGame)
+		t.Fatalf("ToDTOStoredGame() = %+v, want nullable pointers preserved", dtoGame)
 	}
 }

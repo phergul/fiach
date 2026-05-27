@@ -7,6 +7,7 @@ import (
 
 	"github.com/phergul/mod-manager/internal/appliedstate"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
@@ -35,7 +36,7 @@ func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name s
 		return dto.ModProfile{}, err
 	}
 
-	return toDTOModProfile(storedProfile), nil
+	return mappers.ToDTOModProfile(storedProfile), nil
 }
 
 func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []dto.ModProfile, err error) {
@@ -50,7 +51,7 @@ func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profil
 		return nil, err
 	}
 
-	return toDTOModProfiles(storedProfiles), nil
+	return mappers.ToDTOModProfiles(storedProfiles), nil
 }
 
 func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, name string) (profile dto.ModProfile, err error) {
@@ -65,7 +66,7 @@ func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, nam
 		return dto.ModProfile{}, err
 	}
 
-	return toDTOModProfile(storedProfile), nil
+	return mappers.ToDTOModProfile(storedProfile), nil
 }
 
 func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (err error) {
