@@ -8,6 +8,10 @@ type Mod struct {
 	SourcePath         string        `db:"source_path"`
 	OriginalSourcePath string        `db:"original_source_path"`
 	OriginalSourceName *string       `db:"original_source_name"`
+	FileCount          *int64        `db:"file_count"`
+	DirectoryCount     *int64        `db:"directory_count"`
+	TotalSizeBytes     *int64        `db:"total_size_bytes"`
+	MetadataJSON       *string       `db:"metadata_json"`
 	CreatedAt          string        `db:"created_at"`
 	UpdatedAt          string        `db:"updated_at"`
 }
@@ -26,4 +30,8 @@ type CreateModInput struct {
 	SourcePath         string
 	OriginalSourcePath string
 	OriginalSourceName *string
+	FileCount          *int64
+	DirectoryCount     *int64
+	TotalSizeBytes     *int64
+	MetadataJSON       *string
 }

@@ -21,6 +21,10 @@ CREATE TABLE mods (
     source_path TEXT NOT NULL,
     original_source_path TEXT NOT NULL,
     original_source_name TEXT,
+    file_count INTEGER,
+    directory_count INTEGER,
+    total_size_bytes INTEGER,
+    metadata_json TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

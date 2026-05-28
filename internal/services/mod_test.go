@@ -3,13 +3,16 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/phergul/mod-manager/internal/installconfig"
+	"github.com/phergul/mod-manager/internal/modmetadata"
 	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/storage"
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
@@ -31,6 +34,25 @@ func TestModServiceListsMods(t *testing.T) {
 	}
 	if len(mods) != 1 || mods[0].ID != modID {
 		t.Fatalf("ListMods() = %+v, want inserted mod", mods)
+	}
+}
+
+func TestModServiceRenamesMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	service := NewModService(store, testLogger())
+
+	renamed, err := service.RenameMod(context.Background(), modID, " USSEP ")
+	if err != nil {
+		t.Fatalf("RenameMod() error = %v", err)
+	}
+	if renamed.ID != modID || renamed.Name != "USSEP" {
+		t.Fatalf("RenameMod() = %+v, want renamed mod", renamed)
 	}
 }
 
@@ -333,6 +355,9 @@ func TestModServiceImportsModFolder(t *testing.T) {
 	if mod.Name != "SkyUI" || mod.SourceType != dto.ModSourceTypeFolder || mod.SourcePath != wantSourcePath || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName != nil {
 		t.Fatalf("ImportMod() = %+v, want trimmed name and managed/original paths", mod)
 	}
+	if mod.FileCount == nil || *mod.FileCount != 2 || mod.DirectoryCount == nil || *mod.DirectoryCount != 1 || mod.TotalSizeBytes == nil || *mod.TotalSizeBytes != 11 {
+		t.Fatalf("ImportMod() metadata = %+v, want inventory metadata", mod)
+	}
 	assertFileContents(t, filepath.Join(mod.SourcePath, "Data", "SkyUI.esp"), "plugin")
 	assertFileContents(t, filepath.Join(mod.SourcePath, "readme.txt"), "hello")
 }
@@ -396,7 +421,7 @@ func TestModServicePreviewsFolderImportConfiguration(t *testing.T) {
 	}
 
 	wantPaths := []string{"Mods/SkyUI/Data/SkyUI.esp", "Mods/SkyUI/readme.txt"}
-	if preview.TotalFileCount != 2 || preview.TargetRelativePath != "Mods/SkyUI" || strings.Join(preview.TargetFilePaths, "|") != strings.Join(wantPaths, "|") {
+	if preview.TotalFileCount != 2 || preview.TotalSizeBytes != 11 || preview.TargetRelativePath != "Mods/SkyUI" || strings.Join(preview.TargetFilePaths, "|") != strings.Join(wantPaths, "|") {
 		t.Fatalf("PreviewImportConfiguration() = %+v, want mapped target paths %+v", preview, wantPaths)
 	}
 }
@@ -457,6 +482,35 @@ func TestModServiceImportsMod(t *testing.T) {
 	assertFileContents(t, filepath.Join(result.Mod.SourcePath, "Data", "SkyUI.esp"), "plugin")
 }
 
+func TestModServiceImportContinuesWhenMetadataParsingFails(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "plugin"})
+	service := NewModService(store, testLogger())
+	service.metadataRegistry = modmetadata.NewRegistry(failingMetadataParser{})
+
+	result, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+
+	if result.Mod.ID == 0 || result.Mod.FileCount != nil || result.Mod.DirectoryCount != nil || result.Mod.TotalSizeBytes != nil {
+		t.Fatalf("ImportMod() = %+v, want imported mod with unavailable metadata", result.Mod)
+	}
+	assertFileContents(t, filepath.Join(result.Mod.SourcePath, "Data", "SkyUI.esp"), "plugin")
+}
+
 func TestModServiceImportReturnsExistingModAndConfig(t *testing.T) {
 	t.Parallel()
 
@@ -494,6 +548,12 @@ func TestModServiceImportReturnsExistingModAndConfig(t *testing.T) {
 	if second.Mod.ID != first.Mod.ID || second.Mod.Name != first.Mod.Name || second.Config.TargetRelativePath != "Data" {
 		t.Fatalf("ImportMod() repeat = %+v, want existing mod/config %+v", second, first)
 	}
+}
+
+type failingMetadataParser struct{}
+
+func (failingMetadataParser) Parse(context.Context, modmetadata.ParseInput) (modmetadata.Metadata, error) {
+	return modmetadata.Metadata{}, fmt.Errorf("forced metadata failure")
 }
 
 func TestModServiceImportAddsConfigToExistingUnconfiguredMod(t *testing.T) {
@@ -585,7 +645,7 @@ func TestModServiceImportReturnsExistingModForRepeatedOriginalSource(t *testing.
 		t.Fatalf("ImportMod() second error = %v", err)
 	}
 
-	if second != first {
+	if !reflect.DeepEqual(second, first) {
 		t.Fatalf("second import = %+v, want existing %+v", second, first)
 	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(first.SourcePath), "Renamed")); !errors.Is(err, os.ErrNotExist) {

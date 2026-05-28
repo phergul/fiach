@@ -12,20 +12,23 @@ import (
 
 	"github.com/phergul/mod-manager/internal/fileignore"
 	"github.com/phergul/mod-manager/internal/installconfig"
+	"github.com/phergul/mod-manager/internal/modmetadata"
 	"github.com/phergul/mod-manager/internal/services/dto"
 	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 	"github.com/phergul/mod-manager/internal/storage"
 )
 
 type ModService struct {
-	store  *storage.Store
-	logger *slog.Logger
+	store            *storage.Store
+	logger           *slog.Logger
+	metadataRegistry *modmetadata.Registry
 }
 
 func NewModService(store *storage.Store, logger *slog.Logger) *ModService {
 	return &ModService{
-		store:  store,
-		logger: logger,
+		store:            store,
+		logger:           logger,
+		metadataRegistry: modmetadata.DefaultRegistry(),
 	}
 }
 
@@ -42,6 +45,21 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 	}
 
 	return mappers.ToDTOMods(storedMods), nil
+}
+
+func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (mod dto.Mod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("rename mod: %w", err)
+		}
+	}()
+
+	storedMod, err := s.store.RenameMod(ctx, modID, name)
+	if err != nil {
+		return dto.Mod{}, err
+	}
+
+	return mappers.ToDTOMod(storedMod), nil
 }
 
 func (s *ModService) GetModDeleteSummary(ctx context.Context, modID int64) (summary dto.ModDeleteSummary, err error) {

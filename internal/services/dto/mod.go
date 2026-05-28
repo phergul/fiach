@@ -15,6 +15,10 @@ type Mod struct {
 	SourcePath         string
 	OriginalSourcePath string
 	OriginalSourceName *string
+	FileCount          *int64
+	DirectoryCount     *int64
+	TotalSizeBytes     *int64
+	MetadataJSON       *string
 	CreatedAt          string
 	UpdatedAt          string
 }

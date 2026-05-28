@@ -31,6 +31,7 @@ type Preview struct {
 	TargetDisplayPath   string
 	TotalFileCount      int
 	TotalDirectoryCount int
+	TotalSizeBytes      int64
 	TargetFilePaths     []string
 	IsCapped            bool
 	Cap                 int

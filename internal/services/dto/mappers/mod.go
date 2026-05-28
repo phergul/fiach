@@ -22,6 +22,10 @@ func ToDTOMod(mod dbtypes.Mod) dto.Mod {
 		SourcePath:         mod.SourcePath,
 		OriginalSourcePath: mod.OriginalSourcePath,
 		OriginalSourceName: mod.OriginalSourceName,
+		FileCount:          mod.FileCount,
+		DirectoryCount:     mod.DirectoryCount,
+		TotalSizeBytes:     mod.TotalSizeBytes,
+		MetadataJSON:       mod.MetadataJSON,
 		CreatedAt:          mod.CreatedAt,
 		UpdatedAt:          mod.UpdatedAt,
 	}

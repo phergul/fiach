@@ -5,6 +5,7 @@ import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 import {
   DeleteMod,
   GetModDeleteSummary,
+  RenameMod,
 } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
 import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -55,8 +56,11 @@ export const GameModsSection = ({
   const { isLoading, loadError, mods, refreshMods } = modManager;
   const [deleteCandidate, setDeleteCandidate] = useState<Mod | null>(null);
   const [deleteSummary, setDeleteSummary] = useState<ModDeleteSummary | null>(null);
+  const [editingModID, setEditingModID] = useState<number | null>(null);
+  const [editingModName, setEditingModName] = useState('');
   const [isDeleteSummaryLoading, setIsDeleteSummaryLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
@@ -95,6 +99,56 @@ export const GameModsSection = ({
     },
   ];
   const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
+  const isRowBusy = isDeleteBusy || isRenaming;
+
+  const startRenameMod = (mod: Mod) => {
+    if (isRowBusy) {
+      return;
+    }
+
+    setEditingModID(mod.ID);
+    setEditingModName(mod.Name);
+  };
+
+  const cancelRenameMod = () => {
+    if (isRenaming) {
+      return;
+    }
+
+    setEditingModID(null);
+    setEditingModName('');
+  };
+
+  const renameMod = async (modID: number) => {
+    const trimmedName = editingModName.trim();
+    if (trimmedName === '') {
+      addToast({
+        message: 'Mod name is required.',
+        tone: 'error',
+      });
+      return;
+    }
+
+    setIsRenaming(true);
+
+    try {
+      await RenameMod(modID, trimmedName);
+      setEditingModID(null);
+      setEditingModName('');
+      addToast({
+        message: 'Mod renamed.',
+        tone: 'success',
+      });
+      await refreshMods();
+    } catch (error) {
+      addToast({
+        message: getErrorMessage(error),
+        tone: 'error',
+      });
+    } finally {
+      setIsRenaming(false);
+    }
+  };
 
   const requestDeleteMod = async (mod: Mod) => {
     setDeleteCandidate(mod);
@@ -218,10 +272,16 @@ export const GameModsSection = ({
         <ul className="game-mods-section-list">
           {filteredMods.map((mod) => (
             <GameModListItem
-              isBusy={isDeleteBusy}
+              editingModName={editingModName}
+              isBusy={isRowBusy}
+              isEditing={editingModID === mod.ID}
               key={mod.ID}
               mod={mod}
+              onCancelRename={cancelRenameMod}
               onDeleteMod={requestDeleteMod}
+              onEditingModNameChange={setEditingModName}
+              onRenameMod={renameMod}
+              onStartRename={startRenameMod}
             />
           ))}
         </ul>

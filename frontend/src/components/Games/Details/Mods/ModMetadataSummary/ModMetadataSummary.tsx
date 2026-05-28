@@ -36,10 +36,53 @@ const sourceTypeLabel = (sourceType: ModSourceType) => {
   return sourceType === ModSourceType.ModSourceTypeArchive ? 'Archive' : 'Folder';
 };
 
+const numberFormatter = new Intl.NumberFormat(undefined);
+
+const formatCount = (value: number | null | undefined, noun: string) => {
+  if (value === null || value === undefined) {
+    return 'Unavailable';
+  }
+
+  return `${numberFormatter.format(value)} ${value === 1 ? noun : `${noun}s`}`;
+};
+
+export const formatModMetadataBytes = (value: number | null | undefined) => {
+  if (value === null || value === undefined) {
+    return 'Unavailable';
+  }
+  if (value < 1024) {
+    return `${numberFormatter.format(value)} B`;
+  }
+
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let size = value / 1024;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+
+  return `${new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: size >= 10 ? 1 : 2,
+  }).format(size)} ${units[unitIndex]}`;
+};
+
 export const buildModMetadataSummaryItems = (mod: Mod): ModMetadataSummaryItem[] => [
   {
     label: 'Source',
     value: sourceTypeLabel(mod.SourceType),
+  },
+  {
+    label: 'Files',
+    value: formatCount(mod.FileCount, 'file'),
+  },
+  {
+    label: 'Folders',
+    value: formatCount(mod.DirectoryCount, 'folder'),
+  },
+  {
+    label: 'Size',
+    value: formatModMetadataBytes(mod.TotalSizeBytes),
   },
   {
     label: 'Imported',

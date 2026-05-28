@@ -51,6 +51,12 @@ export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurati
     });
 }
 
+export function RenameMod(modID: number, name: string): $CancellablePromise<dto$0.Mod> {
+    return $Call.ByID(814805400, modID, name).then(($result: any) => {
+        return $$createType4($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = dto$0.ModDeleteSummary.createFrom;
 const $$createType1 = dto$0.ImportModResult.createFrom;

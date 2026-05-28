@@ -11,6 +11,22 @@ import (
 	"github.com/phergul/mod-manager/internal/storage/dbtypes"
 )
 
+const modSelectColumns = `
+	id,
+	game_id,
+	name,
+	source_type,
+	source_path,
+	original_source_path,
+	original_source_name,
+	file_count,
+	directory_count,
+	total_size_bytes,
+	metadata_json,
+	created_at,
+	updated_at
+`
+
 func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []dbtypes.Mod, err error) {
 	defer func() {
 		if err != nil {
@@ -23,7 +39,7 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []dbtypes.Mod,
 	}
 
 	err = s.db.SelectContext(ctx, &mods, `
-		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
+		SELECT `+modSelectColumns+`
 		FROM mods
 		WHERE game_id = ?
 		ORDER BY LOWER(name), id
@@ -78,6 +94,46 @@ func (s *Store) CreateMod(ctx context.Context, input dbtypes.CreateModInput) (mo
 	}
 
 	return mod, nil
+}
+
+func (s *Store) RenameMod(ctx context.Context, modID int64, name string) (mod dbtypes.Mod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("update mod name: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return dbtypes.Mod{}, errors.New("store is not open")
+	}
+	if modID <= 0 {
+		return dbtypes.Mod{}, errors.New("mod ID must be positive")
+	}
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return dbtypes.Mod{}, errors.New("mod name is required")
+	}
+
+	result, err := s.db.ExecContext(ctx, `
+		UPDATE mods
+		SET name = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`, name, modID)
+	if err != nil {
+		return dbtypes.Mod{}, err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return dbtypes.Mod{}, fmt.Errorf("get renamed mod count: %w", err)
+	}
+	if affected == 0 {
+		return dbtypes.Mod{}, sql.ErrNoRows
+	}
+
+	return getModByID(ctx, s.db, modID)
 }
 
 func (s *Store) DeleteMod(ctx context.Context, modID int64) (err error) {
@@ -187,7 +243,7 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	}
 
 	err = s.db.GetContext(ctx, &mod, `
-		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
+		SELECT `+modSelectColumns+`
 		FROM mods
 		WHERE game_id = ?
 			AND original_source_path = ?
@@ -231,10 +287,22 @@ func insertMod(ctx context.Context, db interface {
 	}
 
 	originalSourceName := cleanOptionalString(input.OriginalSourceName)
+	metadataJSON := cleanOptionalString(input.MetadataJSON)
 	result, err := db.ExecContext(ctx, `
-		INSERT INTO mods (game_id, name, source_type, source_path, original_source_path, original_source_name)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`, input.GameID, name, sourceType, sourcePath, originalSourcePath, nullableText(originalSourceName))
+		INSERT INTO mods (
+			game_id,
+			name,
+			source_type,
+			source_path,
+			original_source_path,
+			original_source_name,
+			file_count,
+			directory_count,
+			total_size_bytes,
+			metadata_json
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, input.GameID, name, sourceType, sourcePath, originalSourcePath, nullableText(originalSourceName), input.FileCount, input.DirectoryCount, input.TotalSizeBytes, nullableText(metadataJSON))
 	if err != nil {
 		return dbtypes.Mod{}, err
 	}
@@ -254,7 +322,7 @@ type modGetter interface {
 func getModByID(ctx context.Context, db modGetter, modID int64) (dbtypes.Mod, error) {
 	var mod dbtypes.Mod
 	err := db.GetContext(ctx, &mod, `
-		SELECT id, game_id, name, source_type, source_path, original_source_path, original_source_name, created_at, updated_at
+		SELECT `+modSelectColumns+`
 		FROM mods
 		WHERE id = ?
 	`, modID)

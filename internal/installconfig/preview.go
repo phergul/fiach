@@ -26,6 +26,7 @@ type Preview struct {
 	TargetDisplayPath   string
 	TotalFileCount      int
 	TotalDirectoryCount int
+	TotalSizeBytes      int64
 	TargetFilePaths     []string
 	IsCapped            bool
 	Cap                 int
@@ -101,6 +102,7 @@ func BuildPreview(input PreviewInput) (preview Preview, err error) {
 		}
 
 		preview.TotalFileCount++
+		preview.TotalSizeBytes += info.Size()
 		targetPaths = append(targetPaths, installpath.JoinTargetRelativePath(targetRelativePath, filepath.ToSlash(sourceRelativePath)))
 		return nil
 	})

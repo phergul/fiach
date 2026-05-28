@@ -443,6 +443,10 @@ export class Mod {
     "SourcePath": string;
     "OriginalSourcePath": string;
     "OriginalSourceName": string | null;
+    "FileCount": number | null;
+    "DirectoryCount": number | null;
+    "TotalSizeBytes": number | null;
+    "MetadataJSON": string | null;
     "CreatedAt": string;
     "UpdatedAt": string;
 
@@ -468,6 +472,18 @@ export class Mod {
         }
         if (!("OriginalSourceName" in $$source)) {
             this["OriginalSourceName"] = null;
+        }
+        if (!("FileCount" in $$source)) {
+            this["FileCount"] = null;
+        }
+        if (!("DirectoryCount" in $$source)) {
+            this["DirectoryCount"] = null;
+        }
+        if (!("TotalSizeBytes" in $$source)) {
+            this["TotalSizeBytes"] = null;
+        }
+        if (!("MetadataJSON" in $$source)) {
+            this["MetadataJSON"] = null;
         }
         if (!("CreatedAt" in $$source)) {
             this["CreatedAt"] = "";
@@ -863,6 +879,7 @@ export class Preview {
     "TargetDisplayPath": string;
     "TotalFileCount": number;
     "TotalDirectoryCount": number;
+    "TotalSizeBytes": number;
     "TargetFilePaths": string[];
     "IsCapped": boolean;
     "Cap": number;
@@ -888,6 +905,9 @@ export class Preview {
         if (!("TotalDirectoryCount" in $$source)) {
             this["TotalDirectoryCount"] = 0;
         }
+        if (!("TotalSizeBytes" in $$source)) {
+            this["TotalSizeBytes"] = 0;
+        }
         if (!("TargetFilePaths" in $$source)) {
             this["TargetFilePaths"] = [];
         }
@@ -908,14 +928,14 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField6_0 = $$createType21;
-        const $$createField9_0 = $$createType21;
+        const $$createField7_0 = $$createType21;
+        const $$createField10_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
-            $$parsedSource["TargetFilePaths"] = $$createField6_0($$parsedSource["TargetFilePaths"]);
+            $$parsedSource["TargetFilePaths"] = $$createField7_0($$parsedSource["TargetFilePaths"]);
         }
         if ("Warnings" in $$parsedSource) {
-            $$parsedSource["Warnings"] = $$createField9_0($$parsedSource["Warnings"]);
+            $$parsedSource["Warnings"] = $$createField10_0($$parsedSource["Warnings"]);
         }
         return new Preview($$parsedSource as Partial<Preview>);
     }

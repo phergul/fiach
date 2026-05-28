@@ -43,6 +43,7 @@ func ToDTOPreview(preview installconfig.Preview) dto.Preview {
 		TargetDisplayPath:   preview.TargetDisplayPath,
 		TotalFileCount:      preview.TotalFileCount,
 		TotalDirectoryCount: preview.TotalDirectoryCount,
+		TotalSizeBytes:      preview.TotalSizeBytes,
 		TargetFilePaths:     preview.TargetFilePaths,
 		IsCapped:            preview.IsCapped,
 		Cap:                 preview.Cap,

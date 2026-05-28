@@ -83,6 +83,10 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 	}
 
 	originalName := "SkyUI.zip"
+	fileCount := int64(2)
+	directoryCount := int64(1)
+	totalSizeBytes := int64(42)
+	metadataJSON := `{"parser":"inventory"}`
 	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
 		GameID:             gameID,
 		Name:               " SkyUI ",
@@ -90,6 +94,10 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 		SourcePath:         "/managed/skyui",
 		OriginalSourcePath: originalPath,
 		OriginalSourceName: &originalName,
+		FileCount:          &fileCount,
+		DirectoryCount:     &directoryCount,
+		TotalSizeBytes:     &totalSizeBytes,
+		MetadataJSON:       &metadataJSON,
 	})
 	if err != nil {
 		t.Fatalf("CreateMod() error = %v", err)
@@ -97,6 +105,9 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 
 	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != dbtypes.ModSourceTypeArchive || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
 		t.Fatalf("CreateMod() = %+v, want persisted mod fields", mod)
+	}
+	if mod.FileCount == nil || *mod.FileCount != fileCount || mod.DirectoryCount == nil || *mod.DirectoryCount != directoryCount || mod.TotalSizeBytes == nil || *mod.TotalSizeBytes != totalSizeBytes || mod.MetadataJSON == nil || *mod.MetadataJSON != metadataJSON {
+		t.Fatalf("CreateMod() metadata = %+v, want persisted metadata", mod)
 	}
 }
 
@@ -112,6 +123,41 @@ func TestGetModReportsMissingMod(t *testing.T) {
 	}
 	if found || mod != (dbtypes.Mod{}) {
 		t.Fatalf("GetMod() = %+v, %v; want missing", mod, found)
+	}
+}
+
+func TestRenameModUpdatesName(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+
+	renamed, err := store.RenameMod(context.Background(), modID, "  USSEP  ")
+	if err != nil {
+		t.Fatalf("RenameMod() error = %v", err)
+	}
+	if renamed.ID != modID || renamed.Name != "USSEP" {
+		t.Fatalf("RenameMod() = %+v, want renamed same mod", renamed)
+	}
+}
+
+func TestRenameModRejectsEmptyAndMissingMods(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+
+	if _, err := store.RenameMod(context.Background(), modID, "   "); err == nil {
+		t.Fatal("RenameMod() empty name error = nil, want error")
+	}
+	if _, err := store.RenameMod(context.Background(), 999, "Missing"); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("RenameMod() missing error = %v, want no rows", err)
 	}
 }
 

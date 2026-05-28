@@ -1,4 +1,5 @@
 import type { Preview, StrategyDescriptor } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import { formatModMetadataBytes } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 
 import './GameModImportWizardPreviewStep.scss';
 
@@ -38,8 +39,18 @@ export const GameModImportWizardPreviewStep = ({
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
-          <span className="game-mod-import-wizard-preview-step-label">Managed files</span>
+          <span className="game-mod-import-wizard-preview-step-label">Number of files</span>
           <span className="game-mod-import-wizard-preview-step-value">{preview.TotalFileCount}</span>
+        </div>
+
+        <div className="game-mod-import-wizard-preview-step-row">
+          <span className="game-mod-import-wizard-preview-step-label">Number of folders</span>
+          <span className="game-mod-import-wizard-preview-step-value">{preview.TotalDirectoryCount}</span>
+        </div>
+
+        <div className="game-mod-import-wizard-preview-step-row">
+          <span className="game-mod-import-wizard-preview-step-label">Size</span>
+          <span className="game-mod-import-wizard-preview-step-value">{formatModMetadataBytes(preview.TotalSizeBytes)}</span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">

@@ -111,9 +111,23 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		source,
 		mappers.ToInstallStrategyType(input.StrategyType),
 		input.TargetRelativePath,
+		modimport.ImportOptions{
+			MetadataRegistry: s.metadataRegistry,
+		},
 	)
 	if err != nil {
 		return dto.ImportModResult{}, err
+	}
+	if importResult.MetadataError != nil {
+		s.logger.WarnContext(ctx, "Mod metadata unavailable",
+			slog.String("operation", diagnostics.OperationImportMod),
+			slog.String("event", "metadata_unavailable"),
+			slog.Int64("game_id", input.GameID),
+			slog.Int64("mod_id", importResult.Mod.ID),
+			slog.String("source_type", string(input.SourceType)),
+			diagnostics.PathAttr("source_path", input.SourcePath),
+			diagnostics.ErrorAttr(importResult.MetadataError),
+		)
 	}
 
 	s.logger.InfoContext(ctx, "Mod import completed",
