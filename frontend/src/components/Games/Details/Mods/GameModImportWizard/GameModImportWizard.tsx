@@ -246,7 +246,7 @@ export const GameModImportWizard = ({
     <Modal
       bodyClassName="game-mod-import-wizard-body"
       closeTitle="Close import wizard"
-      description="Choose how this mod should be prepared for later profile planning."
+      description="Decide how to import this mod into your game"
       isBusy={isBusy}
       isOpen={isOpen}
       labelledByID="game-mod-import-wizard-title"
