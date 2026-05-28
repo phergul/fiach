@@ -156,7 +156,7 @@ export const GameProfileModsPanel = ({
           </button>
         ) : isAnotherProfileApplied ? (
           <button
-            className="game-profile-mods-panel-apply-button"
+            className="game-profile-mods-panel-apply-button button-main"
             disabled
             title={blockedApplyTitle}
             type="button"
@@ -166,7 +166,7 @@ export const GameProfileModsPanel = ({
           </button>
         ) : (
           <Link
-            className={isBusy ? 'game-profile-mods-panel-apply-button game-profile-mods-panel-link-disabled' : 'game-profile-mods-panel-apply-button'}
+            className={isBusy ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled' : 'game-profile-mods-panel-apply-button button-main'}
             to={`${applyProfilePath}/${profile.ID}`}
             onClick={(event) => {
               if (isBusy) {

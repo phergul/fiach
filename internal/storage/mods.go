@@ -35,6 +35,32 @@ func (s *Store) ListMods(ctx context.Context, gameID int64) (mods []dbtypes.Mod,
 	return mods, nil
 }
 
+func (s *Store) GetMod(ctx context.Context, modID int64) (mod dbtypes.Mod, found bool, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("select mod row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return dbtypes.Mod{}, false, errors.New("store is not open")
+	}
+	if modID <= 0 {
+		return dbtypes.Mod{}, false, errors.New("mod ID must be positive")
+	}
+
+	mod, err = getModByID(ctx, s.db, modID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return dbtypes.Mod{}, false, nil
+		}
+
+		return dbtypes.Mod{}, false, err
+	}
+
+	return mod, true, nil
+}
+
 func (s *Store) CreateMod(ctx context.Context, input dbtypes.CreateModInput) (mod dbtypes.Mod, err error) {
 	defer func() {
 		if err != nil {
@@ -52,6 +78,96 @@ func (s *Store) CreateMod(ctx context.Context, input dbtypes.CreateModInput) (mo
 	}
 
 	return mod, nil
+}
+
+func (s *Store) DeleteMod(ctx context.Context, modID int64) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("delete mod row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return errors.New("store is not open")
+	}
+	if modID <= 0 {
+		return errors.New("mod ID must be positive")
+	}
+
+	result, err := s.db.ExecContext(ctx, `
+		DELETE FROM mods
+		WHERE id = ?
+	`, modID)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get deleted mod count: %w", err)
+	}
+	if affected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (s *Store) CountProfilesUsingMod(ctx context.Context, modID int64) (count int64, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("count profiles using mod: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return 0, errors.New("store is not open")
+	}
+	if modID <= 0 {
+		return 0, errors.New("mod ID must be positive")
+	}
+
+	err = s.db.GetContext(ctx, &count, `
+		SELECT COUNT(*)
+		FROM profile_mods
+		WHERE mod_id = ?
+	`, modID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (s *Store) ProfileUsesMod(ctx context.Context, profileID int64, modID int64) (uses bool, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("check profile mod membership: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return false, errors.New("store is not open")
+	}
+	if profileID <= 0 {
+		return false, errors.New("profile ID must be positive")
+	}
+	if modID <= 0 {
+		return false, errors.New("mod ID must be positive")
+	}
+
+	var count int
+	err = s.db.GetContext(ctx, &count, `
+		SELECT COUNT(*)
+		FROM profile_mods
+		WHERE profile_id = ?
+			AND mod_id = ?
+	`, profileID, modID)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (mod dbtypes.Mod, found bool, err error) {

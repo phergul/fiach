@@ -1,0 +1,26 @@
+@use '@styles' as *;
+
+.mod-metadata-summary {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: $spacing-xs $spacing-md;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.mod-metadata-summary-item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: $spacing-xs;
+}
+
+.mod-metadata-summary-label {
+  color: $color-text-muted;
+}
+
+.mod-metadata-summary-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

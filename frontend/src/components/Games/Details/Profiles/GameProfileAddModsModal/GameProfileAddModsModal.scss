@@ -67,9 +67,9 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 .game-profile-add-mods-modal-option {
   display: grid;
   grid-template-columns: $game-profile-add-mods-modal-option-size minmax(0, 1fr);
-  align-items: start;
-  gap: $spacing-md;
-  padding: $spacing-md $spacing-xl;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-lg;
   cursor: pointer;
 }
 
@@ -146,16 +146,4 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 .game-profile-add-mods-modal-add-button,
 .game-profile-add-mods-modal-cancel-button {
   min-height: $game-profile-add-mods-modal-control-height;
-}
-
-.game-profile-add-mods-modal-add-button {
-  background: $color-text-subtle;
-  color: $color-background;
-  border-color: $color-text-subtle;
-}
-
-.game-profile-add-mods-modal-add-button:hover:not(:disabled),
-.game-profile-add-mods-modal-add-button:focus-visible:not(:disabled) {
-  background: $color-text-primary;
-  border-color: $color-text-primary;
 }

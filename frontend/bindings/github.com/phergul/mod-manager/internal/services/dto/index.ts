@@ -16,6 +16,7 @@ export {
     ListDiagnosticLogsInput,
     Mod,
     ModContext,
+    ModDeleteSummary,
     ModInstallConfig,
     ModProfile,
     ModSourceType,

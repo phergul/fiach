@@ -107,6 +107,13 @@ export const GameDetails = () => {
     }
   };
 
+  const refreshAfterModDeleted = async () => {
+    await Promise.all([
+      profileManager.refreshProfiles(),
+      appliedProfileManager.refreshAppliedProfile(),
+    ]);
+  };
+
   return (
     <section
       className={heroArtworkSource === '' ? 'game-details' : 'game-details game-details-with-backdrop'}
@@ -244,6 +251,7 @@ export const GameDetails = () => {
             <GameModsSection
               isImportDisabled={importFlow.isImporting}
               modManager={gameModManager}
+              onModDeleted={refreshAfterModDeleted}
               onImportArchive={importFlow.startArchiveImportFlow}
               onImportFolder={importFlow.startFolderImportFlow}
             />

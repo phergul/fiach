@@ -19,6 +19,16 @@ type Mod struct {
 	UpdatedAt          string
 }
 
+type ModDeleteSummary struct {
+	ModID              int64
+	ModName            string
+	ProfileUsageCount  int64
+	IsInAppliedProfile bool
+	ManagedSourcePath  string
+	OriginalSourceName *string
+	OriginalSourcePath string
+}
+
 type ModInstallConfig struct {
 	ModID              int64
 	StrategyType       string

@@ -58,29 +58,7 @@ $game-profile-mods-panel-icon-size: 1rem;
 
 .game-profile-mods-panel-apply-button,
 .game-profile-mods-panel-restore-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-sm;
-  padding: 0 $spacing-md;
-  color: $color-text-primary;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
-  font-size: $font-size-base;
   font-weight: $font-weight-semibold;
-  line-height: $line-height-heading;
-}
-
-.game-profile-mods-panel-apply-button {
-  background: color-mix(in srgb, $color-success 26%, transparent);
-  border-color: color-mix(in srgb, $color-success 72%, transparent);
-}
-
-.game-profile-mods-panel-apply-button:hover:not(:disabled),
-.game-profile-mods-panel-apply-button:focus-visible:not(:disabled) {
-  background: color-mix(in srgb, $color-success 36%, transparent);
-  border-color: $color-success;
-  outline: none;
 }
 
 .game-profile-mods-panel-restore-button {

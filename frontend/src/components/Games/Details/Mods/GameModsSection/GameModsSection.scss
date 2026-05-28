@@ -67,34 +67,3 @@ $game-mods-section-import-width: 8.5rem;
 .game-mods-section-button {
   min-height: $input-height;
 }
-
-.game-mods-section-list-item {
-  padding: $spacing-lg $spacing-xl;
-  border-bottom: $app-border;
-}
-
-.game-mods-section-list-item-copy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: $spacing-xs;
-}
-
-.game-mods-section-list-item-name {
-  overflow-wrap: anywhere;
-  color: $color-text-primary;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-}
-
-.game-mods-section-list-item-source {
-  overflow-wrap: anywhere;
-  color: $color-text-subtle;
-  font-size: $font-size-sm;
-}
-
-.game-mods-section-list-item-path {
-  overflow-wrap: anywhere;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-}

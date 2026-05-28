@@ -513,6 +513,51 @@ export class ModContext {
     }
 }
 
+export class ModDeleteSummary {
+    "ModID": number;
+    "ModName": string;
+    "ProfileUsageCount": number;
+    "IsInAppliedProfile": boolean;
+    "ManagedSourcePath": string;
+    "OriginalSourceName": string | null;
+    "OriginalSourcePath": string;
+
+    /** Creates a new ModDeleteSummary instance. */
+    constructor($$source: Partial<ModDeleteSummary> = {}) {
+        if (!("ModID" in $$source)) {
+            this["ModID"] = 0;
+        }
+        if (!("ModName" in $$source)) {
+            this["ModName"] = "";
+        }
+        if (!("ProfileUsageCount" in $$source)) {
+            this["ProfileUsageCount"] = 0;
+        }
+        if (!("IsInAppliedProfile" in $$source)) {
+            this["IsInAppliedProfile"] = false;
+        }
+        if (!("ManagedSourcePath" in $$source)) {
+            this["ManagedSourcePath"] = "";
+        }
+        if (!("OriginalSourceName" in $$source)) {
+            this["OriginalSourceName"] = null;
+        }
+        if (!("OriginalSourcePath" in $$source)) {
+            this["OriginalSourcePath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModDeleteSummary instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModDeleteSummary {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModDeleteSummary($$parsedSource as Partial<ModDeleteSummary>);
+    }
+}
+
 export class ModInstallConfig {
     "ModID": number;
     "StrategyType": string;

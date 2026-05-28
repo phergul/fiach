@@ -35,6 +35,18 @@ func ToDTOMods(mods []dbtypes.Mod) []dto.Mod {
 	return result
 }
 
+func ToDTOModDeleteSummary(mod dbtypes.Mod, profileUsageCount int64, isInAppliedProfile bool) dto.ModDeleteSummary {
+	return dto.ModDeleteSummary{
+		ModID:              mod.ID,
+		ModName:            mod.Name,
+		ProfileUsageCount:  profileUsageCount,
+		IsInAppliedProfile: isInAppliedProfile,
+		ManagedSourcePath:  mod.SourcePath,
+		OriginalSourceName: mod.OriginalSourceName,
+		OriginalSourcePath: mod.OriginalSourcePath,
+	}
+}
+
 func ToDTOModInstallConfig(config dbtypes.ModInstallConfig) dto.ModInstallConfig {
 	return dto.ModInstallConfig(config)
 }

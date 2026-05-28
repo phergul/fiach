@@ -86,6 +86,33 @@ button:disabled {
   opacity: 0.58;
 }
 
+.button-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-md;
+  background: color-mix(in srgb, $color-success 26%, transparent);
+  color: $color-text-primary;
+  border: $app-border-width solid color-mix(in srgb, $color-success 72%, transparent);
+  border-radius: $radius-sm;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-decoration: none;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard,
+    color $transition-duration-fast $transition-easing-standard;
+}
+
+.button-main:hover:not(:disabled):not([aria-disabled='true']),
+.button-main:focus-visible:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in srgb, $color-success 36%, transparent);
+  border-color: $color-success;
+  outline: none;
+}
+
 input:not([type='checkbox']):not([type='radio']),
 textarea,
 select {

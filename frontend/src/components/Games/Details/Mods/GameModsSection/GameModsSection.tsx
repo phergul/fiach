@@ -2,27 +2,61 @@ import { useMemo, useState } from 'react';
 
 import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 
-import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import {
+  DeleteMod,
+  GetModDeleteSummary,
+} from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
+import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
+import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
+import { useToast } from '@components/Common/Toast/Toast';
+import { GameModListItem } from '@components/Games/Details/Mods/GameModListItem/GameModListItem';
 import type { UseGameModsResult } from '@hooks';
+import { getErrorMessage } from '@utils';
 
 import './GameModsSection.scss';
 
 interface GameModsSectionProps {
   isImportDisabled?: boolean;
   modManager: UseGameModsResult;
+  onModDeleted: () => Promise<void> | void;
   onImportArchive: () => void;
   onImportFolder: () => void;
 }
 
+const deleteSummaryMessage = (mod: Mod | null, summary: ModDeleteSummary | null) => {
+  if (mod === null) {
+    return '';
+  }
+  if (summary === null) {
+    return `Preparing to delete "${mod.Name}"...`;
+  }
+
+  const profileMessage = summary.ProfileUsageCount === 0
+    ? 'It is not assigned to any profiles.'
+    : `It will be removed from ${summary.ProfileUsageCount} ${summary.ProfileUsageCount === 1 ? 'profile' : 'profiles'
+    }.`;
+  const appliedMessage = summary.IsInAppliedProfile
+    ? ' This mod is part of the currently applied profile.'
+    : '';
+
+  return `Delete "${summary.ModName}" and its managed files? ${profileMessage}${appliedMessage}`;
+};
+
 export const GameModsSection = ({
   isImportDisabled = false,
   modManager,
+  onModDeleted,
   onImportArchive,
   onImportFolder,
 }: GameModsSectionProps) => {
+  const { addToast } = useToast();
   const { isLoading, loadError, mods, refreshMods } = modManager;
+  const [deleteCandidate, setDeleteCandidate] = useState<Mod | null>(null);
+  const [deleteSummary, setDeleteSummary] = useState<ModDeleteSummary | null>(null);
+  const [isDeleteSummaryLoading, setIsDeleteSummaryLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
@@ -60,6 +94,70 @@ export const GameModsSection = ({
       },
     },
   ];
+  const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
+
+  const requestDeleteMod = async (mod: Mod) => {
+    setDeleteCandidate(mod);
+    setDeleteSummary(null);
+    setIsDeleteSummaryLoading(true);
+
+    try {
+      const summary = await GetModDeleteSummary(mod.ID);
+      setDeleteSummary(summary);
+    } catch (error) {
+      setDeleteCandidate(null);
+      addToast({
+        message: getErrorMessage(error),
+        tone: 'error',
+      });
+    } finally {
+      setIsDeleteSummaryLoading(false);
+    }
+  };
+
+  const cancelDeleteMod = () => {
+    if (isDeleteBusy) {
+      return;
+    }
+
+    setDeleteCandidate(null);
+    setDeleteSummary(null);
+  };
+
+  const confirmDeleteMod = async () => {
+    if (deleteCandidate === null || deleteSummary === null) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      await DeleteMod(deleteCandidate.ID);
+      setDeleteCandidate(null);
+      setDeleteSummary(null);
+      addToast({
+        message: 'Mod deleted.',
+        tone: 'success',
+      });
+
+      try {
+        await refreshMods();
+        await onModDeleted();
+      } catch (refreshError) {
+        addToast({
+          message: getErrorMessage(refreshError),
+          tone: 'error',
+        });
+      }
+    } catch (error) {
+      addToast({
+        message: getErrorMessage(error),
+        tone: 'error',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <section className="game-mods-section" aria-label="Imported mods">
@@ -119,22 +217,25 @@ export const GameModsSection = ({
       {loadError === null && !isLoading && filteredMods.length > 0 && (
         <ul className="game-mods-section-list">
           {filteredMods.map((mod) => (
-            <li className="game-mods-section-list-item" key={mod.ID}>
-              <div className="game-mods-section-list-item-copy">
-                <span className="game-mods-section-list-item-name">{mod.Name}</span>
-                <span className="game-mods-section-list-item-source">
-                  {mod.SourceType === ModSourceType.ModSourceTypeArchive ? 'Archive' : 'Folder'}
-                  {' '}
-                  -
-                  {' '}
-                  {mod.OriginalSourceName ?? mod.OriginalSourcePath}
-                </span>
-                <span className="game-mods-section-list-item-path">{mod.SourcePath}</span>
-              </div>
-            </li>
+            <GameModListItem
+              isBusy={isDeleteBusy}
+              key={mod.ID}
+              mod={mod}
+              onDeleteMod={requestDeleteMod}
+            />
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        confirmLabel="Delete"
+        isBusy={isDeleteBusy}
+        isOpen={deleteCandidate !== null}
+        message={deleteSummaryMessage(deleteCandidate, deleteSummary)}
+        onCancel={cancelDeleteMod}
+        onConfirm={confirmDeleteMod}
+        title="Delete mod"
+      />
     </section>
   );
 };

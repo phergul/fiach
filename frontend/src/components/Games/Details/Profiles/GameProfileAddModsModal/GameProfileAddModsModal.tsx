@@ -5,6 +5,10 @@ import { Search } from 'lucide-react';
 import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { Modal } from '@components/Common/Modal/Modal';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
+import {
+  buildModMetadataSummaryItems,
+  ModMetadataSummary,
+} from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 
 import './GameProfileAddModsModal.scss';
 
@@ -100,7 +104,7 @@ export const GameProfileAddModsModal = ({
       footer={(
         <>
           <button
-            className="game-profile-add-mods-modal-add-button"
+            className="game-profile-add-mods-modal-add-button button-main"
             disabled={isBusy || selectedCount === 0}
             onClick={handleAddMods}
             type="button"
@@ -161,6 +165,7 @@ export const GameProfileAddModsModal = ({
                       <span className="game-profile-add-mods-modal-option-control" aria-hidden="true" />
                       <span className="game-profile-add-mods-modal-option-copy">
                         <span className="game-profile-add-mods-modal-option-name">{mod.Name}</span>
+                        <ModMetadataSummary items={buildModMetadataSummaryItems(mod)} />
                       </span>
                     </label>
                   </li>

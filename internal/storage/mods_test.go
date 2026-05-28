@@ -100,6 +100,109 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 	}
 }
 
+func TestGetModReportsMissingMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	mod, found, err := store.GetMod(context.Background(), 999)
+	if err != nil {
+		t.Fatalf("GetMod() error = %v", err)
+	}
+	if found || mod != (dbtypes.Mod{}) {
+		t.Fatalf("GetMod() = %+v, %v; want missing", mod, found)
+	}
+}
+
+func TestDeleteModDeletesRowAndCascadesProfileMods(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	if _, err := store.AddModToProfile(context.Background(), profile.ID, modID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+
+	if err := store.DeleteMod(context.Background(), modID); err != nil {
+		t.Fatalf("DeleteMod() error = %v", err)
+	}
+
+	_, found, err := store.GetMod(context.Background(), modID)
+	if err != nil {
+		t.Fatalf("GetMod() after delete error = %v", err)
+	}
+	if found {
+		t.Fatal("GetMod() after delete found = true, want false")
+	}
+
+	profileMods, err := store.ListProfileMods(context.Background(), profile.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 0 {
+		t.Fatalf("ListProfileMods() length = %d, want 0: %+v", len(profileMods), profileMods)
+	}
+}
+
+func TestDeleteModReportsMissingRow(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	err := store.DeleteMod(context.Background(), 999)
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("DeleteMod() error = %v, want sql.ErrNoRows", err)
+	}
+}
+
+func TestCountProfilesUsingModAndProfileUsesMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	firstProfile := mustCreateProfile(t, store, gameID, "Default")
+	secondProfile := mustCreateProfile(t, store, gameID, "Survival")
+	modID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	otherModID := insertProfileTestMod(t, store, gameID, "USSEP", "/mods/ussep")
+	for _, profileID := range []int64{firstProfile.ID, secondProfile.ID} {
+		if _, err := store.AddModToProfile(context.Background(), profileID, modID); err != nil {
+			t.Fatalf("AddModToProfile(%d) error = %v", profileID, err)
+		}
+	}
+
+	count, err := store.CountProfilesUsingMod(context.Background(), modID)
+	if err != nil {
+		t.Fatalf("CountProfilesUsingMod() error = %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("CountProfilesUsingMod() = %d, want 2", count)
+	}
+
+	uses, err := store.ProfileUsesMod(context.Background(), firstProfile.ID, modID)
+	if err != nil {
+		t.Fatalf("ProfileUsesMod() error = %v", err)
+	}
+	if !uses {
+		t.Fatal("ProfileUsesMod() = false, want true")
+	}
+
+	uses, err = store.ProfileUsesMod(context.Background(), firstProfile.ID, otherModID)
+	if err != nil {
+		t.Fatalf("ProfileUsesMod() other mod error = %v", err)
+	}
+	if uses {
+		t.Fatal("ProfileUsesMod() other mod = true, want false")
+	}
+}
+
 func TestCreateModRequiresNameAndPaths(t *testing.T) {
 	t.Parallel()
 

@@ -34,6 +34,152 @@ func TestModServiceListsMods(t *testing.T) {
 	}
 }
 
+func TestModServiceGetsDeleteSummary(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}), "SkyUI")
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", modPath)
+	appliedProfileID := insertServiceProfileTestProfile(t, store, gameID, "Applied")
+	otherProfileID := insertServiceProfileTestProfile(t, store, gameID, "Other")
+	if _, err := store.AddModToProfile(context.Background(), appliedProfileID, modID); err != nil {
+		t.Fatalf("AddModToProfile() applied error = %v", err)
+	}
+	if _, err := store.AddModToProfile(context.Background(), otherProfileID, modID); err != nil {
+		t.Fatalf("AddModToProfile() other error = %v", err)
+	}
+	saveServiceAppliedStateWithCurrentComposition(t, store, gameID, appliedProfileID)
+
+	service := NewModService(store, testLogger())
+	summary, err := service.GetModDeleteSummary(context.Background(), modID)
+	if err != nil {
+		t.Fatalf("GetModDeleteSummary() error = %v", err)
+	}
+
+	if summary.ModID != modID || summary.ModName != "SkyUI" || summary.ProfileUsageCount != 2 || !summary.IsInAppliedProfile || summary.ManagedSourcePath != modPath {
+		t.Fatalf("GetModDeleteSummary() = %+v, want applied mod usage summary", summary)
+	}
+}
+
+func TestModServiceDeletesManagedModFilesThenRow(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	modPath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}), "SkyUI")
+	if err := os.MkdirAll(modPath, 0o755); err != nil {
+		t.Fatalf("create managed mod folder: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modPath, "mod.esp"), []byte("plugin"), 0o644); err != nil {
+		t.Fatalf("write managed mod file: %v", err)
+	}
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", modPath)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	if _, err := store.AddModToProfile(context.Background(), profileID, modID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+
+	service := NewModService(store, testLogger())
+	if err := service.DeleteMod(context.Background(), modID); err != nil {
+		t.Fatalf("DeleteMod() error = %v", err)
+	}
+
+	if _, err := os.Stat(modPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("managed mod folder stat error = %v, want removed", err)
+	}
+	if _, found, err := store.GetMod(context.Background(), modID); err != nil || found {
+		t.Fatalf("GetMod() = found %v, error %v; want deleted", found, err)
+	}
+	profileMods, err := store.ListProfileMods(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 0 {
+		t.Fatalf("ListProfileMods() length = %d, want cascade delete", len(profileMods))
+	}
+}
+
+func TestModServiceDeleteRejectsSourcePathOutsideManagedStorage(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	externalPath := makeSourceFolder(t, map[string]string{"mod.esp": "plugin"})
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", externalPath)
+
+	service := NewModService(store, testLogger())
+	err := service.DeleteMod(context.Background(), modID)
+	if err == nil {
+		t.Fatal("DeleteMod() error = nil, want unsafe path error")
+	}
+	if !strings.Contains(err.Error(), "outside managed storage") {
+		t.Fatalf("DeleteMod() error = %q, want managed storage guard", err.Error())
+	}
+
+	if _, found, err := store.GetMod(context.Background(), modID); err != nil || !found {
+		t.Fatalf("GetMod() after rejected delete = found %v, error %v; want row preserved", found, err)
+	}
+	assertFileContents(t, filepath.Join(externalPath, "mod.esp"), "plugin")
+}
+
+func TestModServiceDeleteKeepsRowWhenFileRemovalFails(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod delete restrictions are not reliable on Windows")
+	}
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	gameStoragePath := filepath.Join(filepath.Dir(store.Path()), "mods", storage.DefaultGameModStorageFolderName(dbtypes.StoredGame{ID: gameID}))
+	modPath := filepath.Join(gameStoragePath, "SkyUI")
+	if err := os.MkdirAll(modPath, 0o755); err != nil {
+		t.Fatalf("create managed mod folder: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modPath, "mod.esp"), []byte("plugin"), 0o644); err != nil {
+		t.Fatalf("write managed mod file: %v", err)
+	}
+	if err := os.Chmod(gameStoragePath, 0o555); err != nil {
+		t.Fatalf("chmod managed storage: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chmod(gameStoragePath, 0o755)
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", modPath)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	if _, err := store.AddModToProfile(context.Background(), profileID, modID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+
+	service := NewModService(store, testLogger())
+	err := service.DeleteMod(context.Background(), modID)
+	if err == nil {
+		t.Fatal("DeleteMod() error = nil, want file removal error")
+	}
+	if !strings.Contains(err.Error(), "remove managed mod files") {
+		t.Fatalf("DeleteMod() error = %q, want file removal context", err.Error())
+	}
+
+	if _, found, err := store.GetMod(context.Background(), modID); err != nil || !found {
+		t.Fatalf("GetMod() after failed delete = found %v, error %v; want row preserved", found, err)
+	}
+	profileMods, err := store.ListProfileMods(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 1 {
+		t.Fatalf("ListProfileMods() length = %d, want association preserved", len(profileMods))
+	}
+}
+
 func TestModServiceGetsManagedModStorageUsage(t *testing.T) {
 	t.Parallel()
 

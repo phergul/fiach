@@ -1,0 +1,62 @@
+@use '@styles' as *;
+
+$game-mod-list-item-control-height: 2.5rem;
+$game-mod-list-item-icon-size: 1rem;
+
+.game-mod-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.game-mod-list-item-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-list-item-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-list-item-source {
+  overflow-wrap: anywhere;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.game-mod-list-item-path {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-mod-list-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.game-mod-list-item-icon-button {
+  width: $game-mod-list-item-control-height;
+  height: $game-mod-list-item-control-height;
+  flex: 0 0 $game-mod-list-item-control-height;
+}
+
+.game-mod-list-item-icon-button-danger {
+  color: $color-danger;
+}
+
+.game-mod-list-item-icon {
+  width: $game-mod-list-item-icon-size;
+  height: $game-mod-list-item-icon-size;
+  flex: 0 0 $game-mod-list-item-icon-size;
+  stroke-width: 1.8;
+}
