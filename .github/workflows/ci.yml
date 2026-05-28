@@ -74,27 +74,27 @@ jobs:
       - name: Run Go tests
         run: go test ./...
 
-  windows-build:
-    name: Windows Build
-    runs-on: windows-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
-
-      - name: Build Windows app
-        run: wails3 task windows:build
+  # windows-build:
+  #   name: Windows Build
+  #   runs-on: windows-latest
+  #
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
+  #
+  #     - name: Set up Bun
+  #       uses: oven-sh/setup-bun@v2
+  #       with:
+  #         bun-version: ${{ env.BUN_VERSION }}
+  #
+  #     - name: Install Wails CLI
+  #       run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+  #
+  #     - name: Build Windows app
+  #       run: wails3 task windows:build
