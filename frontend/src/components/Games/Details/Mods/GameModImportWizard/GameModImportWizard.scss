@@ -2,10 +2,13 @@
 
 $game-mod-import-wizard-control-height: 2.5rem;
 $game-mod-import-wizard-step-size: 1.5rem;
+$game-mod-import-wizard-height: 28rem;
 
 .game-mod-import-wizard-body {
   display: flex;
   min-width: 0;
+  min-height: $game-mod-import-wizard-height;
+  max-height: $game-mod-import-wizard-height;
   flex-direction: column;
   gap: $spacing-lg;
   padding: $spacing-lg $spacing-xl;

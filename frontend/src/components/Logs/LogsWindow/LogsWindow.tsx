@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Clipboard, Dialogs, Events } from '@wailsio/runtime';
 
-import { ExportLogs, ListRecentLogs } from '@bindings/github.com/phergul/mod-manager/internal/services/diagnosticsservice';
+import {
+  ExportLogs,
+  ListRecentLogs,
+  ListRecentRawLogs,
+} from '@bindings/github.com/phergul/mod-manager/internal/services/diagnosticsservice';
 import {
   DiagnosticLogEntry,
   ExportDiagnosticLogsInput,
@@ -59,6 +63,10 @@ export const LogsWindow = () => {
   const [level, setLevel] = useState<LogLevelFilter>('all');
   const [operation, setOperation] = useState<LogOperationFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRawJsonVisible, setIsRawJsonVisible] = useState(false);
+  const [rawJson, setRawJson] = useState('[]');
+  const [rawJsonIsLoading, setRawJsonIsLoading] = useState(false);
+  const [rawJsonErrorMessage, setRawJsonErrorMessage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -87,9 +95,41 @@ export const LogsWindow = () => {
     }
   }, [addToast]);
 
+  const loadRawLogs = useCallback(async () => {
+    setRawJsonIsLoading(true);
+    setRawJsonErrorMessage(null);
+
+    try {
+      const operationFilter = operation === 'all' ? '' : operation;
+      const levelFilter = level === 'all' ? '' : level;
+      const content = await ListRecentRawLogs(
+        new ListDiagnosticLogsInput({
+          Limit: maxRecentLogEntries,
+          Operation: operationFilter,
+          Level: levelFilter,
+        }),
+      );
+      setRawJson(content.trim() === '' ? '[]' : content);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setRawJsonErrorMessage(message);
+      addToast({ message, tone: 'error' });
+    } finally {
+      setRawJsonIsLoading(false);
+    }
+  }, [addToast, level, operation]);
+
   useEffect(() => {
     void loadLogs();
   }, [loadLogs]);
+
+  useEffect(() => {
+    if (!isRawJsonVisible) {
+      return;
+    }
+
+    void loadRawLogs();
+  }, [isRawJsonVisible, loadRawLogs]);
 
   useEffect(() => {
     return Events.On(logEntryEventName, (event) => {
@@ -163,6 +203,7 @@ export const LogsWindow = () => {
       <LogsToolbar
         isExporting={isExporting}
         isLoading={isLoading}
+        isRawJsonVisible={isRawJsonVisible}
         level={level}
         operation={operation}
         visibleCount={visibleEntries.length}
@@ -171,9 +212,23 @@ export const LogsWindow = () => {
         onExport={() => void exportVisibleLogs()}
         onLevelChange={setLevel}
         onOperationChange={setOperation}
-        onRefresh={() => void loadLogs()}
+        onRawJsonVisibleChange={setIsRawJsonVisible}
+        onRefresh={() => {
+          void loadLogs();
+          if (isRawJsonVisible) {
+            void loadRawLogs();
+          }
+        }}
       />
-      <LogsTable entries={visibleEntries} errorMessage={errorMessage} isLoading={isLoading} />
+      <LogsTable
+        entries={visibleEntries}
+        errorMessage={errorMessage}
+        isLoading={isLoading}
+        isRawJsonVisible={isRawJsonVisible}
+        rawJson={rawJson}
+        rawJsonErrorMessage={rawJsonErrorMessage}
+        rawJsonIsLoading={rawJsonIsLoading}
+      />
     </main>
   );
 };

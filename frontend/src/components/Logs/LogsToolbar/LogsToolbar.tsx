@@ -1,4 +1,4 @@
-import { ClipboardCopy, Download, RotateCw, Trash2 } from 'lucide-react';
+import { Braces, ClipboardCopy, Download, RotateCw, Trash2 } from 'lucide-react';
 
 import './LogsToolbar.scss';
 
@@ -8,6 +8,7 @@ export type LogOperationFilter = 'all' | 'scan_games' | 'import_mod' | 'apply_pr
 interface LogsToolbarProps {
   isExporting: boolean;
   isLoading: boolean;
+  isRawJsonVisible: boolean;
   level: LogLevelFilter;
   operation: LogOperationFilter;
   visibleCount: number;
@@ -16,6 +17,7 @@ interface LogsToolbarProps {
   onExport: () => void;
   onLevelChange: (level: LogLevelFilter) => void;
   onOperationChange: (operation: LogOperationFilter) => void;
+  onRawJsonVisibleChange: (isRawJsonVisible: boolean) => void;
   onRefresh: () => void;
 }
 
@@ -38,6 +40,7 @@ const operationOptions: Array<{ label: string; value: LogOperationFilter }> = [
 export const LogsToolbar = ({
   isExporting,
   isLoading,
+  isRawJsonVisible,
   level,
   operation,
   visibleCount,
@@ -46,6 +49,7 @@ export const LogsToolbar = ({
   onExport,
   onLevelChange,
   onOperationChange,
+  onRawJsonVisibleChange,
   onRefresh,
 }: LogsToolbarProps) => {
   return (
@@ -80,6 +84,15 @@ export const LogsToolbar = ({
         </label>
 
         <div className="logs-toolbar-actions">
+          <button
+            aria-pressed={isRawJsonVisible}
+            className={isRawJsonVisible ? 'logs-toolbar-action-active' : undefined}
+            onClick={() => onRawJsonVisibleChange(!isRawJsonVisible)}
+            title={isRawJsonVisible ? 'Show formatted logs' : 'Show raw JSON'}
+            type="button"
+          >
+            <Braces aria-hidden="true" />
+          </button>
           <button disabled={isLoading} onClick={onRefresh} title="Refresh logs" type="button">
             <RotateCw aria-hidden="true" />
           </button>

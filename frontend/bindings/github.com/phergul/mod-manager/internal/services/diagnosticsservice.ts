@@ -19,6 +19,10 @@ export function ListRecentLogs(input: dto$0.ListDiagnosticLogsInput): $Cancellab
     });
 }
 
+export function ListRecentRawLogs(input: dto$0.ListDiagnosticLogsInput): $CancellablePromise<string> {
+    return $Call.ByID(693124794, input);
+}
+
 // Private type creation functions
 const $$createType0 = dto$0.DiagnosticLogEntry.createFrom;
 const $$createType1 = $Create.Array($$createType0);

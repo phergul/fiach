@@ -149,13 +149,7 @@ func (m *Manager) RecentLogs(_ context.Context, input RecentLogsInput) ([]LogEnt
 		return nil, errors.New("diagnostics manager is not configured")
 	}
 
-	limit := input.Limit
-	if limit <= 0 {
-		limit = DefaultRecentLimit
-	}
-	if limit > MaxRecentLimit {
-		limit = MaxRecentLimit
-	}
+	limit := normalizedRecentLimit(input.Limit)
 
 	files, err := m.writer.logFiles()
 	if err != nil {
@@ -171,6 +165,35 @@ func (m *Manager) RecentLogs(_ context.Context, input RecentLogsInput) ([]LogEnt
 
 	reverseEntries(entries)
 	return entries, nil
+}
+
+func (m *Manager) RecentRawLogs(_ context.Context, input RecentLogsInput) (lines []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("read recent raw diagnostics logs: %w", err)
+		}
+	}()
+
+	if m == nil || m.writer == nil {
+		return nil, errors.New("diagnostics manager is not configured")
+	}
+
+	limit := normalizedRecentLimit(input.Limit)
+
+	files, err := m.writer.logFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	lines = make([]string, 0, limit)
+	for _, filePath := range files {
+		if err := readRawLogFile(filePath, input, limit, &lines); err != nil {
+			return nil, err
+		}
+	}
+
+	reverseStrings(lines)
+	return lines, nil
 }
 
 func PathLabel(path string) string {
@@ -379,6 +402,57 @@ func readableDetailKey(key string) string {
 	}
 
 	return strings.ToUpper(key[:1]) + key[1:]
+}
+
+func normalizedRecentLimit(limit int) int {
+	if limit <= 0 {
+		return DefaultRecentLimit
+	}
+	if limit > MaxRecentLimit {
+		return MaxRecentLimit
+	}
+
+	return limit
+}
+
+func readRawLogFile(filePath string, input RecentLogsInput, limit int, lines *[]string) error {
+	file, err := os.Open(filePath)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("open raw diagnostics log %q: %w", filePath, err)
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		entry, ok := parseLogLine([]byte(line))
+		if line == "" || !ok || !matchesFilters(entry, input) {
+			continue
+		}
+
+		*lines = append(*lines, line)
+		if len(*lines) > limit {
+			copy((*lines)[0:], (*lines)[1:])
+			*lines = (*lines)[:limit]
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("read raw diagnostics log %q: %w", filePath, err)
+	}
+
+	return nil
+}
+
+func reverseStrings(values []string) {
+	for left, right := 0, len(values)-1; left < right; left, right = left+1, right-1 {
+		values[left], values[right] = values[right], values[left]
+	}
 }
 
 func sanitizeDetail(value string) string {

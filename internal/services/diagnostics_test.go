@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -166,6 +167,48 @@ func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	}
 	if restoreCompleted.Details["Profile id"] != int64String(profileID) || restoreCompleted.Details["Game id"] != int64String(gameID) {
 		t.Fatalf("restore completed details = %+v, want game/profile IDs", restoreCompleted.Details)
+	}
+}
+
+func TestDiagnosticsServiceListRecentRawLogsReturnsPrettyJSON(t *testing.T) {
+	t.Parallel()
+
+	logPath := filepath.Join(t.TempDir(), diagnostics.DefaultLogFileName)
+	if err := os.WriteFile(logPath, []byte(`not-json
+{"time":"2026-05-27T12:00:00Z","level":"INFO","msg":"Mod import completed","operation":"import_mod","event":"completed","source_path":"/Users/fergal/Games/Mod.zip","game_id":42}
+{"time":"2026-05-27T12:01:00Z","level":"ERROR","msg":"Mod import failed","operation":"import_mod","event":"failed","source_path":"/Users/fergal/Games/Broken.zip"}
+{"time":"2026-05-27T12:02:00Z","level":"INFO","msg":"Game scan completed","operation":"scan_games","event":"completed","inserted_count":1}
+`), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	manager, err := diagnostics.NewManager(diagnostics.Options{LogPath: logPath})
+	if err != nil {
+		t.Fatalf("NewManager() error = %v", err)
+	}
+	defer closeServiceTestDiagnostics(t, manager)
+
+	content, err := NewDiagnosticsService(manager).ListRecentRawLogs(context.Background(), dto.ListDiagnosticLogsInput{
+		Limit:     1,
+		Level:     "info",
+		Operation: diagnostics.OperationImportMod,
+	})
+	if err != nil {
+		t.Fatalf("ListRecentRawLogs() error = %v", err)
+	}
+
+	var entries []map[string]any
+	if err := json.Unmarshal([]byte(content), &entries); err != nil {
+		t.Fatalf("Unmarshal() error = %v, content = %q", err, content)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("ListRecentRawLogs() entries = %d, want 1 in %s", len(entries), content)
+	}
+	if entries[0]["source_path"] != "/Users/fergal/Games/Mod.zip" {
+		t.Fatalf("ListRecentRawLogs() entry = %+v, want raw source path preserved", entries[0])
+	}
+	if !strings.Contains(content, "\n  {") {
+		t.Fatalf("ListRecentRawLogs() content = %q, want pretty JSON", content)
 	}
 }
 

@@ -8,14 +8,50 @@ interface LogsTableProps {
   entries: DiagnosticLogEntry[];
   errorMessage: string | null;
   isLoading: boolean;
+  isRawJsonVisible: boolean;
+  rawJson: string;
+  rawJsonErrorMessage: string | null;
+  rawJsonIsLoading: boolean;
 }
 
-export const LogsTable = ({ entries, errorMessage, isLoading }: LogsTableProps) => {
+export const LogsTable = ({
+  entries,
+  errorMessage,
+  isLoading,
+  isRawJsonVisible,
+  rawJson,
+  rawJsonErrorMessage,
+  rawJsonIsLoading,
+}: LogsTableProps) => {
   if (isLoading) {
     return (
       <div className="logs-table-state">
         <StateBlock title="Loading logs" message="Reading recent diagnostic entries." />
       </div>
+    );
+  }
+
+  if (isRawJsonVisible) {
+    if (rawJsonIsLoading) {
+      return (
+        <div className="logs-table-state">
+          <StateBlock title="Loading raw logs" message="Reading recent diagnostic JSON entries." />
+        </div>
+      );
+    }
+
+    if (rawJsonErrorMessage !== null) {
+      return (
+        <div className="logs-table-state">
+          <StateBlock title="Unable to load raw logs" message={rawJsonErrorMessage} />
+        </div>
+      );
+    }
+
+    return (
+      <section className="logs-table-raw" aria-label="Raw diagnostic logs">
+        <pre>{rawJson}</pre>
+      </section>
     );
   }
 

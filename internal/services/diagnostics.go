@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -39,6 +40,25 @@ func (s *DiagnosticsService) ListRecentLogs(ctx context.Context, input dto.ListD
 	}
 
 	return toDTODiagnosticLogEntries(logs), nil
+}
+
+func (s *DiagnosticsService) ListRecentRawLogs(ctx context.Context, input dto.ListDiagnosticLogsInput) (content string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("list recent raw diagnostic logs: %w", err)
+		}
+	}()
+
+	lines, err := s.manager.RecentRawLogs(ctx, diagnostics.RecentLogsInput{
+		Limit:     input.Limit,
+		Operation: input.Operation,
+		Level:     input.Level,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return formatRawDiagnosticLogLines(lines)
 }
 
 func (s *DiagnosticsService) ExportLogs(ctx context.Context, input dto.ExportDiagnosticLogsInput) (err error) {
@@ -84,6 +104,29 @@ func toDTODiagnosticLogEntries(entries []diagnostics.LogEntry) []dto.DiagnosticL
 	}
 
 	return result
+}
+
+func formatRawDiagnosticLogLines(lines []string) (string, error) {
+	if len(lines) == 0 {
+		return "[]", nil
+	}
+
+	entries := make([]any, 0, len(lines))
+	for _, line := range lines {
+		var entry any
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			continue
+		}
+
+		entries = append(entries, entry)
+	}
+
+	content, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }
 
 func formatDiagnosticLogEntries(entries []dto.DiagnosticLogEntry) string {

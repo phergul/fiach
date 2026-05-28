@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -85,6 +86,40 @@ func TestRecentLogsSkipsMalformedLinesAndCleansDetails(t *testing.T) {
 	}
 	if entries[1].Details["Game id"] != "42" {
 		t.Fatalf("RecentLogs() details = %+v, want game id", entries[1].Details)
+	}
+}
+
+func TestRecentRawLogsReturnsFilteredRawLines(t *testing.T) {
+	t.Parallel()
+
+	logPath := filepath.Join(t.TempDir(), DefaultLogFileName)
+	if err := os.WriteFile(logPath, []byte(`not-json
+{"time":"2026-05-27T12:00:00Z","level":"INFO","msg":"Mod import completed","operation":"import_mod","event":"completed","source_path":"/Users/fergal/Games/Mod.zip","game_id":42}
+{"time":"2026-05-27T12:01:00Z","level":"ERROR","msg":"Mod import failed","operation":"import_mod","event":"failed","source_path":"/Users/fergal/Games/Broken.zip"}
+{"time":"2026-05-27T12:02:00Z","level":"INFO","msg":"Game scan completed","operation":"scan_games","event":"completed","inserted_count":1}
+`), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	manager, err := NewManager(Options{LogPath: logPath})
+	if err != nil {
+		t.Fatalf("NewManager() error = %v", err)
+	}
+	defer closeManager(t, manager)
+
+	lines, err := manager.RecentRawLogs(context.Background(), RecentLogsInput{
+		Limit:     1,
+		Level:     "info",
+		Operation: OperationImportMod,
+	})
+	if err != nil {
+		t.Fatalf("RecentRawLogs() error = %v", err)
+	}
+	if len(lines) != 1 {
+		t.Fatalf("RecentRawLogs() length = %d, want 1", len(lines))
+	}
+	if !strings.Contains(lines[0], `"source_path":"/Users/fergal/Games/Mod.zip"`) {
+		t.Fatalf("RecentRawLogs() line = %q, want raw source path preserved", lines[0])
 	}
 }
 

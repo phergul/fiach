@@ -3,6 +3,7 @@
 $logs-toolbar-button-size: 2.25rem;
 $logs-toolbar-select-width: 11rem;
 $logs-toolbar-height: 3rem;
+$logs-toolbar-actions-height: 2.25rem;
 
 .logs-toolbar {
   display: flex;
@@ -10,7 +11,7 @@ $logs-toolbar-height: 3rem;
   align-items: center;
   justify-content: space-between;
   gap: $spacing-lg;
-  padding: $spacing-sm $spacing-lg;
+  padding: $spacing-sm $spacing-sm $spacing-sm $spacing-lg;
   border-bottom: $app-border;
   background: $color-surface;
 }
@@ -50,7 +51,7 @@ $logs-toolbar-height: 3rem;
 
 .logs-toolbar-field select {
   width: $logs-toolbar-select-width;
-  height: $input-height;
+  height: $logs-toolbar-actions-height;
   padding: 0 $spacing-sm;
   border-radius: $radius-sm;
 }
@@ -62,10 +63,16 @@ $logs-toolbar-height: 3rem;
 }
 
 .logs-toolbar-actions button {
-  width: $input-height;
-  height: $input-height;
+  width: $logs-toolbar-actions-height;
+  height: $logs-toolbar-actions-height;
   padding: 0;
   background: $color-surface-elevated;
+}
+
+.logs-toolbar-actions .logs-toolbar-action-active {
+  color: $color-accent;
+  border-color: $color-accent;
+  background: $color-surface;
 }
 
 .logs-toolbar-actions svg {
