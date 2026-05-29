@@ -4,10 +4,9 @@ type StrategyType string
 type StrategyVisibility string
 
 const (
-	StrategyTypeGenericCopy  StrategyType = "generic_copy"
-	StrategyTypeReplaceFiles StrategyType = "replace_files"
-	StrategyTypeBepInEx      StrategyType = "bepinex"
-	StrategyTypeUnrealPak    StrategyType = "unreal_pak"
+	StrategyTypeGenericCopy StrategyType = "generic_copy"
+	StrategyTypeBepInEx     StrategyType = "bepinex"
+	StrategyTypeUnrealPak   StrategyType = "unreal_pak"
 )
 
 const (

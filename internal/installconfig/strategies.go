@@ -9,10 +9,9 @@ type StrategyType string
 type StrategyVisibility string
 
 const (
-	StrategyTypeGenericCopy  StrategyType = "generic_copy"
-	StrategyTypeReplaceFiles StrategyType = "replace_files"
-	StrategyTypeBepInEx      StrategyType = "bepinex"
-	StrategyTypeUnrealPak    StrategyType = "unreal_pak"
+	StrategyTypeGenericCopy StrategyType = "generic_copy"
+	StrategyTypeBepInEx     StrategyType = "bepinex"
+	StrategyTypeUnrealPak   StrategyType = "unreal_pak"
 )
 
 const (
@@ -32,16 +31,9 @@ type StrategyDescriptor struct {
 var strategies = []StrategyDescriptor{
 	{
 		Type:               StrategyTypeGenericCopy,
-		Label:              "Generic Copy",
-		Description:        "Copy all managed mod files into a game-relative folder.",
+		Label:              "File Copy",
+		Description:        "Install mod files into the game folder. Existing files are backed up before being replaced.",
 		Visibility:         StrategyVisibilitySelectable,
-		RequiresTargetPath: true,
-	},
-	{
-		Type:               StrategyTypeReplaceFiles,
-		Label:              "Replace Files",
-		Description:        "Replace matching game files with managed mod files.",
-		Visibility:         StrategyVisibilityInternal,
 		RequiresTargetPath: true,
 	},
 	{

@@ -34,7 +34,6 @@ CREATE TABLE mod_install_configs (
     strategy_type TEXT NOT NULL CHECK (
         strategy_type IN (
             'generic_copy',
-            'replace_files',
             'bepinex',
             'unreal_pak'
         )

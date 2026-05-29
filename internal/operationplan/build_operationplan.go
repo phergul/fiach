@@ -34,10 +34,9 @@ type StrategyAdapter interface {
 }
 
 var strategyAdapters = map[installconfig.StrategyType]StrategyAdapter{
-	installconfig.StrategyTypeGenericCopy:  fileTreeStrategyAdapter{},
-	installconfig.StrategyTypeReplaceFiles: fileTreeStrategyAdapter{},
-	installconfig.StrategyTypeBepInEx:      fileTreeStrategyAdapter{},
-	installconfig.StrategyTypeUnrealPak:    fileTreeStrategyAdapter{},
+	installconfig.StrategyTypeGenericCopy: fileTreeStrategyAdapter{},
+	installconfig.StrategyTypeBepInEx:     fileTreeStrategyAdapter{},
+	installconfig.StrategyTypeUnrealPak:   fileTreeStrategyAdapter{},
 }
 
 func BuildOperationPlan(resolved ResolveProfilePlanResult) (plan OperationPlan, err error) {

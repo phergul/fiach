@@ -27,7 +27,6 @@ func TestAllStrategiesIncludesFutureInternalDescriptors(t *testing.T) {
 
 	for _, strategyType := range []StrategyType{
 		StrategyTypeGenericCopy,
-		StrategyTypeReplaceFiles,
 		StrategyTypeBepInEx,
 		StrategyTypeUnrealPak,
 	} {
@@ -37,7 +36,6 @@ func TestAllStrategiesIncludesFutureInternalDescriptors(t *testing.T) {
 	}
 
 	for _, strategyType := range []StrategyType{
-		StrategyTypeReplaceFiles,
 		StrategyTypeBepInEx,
 		StrategyTypeUnrealPak,
 	} {

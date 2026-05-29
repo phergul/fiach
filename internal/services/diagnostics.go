@@ -11,6 +11,7 @@ import (
 
 	"github.com/phergul/mod-manager/internal/diagnostics"
 	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/mod-manager/internal/services/dto/mappers"
 )
 
 type DiagnosticsService struct {
@@ -39,7 +40,7 @@ func (s *DiagnosticsService) ListRecentLogs(ctx context.Context, input dto.ListD
 		return nil, err
 	}
 
-	return toDTODiagnosticLogEntries(logs), nil
+	return mappers.ToDTODiagnosticLogEntries(logs), nil
 }
 
 func (s *DiagnosticsService) ListRecentRawLogs(ctx context.Context, input dto.ListDiagnosticLogsInput) (content string, err error) {
@@ -85,25 +86,6 @@ func (s *DiagnosticsService) ExportLogs(ctx context.Context, input dto.ExportDia
 	}
 
 	return nil
-}
-
-func toDTODiagnosticLogEntries(entries []diagnostics.LogEntry) []dto.DiagnosticLogEntry {
-	if len(entries) == 0 {
-		return nil
-	}
-
-	result := make([]dto.DiagnosticLogEntry, 0, len(entries))
-	for _, entry := range entries {
-		result = append(result, dto.DiagnosticLogEntry{
-			Timestamp: entry.Timestamp,
-			Level:     entry.Level,
-			Operation: entry.Operation,
-			Message:   entry.Message,
-			Details:   entry.Details,
-		})
-	}
-
-	return result
 }
 
 func formatRawDiagnosticLogLines(lines []string) (string, error) {

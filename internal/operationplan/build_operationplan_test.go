@@ -145,7 +145,7 @@ func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithWarningAndManagedBac
 	})
 	modID := insertPlannerMod(t, store, gameID, "SkyUI", sourcePath)
 	addPlannerProfileMod(t, store, profileID, modID, true, 0)
-	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeReplaceFiles), installconfig.TargetBaseGameRoot, ".", nil)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, ".", nil)
 
 	targetPath := filepath.Join(gameRoot, "Data", "SkyUI.esp")
 	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {

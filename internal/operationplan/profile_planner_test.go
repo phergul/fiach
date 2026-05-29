@@ -28,7 +28,7 @@ func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
 
 	addPlannerInstallConfig(t, store, firstModID, "generic_copy", "game_root", "Data", nil)
 	sourceSubpath := "plugins/core"
-	addPlannerInstallConfig(t, store, secondModID, "replace_files", "game_root", "BepInEx/plugins", &sourceSubpath)
+	addPlannerInstallConfig(t, store, secondModID, "generic_copy", "game_root", "BepInEx/plugins", &sourceSubpath)
 	addPlannerInstallConfig(t, store, disabledModID, "generic_copy", "game_root", "Ignored", nil)
 
 	result, err := ResolveProfilePlan(context.Background(), store, profileID)
@@ -54,7 +54,7 @@ func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
 	if first.ModID != firstModID || first.ModName != "First" || first.ManagedSourcePath != "/managed/first" || first.LoadOrder != 0 || first.StrategyType != "generic_copy" || first.TargetBase != "game_root" || first.TargetRelativePath != "Data" || first.SourceSubpath != nil {
 		t.Fatalf("first input = %+v, want first enabled mod with config", first)
 	}
-	if second.ModID != secondModID || second.ModName != "Second" || second.ManagedSourcePath != "/managed/second" || second.LoadOrder != 1 || second.StrategyType != "replace_files" || second.TargetBase != "game_root" || second.TargetRelativePath != "BepInEx/plugins" || second.SourceSubpath == nil || *second.SourceSubpath != sourceSubpath {
+	if second.ModID != secondModID || second.ModName != "Second" || second.ManagedSourcePath != "/managed/second" || second.LoadOrder != 1 || second.StrategyType != "generic_copy" || second.TargetBase != "game_root" || second.TargetRelativePath != "BepInEx/plugins" || second.SourceSubpath == nil || *second.SourceSubpath != sourceSubpath {
 		t.Fatalf("second input = %+v, want second enabled mod with source subpath", second)
 	}
 }

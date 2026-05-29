@@ -1389,7 +1389,6 @@ export enum StrategyType {
     $zero = "",
 
     StrategyTypeGenericCopy = "generic_copy",
-    StrategyTypeReplaceFiles = "replace_files",
     StrategyTypeBepInEx = "bepinex",
     StrategyTypeUnrealPak = "unreal_pak",
 };
