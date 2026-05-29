@@ -35,7 +35,7 @@ export const useGameReShadeInstall = ({
     setIsLaunchingInstaller(true);
 
     try {
-      const result = await DownloadAndOpenReShadeInstaller(game.ID);
+      const result = await DownloadAndOpenReShadeInstaller();
       addToast({
         message: `ReShade ${result.Version} installer opened.`,
         tone: 'success',

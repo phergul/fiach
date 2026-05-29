@@ -1071,6 +1071,27 @@ export enum ReShadeDetectionStatus {
     ReShadeDetectionStatusUnsupported = "unsupported",
 };
 
+export class ReShadeInstallerLaunchResult {
+    "Version": string;
+
+    /** Creates a new ReShadeInstallerLaunchResult instance. */
+    constructor($$source: Partial<ReShadeInstallerLaunchResult> = {}) {
+        if (!("Version" in $$source)) {
+            this["Version"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReShadeInstallerLaunchResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReShadeInstallerLaunchResult {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ReShadeInstallerLaunchResult($$parsedSource as Partial<ReShadeInstallerLaunchResult>);
+    }
+}
+
 export class ReShadeTarget {
     "Path": string;
     "Executables": string[];

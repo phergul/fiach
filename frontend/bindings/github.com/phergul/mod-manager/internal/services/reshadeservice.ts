@@ -15,5 +15,12 @@ export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReS
     });
 }
 
+export function DownloadAndOpenReShadeInstaller(): $CancellablePromise<dto$0.ReShadeInstallerLaunchResult> {
+    return $Call.ByID(582445083).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = dto$0.ReShadeDetectionResult.createFrom;
+const $$createType1 = dto$0.ReShadeInstallerLaunchResult.createFrom;

@@ -75,3 +75,24 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 		Targets: mappers.ToDTOReShadeTargets(scanResult.Targets),
 	}, nil
 }
+
+func (s *ReshadeService) DownloadAndOpenReShadeInstaller(ctx context.Context) (result dto.ReShadeInstallerLaunchResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("download and open ReShade installer: %w", err)
+		}
+	}()
+
+	if s.operatingSystem != "windows" {
+		return dto.ReShadeInstallerLaunchResult{}, errors.New("ReShade installer launch is only supported on Windows")
+	}
+
+	launchResult, err := reshade.DownloadAndOpenInstaller(ctx, reshade.InstallerOptions{})
+	if err != nil {
+		return dto.ReShadeInstallerLaunchResult{}, err
+	}
+
+	return dto.ReShadeInstallerLaunchResult{
+		Version: launchResult.Version,
+	}, nil
+}

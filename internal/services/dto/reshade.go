@@ -18,3 +18,7 @@ type ReShadeDetectionResult struct {
 	Targets           []ReShadeTarget
 	UnsupportedReason *string
 }
+
+type ReShadeInstallerLaunchResult struct {
+	Version string
+}

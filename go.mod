@@ -7,6 +7,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.77
+	golang.org/x/mod v0.34.0
 	golang.org/x/sys v0.43.0
 	modernc.org/sqlite v1.49.1
 )

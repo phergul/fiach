@@ -82,3 +82,18 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 		t.Fatalf("Executables = %#v, want Game.exe path", result.Targets[0].Executables)
 	}
 }
+
+func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
+	t.Parallel()
+
+	service := NewReshadeService(nil)
+	service.operatingSystem = "darwin"
+
+	_, err := service.DownloadAndOpenReShadeInstaller(context.Background())
+	if err == nil {
+		t.Fatal("DownloadAndOpenReShadeInstaller() error = nil, want error")
+	}
+	if !contains(err.Error(), "download and open ReShade installer") || !contains(err.Error(), "only supported on Windows") {
+		t.Fatalf("DownloadAndOpenReShadeInstaller() error = %q, want service and unsupported context", err.Error())
+	}
+}

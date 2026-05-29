@@ -32,6 +32,7 @@ export {
     ProfileMod,
     ReShadeDetectionResult,
     ReShadeDetectionStatus,
+    ReShadeInstallerLaunchResult,
     ReShadeTarget,
     ReplacedFileManifestEntry,
     RestoreMod,
