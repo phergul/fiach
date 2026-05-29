@@ -9,19 +9,26 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
+export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReShadeDetectionResult> {
+    return $Call.ByID(1526227722, gameID).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function GetStoredGames(): $CancellablePromise<dto$0.StoredGame[]> {
     return $Call.ByID(3350881315).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 export function ScanAndSaveGames(): $CancellablePromise<dto$0.SourceScanResult> {
     return $Call.ByID(3143372107).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = dto$0.StoredGame.createFrom;
-const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = dto$0.SourceScanResult.createFrom;
+const $$createType0 = dto$0.ReShadeDetectionResult.createFrom;
+const $$createType1 = dto$0.StoredGame.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = dto$0.SourceScanResult.createFrom;

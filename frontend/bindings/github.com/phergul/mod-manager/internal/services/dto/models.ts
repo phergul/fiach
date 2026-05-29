@@ -1027,6 +1027,79 @@ export class ProfileMod {
     }
 }
 
+export class ReShadeDetectionResult {
+    "Status": ReShadeDetectionStatus;
+    "Targets": ReShadeTarget[];
+    "UnsupportedReason": string | null;
+
+    /** Creates a new ReShadeDetectionResult instance. */
+    constructor($$source: Partial<ReShadeDetectionResult> = {}) {
+        if (!("Status" in $$source)) {
+            this["Status"] = ReShadeDetectionStatus.$zero;
+        }
+        if (!("Targets" in $$source)) {
+            this["Targets"] = [];
+        }
+        if (!("UnsupportedReason" in $$source)) {
+            this["UnsupportedReason"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReShadeDetectionResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReShadeDetectionResult {
+        const $$createField1_0 = $$createType23;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Targets" in $$parsedSource) {
+            $$parsedSource["Targets"] = $$createField1_0($$parsedSource["Targets"]);
+        }
+        return new ReShadeDetectionResult($$parsedSource as Partial<ReShadeDetectionResult>);
+    }
+}
+
+export enum ReShadeDetectionStatus {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ReShadeDetectionStatusInstalled = "installed",
+    ReShadeDetectionStatusNotInstalled = "not_installed",
+    ReShadeDetectionStatusUnsupported = "unsupported",
+};
+
+export class ReShadeTarget {
+    "Path": string;
+    "Executables": string[];
+
+    /** Creates a new ReShadeTarget instance. */
+    constructor($$source: Partial<ReShadeTarget> = {}) {
+        if (!("Path" in $$source)) {
+            this["Path"] = "";
+        }
+        if (!("Executables" in $$source)) {
+            this["Executables"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReShadeTarget instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReShadeTarget {
+        const $$createField1_0 = $$createType21;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Executables" in $$parsedSource) {
+            $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
+        }
+        return new ReShadeTarget($$parsedSource as Partial<ReShadeTarget>);
+    }
+}
+
 export class ReplacedFileManifestEntry {
     "OperationIndex": number;
     "Mod": ModContext;
@@ -1141,7 +1214,7 @@ export class RestoreOperation {
      * Creates a new RestoreOperation instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperation {
-        const $$createField2_0 = $$createType22;
+        const $$createField2_0 = $$createType24;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField2_0($$parsedSource["Mod"]);
@@ -1182,7 +1255,7 @@ export class RestoreOperationResult {
      * Creates a new RestoreOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperationResult {
-        const $$createField1_0 = $$createType23;
+        const $$createField1_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -1246,7 +1319,7 @@ export class RestoreResult {
      * Creates a new RestoreResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreResult {
-        const $$createField4_0 = $$createType25;
+        const $$createField4_0 = $$createType27;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
@@ -1283,7 +1356,7 @@ export class SourceScanResult {
      * Creates a new SourceScanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): SourceScanResult {
-        const $$createField3_0 = $$createType27;
+        const $$createField3_0 = $$createType29;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
@@ -1427,9 +1500,11 @@ const $$createType18 = $Create.Array($$createType17);
 const $$createType19 = $Create.Nullable($$createType0);
 const $$createType20 = $Create.Array($Create.Any);
 const $$createType21 = $Create.Array($Create.Any);
-const $$createType22 = RestoreMod.createFrom;
-const $$createType23 = RestoreOperation.createFrom;
-const $$createType24 = RestoreOperationResult.createFrom;
-const $$createType25 = $Create.Array($$createType24);
-const $$createType26 = StoredGame.createFrom;
+const $$createType22 = ReShadeTarget.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = RestoreMod.createFrom;
+const $$createType25 = RestoreOperation.createFrom;
+const $$createType26 = RestoreOperationResult.createFrom;
 const $$createType27 = $Create.Array($$createType26);
+const $$createType28 = StoredGame.createFrom;
+const $$createType29 = $Create.Array($$createType28);
