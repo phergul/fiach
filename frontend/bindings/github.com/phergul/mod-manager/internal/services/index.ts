@@ -5,6 +5,7 @@ import * as DiagnosticsService from "./diagnosticsservice.js";
 import * as GamesService from "./gamesservice.js";
 import * as ModService from "./modservice.js";
 import * as ProfileService from "./profileservice.js";
+import * as ReshadeService from "./reshadeservice.js";
 import * as SettingsService from "./settingsservice.js";
 import * as WindowService from "./windowservice.js";
 export {
@@ -12,6 +13,7 @@ export {
     GamesService,
     ModService,
     ProfileService,
+    ReshadeService,
     SettingsService,
     WindowService
 };

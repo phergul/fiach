@@ -54,6 +54,7 @@ func main() {
 			application.NewService(services.NewModService(store, logger)),
 			application.NewService(services.NewProfileService(store, logger)),
 			application.NewService(services.NewSettingsService(store, logger)),
+			application.NewService(services.NewReshadeService(store)),
 			application.NewService(gamesService),
 
 			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),

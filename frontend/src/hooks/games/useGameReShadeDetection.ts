@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { DetectGameReShade } from '@bindings/github.com/phergul/mod-manager/internal/services/gamesservice';
+import { DetectGameReShade } from '@bindings/github.com/phergul/mod-manager/internal/services/reshadeservice';
 import type { ReShadeDetectionResult } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
