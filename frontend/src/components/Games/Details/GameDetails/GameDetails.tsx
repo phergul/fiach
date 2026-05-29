@@ -21,6 +21,7 @@ import {
   useGameMods,
   useGameProfiles,
   useGameReShadeDetection,
+  useGameReShadeInstall,
   useGameStorageOverride,
   useStoredGames,
 } from '@hooks';
@@ -52,6 +53,11 @@ export const GameDetails = () => {
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
   const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
+  const reShadeInstall = useGameReShadeInstall({
+    game,
+    onMenuClose: () => setIsActionsMenuOpen(false),
+    reShadeDetection,
+  });
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
@@ -194,7 +200,9 @@ export const GameDetails = () => {
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}
+                onInstallReShade={reShadeInstall.downloadAndOpenInstaller}
                 onSetStorageOverride={storageOverride.requestSetStorageOverride}
+                showInstallReShade={reShadeInstall.canInstallReShade}
               />
             )}
           </div>

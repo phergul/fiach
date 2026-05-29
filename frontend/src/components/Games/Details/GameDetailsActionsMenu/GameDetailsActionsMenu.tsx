@@ -1,4 +1,4 @@
-import { FolderCog, RotateCcw } from 'lucide-react';
+import { FolderCog, RotateCcw, Sparkles } from 'lucide-react';
 
 import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -8,15 +8,19 @@ import './GameDetailsActionsMenu.scss';
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
   isOpen: boolean;
+  onInstallReShade: () => void;
   onClearStorageOverride: () => void;
   onSetStorageOverride: () => void;
+  showInstallReShade: boolean;
 }
 
 export const GameDetailsActionsMenu = ({
   game,
   isOpen,
+  onInstallReShade,
   onClearStorageOverride,
   onSetStorageOverride,
+  showInstallReShade,
 }: GameDetailsActionsMenuProps) => {
   if (!isOpen) {
     return null;
@@ -29,6 +33,11 @@ export const GameDetailsActionsMenu = ({
       ariaLabel="Game actions"
       isOpen={isOpen}
       items={[
+        ...(showInstallReShade ? [{
+          icon: Sparkles,
+          label: 'Install ReShade',
+          onSelect: onInstallReShade,
+        }] : []),
         {
           icon: FolderCog,
           label: 'Set mod storage override',
