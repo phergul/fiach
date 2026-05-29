@@ -20,6 +20,7 @@ import {
   useGameModImportFlow,
   useGameMods,
   useGameProfiles,
+  useGameReShadeDetection,
   useGameStorageOverride,
   useStoredGames,
 } from '@hooks';
@@ -50,6 +51,7 @@ export const GameDetails = () => {
   const profileManager = useGameProfiles(game?.ID ?? null);
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
+  const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
@@ -242,6 +244,7 @@ export const GameDetails = () => {
             isStorageUsageLoading={gameModManager.isStorageUsageLoading}
             modCount={gameModManager.mods.length}
             profileCount={profileManager.profiles.length}
+            reShadeDetection={reShadeDetection}
             storageUsedBytes={gameModManager.storageUsedBytes}
           />
 

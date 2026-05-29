@@ -1,6 +1,10 @@
-import { CheckCircle2, CircleSlash2, Database, Package, Users } from 'lucide-react';
+import { CheckCircle2, CircleSlash2, Database, Package, Sparkles, Users } from 'lucide-react';
 
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import {
+  ReShadeDetectionStatus,
+  type StoredGame,
+} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { UseGameReShadeDetectionResult } from '@hooks';
 
 import './GameDetailsMetadata.scss';
 
@@ -9,6 +13,7 @@ interface GameDetailsMetadataProps {
   isStorageUsageLoading: boolean;
   modCount: number;
   profileCount: number;
+  reShadeDetection: UseGameReShadeDetectionResult;
   storageUsedBytes: number | null;
 }
 
@@ -34,11 +39,33 @@ const formatStorageUsage = (bytes: number | null, isLoading: boolean) => {
   return `${formattedValue} ${units[unitIndex]}`;
 };
 
+const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) => {
+  if (reShadeDetection.isLoading) {
+    return 'Checking';
+  }
+
+  if (reShadeDetection.loadError !== null) {
+    return 'Error';
+  }
+
+  switch (reShadeDetection.result?.Status) {
+    case ReShadeDetectionStatus.ReShadeDetectionStatusInstalled:
+      return 'Installed';
+    case ReShadeDetectionStatus.ReShadeDetectionStatusNotInstalled:
+      return 'Not installed';
+    case ReShadeDetectionStatus.ReShadeDetectionStatusUnsupported:
+      return 'Unsupported';
+    default:
+      return '-';
+  }
+};
+
 export const GameDetailsMetadata = ({
   game,
   isStorageUsageLoading,
   modCount,
   profileCount,
+  reShadeDetection,
   storageUsedBytes,
 }: GameDetailsMetadataProps) => {
   const metadataItems = [
@@ -46,6 +73,7 @@ export const GameDetailsMetadata = ({
     { Icon: Package, label: 'Mods installed', value: String(modCount) },
     { Icon: Database, label: 'Storage used', value: formatStorageUsage(storageUsedBytes, isStorageUsageLoading) },
     { Icon: Users, label: 'Profiles', value: String(profileCount) },
+    { Icon: Sparkles, label: 'ReShade', value: formatReShadeStatus(reShadeDetection) },
   ];
 
   return (
