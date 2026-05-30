@@ -23,11 +23,25 @@ export const useGameReShadeInstall = ({
 }: UseGameReShadeInstallInput) => {
   const { addToast } = useToast();
   const [isLaunchingInstaller, setIsLaunchingInstaller] = useState(false);
-  const canInstallReShade = game !== undefined
-    && reShadeDetection.result?.Status === ReShadeDetectionStatus.ReShadeDetectionStatusNotInstalled;
+  const reShadeStatus = reShadeDetection.result?.Status;
+  const reShadeInstallerActionLabel = (() => {
+    if (game === undefined) {
+      return null;
+    }
+
+    switch (reShadeStatus) {
+      case ReShadeDetectionStatus.ReShadeDetectionStatusInstalled:
+        return 'Update/Reinstall ReShade';
+      case ReShadeDetectionStatus.ReShadeDetectionStatusNotInstalled:
+        return 'Install ReShade';
+      default:
+        return null;
+    }
+  })();
+  const canLaunchInstaller = reShadeInstallerActionLabel !== null;
 
   const downloadAndOpenInstaller = async () => {
-    if (game === undefined || !canInstallReShade || isLaunchingInstaller) {
+    if (game === undefined || !canLaunchInstaller || isLaunchingInstaller) {
       return;
     }
 
@@ -51,9 +65,9 @@ export const useGameReShadeInstall = ({
   };
 
   return {
-    canInstallReShade,
     downloadAndOpenInstaller,
     isLaunchingInstaller,
+    reShadeInstallerActionLabel,
   };
 };
 

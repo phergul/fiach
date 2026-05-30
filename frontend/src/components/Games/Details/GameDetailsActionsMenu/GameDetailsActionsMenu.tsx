@@ -8,19 +8,19 @@ import './GameDetailsActionsMenu.scss';
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
   isOpen: boolean;
-  onInstallReShade: () => void;
+  onOpenReShadeInstaller: () => void;
   onClearStorageOverride: () => void;
   onSetStorageOverride: () => void;
-  showInstallReShade: boolean;
+  reShadeInstallerActionLabel: string | null;
 }
 
 export const GameDetailsActionsMenu = ({
   game,
   isOpen,
-  onInstallReShade,
+  onOpenReShadeInstaller,
   onClearStorageOverride,
   onSetStorageOverride,
-  showInstallReShade,
+  reShadeInstallerActionLabel,
 }: GameDetailsActionsMenuProps) => {
   if (!isOpen) {
     return null;
@@ -33,10 +33,10 @@ export const GameDetailsActionsMenu = ({
       ariaLabel="Game actions"
       isOpen={isOpen}
       items={[
-        ...(showInstallReShade ? [{
+        ...(reShadeInstallerActionLabel !== null ? [{
           icon: Sparkles,
-          label: 'Install ReShade',
-          onSelect: onInstallReShade,
+          label: reShadeInstallerActionLabel,
+          onSelect: onOpenReShadeInstaller,
         }] : []),
         {
           icon: FolderCog,

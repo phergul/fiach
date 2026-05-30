@@ -200,9 +200,9 @@ export const GameDetails = () => {
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}
-                onInstallReShade={reShadeInstall.downloadAndOpenInstaller}
+                onOpenReShadeInstaller={reShadeInstall.downloadAndOpenInstaller}
                 onSetStorageOverride={storageOverride.requestSetStorageOverride}
-                showInstallReShade={reShadeInstall.canInstallReShade}
+                reShadeInstallerActionLabel={reShadeInstall.reShadeInstallerActionLabel}
               />
             )}
           </div>
