@@ -12,14 +12,14 @@ priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
 description: "A general-purpose mod manager for any game"
 vendor: "phergul"
-homepage: "https://github.com/phergul/fiach"
+homepage: "https://wails.io"
 license: "MIT"
 release: "1"
 
 contents:
   - src: "./bin/fiach"
     dst: "/usr/local/bin/fiach"
-  - src: "./build/fiach.png"
+  - src: "./build/appicon.png"
     dst: "/usr/share/icons/hicolor/128x128/apps/fiach.png"
   - src: "./build/linux/fiach.desktop"
     dst: "/usr/share/applications/fiach.desktop"

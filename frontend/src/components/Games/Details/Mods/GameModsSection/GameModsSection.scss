@@ -5,6 +5,10 @@ $game-mods-section-icon-size: 1rem;
 $game-mods-section-import-width: 8.5rem;
 
 .game-mods-section {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
   background: $color-background;
   z-index: 1;
 }

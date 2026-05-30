@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
+import '@fontsource/atkinson-hyperlegible'
+
 import { App } from '@app'
 import { applyThemeCSSVariables } from '@theme/themeCSSVariables'
 import { defaultTheme } from '@theme/themes'

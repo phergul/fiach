@@ -44,7 +44,19 @@ jobs:
 
       - name: Install NSIS
         shell: pwsh
-        run: choco install nsis -y --no-progress
+        run: |
+          choco install nsis -y --no-progress
+          if (Test-Path "C:\Program Files (x86)\NSIS") {
+            $nsisPath = "C:\Program Files (x86)\NSIS"
+            $nsisPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            $env:PATH += ";$nsisPath"
+          }
+          if (Test-Path "C:\Program Files\NSIS") {
+            $nsisPath = "C:\Program Files\NSIS"
+            $nsisPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            $env:PATH += ";$nsisPath"
+          }
+          Get-Command makensis -ErrorAction SilentlyContinue | Out-Null
 
       - name: Build Windows executable
         run: wails3 task windows:build
@@ -197,7 +209,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.tag }}
-          name: Fiach ${{ steps.release.outputs.version }}
+          name: fiach ${{ steps.release.outputs.version }}
           draft: true
           prerelease: false
           fail_on_unmatched_files: true
