@@ -16,7 +16,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: $spacing-sm;
-  align-items: start;
+  align-items: center;
   max-height: $toast-max-height;
   padding: $spacing-sm $spacing-md;
   overflow: auto;
