@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 
 import { NavLink } from 'react-router-dom';
-import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
+import { BookOpen, ScrollText, Settings } from 'lucide-react';
 
 import { OpenLogsWindow } from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
 
@@ -9,7 +9,7 @@ import './Navigation.scss';
 
 const navigationItems = [
   { Icon: BookOpen, label: 'Library', path: '/library' },
-  { Icon: Users, label: 'Profiles', path: '/profiles' },
+  // { Icon: Users, label: 'Profiles', path: '/profiles' },
   { Icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
