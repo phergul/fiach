@@ -5,10 +5,10 @@
 	"info": {
 		"0000": {
 			"ProductVersion": "0.1.0",
-			"CompanyName": "My Company",
-			"FileDescription": "A mod-manager application",
-			"LegalCopyright": "© 2026, My Company",
-			"ProductName": "My Product",
+			"CompanyName": "phergul",
+			"FileDescription": "A general-purpose mod manager for any game",
+			"LegalCopyright": "(c) 2026, phergul",
+			"ProductName": "Fiach",
 			"Comments": "This is a comment"
 		}
 	}

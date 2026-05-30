@@ -8,15 +8,15 @@
   IgnorableNamespaces="uap3">
   
   <Identity 
-    Name="com.example.modmanager"
-    Publisher="CN=My Company"
+    Name="com.phergul.fiach"
+    Publisher="CN=phergul"
     Version="0.1.0.0" 
     ProcessorArchitecture="x64" />
   
   <Properties>
-    <DisplayName>My Product</DisplayName>
-    <PublisherDisplayName>My Company</PublisherDisplayName>
-    <Description>A mod-manager application</Description>
+    <DisplayName>Fiach</DisplayName>
+    <PublisherDisplayName>phergul</PublisherDisplayName>
+    <Description>A general-purpose mod manager for any game</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   
@@ -29,10 +29,10 @@
   </Resources>
   
   <Applications>
-    <Application Id="com.example.modmanager" Executable="mod-manager" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="com.phergul.fiach" Executable="fiach" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="My Product"
-        Description="A mod-manager application"
+        DisplayName="Fiach"
+        Description="A general-purpose mod manager for any game"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -41,7 +41,7 @@
       </uap:VisualElements>
       
       <Extensions>
-        <desktop:Extension Category="windows.fullTrustProcess" Executable="mod-manager" />
+        <desktop:Extension Category="windows.fullTrustProcess" Executable="fiach" />
         
         
       </Extensions>

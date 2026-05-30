@@ -1,59 +1,58 @@
-# Welcome to Your New Wails3 Project!
+# Fiach
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+Fiach is a Wails v3 desktop app for managing game mods.
 
-## Getting Started
+## Development
 
-1. Navigate to your project directory in the terminal.
+Run the app in development mode:
 
-2. To run your application in development mode, use the following command:
+```powershell
+wails3 dev
+```
 
-   ```
-   wails3 dev
-   ```
+Build the app for the current platform:
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+```powershell
+wails3 task build
+```
 
-3. To build your application for production, use:
+Build outputs are written to `bin/`.
 
-   ```
-   wails3 build
-   ```
+## Windows Builds
 
-   This will create a production-ready executable in the `build` directory.
+Build the Windows executable:
 
-## Exploring Wails3 Features
+```powershell
+wails3 task windows:build
+```
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+Create the default unsigned NSIS installer:
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+```powershell
+wails3 task windows:package
+```
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+The Windows executable is written to `bin/fiach.exe`. The NSIS installer is written to `bin/fiach-<arch>-installer.exe`.
 
-   ```
-   go run .
-   ```
+To create an unsigned MSIX package instead:
 
-   Note: Some examples may be under development during the alpha phase.
+```powershell
+wails3 task windows:package FORMAT=msix
+```
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+The MSIX package is written to `bin/fiach-<arch>.msix`.
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+## Releases
 
-## Project Structure
+The GitHub release workflow builds unsigned artifacts for Windows, macOS, and Linux, then creates a draft GitHub Release.
 
-Take a moment to familiarize yourself with your project structure:
+Create a release from a tag:
 
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
+```
 
-## Next Steps
+You can also run the `Release` workflow manually in GitHub Actions and provide a version such as `0.1.0`. Manual runs create or update the matching `v<version>` tag at the selected commit.
 
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
-
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+Release artifacts are uploaded to the draft release for review before publishing.

@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=My Product
-Comment=A mod-manager application
+Name=Fiach
+Comment=A general-purpose mod manager for any game
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/mod-manager %u
+Exec=/usr/local/bin/fiach %u
 Terminal=false
 Type=Application
-Icon=mod-manager
+Icon=fiach
 Categories=Utility;
-StartupWMClass=mod-manager
+StartupWMClass=fiach
 
  
