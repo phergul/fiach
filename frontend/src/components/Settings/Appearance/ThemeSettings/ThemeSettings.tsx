@@ -5,13 +5,12 @@ import { useTheme } from '@components/Common/ThemeProvider/ThemeProvider';
 import { ThemeSelectControl } from '@components/Settings/Appearance/ThemeSelectControl/ThemeSelectControl';
 import { SettingsRow } from '@components/Settings/Common/SettingsRow/SettingsRow';
 import { SettingsSection } from '@components/Settings/Common/SettingsSection/SettingsSection';
-import { getErrorMessage } from '@utils';
 
 const themeDescription =
   'Select the theme for the application.';
 
 export const ThemeSettings = () => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const { activeTheme, isLoading, setTheme, themes } = useTheme();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,10 +28,7 @@ export const ThemeSettings = () => {
         tone: 'success',
       });
     } catch (error) {
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsSaving(false);
     }

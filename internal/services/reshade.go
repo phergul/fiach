@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime"
 	"strings"
 
+	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
@@ -16,30 +18,45 @@ import (
 
 type ReshadeService struct {
 	store           *storage.Store
+	logger          *slog.Logger
 	operatingSystem string
 }
 
-func NewReshadeService(store *storage.Store) *ReshadeService {
+func NewReshadeService(store *storage.Store, logger ...*slog.Logger) *ReshadeService {
+	serviceLogger := slog.Default()
+	if len(logger) > 0 && logger[0] != nil {
+		serviceLogger = logger[0]
+	}
+
 	return &ReshadeService{
 		store:           store,
+		logger:          serviceLogger,
 		operatingSystem: runtime.GOOS,
 	}
 }
 
 func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (result dto.ReShadeDetectionResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationDetectReShade, "ReShade detection started",
+		slog.Int64("game_id", gameID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("ReShade detection failed", err)
 			err = fmt.Errorf("detect game ReShade runtime: %w", err)
 		}
 	}()
 
 	if s.operatingSystem != "windows" {
 		reason := "ReShade runtime detection is only supported on Windows."
-		return dto.ReShadeDetectionResult{
+		result = dto.ReShadeDetectionResult{
 			Status:            dto.ReShadeDetectionStatusUnsupported,
 			Targets:           []dto.ReShadeTarget{},
 			UnsupportedReason: &reason,
-		}, nil
+		}
+		diag.complete("ReShade detection completed",
+			slog.String("status", string(result.Status)),
+		)
+		return result, nil
 	}
 
 	game, err := s.store.GetStoredGame(ctx, gameID)
@@ -70,15 +87,23 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 		status = dto.ReShadeDetectionStatusInstalled
 	}
 
-	return dto.ReShadeDetectionResult{
+	result = dto.ReShadeDetectionResult{
 		Status:  status,
 		Targets: mappers.ToDTOReShadeTargets(scanResult.Targets),
-	}, nil
+	}
+	diag.complete("ReShade detection completed",
+		slog.String("status", string(result.Status)),
+		slog.Int("target_count", len(result.Targets)),
+	)
+
+	return result, nil
 }
 
 func (s *ReshadeService) DownloadAndOpenReShadeInstaller(ctx context.Context) (result dto.ReShadeInstallerLaunchResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationLaunchReShadeInstaller, "ReShade installer launch started")
 	defer func() {
 		if err != nil {
+			diag.fail("ReShade installer launch failed", err)
 			err = fmt.Errorf("download and open ReShade installer: %w", err)
 		}
 	}()
@@ -92,7 +117,12 @@ func (s *ReshadeService) DownloadAndOpenReShadeInstaller(ctx context.Context) (r
 		return dto.ReShadeInstallerLaunchResult{}, err
 	}
 
-	return dto.ReShadeInstallerLaunchResult{
+	result = dto.ReShadeInstallerLaunchResult{
 		Version: launchResult.Version,
-	}, nil
+	}
+	diag.complete("ReShade installer launch completed",
+		slog.String("version", result.Version),
+	)
+
+	return result, nil
 }

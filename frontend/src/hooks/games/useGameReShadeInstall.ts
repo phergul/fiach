@@ -6,7 +6,6 @@ import {
   type StoredGame,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
-import { getErrorMessage } from '@utils';
 
 import type { UseGameReShadeDetectionResult } from './useGameReShadeDetection';
 
@@ -21,7 +20,7 @@ export const useGameReShadeInstall = ({
   onMenuClose,
   reShadeDetection,
 }: UseGameReShadeInstallInput) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [isLaunchingInstaller, setIsLaunchingInstaller] = useState(false);
   const reShadeStatus = reShadeDetection.result?.Status;
   const reShadeInstallerActionLabel = (() => {
@@ -55,10 +54,7 @@ export const useGameReShadeInstall = ({
         tone: 'success',
       });
     } catch (error) {
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsLaunchingInstaller(false);
     }

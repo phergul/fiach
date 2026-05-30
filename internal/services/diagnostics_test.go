@@ -96,6 +96,39 @@ func TestModServiceImportWritesDiagnostics(t *testing.T) {
 	}
 }
 
+func TestModServicePreValidateImportFailureWritesDiagnostics(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+	manager := newServiceTestDiagnostics(t)
+	defer closeServiceTestDiagnostics(t, manager)
+
+	sourcePath := t.TempDir()
+	service := NewModService(store, manager.Logger())
+	err := service.PreValidateImport(context.Background(), dto.PreValidateImportInput{
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: sourcePath,
+	})
+	if err == nil {
+		t.Fatal("PreValidateImport() error = nil, want empty folder error")
+	}
+
+	failed, ok := findDiagnosticEvent(readServiceTestLogs(t, manager), diagnostics.OperationPreValidateMod, diagnostics.EventFailed)
+	if !ok {
+		t.Fatal("PreValidateImport() did not write failed diagnostic event")
+	}
+	if failed.Details["Error"] == "" {
+		t.Fatalf("failed pre-validation details = %+v, want error detail", failed.Details)
+	}
+	if _, ok := failed.Details["Source path"]; ok {
+		t.Fatalf("failed pre-validation details = %+v, want raw source path omitted", failed.Details)
+	}
+	if failed.Details["Source path label"] == "" {
+		t.Fatalf("failed pre-validation details = %+v, want safe source path label", failed.Details)
+	}
+}
+
 func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	t.Parallel()
 

@@ -28,10 +28,29 @@ const (
 )
 
 const (
-	OperationScanGames      = "scan_games"
-	OperationImportMod      = "import_mod"
-	OperationApplyProfile   = "apply_profile"
-	OperationRestoreVanilla = "restore_vanilla"
+	OperationScanGames                 = "scan_games"
+	OperationPreValidateMod            = "pre_validate_mod_import"
+	OperationPreviewMod                = "preview_mod_import"
+	OperationImportMod                 = "import_mod"
+	OperationRenameMod                 = "rename_mod"
+	OperationGetModDeleteSummary       = "get_mod_delete_summary"
+	OperationDeleteMod                 = "delete_mod"
+	OperationCreateProfile             = "create_profile"
+	OperationRenameProfile             = "rename_profile"
+	OperationDeleteProfile             = "delete_profile"
+	OperationAddProfileMod             = "add_profile_mod"
+	OperationRemoveProfileMod          = "remove_profile_mod"
+	OperationSetProfileModEnabled      = "set_profile_mod_enabled"
+	OperationReorderProfileMods        = "reorder_profile_mods"
+	OperationBuildProfilePlan          = "build_profile_plan"
+	OperationApplyProfile              = "apply_profile"
+	OperationRestoreVanilla            = "restore_vanilla"
+	OperationSetGlobalModStorageRoot   = "set_global_mod_storage_root"
+	OperationSetTheme                  = "set_theme"
+	OperationSetGameModStorageOverride = "set_game_mod_storage_override"
+	OperationDetectReShade             = "detect_reshade"
+	OperationLaunchReShadeInstaller    = "launch_reshade_installer"
+	OperationExportLogs                = "export_logs"
 )
 
 const (
@@ -59,6 +78,11 @@ type RecentLogsInput struct {
 	Limit     int
 	Operation string
 	Level     string
+}
+
+type OperationDescriptor struct {
+	Value string
+	Label string
 }
 
 type LogEntry struct {
@@ -104,6 +128,34 @@ func (m *Manager) Logger() *slog.Logger {
 	}
 
 	return m.logger
+}
+
+func Operations() []OperationDescriptor {
+	return []OperationDescriptor{
+		{Value: OperationScanGames, Label: "Scan games"},
+		{Value: OperationPreValidateMod, Label: "Pre-validate mod import"},
+		{Value: OperationPreviewMod, Label: "Preview mod import"},
+		{Value: OperationImportMod, Label: "Import mod"},
+		{Value: OperationRenameMod, Label: "Rename mod"},
+		{Value: OperationGetModDeleteSummary, Label: "Get mod delete summary"},
+		{Value: OperationDeleteMod, Label: "Delete mod"},
+		{Value: OperationCreateProfile, Label: "Create profile"},
+		{Value: OperationRenameProfile, Label: "Rename profile"},
+		{Value: OperationDeleteProfile, Label: "Delete profile"},
+		{Value: OperationAddProfileMod, Label: "Add profile mod"},
+		{Value: OperationRemoveProfileMod, Label: "Remove profile mod"},
+		{Value: OperationSetProfileModEnabled, Label: "Set profile mod enabled"},
+		{Value: OperationReorderProfileMods, Label: "Reorder profile mods"},
+		{Value: OperationBuildProfilePlan, Label: "Build profile plan"},
+		{Value: OperationApplyProfile, Label: "Apply profile"},
+		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
+		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
+		{Value: OperationSetTheme, Label: "Set theme"},
+		{Value: OperationSetGameModStorageOverride, Label: "Set game mod storage override"},
+		{Value: OperationDetectReShade, Label: "Detect ReShade"},
+		{Value: OperationLaunchReShadeInstaller, Label: "Launch ReShade installer"},
+		{Value: OperationExportLogs, Label: "Export logs"},
+	}
 }
 
 func (m *Manager) Close() error {

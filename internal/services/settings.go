@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
@@ -36,13 +37,23 @@ func (s *SettingsService) GetGlobalModStorageRoot(ctx context.Context) (root str
 }
 
 func (s *SettingsService) SetGlobalModStorageRoot(ctx context.Context, path string) (err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationSetGlobalModStorageRoot, "Global mod storage root update started",
+		diagnostics.PathAttr("storage_root", path),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Global mod storage root update failed", err)
 			err = fmt.Errorf("set global mod storage root: %w", err)
 		}
 	}()
 
-	return s.store.SetGlobalModStorageRoot(ctx, path)
+	if err := s.store.SetGlobalModStorageRoot(ctx, path); err != nil {
+		return err
+	}
+
+	diag.complete("Global mod storage root update completed")
+
+	return nil
 }
 
 func (s *SettingsService) GetThemeID(ctx context.Context) (themeID string, err error) {
@@ -56,8 +67,10 @@ func (s *SettingsService) GetThemeID(ctx context.Context) (themeID string, err e
 }
 
 func (s *SettingsService) SetThemeID(ctx context.Context, themeID string) (err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationSetTheme, "Theme update started")
 	defer func() {
 		if err != nil {
+			diag.fail("Theme update failed", err)
 			err = fmt.Errorf("set theme ID: %w", err)
 		}
 	}()
@@ -67,12 +80,25 @@ func (s *SettingsService) SetThemeID(ctx context.Context, themeID string) (err e
 		return errors.New("theme ID is required")
 	}
 
-	return s.store.SetThemeID(ctx, themeID)
+	if err := s.store.SetThemeID(ctx, themeID); err != nil {
+		return err
+	}
+
+	diag.complete("Theme update completed",
+		slog.String("theme_id", themeID),
+	)
+
+	return nil
 }
 
 func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gameID int64, path string) (game dto.StoredGame, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationSetGameModStorageOverride, "Game mod storage override update started",
+		slog.Int64("game_id", gameID),
+		diagnostics.PathAttr("storage_override", path),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Game mod storage override update failed", err)
 			err = fmt.Errorf("set game mod storage path override: %w", err)
 		}
 	}()
@@ -82,7 +108,12 @@ func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gam
 		return dto.StoredGame{}, err
 	}
 
-	return mappers.ToDTOStoredGame(storedGame), nil
+	game = mappers.ToDTOStoredGame(storedGame)
+	diag.complete("Game mod storage override update completed",
+		slog.String("game_name", storedGame.Name),
+	)
+
+	return game, nil
 }
 
 func (s *SettingsService) ResolveGameModStoragePath(ctx context.Context, gameID int64) (path string, err error) {

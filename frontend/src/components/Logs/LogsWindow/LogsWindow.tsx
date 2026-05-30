@@ -4,17 +4,24 @@ import { Clipboard, Dialogs, Events } from '@wailsio/runtime';
 
 import {
   ExportLogs,
+  ListDiagnosticOperations,
   ListRecentLogs,
   ListRecentRawLogs,
 } from '@bindings/github.com/phergul/fiach/internal/services/diagnosticsservice';
 import {
   DiagnosticLogEntry,
+  DiagnosticOperation,
   ExportDiagnosticLogsInput,
   ListDiagnosticLogsInput,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { LogsTable } from '@components/Logs/LogsTable/LogsTable';
-import { LogsToolbar, LogLevelFilter, LogOperationFilter } from '@components/Logs/LogsToolbar/LogsToolbar';
+import {
+  LogLevelFilter,
+  LogOperationFilter,
+  LogOperationOption,
+  LogsToolbar,
+} from '@components/Logs/LogsToolbar/LogsToolbar';
 import { getErrorMessage } from '@utils';
 
 import './LogsWindow.scss';
@@ -25,6 +32,21 @@ const logEntryEventName = 'diagnostics:log-entry';
 const normalizeLogEntry = (entry: unknown): DiagnosticLogEntry => {
   return DiagnosticLogEntry.createFrom(entry);
 };
+
+const allOperationOption: LogOperationOption = {
+  label: 'All operations',
+  value: 'all',
+};
+
+const toOperationOptions = (operations: DiagnosticOperation[]): LogOperationOption[] => [
+  allOperationOption,
+  ...operations
+    .filter((operation) => operation.Value.trim() !== '' && operation.Label.trim() !== '')
+    .map((operation) => ({
+      label: operation.Label,
+      value: operation.Value,
+    })),
+];
 
 const matchesLevel = (entry: DiagnosticLogEntry, level: LogLevelFilter) => {
   return level === 'all' || entry.Level.toLowerCase() === level;
@@ -58,10 +80,11 @@ const formatLogEntries = (entries: DiagnosticLogEntry[]) => {
 };
 
 export const LogsWindow = () => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [entries, setEntries] = useState<DiagnosticLogEntry[]>([]);
   const [level, setLevel] = useState<LogLevelFilter>('all');
   const [operation, setOperation] = useState<LogOperationFilter>('all');
+  const [operationOptions, setOperationOptions] = useState<LogOperationOption[]>([allOperationOption]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRawJsonVisible, setIsRawJsonVisible] = useState(false);
   const [rawJson, setRawJson] = useState('[]');
@@ -89,11 +112,20 @@ export const LogsWindow = () => {
     } catch (error) {
       const message = getErrorMessage(error);
       setErrorMessage(message);
-      addToast({ message, tone: 'error' });
+      addErrorToast(error);
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addErrorToast]);
+
+  const loadOperationOptions = useCallback(async () => {
+    try {
+      const operations = await ListDiagnosticOperations();
+      setOperationOptions(toOperationOptions(operations ?? []));
+    } catch (error) {
+      addErrorToast(error);
+    }
+  }, [addErrorToast]);
 
   const loadRawLogs = useCallback(async () => {
     setRawJsonIsLoading(true);
@@ -113,15 +145,16 @@ export const LogsWindow = () => {
     } catch (error) {
       const message = getErrorMessage(error);
       setRawJsonErrorMessage(message);
-      addToast({ message, tone: 'error' });
+      addErrorToast(error);
     } finally {
       setRawJsonIsLoading(false);
     }
-  }, [addToast, level, operation]);
+  }, [addErrorToast, level, operation]);
 
   useEffect(() => {
+    void loadOperationOptions();
     void loadLogs();
-  }, [loadLogs]);
+  }, [loadLogs, loadOperationOptions]);
 
   useEffect(() => {
     if (!isRawJsonVisible) {
@@ -148,7 +181,7 @@ export const LogsWindow = () => {
       await Clipboard.SetText(formatLogEntries(visibleEntries));
       addToast({ message: 'Visible logs copied.', tone: 'success' });
     } catch (error) {
-      addToast({ message: getErrorMessage(error), tone: 'error' });
+      addErrorToast(error);
     }
   };
 
@@ -192,7 +225,7 @@ export const LogsWindow = () => {
       );
       addToast({ message: 'Visible logs exported.', tone: 'success' });
     } catch (error) {
-      addToast({ message: getErrorMessage(error), tone: 'error' });
+      addErrorToast(error);
     } finally {
       setIsExporting(false);
     }
@@ -206,6 +239,7 @@ export const LogsWindow = () => {
         isRawJsonVisible={isRawJsonVisible}
         level={level}
         operation={operation}
+        operationOptions={operationOptions}
         visibleCount={visibleEntries.length}
         onClear={clearVisibleLogs}
         onCopy={() => void copyVisibleLogs()}

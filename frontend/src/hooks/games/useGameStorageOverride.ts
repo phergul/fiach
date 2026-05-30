@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { SetGameModStoragePathOverride } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
-import { getErrorMessage, openDirectory } from '@utils';
+import { openDirectory } from '@utils';
 
 interface PendingStorageOverride {
   confirmLabel: string;
@@ -23,7 +23,7 @@ export const useGameStorageOverride = ({
   onMenuClose,
   updateStoredGame,
 }: UseGameStorageOverrideInput) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [pendingStorageOverride, setPendingStorageOverride] = useState<PendingStorageOverride | null>(null);
   const [isApplyingStorageOverride, setIsApplyingStorageOverride] = useState(false);
 
@@ -51,11 +51,7 @@ export const useGameStorageOverride = ({
         title: 'Set Storage Override?',
       });
     } catch (error) {
-      const message = getErrorMessage(error);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     }
   };
 
@@ -95,11 +91,7 @@ export const useGameStorageOverride = ({
       });
       setPendingStorageOverride(null);
     } catch (error) {
-      const message = getErrorMessage(error);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsApplyingStorageOverride(false);
     }

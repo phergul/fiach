@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
@@ -22,6 +23,16 @@ func NewDiagnosticsService(manager *diagnostics.Manager) *DiagnosticsService {
 	return &DiagnosticsService{
 		manager: manager,
 	}
+}
+
+func (s *DiagnosticsService) ListDiagnosticOperations(_ context.Context) (operations []dto.DiagnosticOperation, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("list diagnostic operations: %w", err)
+		}
+	}()
+
+	return mappers.ToDTODiagnosticOperations(diagnostics.Operations()), nil
 }
 
 func (s *DiagnosticsService) ListRecentLogs(ctx context.Context, input dto.ListDiagnosticLogsInput) (entries []dto.DiagnosticLogEntry, err error) {
@@ -63,8 +74,13 @@ func (s *DiagnosticsService) ListRecentRawLogs(ctx context.Context, input dto.Li
 }
 
 func (s *DiagnosticsService) ExportLogs(ctx context.Context, input dto.ExportDiagnosticLogsInput) (err error) {
+	diag := startDiagnosticOperation(ctx, s.manager.Logger(), diagnostics.OperationExportLogs, "Diagnostic logs export started",
+		diagnostics.PathAttr("export_path", input.Path),
+		slog.Int("entry_count", len(input.Entries)),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Diagnostic logs export failed", err)
 			err = fmt.Errorf("export diagnostic logs: %w", err)
 		}
 	}()
@@ -84,6 +100,8 @@ func (s *DiagnosticsService) ExportLogs(ctx context.Context, input dto.ExportDia
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		return err
 	}
+
+	diag.complete("Diagnostic logs export completed")
 
 	return nil
 }

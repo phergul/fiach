@@ -44,7 +44,7 @@ export const useGameModImportFlow = ({
   gameID,
   refreshMods,
 }: UseGameModImportFlowInput) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [importWizard, setImportWizard] = useState<ImportReviewState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -95,11 +95,7 @@ export const useGameModImportFlow = ({
         targetPath,
       });
     } catch (error) {
-      const message = getErrorMessage(error);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     }
   };
 
@@ -156,10 +152,7 @@ export const useGameModImportFlow = ({
       try {
         await refreshMods();
       } catch (refreshError) {
-        addToast({
-          message: getErrorMessage(refreshError),
-          tone: 'error',
-        });
+        addErrorToast(refreshError);
       }
 
       addToast({
@@ -169,10 +162,7 @@ export const useGameModImportFlow = ({
     } catch (error) {
       const message = getErrorMessage(error);
       setImportError(message);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsImporting(false);
     }

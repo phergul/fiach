@@ -52,7 +52,10 @@ $app-border-width: 0.0625rem;
 $app-border: $app-border-width solid $color-border-subtle;
 
 $input-height: 2.5rem;
-$toast-width: 20rem;
+$toast-width: 25rem;
+$toast-max-height: 12rem;
+$toast-close-size: 1.75rem;
+$toast-close-icon-size: 1rem;
 
 $shadow-subtle: var(--shadow-subtle, 0 0.125rem 0.5rem rgb(0 0 0 / 18%));
 

@@ -10,6 +10,7 @@ export {
     ApplyOperationResult,
     ApplyOperationStatus,
     DiagnosticLogEntry,
+    DiagnosticOperation,
     ExportDiagnosticLogsInput,
     ImportModInput,
     ImportModResult,

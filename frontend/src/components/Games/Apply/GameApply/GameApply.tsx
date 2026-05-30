@@ -16,7 +16,6 @@ import { GameDetailsState } from '@components/Games/Details/GameDetailsState/Gam
 import { GameApplyReview } from '@components/Games/Apply/GameApplyReview/GameApplyReview';
 import { GameApplySummary, type GameApplySummaryItem } from '@components/Games/Apply/GameApplySummary/GameApplySummary';
 import { useAppliedProfile, useGameArtwork, useGameProfiles, useProfileOperationPlan, useStoredGames } from '@hooks';
-import { getErrorMessage } from '@utils';
 
 import './GameApply.scss';
 
@@ -133,7 +132,7 @@ const buildApplyFailureMessage = (result: ApplyOperationPlanResult) => {
 export const GameApply = () => {
   const { gameId, profileId } = useParams();
   const navigate = useNavigate();
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [isApplyConfirmOpen, setIsApplyConfirmOpen] = useState(false);
   const [isApplyPending, setIsApplyPending] = useState(false);
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
@@ -226,12 +225,8 @@ export const GameApply = () => {
         navigate(gameDetailsPath);
       }
     } catch (error) {
-      const message = getErrorMessage(error);
       setIsApplyConfirmOpen(false);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsApplyPending(false);
     }

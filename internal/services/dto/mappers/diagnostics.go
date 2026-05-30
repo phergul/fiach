@@ -23,3 +23,19 @@ func ToDTODiagnosticLogEntries(entries []diagnostics.LogEntry) []dto.DiagnosticL
 
 	return result
 }
+
+func ToDTODiagnosticOperations(operations []diagnostics.OperationDescriptor) []dto.DiagnosticOperation {
+	if len(operations) == 0 {
+		return nil
+	}
+
+	result := make([]dto.DiagnosticOperation, 0, len(operations))
+	for _, operation := range operations {
+		result = append(result, dto.DiagnosticOperation{
+			Value: operation.Value,
+			Label: operation.Label,
+		})
+	}
+
+	return result
+}

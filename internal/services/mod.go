@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/fileignore"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/modmetadata"
@@ -48,8 +49,12 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 }
 
 func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (mod dto.Mod, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationRenameMod, "Mod rename started",
+		slog.Int64("mod_id", modID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod rename failed", err)
 			err = fmt.Errorf("rename mod: %w", err)
 		}
 	}()
@@ -59,12 +64,22 @@ func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (m
 		return dto.Mod{}, err
 	}
 
-	return mappers.ToDTOMod(storedMod), nil
+	mod = mappers.ToDTOMod(storedMod)
+	diag.complete("Mod rename completed",
+		slog.Int64("game_id", storedMod.GameID),
+		slog.String("mod_name", storedMod.Name),
+	)
+
+	return mod, nil
 }
 
 func (s *ModService) GetModDeleteSummary(ctx context.Context, modID int64) (summary dto.ModDeleteSummary, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationGetModDeleteSummary, "Mod delete summary started",
+		slog.Int64("mod_id", modID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod delete summary failed", err)
 			err = fmt.Errorf("get mod delete summary: %w", err)
 		}
 	}()
@@ -94,12 +109,24 @@ func (s *ModService) GetModDeleteSummary(ctx context.Context, modID int64) (summ
 		}
 	}
 
-	return mappers.ToDTOModDeleteSummary(mod, profileUsageCount, isInAppliedProfile), nil
+	summary = mappers.ToDTOModDeleteSummary(mod, profileUsageCount, isInAppliedProfile)
+	diag.complete("Mod delete summary completed",
+		slog.Int64("game_id", mod.GameID),
+		slog.String("mod_name", mod.Name),
+		slog.Int64("profile_usage_count", profileUsageCount),
+		slog.Bool("is_in_applied_profile", isInAppliedProfile),
+	)
+
+	return summary, nil
 }
 
 func (s *ModService) DeleteMod(ctx context.Context, modID int64) (err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationDeleteMod, "Mod delete started",
+		slog.Int64("mod_id", modID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod delete failed", err)
 			err = fmt.Errorf("delete mod: %w", err)
 		}
 	}()
@@ -111,6 +138,11 @@ func (s *ModService) DeleteMod(ctx context.Context, modID int64) (err error) {
 	if !found {
 		return fmt.Errorf("mod %d was not found", modID)
 	}
+	diag.attrs = append(diag.attrs,
+		slog.Int64("game_id", mod.GameID),
+		slog.String("mod_name", mod.Name),
+		diagnostics.PathAttr("source_path", mod.SourcePath),
+	)
 
 	managedRoot, err := s.store.ResolveGameModStoragePath(ctx, mod.GameID, "")
 	if err != nil {
@@ -127,6 +159,8 @@ func (s *ModService) DeleteMod(ctx context.Context, modID int64) (err error) {
 	if err := s.store.DeleteMod(ctx, modID); err != nil {
 		return err
 	}
+
+	diag.complete("Mod delete completed")
 
 	return nil
 }

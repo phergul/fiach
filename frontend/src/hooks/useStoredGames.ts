@@ -27,7 +27,7 @@ const ensureInitialScan = () => {
 };
 
 export const useStoredGames = () => {
-  const { addToast, removeToast } = useToast();
+  const { addErrorToast, addToast, removeToast } = useToast();
   const [games, setGames] = useState<StoredGame[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
@@ -80,15 +80,12 @@ export const useStoredGames = () => {
     } catch (error) {
       const message = getErrorMessage(error);
       setScanError(message);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       removeToast(scanningToastID);
       setIsScanning(false);
     }
-  }, [addToast, isScanning, loadGames, removeToast]);
+  }, [addErrorToast, addToast, isScanning, loadGames, removeToast]);
 
   useEffect(() => {
     let isMounted = true;
@@ -119,10 +116,7 @@ export const useStoredGames = () => {
         if (isMounted) {
           setScanError(message);
           if (cachedGames.length > 0) {
-            addToast({
-              message,
-              tone: 'error',
-            });
+            addErrorToast(error);
           }
         }
       } finally {
@@ -137,7 +131,7 @@ export const useStoredGames = () => {
     return () => {
       isMounted = false;
     };
-  }, [addToast, loadGames]);
+  }, [addErrorToast, addToast, loadGames]);
 
   return {
     games,

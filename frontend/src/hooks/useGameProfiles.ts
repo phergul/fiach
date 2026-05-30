@@ -35,7 +35,7 @@ const loadProfileModEntries = async (profiles: ModProfile[]) => {
 };
 
 export const useGameProfiles = (gameID: number | null) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [profiles, setProfiles] = useState<ModProfile[]>([]);
   const [profileModsByProfileID, setProfileModsByProfileID] = useState<Record<number, ProfileMod[]>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -103,16 +103,13 @@ export const useGameProfiles = (gameID: number | null) => {
         });
         return result;
       } catch (error) {
-        addToast({
-          message: getErrorMessage(error),
-          tone: 'error',
-        });
+        addErrorToast(error);
         throw error;
       } finally {
         setPendingAction(null);
       }
     },
-    [addToast, loadProfiles],
+    [addErrorToast, addToast, loadProfiles],
   );
 
   const createProfile = useCallback(
@@ -171,16 +168,13 @@ export const useGameProfiles = (gameID: number | null) => {
           tone: 'success',
         });
       } catch (error) {
-        addToast({
-          message: getErrorMessage(error),
-          tone: 'error',
-        });
+        addErrorToast(error);
         throw error;
       } finally {
         setPendingAction(null);
       }
     },
-    [addToast, loadProfileMods],
+    [addErrorToast, addToast, loadProfileMods],
   );
 
   const removeModFromProfile = useCallback(
@@ -222,16 +216,13 @@ export const useGameProfiles = (gameID: number | null) => {
         }));
         return reorderedProfileMods;
       } catch (error) {
-        addToast({
-          message: getErrorMessage(error),
-          tone: 'error',
-        });
+        addErrorToast(error);
         throw error;
       } finally {
         setPendingAction(null);
       }
     },
-    [addToast],
+    [addErrorToast],
   );
 
   useEffect(() => {

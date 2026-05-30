@@ -13,9 +13,15 @@ export function ExportLogs(input: dto$0.ExportDiagnosticLogsInput): $Cancellable
     return $Call.ByID(2191609694, input);
 }
 
+export function ListDiagnosticOperations(): $CancellablePromise<dto$0.DiagnosticOperation[]> {
+    return $Call.ByID(1831480386).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 export function ListRecentLogs(input: dto$0.ListDiagnosticLogsInput): $CancellablePromise<dto$0.DiagnosticLogEntry[]> {
     return $Call.ByID(1168352495, input).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType3($result);
     });
 }
 
@@ -24,5 +30,7 @@ export function ListRecentRawLogs(input: dto$0.ListDiagnosticLogsInput): $Cancel
 }
 
 // Private type creation functions
-const $$createType0 = dto$0.DiagnosticLogEntry.createFrom;
+const $$createType0 = dto$0.DiagnosticOperation.createFrom;
 const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = dto$0.DiagnosticLogEntry.createFrom;
+const $$createType3 = $Create.Array($$createType2);

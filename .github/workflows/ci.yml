@@ -74,6 +74,10 @@ jobs:
       - name: Run Go tests
         run: go test ./...
 
+      - name: Run frontend tests
+        working-directory: frontend
+        run: bun test
+
   # windows-build:
   #   name: Windows Build
   #   runs-on: windows-latest

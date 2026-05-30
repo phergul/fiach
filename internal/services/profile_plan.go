@@ -18,8 +18,12 @@ import (
 )
 
 func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileID int64) (plan dto.OperationPlan, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationBuildProfilePlan, "Profile operation plan build started",
+		slog.Int64("profile_id", profileID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Profile operation plan build failed", err)
 			err = fmt.Errorf("build profile operation plan: %w", err)
 		}
 	}()
@@ -34,7 +38,14 @@ func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileI
 		return dto.OperationPlan{}, err
 	}
 
-	return mappers.ToDTOOperationPlan(operationPlan), nil
+	plan = mappers.ToDTOOperationPlan(operationPlan)
+	diag.complete("Profile operation plan build completed",
+		slog.Bool("can_apply", plan.CanApply),
+		slog.Int("issue_count", len(plan.Issues)),
+		slog.Int("operation_count", len(plan.Operations)),
+	)
+
+	return plan, nil
 }
 
 func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileID int64, plan dto.OperationPlan) (result dto.ApplyOperationPlanResult, err error) {

@@ -22,7 +22,7 @@ const futureImportsOnlyMessage =
   'Changing this setting affects future imports only. Existing imported mod folders and mod rows will not be moved.';
 
 export const ModsSettings = () => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [globalRoot, setGlobalRoot] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,10 +46,7 @@ export const ModsSettings = () => {
         if (isMounted) {
           setLoadError(message);
         }
-        addToast({
-          message,
-          tone: 'error',
-        });
+        addErrorToast(error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -62,7 +59,7 @@ export const ModsSettings = () => {
     return () => {
       isMounted = false;
     };
-  }, [addToast]);
+  }, [addErrorToast]);
 
   const requestSetGlobalRoot = async () => {
     if (isLoading || isApplyingGlobalRoot) {
@@ -86,11 +83,7 @@ export const ModsSettings = () => {
         title: 'Set Global Mod Storage Root?',
       });
     } catch (error) {
-      const message = getErrorMessage(error);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     }
   };
 
@@ -125,11 +118,7 @@ export const ModsSettings = () => {
       });
       setPendingGlobalRootChange(null);
     } catch (error) {
-      const message = getErrorMessage(error);
-      addToast({
-        message,
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsApplyingGlobalRoot(false);
     }

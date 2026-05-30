@@ -11,6 +11,11 @@ type ExportDiagnosticLogsInput struct {
 	Entries []DiagnosticLogEntry
 }
 
+type DiagnosticOperation struct {
+	Value string
+	Label string
+}
+
 type DiagnosticLogEntry struct {
 	Timestamp string
 	Level     string

@@ -3,7 +3,12 @@ import { Braces, ClipboardCopy, Download, RotateCw, Trash2 } from 'lucide-react'
 import './LogsToolbar.scss';
 
 export type LogLevelFilter = 'all' | 'debug' | 'info' | 'warn' | 'error';
-export type LogOperationFilter = 'all' | 'scan_games' | 'import_mod' | 'apply_profile' | 'restore_vanilla';
+export type LogOperationFilter = string;
+
+export interface LogOperationOption {
+  label: string;
+  value: LogOperationFilter;
+}
 
 interface LogsToolbarProps {
   isExporting: boolean;
@@ -11,6 +16,7 @@ interface LogsToolbarProps {
   isRawJsonVisible: boolean;
   level: LogLevelFilter;
   operation: LogOperationFilter;
+  operationOptions: LogOperationOption[];
   visibleCount: number;
   onClear: () => void;
   onCopy: () => void;
@@ -29,20 +35,13 @@ const levelOptions: Array<{ label: string; value: LogLevelFilter }> = [
   { label: 'Error', value: 'error' },
 ];
 
-const operationOptions: Array<{ label: string; value: LogOperationFilter }> = [
-  { label: 'All operations', value: 'all' },
-  { label: 'Scan games', value: 'scan_games' },
-  { label: 'Import mod', value: 'import_mod' },
-  { label: 'Apply profile', value: 'apply_profile' },
-  { label: 'Restore vanilla', value: 'restore_vanilla' },
-];
-
 export const LogsToolbar = ({
   isExporting,
   isLoading,
   isRawJsonVisible,
   level,
   operation,
+  operationOptions,
   visibleCount,
   onClear,
   onCopy,

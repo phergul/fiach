@@ -30,7 +30,7 @@ const buildRestoreFailureMessage = (result: RestoreResult) => {
 };
 
 export const useAppliedProfile = (gameID: number | null) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const [appliedProfile, setAppliedProfile] = useState<AppliedProfileSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -90,15 +90,12 @@ export const useAppliedProfile = (gameID: number | null) => {
       });
       return result;
     } catch (error) {
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
       throw error;
     } finally {
       setPendingAction(null);
     }
-  }, [addToast, gameID, loadAppliedProfile]);
+  }, [addErrorToast, addToast, gameID, loadAppliedProfile]);
 
   useEffect(() => {
     let isMounted = true;

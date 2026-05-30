@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/installconfig"
@@ -16,9 +15,14 @@ import (
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
-func (s *ModService) PreValidateImport(_ context.Context, input dto.PreValidateImportInput) (err error) {
+func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidateImportInput) (err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationPreValidateMod, "Mod import validation started",
+		slog.String("source_type", string(input.SourceType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod import validation failed", err)
 			err = fmt.Errorf("pre-validate import: %w", err)
 		}
 	}()
@@ -28,12 +32,24 @@ func (s *ModService) PreValidateImport(_ context.Context, input dto.PreValidateI
 		return err
 	}
 
-	return source.Validate()
+	if err := source.Validate(); err != nil {
+		return err
+	}
+
+	diag.complete("Mod import validation completed")
+
+	return nil
 }
 
-func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
+func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationPreviewMod, "Mod import preview started",
+		slog.String("source_type", string(input.SourceType)),
+		slog.String("strategy_type", string(input.StrategyType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod import preview failed", err)
 			err = fmt.Errorf("preview import configuration: %w", err)
 		}
 	}()
@@ -68,35 +84,28 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.Pre
 		return dto.Preview{}, err
 	}
 
-	return mappers.ToDTOPreview(previewResult), nil
+	preview = mappers.ToDTOPreview(previewResult)
+	diag.complete("Mod import preview completed",
+		slog.Int("file_count", preview.TotalFileCount),
+		slog.Int("directory_count", preview.TotalDirectoryCount),
+	)
+
+	return preview, nil
 }
 
 func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (result dto.ImportModResult, err error) {
-	startedAt := time.Now()
-	defer func() {
-		if err != nil {
-			s.logger.ErrorContext(ctx, "Mod import failed",
-				slog.String("operation", diagnostics.OperationImportMod),
-				slog.String("event", diagnostics.EventFailed),
-				slog.Int64("game_id", input.GameID),
-				slog.String("source_type", string(input.SourceType)),
-				slog.String("strategy_type", string(input.StrategyType)),
-				diagnostics.PathAttr("source_path", input.SourcePath),
-				diagnostics.DurationAttr(startedAt),
-				diagnostics.ErrorAttr(err),
-			)
-			err = fmt.Errorf("import mod: %w", err)
-		}
-	}()
-
-	s.logger.InfoContext(ctx, "Mod import started",
-		slog.String("operation", diagnostics.OperationImportMod),
-		slog.String("event", diagnostics.EventStarted),
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationImportMod, "Mod import started",
 		slog.Int64("game_id", input.GameID),
 		slog.String("source_type", string(input.SourceType)),
 		slog.String("strategy_type", string(input.StrategyType)),
 		diagnostics.PathAttr("source_path", input.SourcePath),
 	)
+	defer func() {
+		if err != nil {
+			diag.fail("Mod import failed", err)
+			err = fmt.Errorf("import mod: %w", err)
+		}
+	}()
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
@@ -130,15 +139,8 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		)
 	}
 
-	s.logger.InfoContext(ctx, "Mod import completed",
-		slog.String("operation", diagnostics.OperationImportMod),
-		slog.String("event", diagnostics.EventCompleted),
-		slog.Int64("game_id", input.GameID),
+	diag.complete("Mod import completed",
 		slog.Int64("mod_id", importResult.Mod.ID),
-		slog.String("source_type", string(input.SourceType)),
-		slog.String("strategy_type", string(input.StrategyType)),
-		diagnostics.PathAttr("source_path", input.SourcePath),
-		diagnostics.DurationAttr(startedAt),
 	)
 
 	return dto.ImportModResult{

@@ -14,7 +14,6 @@ import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameModListItem } from '@components/Games/Details/Mods/GameModListItem/GameModListItem';
 import type { UseGameModsResult } from '@hooks';
-import { getErrorMessage } from '@utils';
 
 import './GameModsSection.scss';
 
@@ -52,7 +51,7 @@ export const GameModsSection = ({
   onImportArchive,
   onImportFolder,
 }: GameModsSectionProps) => {
-  const { addToast } = useToast();
+  const { addErrorToast, addToast } = useToast();
   const { isLoading, loadError, mods, refreshMods } = modManager;
   const [deleteCandidate, setDeleteCandidate] = useState<Mod | null>(null);
   const [deleteSummary, setDeleteSummary] = useState<ModDeleteSummary | null>(null);
@@ -141,10 +140,7 @@ export const GameModsSection = ({
       });
       await refreshMods();
     } catch (error) {
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsRenaming(false);
     }
@@ -160,10 +156,7 @@ export const GameModsSection = ({
       setDeleteSummary(summary);
     } catch (error) {
       setDeleteCandidate(null);
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsDeleteSummaryLoading(false);
     }
@@ -198,16 +191,10 @@ export const GameModsSection = ({
         await refreshMods();
         await onModDeleted();
       } catch (refreshError) {
-        addToast({
-          message: getErrorMessage(refreshError),
-          tone: 'error',
-        });
+        addErrorToast(refreshError);
       }
     } catch (error) {
-      addToast({
-        message: getErrorMessage(error),
-        tone: 'error',
-      });
+      addErrorToast(error);
     } finally {
       setIsDeleting(false);
     }

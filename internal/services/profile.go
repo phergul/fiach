@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
@@ -25,8 +26,12 @@ func NewProfileService(store *storage.Store, logger *slog.Logger) *ProfileServic
 }
 
 func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name string) (profile dto.ModProfile, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationCreateProfile, "Profile create started",
+		slog.Int64("game_id", gameID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Profile create failed", err)
 			err = fmt.Errorf("create profile: %w", err)
 		}
 	}()
@@ -36,7 +41,13 @@ func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name s
 		return dto.ModProfile{}, err
 	}
 
-	return mappers.ToDTOModProfile(storedProfile), nil
+	profile = mappers.ToDTOModProfile(storedProfile)
+	diag.complete("Profile create completed",
+		slog.Int64("profile_id", storedProfile.ID),
+		slog.String("profile_name", storedProfile.Name),
+	)
+
+	return profile, nil
 }
 
 func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []dto.ModProfile, err error) {
@@ -55,8 +66,12 @@ func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profil
 }
 
 func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, name string) (profile dto.ModProfile, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationRenameProfile, "Profile rename started",
+		slog.Int64("profile_id", profileID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Profile rename failed", err)
 			err = fmt.Errorf("rename profile: %w", err)
 		}
 	}()
@@ -66,12 +81,22 @@ func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, nam
 		return dto.ModProfile{}, err
 	}
 
-	return mappers.ToDTOModProfile(storedProfile), nil
+	profile = mappers.ToDTOModProfile(storedProfile)
+	diag.complete("Profile rename completed",
+		slog.Int64("game_id", storedProfile.GameID),
+		slog.String("profile_name", storedProfile.Name),
+	)
+
+	return profile, nil
 }
 
 func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationDeleteProfile, "Profile delete started",
+		slog.Int64("profile_id", profileID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Profile delete failed", err)
 			err = fmt.Errorf("delete profile: %w", err)
 		}
 	}()
@@ -81,6 +106,10 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 		return err
 	}
 	if found {
+		diag.attrs = append(diag.attrs,
+			slog.Int64("game_id", profile.GameID),
+			slog.String("profile_name", profile.Name),
+		)
 		appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID)
 		if err != nil {
 			return err
@@ -90,7 +119,13 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 		}
 	}
 
-	return s.store.DeleteProfile(ctx, profileID)
+	if err := s.store.DeleteProfile(ctx, profileID); err != nil {
+		return err
+	}
+
+	diag.complete("Profile delete completed")
+
+	return nil
 }
 
 func (s *ProfileService) GetAppliedProfileSummary(ctx context.Context, gameID int64) (summary *dto.AppliedProfileSummary, err error) {

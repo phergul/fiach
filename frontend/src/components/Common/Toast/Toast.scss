@@ -13,7 +13,13 @@
 }
 
 .toast-message {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $spacing-sm;
+  align-items: start;
+  max-height: $toast-max-height;
   padding: $spacing-sm $spacing-md;
+  overflow: auto;
   color: $color-text-primary;
   background: $color-surface-elevated;
   border: $app-border-width solid $color-border;
@@ -21,6 +27,57 @@
   box-shadow: $shadow-subtle;
   font-size: $font-size-sm;
   line-height: $line-height-base;
+}
+
+.toast-message-text {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast-message-controls {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.toast-message-action {
+  padding: $spacing-xs $spacing-sm;
+  color: $color-text-primary;
+  background: transparent;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-sm;
+  font: inherit;
+  line-height: $line-height-heading;
+  cursor: pointer;
+}
+
+.toast-message-action:hover {
+  border-color: $color-border-strong;
+}
+
+.toast-message-close {
+  display: inline-flex;
+  width: $toast-close-size;
+  height: $toast-close-size;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: $color-text-subtle;
+  background: transparent;
+  border: 0;
+  border-radius: $radius-sm;
+  cursor: pointer;
+}
+
+.toast-message-close:hover {
+  color: $color-text-primary;
+  background: rgb($color-background-rgb / 24%);
+}
+
+.toast-message-close-icon {
+  width: $toast-close-icon-size;
+  height: $toast-close-icon-size;
 }
 
 .toast-message-success {

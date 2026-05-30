@@ -303,6 +303,31 @@ export class DiagnosticLogEntry {
     }
 }
 
+export class DiagnosticOperation {
+    "Value": string;
+    "Label": string;
+
+    /** Creates a new DiagnosticOperation instance. */
+    constructor($$source: Partial<DiagnosticOperation> = {}) {
+        if (!("Value" in $$source)) {
+            this["Value"] = "";
+        }
+        if (!("Label" in $$source)) {
+            this["Label"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DiagnosticOperation instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DiagnosticOperation {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DiagnosticOperation($$parsedSource as Partial<DiagnosticOperation>);
+    }
+}
+
 export class ExportDiagnosticLogsInput {
     "Path": string;
     "Entries": DiagnosticLogEntry[];
