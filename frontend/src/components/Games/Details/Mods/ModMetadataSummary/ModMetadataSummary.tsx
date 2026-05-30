@@ -1,5 +1,5 @@
-import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ModMetadataSummary.scss';
 

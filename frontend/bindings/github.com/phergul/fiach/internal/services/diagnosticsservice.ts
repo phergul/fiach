@@ -10,17 +10,17 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function ExportLogs(input: dto$0.ExportDiagnosticLogsInput): $CancellablePromise<void> {
-    return $Call.ByID(2264324867, input);
+    return $Call.ByID(2191609694, input);
 }
 
 export function ListRecentLogs(input: dto$0.ListDiagnosticLogsInput): $CancellablePromise<dto$0.DiagnosticLogEntry[]> {
-    return $Call.ByID(702039462, input).then(($result: any) => {
+    return $Call.ByID(1168352495, input).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
 export function ListRecentRawLogs(input: dto$0.ListDiagnosticLogsInput): $CancellablePromise<string> {
-    return $Call.ByID(693124794, input);
+    return $Call.ByID(4026490937, input);
 }
 
 // Private type creation functions

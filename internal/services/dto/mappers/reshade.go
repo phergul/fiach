@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/reshade"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/reshade"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func ToDTOReShadeTargets(targets []reshade.Target) []dto.ReShadeTarget {

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus, RotateCcw } from 'lucide-react';
 
-import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { GameDetailsActionsMenu } from '@components/Games/Details/GameDetailsActionsMenu/GameDetailsActionsMenu';

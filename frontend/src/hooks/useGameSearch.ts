@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 export const useGameSearch = (games: StoredGame[]) => {
   const [searchQuery, setSearchQuery] = useState('');

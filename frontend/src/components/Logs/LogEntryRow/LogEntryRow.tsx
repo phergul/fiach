@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-import type { DiagnosticLogEntry } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { DiagnosticLogEntry } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './LogEntryRow.scss';
 

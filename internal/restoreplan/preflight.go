@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/fileops"
+	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 func preflightOperations(operations []RestoreOperation, manifest appliedstate.ManifestDocument, context resolvedContext) map[int]error {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/fileops"
+	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 func TestExecuteRestoresFilesRemovesSafeDirectoriesAndDeletesBackups(t *testing.T) {

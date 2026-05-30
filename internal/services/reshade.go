@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/reshade"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/reshade"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 type ReshadeService struct {

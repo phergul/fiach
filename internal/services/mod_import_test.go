@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func importFolderMod(ctx context.Context, service *ModService, gameID int64, name string, sourcePath string) (dto.Mod, error) {

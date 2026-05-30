@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveAppliedProfileStateInput) (state dbtypes.AppliedProfileState, err error) {

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
+	"github.com/phergul/fiach/internal/appliedstate"
 )
 
 func buildOperations(manifest appliedstate.ManifestDocument) []RestoreOperation {

@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, ScrollText, Settings, Users } from 'lucide-react';
 
-import { OpenLogsWindow } from '@bindings/github.com/phergul/mod-manager/internal/services/windowservice';
+import { OpenLogsWindow } from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
 
 import './Navigation.scss';
 

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func TestReshadeServiceDetectGameReShadeReturnsUnsupportedWithoutStorageAccess(t *testing.T) {

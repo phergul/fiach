@@ -1,6 +1,6 @@
 import { Check, Pencil, Trash2, X } from 'lucide-react';
 
-import type { ModProfile } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { ModProfile } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './GameProfilesListItem.scss';
 

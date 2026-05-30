@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func ToDTOStrategyType(strategyType installconfig.StrategyType) dto.StrategyType {

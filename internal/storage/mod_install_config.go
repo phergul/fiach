@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *Store) CreateOrReplaceModInstallConfig(ctx context.Context, input dbtypes.CreateModInstallConfigInput) (config dbtypes.ModInstallConfig, err error) {

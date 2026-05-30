@@ -10,13 +10,13 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function GetStoredGames(): $CancellablePromise<dto$0.StoredGame[]> {
-    return $Call.ByID(3350881315).then(($result: any) => {
+    return $Call.ByID(3698982394).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
 export function ScanAndSaveGames(): $CancellablePromise<dto$0.SourceScanResult> {
-    return $Call.ByID(3143372107).then(($result: any) => {
+    return $Call.ByID(3535213326).then(($result: any) => {
         return $$createType2($result);
     });
 }

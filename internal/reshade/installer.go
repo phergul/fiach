@@ -96,7 +96,7 @@ func normalizeInstallerOptions(opts InstallerOptions) InstallerOptions {
 }
 
 func DefaultInstallerCacheDir() string {
-	return filepath.Join(application.Path(application.PathCacheHome), "mod-manager", "reshade", "installers")
+	return filepath.Join(application.Path(application.PathCacheHome), "fiach", "reshade", "installers")
 }
 
 func OpenInstaller(ctx context.Context, path string) error {

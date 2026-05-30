@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/fileops"
+	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 func Execute(manifest appliedstate.ManifestDocument, context Context) (result RestoreResult, err error) {
@@ -103,7 +103,7 @@ func restoreReplacedFile(targetPath string, backupPath string) (string, error) {
 		TargetPath: targetPath,
 		Mode:       backupInfo.Mode().Perm(),
 		Replace:    true,
-		TempPrefix: ".mod-manager-restore-*",
+		TempPrefix: ".fiach-restore-*",
 		OpenLabel:  "backup file",
 	}); err != nil {
 		return "", err

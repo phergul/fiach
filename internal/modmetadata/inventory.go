@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/phergul/mod-manager/internal/fileignore"
+	"github.com/phergul/fiach/internal/fileignore"
 )
 
 type InventoryParser struct{}

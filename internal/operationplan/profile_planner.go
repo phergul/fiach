@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 type ProfilePlanMod struct {

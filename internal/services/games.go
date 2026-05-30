@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/gamesource"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/gamesource"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 type GamesService struct {

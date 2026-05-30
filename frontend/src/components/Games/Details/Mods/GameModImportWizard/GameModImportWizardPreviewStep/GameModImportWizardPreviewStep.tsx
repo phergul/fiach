@@ -1,4 +1,4 @@
-import type { Preview, StrategyDescriptor } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { Preview, StrategyDescriptor } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { formatModMetadataBytes } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 
 import './GameModImportWizardPreviewStep.scss';

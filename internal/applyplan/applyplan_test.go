@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/fiach/internal/operationplan"
 )
 
 func TestExecuteAppliesDirectoriesBeforeDependentFiles(t *testing.T) {

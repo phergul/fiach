@@ -10,33 +10,33 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function EnsureGameModStoragePath(gameID: number): $CancellablePromise<string> {
-    return $Call.ByID(606713683, gameID);
+    return $Call.ByID(2284468152, gameID);
 }
 
 export function GetGlobalModStorageRoot(): $CancellablePromise<string> {
-    return $Call.ByID(956269605);
+    return $Call.ByID(502792444);
 }
 
 export function GetThemeID(): $CancellablePromise<string> {
-    return $Call.ByID(79896145);
+    return $Call.ByID(3877864122);
 }
 
 export function ResolveGameModStoragePath(gameID: number): $CancellablePromise<string> {
-    return $Call.ByID(2190485991, gameID);
+    return $Call.ByID(3472233806, gameID);
 }
 
 export function SetGameModStoragePathOverride(gameID: number, path: string): $CancellablePromise<dto$0.StoredGame> {
-    return $Call.ByID(2381929503, gameID, path).then(($result: any) => {
+    return $Call.ByID(1165004158, gameID, path).then(($result: any) => {
         return $$createType0($result);
     });
 }
 
 export function SetGlobalModStorageRoot(path: string): $CancellablePromise<void> {
-    return $Call.ByID(3589951673, path);
+    return $Call.ByID(4287125056, path);
 }
 
 export function SetThemeID(themeID: string): $CancellablePromise<void> {
-    return $Call.ByID(268691973, themeID);
+    return $Call.ByID(2924940462, themeID);
 }
 
 // Private type creation functions

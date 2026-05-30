@@ -10,9 +10,9 @@ import (
 func TestDataSourceNameUsesWindowsFileURI(t *testing.T) {
 	t.Parallel()
 
-	dsn := dataSourceName(`C:\Users\Fergal\AppData\Local\mod-manager\mod-manager.db`)
+	dsn := dataSourceName(`C:\Users\Fergal\AppData\Local\fiach\fiach.db`)
 
-	if !strings.HasPrefix(dsn, "file:///C:/Users/Fergal/AppData/Local/mod-manager/mod-manager.db?") {
+	if !strings.HasPrefix(dsn, "file:///C:/Users/Fergal/AppData/Local/fiach/fiach.db?") {
 		t.Fatalf("dataSourceName() = %q, want file URI with triple slash and slash-separated path", dsn)
 	}
 	if !strings.Contains(dsn, "_pragma=busy_timeout%3D5000") {

@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/phergul/mod-manager/internal/fileops"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 const (
-	DefaultLogFileName = "mod-manager.jsonl"
+	DefaultLogFileName = "fiach.jsonl"
 	DefaultMaxFileSize = 5 * 1024 * 1024
 	DefaultMaxFiles    = 3
 

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (profile dbtypes.ModProfile, err error) {

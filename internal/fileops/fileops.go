@@ -36,7 +36,7 @@ func CopyFileAtomic(options AtomicCopyOptions) error {
 	targetDirectory := filepath.Dir(options.TargetPath)
 	tempPrefix := options.TempPrefix
 	if tempPrefix == "" {
-		tempPrefix = ".mod-manager-*"
+		tempPrefix = ".fiach-*"
 	}
 	tempFile, err := os.CreateTemp(targetDirectory, tempPrefix)
 	if err != nil {

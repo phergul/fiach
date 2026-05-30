@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/restoreplan"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/restoreplan"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func ToDTORestoreResult(result restoreplan.RestoreResult) dto.RestoreResult {

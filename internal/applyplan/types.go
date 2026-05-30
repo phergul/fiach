@@ -1,7 +1,7 @@
 package applyplan
 
 import (
-	"github.com/phergul/mod-manager/internal/fileops"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 type Context struct {

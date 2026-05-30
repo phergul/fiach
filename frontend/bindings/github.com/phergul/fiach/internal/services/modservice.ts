@@ -10,49 +10,49 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function DeleteMod(modID: number): $CancellablePromise<void> {
-    return $Call.ByID(2044542851, modID);
+    return $Call.ByID(2907973472, modID);
 }
 
 export function GetGameManagedModStorageUsage(gameID: number): $CancellablePromise<number> {
-    return $Call.ByID(1476392311, gameID);
+    return $Call.ByID(316010192, gameID);
 }
 
 export function GetModDeleteSummary(modID: number): $CancellablePromise<dto$0.ModDeleteSummary> {
-    return $Call.ByID(387841027, modID).then(($result: any) => {
+    return $Call.ByID(794073036, modID).then(($result: any) => {
         return $$createType0($result);
     });
 }
 
 export function ImportMod(input: dto$0.ImportModInput): $CancellablePromise<dto$0.ImportModResult> {
-    return $Call.ByID(2313069445, input).then(($result: any) => {
+    return $Call.ByID(1549763346, input).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
 export function ListImportStrategies(): $CancellablePromise<dto$0.StrategyDescriptor[]> {
-    return $Call.ByID(1013940886).then(($result: any) => {
+    return $Call.ByID(2113312407).then(($result: any) => {
         return $$createType3($result);
     });
 }
 
 export function ListMods(gameID: number): $CancellablePromise<dto$0.Mod[]> {
-    return $Call.ByID(2000775995, gameID).then(($result: any) => {
+    return $Call.ByID(3338520162, gameID).then(($result: any) => {
         return $$createType5($result);
     });
 }
 
 export function PreValidateImport(input: dto$0.PreValidateImportInput): $CancellablePromise<void> {
-    return $Call.ByID(472290668, input);
+    return $Call.ByID(3054738227, input);
 }
 
 export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurationInput): $CancellablePromise<dto$0.Preview> {
-    return $Call.ByID(1144919971, input).then(($result: any) => {
+    return $Call.ByID(3729111778, input).then(($result: any) => {
         return $$createType6($result);
     });
 }
 
 export function RenameMod(modID: number, name: string): $CancellablePromise<dto$0.Mod> {
-    return $Call.ByID(814805400, modID, name).then(($result: any) => {
+    return $Call.ByID(4073359283, modID, name).then(($result: any) => {
         return $$createType4($result);
     });
 }

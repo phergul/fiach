@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/fileops"
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/operationplan"
 )
 
 func Execute(plan operationplan.OperationPlan, context Context) (result operationplan.ApplyOperationPlanResult, err error) {

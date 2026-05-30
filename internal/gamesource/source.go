@@ -3,7 +3,7 @@ package gamesource
 import (
 	"context"
 
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type GameSource interface {

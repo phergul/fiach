@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	defaultAppName = "mod-manager"
-	databaseName   = "mod-manager.db"
+	defaultAppName = "fiach"
+	databaseName   = "fiach.db"
 
 	sqliteDriverName = "sqlite"
 	gooseDialect     = "sqlite3"

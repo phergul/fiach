@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *Store) SaveSourceScan(ctx context.Context, source string, games []dbtypes.SourceGame) (result dbtypes.SourceScanResult, err error) {

@@ -1,6 +1,6 @@
 package applyplan
 
-import "github.com/phergul/mod-manager/internal/operationplan"
+import "github.com/phergul/fiach/internal/operationplan"
 
 func newFailedResult(index int, operation operationplan.Operation, err error) operationplan.ApplyOperationResult {
 	errorMessage := err.Error()

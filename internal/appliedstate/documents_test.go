@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/fiach/internal/operationplan"
 )
 
 func TestEncodeManifestUsesVersionedStableJSONShape(t *testing.T) {

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/steam"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/steam"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 func TestSteamSourceLocatesManualSteamPath(t *testing.T) {

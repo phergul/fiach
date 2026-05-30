@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/installconfig"
+	"github.com/phergul/fiach/internal/installconfig"
 )
 
 func TestBuildOperationPlanCreatesDirectoriesAndFilesInStableOrder(t *testing.T) {

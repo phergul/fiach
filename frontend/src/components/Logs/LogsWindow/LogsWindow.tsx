@@ -6,12 +6,12 @@ import {
   ExportLogs,
   ListRecentLogs,
   ListRecentRawLogs,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/diagnosticsservice';
+} from '@bindings/github.com/phergul/fiach/internal/services/diagnosticsservice';
 import {
   DiagnosticLogEntry,
   ExportDiagnosticLogsInput,
   ListDiagnosticLogsInput,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { LogsTable } from '@components/Logs/LogsTable/LogsTable';
 import { LogsToolbar, LogLevelFilter, LogOperationFilter } from '@components/Logs/LogsToolbar/LogsToolbar';
@@ -168,7 +168,7 @@ export const LogsWindow = () => {
     const path = await Dialogs.SaveFile({
       ButtonText: 'Export',
       CanCreateDirectories: true,
-      Filename: 'mod-manager-logs.txt',
+      Filename: 'fiach-logs.txt',
       Filters: [
         {
           DisplayName: 'Text Files',

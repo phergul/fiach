@@ -1,4 +1,4 @@
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { GameCard } from '@components/Games/Grid/GameCard/GameCard';
 
 import './GameGrid.scss';

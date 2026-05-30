@@ -3,7 +3,7 @@ import { CheckCircle2, CircleSlash2, Database, Package, Sparkles, Users } from '
 import {
   ReShadeDetectionStatus,
   type StoredGame,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import type { UseGameReShadeDetectionResult } from '@hooks';
 
 import './GameDetailsMetadata.scss';

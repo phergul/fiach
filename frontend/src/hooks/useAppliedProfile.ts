@@ -3,9 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   GetAppliedProfileSummary,
   RestoreVanillaState,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
-import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import type { RestoreResult } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
+import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { RestoreResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

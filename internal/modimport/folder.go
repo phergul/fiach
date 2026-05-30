@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/phergul/mod-manager/internal/fileignore"
-	"github.com/phergul/mod-manager/internal/fileops"
-	"github.com/phergul/mod-manager/internal/storage"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type FolderSource struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
 )
 
 func (s *ProfileService) ListProfileMods(ctx context.Context, profileID int64) (mods []dto.ProfileMod, err error) {

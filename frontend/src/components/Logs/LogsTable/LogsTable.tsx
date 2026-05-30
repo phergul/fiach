@@ -1,4 +1,4 @@
-import type { DiagnosticLogEntry } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { DiagnosticLogEntry } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { LogEntryRow } from '@components/Logs/LogEntryRow/LogEntryRow';
 

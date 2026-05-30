@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type ProfileService struct {

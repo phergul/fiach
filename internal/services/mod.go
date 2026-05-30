@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/fileignore"
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/modmetadata"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/modmetadata"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 type ModService struct {

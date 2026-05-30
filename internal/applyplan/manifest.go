@@ -3,8 +3,8 @@ package applyplan
 import (
 	"fmt"
 
-	"github.com/phergul/mod-manager/internal/fileops"
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/operationplan"
 )
 
 func appendManifestEntry(index int, operation operationplan.Operation, outcome operationOutcome, manifest *operationplan.AppliedOperationManifest) error {

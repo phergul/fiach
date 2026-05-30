@@ -10,75 +10,75 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<dto$0.ProfileMod> {
-    return $Call.ByID(2973118192, profileID, modID).then(($result: any) => {
+    return $Call.ByID(3187976695, profileID, modID).then(($result: any) => {
         return $$createType0($result);
     });
 }
 
 export function ApplyProfileOperationPlan(profileID: number, plan: dto$0.OperationPlan): $CancellablePromise<dto$0.ApplyOperationPlanResult> {
-    return $Call.ByID(3906686572, profileID, plan).then(($result: any) => {
+    return $Call.ByID(1247512911, profileID, plan).then(($result: any) => {
         return $$createType1($result);
     });
 }
 
 export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<dto$0.OperationPlan> {
-    return $Call.ByID(1803445544, profileID).then(($result: any) => {
+    return $Call.ByID(1883216351, profileID).then(($result: any) => {
         return $$createType2($result);
     });
 }
 
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<dto$0.ModProfile> {
-    return $Call.ByID(4253656700, gameID, name).then(($result: any) => {
+    return $Call.ByID(3434881059, gameID, name).then(($result: any) => {
         return $$createType3($result);
     });
 }
 
 export function DeleteProfile(profileID: number): $CancellablePromise<void> {
-    return $Call.ByID(3036503493, profileID);
+    return $Call.ByID(1258387998, profileID);
 }
 
 export function GetAppliedProfileSummary(gameID: number): $CancellablePromise<dto$0.AppliedProfileSummary | null> {
-    return $Call.ByID(3870728601, gameID).then(($result: any) => {
+    return $Call.ByID(3862387448, gameID).then(($result: any) => {
         return $$createType5($result);
     });
 }
 
 export function ListProfileMods(profileID: number): $CancellablePromise<dto$0.ProfileMod[]> {
-    return $Call.ByID(1055361377, profileID).then(($result: any) => {
+    return $Call.ByID(2451536030, profileID).then(($result: any) => {
         return $$createType6($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<dto$0.ModProfile[]> {
-    return $Call.ByID(3489323205, gameID).then(($result: any) => {
+    return $Call.ByID(2077593160, gameID).then(($result: any) => {
         return $$createType7($result);
     });
 }
 
 export function RemoveModFromProfile(profileID: number, modID: number): $CancellablePromise<void> {
-    return $Call.ByID(666984022, profileID, modID);
+    return $Call.ByID(3265852827, profileID, modID);
 }
 
 export function RenameProfile(profileID: number, name: string): $CancellablePromise<dto$0.ModProfile> {
-    return $Call.ByID(1972408074, profileID, name).then(($result: any) => {
+    return $Call.ByID(4188934241, profileID, name).then(($result: any) => {
         return $$createType3($result);
     });
 }
 
 export function ReorderProfileMods(profileID: number, modIDs: number[]): $CancellablePromise<dto$0.ProfileMod[]> {
-    return $Call.ByID(3311644578, profileID, modIDs).then(($result: any) => {
+    return $Call.ByID(879417303, profileID, modIDs).then(($result: any) => {
         return $$createType6($result);
     });
 }
 
 export function RestoreVanillaState(gameID: number): $CancellablePromise<dto$0.RestoreResult> {
-    return $Call.ByID(969457823, gameID).then(($result: any) => {
+    return $Call.ByID(1179292680, gameID).then(($result: any) => {
         return $$createType8($result);
     });
 }
 
 export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<dto$0.ProfileMod> {
-    return $Call.ByID(734528755, profileID, modID, enabled).then(($result: any) => {
+    return $Call.ByID(139934462, profileID, modID, enabled).then(($result: any) => {
         return $$createType0($result);
     });
 }

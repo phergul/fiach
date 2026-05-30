@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   GetGlobalModStorageRoot,
   SetGlobalModStorageRoot,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
+} from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
 import { SettingsRow } from '@components/Settings/Common/SettingsRow/SettingsRow';

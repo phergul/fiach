@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/operationplan"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/operationplan"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func ToDTOOperationPlan(plan operationplan.OperationPlan) dto.OperationPlan {

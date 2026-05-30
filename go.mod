@@ -1,4 +1,4 @@
-module github.com/phergul/mod-manager
+module github.com/phergul/fiach
 
 go 1.25.7
 

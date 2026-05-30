@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { GetStoredGames, ScanAndSaveGames } from '@bindings/github.com/phergul/mod-manager/internal/services/gamesservice';
+import { GetStoredGames, ScanAndSaveGames } from '@bindings/github.com/phergul/fiach/internal/services/gamesservice';
 import type {
   SourceScanResult,
   StoredGame,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

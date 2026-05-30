@@ -6,8 +6,8 @@ import {
   DeleteMod,
   GetModDeleteSummary,
   RenameMod,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
-import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';

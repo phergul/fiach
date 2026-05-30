@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-import { DownloadAndOpenReShadeInstaller } from '@bindings/github.com/phergul/mod-manager/internal/services/reshadeservice';
+import { DownloadAndOpenReShadeInstaller } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import {
   ReShadeDetectionStatus,
   type StoredGame,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {

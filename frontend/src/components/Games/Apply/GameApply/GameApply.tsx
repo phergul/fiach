@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
-import { ApplyProfileOperationPlan } from '@bindings/github.com/phergul/mod-manager/internal/services/profileservice';
+import { ApplyProfileOperationPlan } from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
 import {
   OperationType,
   PlanIssueSeverity,
   type ApplyOperationPlanResult,
   type OperationPlan,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';

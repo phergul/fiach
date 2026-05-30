@@ -1,6 +1,6 @@
 package restoreplan
 
-import "github.com/phergul/mod-manager/internal/fileops"
+import "github.com/phergul/fiach/internal/fileops"
 
 type RestoreOperationType string
 

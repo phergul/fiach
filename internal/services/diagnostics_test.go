@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/gamesource"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/gamesource"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func TestGamesServiceScanWritesDiagnostics(t *testing.T) {

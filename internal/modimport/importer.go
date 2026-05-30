@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/modmetadata"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/modmetadata"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type Source interface {

@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/fileignore"
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/installpath"
+	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/installpath"
 )
 
 const backupRootDirName = "operation-backups"

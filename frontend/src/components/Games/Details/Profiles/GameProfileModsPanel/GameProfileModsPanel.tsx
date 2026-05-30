@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 
-import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
 import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/GameProfileAssignedModsList/GameProfileAssignedModsList';

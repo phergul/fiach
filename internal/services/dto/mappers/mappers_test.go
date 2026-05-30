@@ -3,10 +3,10 @@ package mappers
 import (
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/operationplan"
-	"github.com/phergul/mod-manager/internal/restoreplan"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/operationplan"
+	"github.com/phergul/fiach/internal/restoreplan"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestOperationPlanDTORoundTrip(t *testing.T) {

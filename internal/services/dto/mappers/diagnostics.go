@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/services/dto"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/services/dto"
 )
 
 func ToDTODiagnosticLogEntries(entries []diagnostics.LogEntry) []dto.DiagnosticLogEntry {

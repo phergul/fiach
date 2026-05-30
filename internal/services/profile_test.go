@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/storage"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestProfileServiceCreatesAndListsProfiles(t *testing.T) {

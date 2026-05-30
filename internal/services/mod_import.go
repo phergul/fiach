@@ -8,12 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/installconfig"
-	"github.com/phergul/mod-manager/internal/modimport"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/installconfig"
+	"github.com/phergul/fiach/internal/modimport"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *ModService) PreValidateImport(_ context.Context, input dto.PreValidateImportInput) (err error) {
@@ -46,7 +46,7 @@ func (s *ModService) PreviewImportConfiguration(_ context.Context, input dto.Pre
 		return dto.Preview{}, err
 	}
 
-	tempPath, err := os.MkdirTemp("", "mod-manager-import-preview-*")
+	tempPath, err := os.MkdirTemp("", "fiach-import-preview-*")
 	if err != nil {
 		return dto.Preview{}, fmt.Errorf("create import preview folder: %w", err)
 	}

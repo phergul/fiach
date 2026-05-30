@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/steam"
+	"github.com/phergul/fiach/internal/steam"
 )
 
 const (

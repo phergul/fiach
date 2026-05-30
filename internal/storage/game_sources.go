@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func getStoredGameBySource(ctx context.Context, tx *sqlx.Tx, source string, sourceID string) (dbtypes.StoredGame, bool, error) {

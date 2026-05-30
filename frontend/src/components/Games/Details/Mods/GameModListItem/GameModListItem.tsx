@@ -1,6 +1,6 @@
 import { Check, Pencil, Trash2, X } from 'lucide-react';
 
-import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   buildModMetadataSummaryItems,
   ModMetadataSummary,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { SetGameModStoragePathOverride } from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import { SetGameModStoragePathOverride } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
+import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage, openDirectory } from '@utils';
 

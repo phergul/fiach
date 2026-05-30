@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestCreateProfileForGame(t *testing.T) {

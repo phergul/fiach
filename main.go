@@ -8,11 +8,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/gamesource"
-	"github.com/phergul/mod-manager/internal/services"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/storage"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/gamesource"
+	"github.com/phergul/fiach/internal/services"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -21,7 +21,7 @@ var assets embed.FS
 
 func main() {
 	diagnosticsManager, err := diagnostics.NewManager(diagnostics.Options{
-		LogPath: filepath.Join(application.Path(application.PathDataHome), "mod-manager", "logs", diagnostics.DefaultLogFileName),
+		LogPath: filepath.Join(application.Path(application.PathDataHome), "fiach", "logs", diagnostics.DefaultLogFileName),
 	})
 	if err != nil {
 		slog.Error("Failed to initialize diagnostics", "error", err)
@@ -48,8 +48,8 @@ func main() {
 
 	var app *application.App
 	app = application.New(application.Options{
-		Name:        "mod-manager",
-		Description: "General Mod Manager",
+		Name:        "fiach",
+		Description: "A general-purpose mod manager for any game",
 		Services: []application.Service{
 			application.NewService(services.NewModService(store, logger)),
 			application.NewService(services.NewProfileService(store, logger)),
@@ -81,7 +81,7 @@ func main() {
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:  "main",
-		Title: "Manager",
+		Title: "Fiach",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,

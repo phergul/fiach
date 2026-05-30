@@ -1,6 +1,6 @@
 import { FolderCog, RotateCcw, Sparkles } from 'lucide-react';
 
-import type { StoredGame } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 
 import './GameDetailsActionsMenu.scss';

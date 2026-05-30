@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import type { StrategyType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import { ImportMod, PreValidateImport } from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
-import { ModSourceType } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
-import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/mod-manager/internal/services/settingsservice';
+import type { StrategyType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { ImportMod, PreValidateImport } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage, openDirectory, openZipArchive } from '@utils';
 

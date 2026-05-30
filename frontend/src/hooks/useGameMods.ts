@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   GetGameManagedModStorageUsage,
   ListMods,
-} from '@bindings/github.com/phergul/mod-manager/internal/services/modservice';
-import type { Mod } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+} from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
 export const useGameMods = (gameID: number | null) => {

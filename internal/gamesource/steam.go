@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/phergul/mod-manager/internal/steam"
-	"github.com/phergul/mod-manager/internal/storage"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/steam"
+	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 const SteamInstallPathSettingKey = "steam.install_path"

@@ -1,6 +1,6 @@
 import { CircleAlert } from 'lucide-react';
 
-import type { AppliedProfileSummary } from '@bindings/github.com/phergul/mod-manager/internal/services/dto/models';
+import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './GameProfilesAppliedSummary.scss';
 

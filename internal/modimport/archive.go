@@ -12,9 +12,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/fileignore"
-	"github.com/phergul/mod-manager/internal/storage"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 var windowsVolumePath = regexp.MustCompile(`^[A-Za-z]:`)

@@ -10,13 +10,13 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as dto$0 from "./dto/models.js";
 
 export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReShadeDetectionResult> {
-    return $Call.ByID(3513278329, gameID).then(($result: any) => {
+    return $Call.ByID(1634432142, gameID).then(($result: any) => {
         return $$createType0($result);
     });
 }
 
 export function DownloadAndOpenReShadeInstaller(): $CancellablePromise<dto$0.ReShadeInstallerLaunchResult> {
-    return $Call.ByID(582445083).then(($result: any) => {
+    return $Call.ByID(2558615308).then(($result: any) => {
         return $$createType1($result);
     });
 }

@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func ToDTOStoredGame(game dbtypes.StoredGame) dto.StoredGame {

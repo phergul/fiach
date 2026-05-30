@@ -7,14 +7,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/phergul/mod-manager/internal/appliedstate"
-	"github.com/phergul/mod-manager/internal/applyplan"
-	"github.com/phergul/mod-manager/internal/diagnostics"
-	"github.com/phergul/mod-manager/internal/operationplan"
-	"github.com/phergul/mod-manager/internal/restoreplan"
-	"github.com/phergul/mod-manager/internal/services/dto"
-	"github.com/phergul/mod-manager/internal/services/dto/mappers"
-	"github.com/phergul/mod-manager/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/appliedstate"
+	"github.com/phergul/fiach/internal/applyplan"
+	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/operationplan"
+	"github.com/phergul/fiach/internal/restoreplan"
+	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func (s *ProfileService) BuildProfileOperationPlan(ctx context.Context, profileID int64) (plan dto.OperationPlan, err error) {

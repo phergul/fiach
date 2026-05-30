@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/phergul/mod-manager/internal/operationplan"
+	"github.com/phergul/fiach/internal/operationplan"
 )
 
 const DocumentVersion = 1
