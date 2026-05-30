@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
-import { Archive, ArrowLeft, FolderOpen, Menu, Plus, RotateCcw } from 'lucide-react';
+import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
@@ -133,21 +133,6 @@ export const GameDetails = () => {
           Back
         </Link>
         <div className="game-details-toolbar-actions">
-          <button
-            className="game-details-toolbar-button game-details-restore-vanilla"
-            disabled={!canRestoreVanilla}
-            onClick={openRestoreConfirm}
-            title={
-              appliedProfileManager.appliedProfile === null
-                ? 'No profile is applied.'
-                : `Restore vanilla from ${appliedProfileManager.appliedProfile.ProfileName}.`
-            }
-            type="button"
-          >
-            <RotateCcw className="game-details-toolbar-icon" aria-hidden="true" />
-            <span>Restore Vanilla</span>
-          </button>
-
           <div className="game-details-menu-anchor">
             <button
               className="game-details-toolbar-button game-details-import-mods"
