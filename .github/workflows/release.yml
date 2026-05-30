@@ -68,8 +68,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/windows | Out-Null
-          Copy-Item "bin/${{ env.APP_NAME }}.exe" artifacts/windows/
-          Copy-Item "bin/${{ env.APP_NAME }}-*-installer.exe" artifacts/windows/
+          Copy-Item "bin/${{ env.APP_NAME }}.exe" "artifacts/windows/${{ env.APP_NAME }}-windows-x64-portable.exe"
+          Copy-Item "bin/${{ env.APP_NAME }}-amd64-installer.exe" "artifacts/windows/${{ env.APP_NAME }}-windows-x64-installer.exe"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -160,8 +160,10 @@ jobs:
       - name: Collect Linux artifacts
         run: |
           mkdir -p artifacts/linux
-          cp "bin/${APP_NAME}" artifacts/linux/
-          find bin -maxdepth 1 -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' \) -exec cp {} artifacts/linux/ \;
+          cp "bin/${APP_NAME}" "artifacts/linux/${APP_NAME}-linux-x64"
+          cp "bin/${APP_NAME}.AppImage" "artifacts/linux/${APP_NAME}-linux-x64.AppImage"
+          cp "bin/${APP_NAME}.deb" "artifacts/linux/${APP_NAME}-linux-amd64.deb"
+          cp "bin/${APP_NAME}.rpm" "artifacts/linux/${APP_NAME}-linux-x86_64.rpm"
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
