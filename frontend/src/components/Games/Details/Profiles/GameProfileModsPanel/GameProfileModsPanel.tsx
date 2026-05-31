@@ -127,6 +127,7 @@ export const GameProfileModsPanel = ({
             isBusy={isBusy}
             mods={profileMods}
             onMoveMod={handleMoveProfileMod}
+            onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
             onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
             onSetModEnabled={(modID, enabled) => onSetProfileModEnabled(profile.ID, modID, enabled)}
           />

@@ -1,4 +1,9 @@
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import type { CSSProperties } from 'react';
+
+import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
+
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import type { ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
@@ -26,11 +31,42 @@ export const GameProfileAssignedModRow = ({
   onSetModEnabled,
 }: GameProfileAssignedModRowProps) => {
   const displayLoadOrder = mod.LoadOrder + 1;
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mod.ModID, disabled: isBusy });
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
-    <li className="game-profile-assigned-mod-row">
+    <li
+      ref={setNodeRef}
+      className={isDragging
+        ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging'
+        : 'game-profile-assigned-mod-row'}
+      style={style}
+    >
       <div className="game-profile-assigned-mod-row-order" aria-label={`Load order ${displayLoadOrder}`}>
         {displayLoadOrder}
+      </div>
+
+      <div className="game-profile-assigned-mod-row-handle">
+        <button
+          aria-label={`Drag ${mod.Name}`}
+          className="game-profile-assigned-mod-row-handle-button"
+          disabled={isBusy}
+          type="button"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="game-profile-assigned-mod-row-handle-icon" aria-hidden="true" />
+        </button>
       </div>
 
       <div className="game-profile-assigned-mod-row-main">
