@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { RotateCcw, X } from 'lucide-react';
@@ -123,21 +123,6 @@ export const ModMetadataSidePanel = ({
     setFieldErrors({});
   }, [metadata, mod]);
 
-  const summary = useMemo(() => {
-    if (metadata === null) {
-      return 'Metadata has not loaded for this mod.';
-    }
-
-    const editedCount = [
-      metadata.Version.UserSet,
-      metadata.Author.UserSet,
-      metadata.Description.UserSet,
-      metadata.SourceURL.UserSet,
-    ].filter(Boolean).length;
-
-    return editedCount === 0 ? 'Using detected metadata.' : `${editedCount} edited metadata ${editedCount === 1 ? 'field' : 'fields'}.`;
-  }, [metadata]);
-
   if (mod === null) {
     return null;
   }
@@ -226,7 +211,6 @@ export const ModMetadataSidePanel = ({
         <header className="mod-metadata-side-panel-header">
           <div className="mod-metadata-side-panel-heading">
             <h2 className="mod-metadata-side-panel-title">{panelTitle}</h2>
-            <p className="mod-metadata-side-panel-summary">{summary}</p>
           </div>
           <button
             className="mod-metadata-side-panel-close-button"

@@ -26,16 +26,15 @@ $mod-metadata-side-panel-textarea-min-height: 6rem;
 .mod-metadata-side-panel-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: $spacing-md;
-  padding: $spacing-lg;
+  padding: $spacing-md $spacing-lg;
   border-bottom: $app-border;
 }
 
 .mod-metadata-side-panel-heading {
   display: flex;
   min-width: 0;
-  flex-direction: column;
   gap: $spacing-xs;
 }
 
@@ -45,11 +44,6 @@ $mod-metadata-side-panel-textarea-min-height: 6rem;
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
-}
-
-.mod-metadata-side-panel-summary {
-  color: $color-text-subtle;
-  font-size: $font-size-sm;
 }
 
 .mod-metadata-side-panel-close-button {
