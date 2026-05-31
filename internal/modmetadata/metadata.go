@@ -11,6 +11,10 @@ type Metadata struct {
 	DirectoryCount *int64
 	TotalSizeBytes *int64
 	JSON           *string
+	Version        *string
+	Author         *string
+	Description    *string
+	SourceURL      *string
 }
 
 type ParseInput struct {
@@ -75,6 +79,18 @@ func mergeMetadata(base Metadata, next Metadata) Metadata {
 	}
 	if next.JSON != nil {
 		base.JSON = next.JSON
+	}
+	if next.Version != nil {
+		base.Version = next.Version
+	}
+	if next.Author != nil {
+		base.Author = next.Author
+	}
+	if next.Description != nil {
+		base.Description = next.Description
+	}
+	if next.SourceURL != nil {
+		base.SourceURL = next.SourceURL
 	}
 
 	return base

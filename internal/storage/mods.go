@@ -311,6 +311,9 @@ func insertMod(ctx context.Context, db interface {
 	if err != nil {
 		return dbtypes.Mod{}, fmt.Errorf("get created mod id: %w", err)
 	}
+	if err := upsertDetectedModMetadata(ctx, db, modID, input.DetectedMetadata); err != nil {
+		return dbtypes.Mod{}, fmt.Errorf("insert mod metadata row: %w", err)
+	}
 
 	return getModByID(ctx, db, modID)
 }

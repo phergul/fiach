@@ -173,6 +173,12 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 			DirectoryCount:     metadata.DirectoryCount,
 			TotalSizeBytes:     metadata.TotalSizeBytes,
 			MetadataJSON:       metadata.JSON,
+			DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+				Version:     metadata.Version,
+				Author:      metadata.Author,
+				Description: metadata.Description,
+				SourceURL:   metadata.SourceURL,
+			},
 		},
 		Config: configInput,
 	})

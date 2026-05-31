@@ -45,6 +45,25 @@ CREATE TABLE mod_install_configs (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE mod_metadata (
+    mod_id INTEGER PRIMARY KEY REFERENCES mods(id) ON DELETE CASCADE,
+    detected_version TEXT,
+    user_version TEXT,
+    version_user_set INTEGER NOT NULL DEFAULT 0 CHECK (version_user_set IN (0, 1)),
+    detected_author TEXT,
+    user_author TEXT,
+    author_user_set INTEGER NOT NULL DEFAULT 0 CHECK (author_user_set IN (0, 1)),
+    detected_description TEXT,
+    user_description TEXT,
+    description_user_set INTEGER NOT NULL DEFAULT 0 CHECK (description_user_set IN (0, 1)),
+    detected_source_url TEXT,
+    user_source_url TEXT,
+    source_url_user_set INTEGER NOT NULL DEFAULT 0 CHECK (source_url_user_set IN (0, 1)),
+    notes TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
@@ -102,6 +121,7 @@ DROP TABLE IF EXISTS settings;
 DROP TABLE IF EXISTS applied_profile_states;
 DROP TABLE IF EXISTS profile_mods;
 DROP TABLE IF EXISTS profiles;
+DROP TABLE IF EXISTS mod_metadata;
 DROP TABLE IF EXISTS mod_install_configs;
 DROP TABLE IF EXISTS mods;
 DROP TABLE IF EXISTS games;

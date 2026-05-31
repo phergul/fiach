@@ -19,6 +19,10 @@ export {
     ModContext,
     ModDeleteSummary,
     ModInstallConfig,
+    ModMetadata,
+    ModMetadataField,
+    ModMetadataFieldUpdate,
+    ModMetadataFieldUpdateMode,
     ModProfile,
     ModSourceType,
     Operation,
@@ -46,5 +50,6 @@ export {
     StoredGame,
     StrategyDescriptor,
     StrategyType,
-    StrategyVisibility
+    StrategyVisibility,
+    UpdateModMetadataInput
 } from "./models.js";

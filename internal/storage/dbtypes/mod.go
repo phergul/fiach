@@ -34,4 +34,5 @@ type CreateModInput struct {
 	DirectoryCount     *int64
 	TotalSizeBytes     *int64
 	MetadataJSON       *string
+	DetectedMetadata   ModMetadataDetectedInput
 }

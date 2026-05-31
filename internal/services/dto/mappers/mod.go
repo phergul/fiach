@@ -51,6 +51,47 @@ func ToDTOModDeleteSummary(mod dbtypes.Mod, profileUsageCount int64, isInApplied
 	}
 }
 
+func ToDTOModMetadata(metadata dbtypes.ModMetadata) dto.ModMetadata {
+	return dto.ModMetadata{
+		ModID: metadata.ModID,
+		Version: dto.ModMetadataField{
+			Detected:  metadata.DetectedVersion,
+			User:      metadata.UserVersion,
+			UserSet:   metadata.VersionUserSet,
+			Effective: effectiveMetadataValue(metadata.DetectedVersion, metadata.UserVersion, metadata.VersionUserSet),
+		},
+		Author: dto.ModMetadataField{
+			Detected:  metadata.DetectedAuthor,
+			User:      metadata.UserAuthor,
+			UserSet:   metadata.AuthorUserSet,
+			Effective: effectiveMetadataValue(metadata.DetectedAuthor, metadata.UserAuthor, metadata.AuthorUserSet),
+		},
+		Description: dto.ModMetadataField{
+			Detected:  metadata.DetectedDescription,
+			User:      metadata.UserDescription,
+			UserSet:   metadata.DescriptionUserSet,
+			Effective: effectiveMetadataValue(metadata.DetectedDescription, metadata.UserDescription, metadata.DescriptionUserSet),
+		},
+		SourceURL: dto.ModMetadataField{
+			Detected:  metadata.DetectedSourceURL,
+			User:      metadata.UserSourceURL,
+			UserSet:   metadata.SourceURLUserSet,
+			Effective: effectiveMetadataValue(metadata.DetectedSourceURL, metadata.UserSourceURL, metadata.SourceURLUserSet),
+		},
+		Notes:     metadata.Notes,
+		CreatedAt: metadata.CreatedAt,
+		UpdatedAt: metadata.UpdatedAt,
+	}
+}
+
+func effectiveMetadataValue(detected *string, user *string, userSet bool) *string {
+	if userSet {
+		return user
+	}
+
+	return detected
+}
+
 func ToDTOModInstallConfig(config dbtypes.ModInstallConfig) dto.ModInstallConfig {
 	return dto.ModInstallConfig(config)
 }

@@ -211,7 +211,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.tag }}
-          name: fiach ${{ steps.release.outputs.version }}
+          name: v${{ steps.release.outputs.version }}
           draft: true
           prerelease: false
           fail_on_unmatched_files: true

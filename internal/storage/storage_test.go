@@ -76,6 +76,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"games",
 		"mods",
 		"mod_install_configs",
+		"mod_metadata",
 		"profiles",
 		"profile_mods",
 		"applied_profile_states",
@@ -170,6 +171,7 @@ func TestMigrateDownDropsCoreTables(t *testing.T) {
 	for _, table := range []string{
 		"games",
 		"mods",
+		"mod_metadata",
 		"profiles",
 		"profile_mods",
 		"applied_profile_states",

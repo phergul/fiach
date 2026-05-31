@@ -56,6 +56,157 @@ func TestModServiceRenamesMod(t *testing.T) {
 	}
 }
 
+func TestModServiceGetsAndUpdatesModMetadata(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/mods/skyui",
+		OriginalSourcePath: "/imports/skyui",
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version:   serviceStringPtr("1.0.0"),
+			Author:    serviceStringPtr("Detected Author"),
+			SourceURL: serviceStringPtr("https://example.com/skyui"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+
+	service := NewModService(store, testLogger())
+	initial, err := service.GetModMetadata(context.Background(), mod.ID)
+	if err != nil {
+		t.Fatalf("GetModMetadata() error = %v", err)
+	}
+	if initial.Version.Effective == nil || *initial.Version.Effective != "1.0.0" || initial.Version.UserSet {
+		t.Fatalf("GetModMetadata() = %+v, want detected effective version", initial)
+	}
+
+	updated, err := service.UpdateModMetadata(context.Background(), dto.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr(" 2.0.0 "),
+		},
+		Author: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeClear,
+		},
+		Description: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("Better menus"),
+		},
+		SourceURL: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		Notes: serviceStringPtr("Local install notes"),
+	})
+	if err != nil {
+		t.Fatalf("UpdateModMetadata() error = %v", err)
+	}
+
+	if updated.Version.User == nil || *updated.Version.User != "2.0.0" || updated.Version.Effective == nil || *updated.Version.Effective != "2.0.0" {
+		t.Fatalf("Version = %+v, want trimmed user override", updated.Version)
+	}
+	if updated.Author.User != nil || updated.Author.Effective != nil || !updated.Author.UserSet {
+		t.Fatalf("Author = %+v, want explicit clear", updated.Author)
+	}
+	if updated.SourceURL.Effective == nil || *updated.SourceURL.Effective != "https://example.com/skyui" || updated.SourceURL.UserSet {
+		t.Fatalf("SourceURL = %+v, want reset to detected", updated.SourceURL)
+	}
+	if updated.Notes == nil || *updated.Notes != "Local install notes" {
+		t.Fatalf("Notes = %v, want saved notes", updated.Notes)
+	}
+}
+
+func TestModServiceUpdateModMetadataRejectsInvalidValuesWithoutCorruptingExistingData(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/mods/skyui",
+		OriginalSourcePath: "/imports/skyui",
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+
+	service := NewModService(store, testLogger())
+	_, err = service.UpdateModMetadata(context.Background(), dto.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("1.0.0"),
+		},
+		Author: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		Description: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		SourceURL: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateModMetadata() setup error = %v", err)
+	}
+
+	_, err = service.UpdateModMetadata(context.Background(), dto.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		Author: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("Bad\x00Author"),
+		},
+		Description: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		SourceURL: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("file:///mods/skyui"),
+		},
+	})
+	if err == nil {
+		t.Fatal("UpdateModMetadata() invalid error = nil, want validation error")
+	}
+
+	metadata, err := service.GetModMetadata(context.Background(), mod.ID)
+	if err != nil {
+		t.Fatalf("GetModMetadata() error = %v", err)
+	}
+	if metadata.Version.User == nil || *metadata.Version.User != "1.0.0" || !metadata.Version.UserSet {
+		t.Fatalf("metadata after invalid update = %+v, want previous version preserved", metadata)
+	}
+}
+
+func TestModServiceGetModMetadataReportsMissingMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := NewModService(store, testLogger())
+	_, err := service.GetModMetadata(context.Background(), 999)
+	if err == nil {
+		t.Fatal("GetModMetadata() error = nil, want missing mod error")
+	}
+	if !strings.Contains(err.Error(), "mod 999 was not found") {
+		t.Fatalf("GetModMetadata() error = %q, want missing mod context", err.Error())
+	}
+}
+
 func TestModServiceGetsDeleteSummary(t *testing.T) {
 	t.Parallel()
 
@@ -511,6 +662,48 @@ func TestModServiceImportContinuesWhenMetadataParsingFails(t *testing.T) {
 	assertFileContents(t, filepath.Join(result.Mod.SourcePath, "Data", "SkyUI.esp"), "plugin")
 }
 
+func TestModServiceImportPersistsDetectedEditableMetadata(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "plugin"})
+	service := NewModService(store, testLogger())
+	service.metadataRegistry = modmetadata.NewRegistry(staticMetadataParser{
+		metadata: modmetadata.Metadata{
+			Version:     serviceStringPtr("1.0.0"),
+			Author:      serviceStringPtr("Mod Author"),
+			Description: serviceStringPtr("User interface mod"),
+			SourceURL:   serviceStringPtr("https://example.com/skyui"),
+		},
+	})
+
+	result, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+
+	metadata, err := service.GetModMetadata(context.Background(), result.Mod.ID)
+	if err != nil {
+		t.Fatalf("GetModMetadata() error = %v", err)
+	}
+	if metadata.Version.Detected == nil || *metadata.Version.Detected != "1.0.0" ||
+		metadata.Author.Detected == nil || *metadata.Author.Detected != "Mod Author" ||
+		metadata.Description.Detected == nil || *metadata.Description.Detected != "User interface mod" ||
+		metadata.SourceURL.Detected == nil || *metadata.SourceURL.Detected != "https://example.com/skyui" {
+		t.Fatalf("GetModMetadata() = %+v, want parser-provided detected metadata", metadata)
+	}
+}
+
 func TestModServiceImportReturnsExistingModAndConfig(t *testing.T) {
 	t.Parallel()
 
@@ -554,6 +747,18 @@ type failingMetadataParser struct{}
 
 func (failingMetadataParser) Parse(context.Context, modmetadata.ParseInput) (modmetadata.Metadata, error) {
 	return modmetadata.Metadata{}, fmt.Errorf("forced metadata failure")
+}
+
+type staticMetadataParser struct {
+	metadata modmetadata.Metadata
+}
+
+func (p staticMetadataParser) Parse(context.Context, modmetadata.ParseInput) (modmetadata.Metadata, error) {
+	return p.metadata, nil
+}
+
+func serviceStringPtr(value string) *string {
+	return &value
 }
 
 func TestModServiceImportAddsConfigToExistingUnconfiguredMod(t *testing.T) {

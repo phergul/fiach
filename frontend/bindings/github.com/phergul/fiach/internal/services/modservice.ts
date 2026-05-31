@@ -23,21 +23,27 @@ export function GetModDeleteSummary(modID: number): $CancellablePromise<dto$0.Mo
     });
 }
 
+export function GetModMetadata(modID: number): $CancellablePromise<dto$0.ModMetadata> {
+    return $Call.ByID(3549730346, modID).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 export function ImportMod(input: dto$0.ImportModInput): $CancellablePromise<dto$0.ImportModResult> {
     return $Call.ByID(1549763346, input).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 export function ListImportStrategies(): $CancellablePromise<dto$0.StrategyDescriptor[]> {
     return $Call.ByID(2113312407).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
     });
 }
 
 export function ListMods(gameID: number): $CancellablePromise<dto$0.Mod[]> {
     return $Call.ByID(3338520162, gameID).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
 }
 
@@ -47,21 +53,28 @@ export function PreValidateImport(input: dto$0.PreValidateImportInput): $Cancell
 
 export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurationInput): $CancellablePromise<dto$0.Preview> {
     return $Call.ByID(3729111778, input).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType7($result);
     });
 }
 
 export function RenameMod(modID: number, name: string): $CancellablePromise<dto$0.Mod> {
     return $Call.ByID(4073359283, modID, name).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType5($result);
+    });
+}
+
+export function UpdateModMetadata(input: dto$0.UpdateModMetadataInput): $CancellablePromise<dto$0.ModMetadata> {
+    return $Call.ByID(3991595271, input).then(($result: any) => {
+        return $$createType1($result);
     });
 }
 
 // Private type creation functions
 const $$createType0 = dto$0.ModDeleteSummary.createFrom;
-const $$createType1 = dto$0.ImportModResult.createFrom;
-const $$createType2 = dto$0.StrategyDescriptor.createFrom;
-const $$createType3 = $Create.Array($$createType2);
-const $$createType4 = dto$0.Mod.createFrom;
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = dto$0.Preview.createFrom;
+const $$createType1 = dto$0.ModMetadata.createFrom;
+const $$createType2 = dto$0.ImportModResult.createFrom;
+const $$createType3 = dto$0.StrategyDescriptor.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = dto$0.Mod.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = dto$0.Preview.createFrom;

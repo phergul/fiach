@@ -644,6 +644,140 @@ export class ModInstallConfig {
     }
 }
 
+export class ModMetadata {
+    "ModID": number;
+    "Version": ModMetadataField;
+    "Author": ModMetadataField;
+    "Description": ModMetadataField;
+    "SourceURL": ModMetadataField;
+    "Notes": string | null;
+    "CreatedAt": string;
+    "UpdatedAt": string;
+
+    /** Creates a new ModMetadata instance. */
+    constructor($$source: Partial<ModMetadata> = {}) {
+        if (!("ModID" in $$source)) {
+            this["ModID"] = 0;
+        }
+        if (!("Version" in $$source)) {
+            this["Version"] = (new ModMetadataField());
+        }
+        if (!("Author" in $$source)) {
+            this["Author"] = (new ModMetadataField());
+        }
+        if (!("Description" in $$source)) {
+            this["Description"] = (new ModMetadataField());
+        }
+        if (!("SourceURL" in $$source)) {
+            this["SourceURL"] = (new ModMetadataField());
+        }
+        if (!("Notes" in $$source)) {
+            this["Notes"] = null;
+        }
+        if (!("CreatedAt" in $$source)) {
+            this["CreatedAt"] = "";
+        }
+        if (!("UpdatedAt" in $$source)) {
+            this["UpdatedAt"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModMetadata instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModMetadata {
+        const $$createField1_0 = $$createType16;
+        const $$createField2_0 = $$createType16;
+        const $$createField3_0 = $$createType16;
+        const $$createField4_0 = $$createType16;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Version" in $$parsedSource) {
+            $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
+        }
+        if ("Author" in $$parsedSource) {
+            $$parsedSource["Author"] = $$createField2_0($$parsedSource["Author"]);
+        }
+        if ("Description" in $$parsedSource) {
+            $$parsedSource["Description"] = $$createField3_0($$parsedSource["Description"]);
+        }
+        if ("SourceURL" in $$parsedSource) {
+            $$parsedSource["SourceURL"] = $$createField4_0($$parsedSource["SourceURL"]);
+        }
+        return new ModMetadata($$parsedSource as Partial<ModMetadata>);
+    }
+}
+
+export class ModMetadataField {
+    "Detected": string | null;
+    "User": string | null;
+    "UserSet": boolean;
+    "Effective": string | null;
+
+    /** Creates a new ModMetadataField instance. */
+    constructor($$source: Partial<ModMetadataField> = {}) {
+        if (!("Detected" in $$source)) {
+            this["Detected"] = null;
+        }
+        if (!("User" in $$source)) {
+            this["User"] = null;
+        }
+        if (!("UserSet" in $$source)) {
+            this["UserSet"] = false;
+        }
+        if (!("Effective" in $$source)) {
+            this["Effective"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModMetadataField instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModMetadataField {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModMetadataField($$parsedSource as Partial<ModMetadataField>);
+    }
+}
+
+export class ModMetadataFieldUpdate {
+    "Mode": ModMetadataFieldUpdateMode;
+    "Value": string | null;
+
+    /** Creates a new ModMetadataFieldUpdate instance. */
+    constructor($$source: Partial<ModMetadataFieldUpdate> = {}) {
+        if (!("Mode" in $$source)) {
+            this["Mode"] = ModMetadataFieldUpdateMode.$zero;
+        }
+        if (!("Value" in $$source)) {
+            this["Value"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModMetadataFieldUpdate instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModMetadataFieldUpdate {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModMetadataFieldUpdate($$parsedSource as Partial<ModMetadataFieldUpdate>);
+    }
+}
+
+export enum ModMetadataFieldUpdateMode {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ModMetadataFieldUpdateModeUser = "user",
+    ModMetadataFieldUpdateModeClear = "clear",
+    ModMetadataFieldUpdateModeReset = "reset",
+};
+
 export class ModProfile {
     "ID": number;
     "GameID": number;
@@ -760,8 +894,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType16;
-        const $$createField1_0 = $$createType18;
+        const $$createField0_0 = $$createType17;
+        const $$createField1_0 = $$createType19;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -828,8 +962,8 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType19;
-        const $$createField7_0 = $$createType20;
+        const $$createField6_0 = $$createType20;
+        const $$createField7_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -953,8 +1087,8 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField7_0 = $$createType21;
-        const $$createField10_0 = $$createType21;
+        const $$createField7_0 = $$createType22;
+        const $$createField10_0 = $$createType22;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
             $$parsedSource["TargetFilePaths"] = $$createField7_0($$parsedSource["TargetFilePaths"]);
@@ -1076,7 +1210,7 @@ export class ReShadeDetectionResult {
      * Creates a new ReShadeDetectionResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ReShadeDetectionResult {
-        const $$createField1_0 = $$createType23;
+        const $$createField1_0 = $$createType24;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Targets" in $$parsedSource) {
             $$parsedSource["Targets"] = $$createField1_0($$parsedSource["Targets"]);
@@ -1137,7 +1271,7 @@ export class ReShadeTarget {
      * Creates a new ReShadeTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ReShadeTarget {
-        const $$createField1_0 = $$createType21;
+        const $$createField1_0 = $$createType22;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Executables" in $$parsedSource) {
             $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
@@ -1260,7 +1394,7 @@ export class RestoreOperation {
      * Creates a new RestoreOperation instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperation {
-        const $$createField2_0 = $$createType24;
+        const $$createField2_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField2_0($$parsedSource["Mod"]);
@@ -1301,7 +1435,7 @@ export class RestoreOperationResult {
      * Creates a new RestoreOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperationResult {
-        const $$createField1_0 = $$createType25;
+        const $$createField1_0 = $$createType26;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -1365,7 +1499,7 @@ export class RestoreResult {
      * Creates a new RestoreResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreResult {
-        const $$createField4_0 = $$createType27;
+        const $$createField4_0 = $$createType28;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
@@ -1402,7 +1536,7 @@ export class SourceScanResult {
      * Creates a new SourceScanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): SourceScanResult {
-        const $$createField3_0 = $$createType29;
+        const $$createField3_0 = $$createType30;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
@@ -1523,6 +1657,63 @@ export enum StrategyVisibility {
     StrategyVisibilityInternal = "internal",
 };
 
+export class UpdateModMetadataInput {
+    "ModID": number;
+    "Version": ModMetadataFieldUpdate;
+    "Author": ModMetadataFieldUpdate;
+    "Description": ModMetadataFieldUpdate;
+    "SourceURL": ModMetadataFieldUpdate;
+    "Notes": string | null;
+
+    /** Creates a new UpdateModMetadataInput instance. */
+    constructor($$source: Partial<UpdateModMetadataInput> = {}) {
+        if (!("ModID" in $$source)) {
+            this["ModID"] = 0;
+        }
+        if (!("Version" in $$source)) {
+            this["Version"] = (new ModMetadataFieldUpdate());
+        }
+        if (!("Author" in $$source)) {
+            this["Author"] = (new ModMetadataFieldUpdate());
+        }
+        if (!("Description" in $$source)) {
+            this["Description"] = (new ModMetadataFieldUpdate());
+        }
+        if (!("SourceURL" in $$source)) {
+            this["SourceURL"] = (new ModMetadataFieldUpdate());
+        }
+        if (!("Notes" in $$source)) {
+            this["Notes"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UpdateModMetadataInput instance from a string or object.
+     */
+    static createFrom($$source: any = {}): UpdateModMetadataInput {
+        const $$createField1_0 = $$createType31;
+        const $$createField2_0 = $$createType31;
+        const $$createField3_0 = $$createType31;
+        const $$createField4_0 = $$createType31;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Version" in $$parsedSource) {
+            $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
+        }
+        if ("Author" in $$parsedSource) {
+            $$parsedSource["Author"] = $$createField2_0($$parsedSource["Author"]);
+        }
+        if ("Description" in $$parsedSource) {
+            $$parsedSource["Description"] = $$createField3_0($$parsedSource["Description"]);
+        }
+        if ("SourceURL" in $$parsedSource) {
+            $$parsedSource["SourceURL"] = $$createField4_0($$parsedSource["SourceURL"]);
+        }
+        return new UpdateModMetadataInput($$parsedSource as Partial<UpdateModMetadataInput>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = ModContext.createFrom;
 const $$createType1 = AppliedFileManifestEntry.createFrom;
@@ -1540,17 +1731,19 @@ const $$createType12 = DiagnosticLogEntry.createFrom;
 const $$createType13 = $Create.Array($$createType12);
 const $$createType14 = Mod.createFrom;
 const $$createType15 = ModInstallConfig.createFrom;
-const $$createType16 = $Create.Array($$createType10);
-const $$createType17 = PlanIssue.createFrom;
-const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = $Create.Nullable($$createType0);
-const $$createType20 = $Create.Array($Create.Any);
+const $$createType16 = ModMetadataField.createFrom;
+const $$createType17 = $Create.Array($$createType10);
+const $$createType18 = PlanIssue.createFrom;
+const $$createType19 = $Create.Array($$createType18);
+const $$createType20 = $Create.Nullable($$createType0);
 const $$createType21 = $Create.Array($Create.Any);
-const $$createType22 = ReShadeTarget.createFrom;
-const $$createType23 = $Create.Array($$createType22);
-const $$createType24 = RestoreMod.createFrom;
-const $$createType25 = RestoreOperation.createFrom;
-const $$createType26 = RestoreOperationResult.createFrom;
-const $$createType27 = $Create.Array($$createType26);
-const $$createType28 = StoredGame.createFrom;
-const $$createType29 = $Create.Array($$createType28);
+const $$createType22 = $Create.Array($Create.Any);
+const $$createType23 = ReShadeTarget.createFrom;
+const $$createType24 = $Create.Array($$createType23);
+const $$createType25 = RestoreMod.createFrom;
+const $$createType26 = RestoreOperation.createFrom;
+const $$createType27 = RestoreOperationResult.createFrom;
+const $$createType28 = $Create.Array($$createType27);
+const $$createType29 = StoredGame.createFrom;
+const $$createType30 = $Create.Array($$createType29);
+const $$createType31 = ModMetadataFieldUpdate.createFrom;

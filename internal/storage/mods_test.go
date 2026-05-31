@@ -111,6 +111,170 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 	}
 }
 
+func TestCreateModPersistsDetectedMetadata(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: "/imports/skyui",
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version:     stringPtr("1.0.0"),
+			Author:      stringPtr("Mod Author"),
+			Description: stringPtr("User interface mod"),
+			SourceURL:   stringPtr("https://example.com/skyui"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+
+	metadata, found, err := store.GetModMetadata(context.Background(), mod.ID)
+	if err != nil {
+		t.Fatalf("GetModMetadata() error = %v", err)
+	}
+	if !found {
+		t.Fatal("GetModMetadata() found = false, want true")
+	}
+	if metadata.DetectedVersion == nil || *metadata.DetectedVersion != "1.0.0" ||
+		metadata.DetectedAuthor == nil || *metadata.DetectedAuthor != "Mod Author" ||
+		metadata.DetectedDescription == nil || *metadata.DetectedDescription != "User interface mod" ||
+		metadata.DetectedSourceURL == nil || *metadata.DetectedSourceURL != "https://example.com/skyui" {
+		t.Fatalf("GetModMetadata() = %+v, want detected metadata", metadata)
+	}
+}
+
+func TestUpdateModMetadataPersistsUserValuesClearsAndResets(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: "/imports/skyui",
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version:   stringPtr("1.0.0"),
+			Author:    stringPtr("Detected Author"),
+			SourceURL: stringPtr("https://example.com/detected"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+
+	updated, err := store.UpdateModMetadata(context.Background(), dbtypes.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dbtypes.ModMetadataFieldUpdate{
+			UserSet: true,
+			Value:   stringPtr("2.0.0"),
+		},
+		Author: dbtypes.ModMetadataFieldUpdate{
+			UserSet: true,
+		},
+		SourceURL: dbtypes.ModMetadataFieldUpdate{},
+		Notes:     stringPtr("Local notes"),
+	})
+	if err != nil {
+		t.Fatalf("UpdateModMetadata() error = %v", err)
+	}
+
+	if updated.UserVersion == nil || *updated.UserVersion != "2.0.0" || !updated.VersionUserSet {
+		t.Fatalf("Version metadata = %+v, want user override", updated)
+	}
+	if updated.UserAuthor != nil || !updated.AuthorUserSet {
+		t.Fatalf("Author metadata = %+v, want explicit clear", updated)
+	}
+	if updated.UserSourceURL != nil || updated.SourceURLUserSet {
+		t.Fatalf("SourceURL metadata = %+v, want reset to detected", updated)
+	}
+	if updated.Notes == nil || *updated.Notes != "Local notes" {
+		t.Fatalf("Notes = %v, want persisted notes", updated.Notes)
+	}
+}
+
+func TestUpdateModDetectedMetadataPreservesUserValues(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: "/imports/skyui",
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version: stringPtr("1.0.0"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+	if _, err := store.UpdateModMetadata(context.Background(), dbtypes.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dbtypes.ModMetadataFieldUpdate{
+			UserSet: true,
+			Value:   stringPtr("User Version"),
+		},
+	}); err != nil {
+		t.Fatalf("UpdateModMetadata() error = %v", err)
+	}
+
+	updated, err := store.UpdateModDetectedMetadata(context.Background(), mod.ID, dbtypes.ModMetadataDetectedInput{
+		Version: stringPtr("2.0.0"),
+		Author:  stringPtr("Detected Author"),
+	})
+	if err != nil {
+		t.Fatalf("UpdateModDetectedMetadata() error = %v", err)
+	}
+
+	if updated.DetectedVersion == nil || *updated.DetectedVersion != "2.0.0" || updated.UserVersion == nil || *updated.UserVersion != "User Version" || !updated.VersionUserSet {
+		t.Fatalf("Version metadata = %+v, want detected update with user override preserved", updated)
+	}
+	if updated.DetectedAuthor == nil || *updated.DetectedAuthor != "Detected Author" {
+		t.Fatalf("DetectedAuthor = %v, want updated author", updated.DetectedAuthor)
+	}
+}
+
+func TestModMetadataCascadesWhenModDeleted(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: "/imports/skyui",
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+	if err := store.DeleteMod(context.Background(), mod.ID); err != nil {
+		t.Fatalf("DeleteMod() error = %v", err)
+	}
+
+	var count int
+	if err := store.DB().Get(&count, `SELECT COUNT(*) FROM mod_metadata WHERE mod_id = ?`, mod.ID); err != nil {
+		t.Fatalf("count mod metadata: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("metadata count = %d, want cascade delete", count)
+	}
+}
+
 func TestGetModReportsMissingMod(t *testing.T) {
 	t.Parallel()
 
