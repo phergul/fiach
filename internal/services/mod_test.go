@@ -35,6 +35,67 @@ func TestModServiceListsMods(t *testing.T) {
 	if len(mods) != 1 || mods[0].ID != modID {
 		t.Fatalf("ListMods() = %+v, want inserted mod", mods)
 	}
+	if mods[0].Metadata == nil || mods[0].Metadata.ModID != modID {
+		t.Fatalf("ListMods() metadata = %+v, want metadata for mod %d", mods[0].Metadata, modID)
+	}
+}
+
+func TestModServiceListsModsWithEditableMetadata(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/mods/skyui",
+		OriginalSourcePath: "/imports/skyui",
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version: serviceStringPtr("1.0.0"),
+			Author:  serviceStringPtr("Detected Author"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+	service := NewModService(store, testLogger())
+	if _, err := service.UpdateModMetadata(context.Background(), dto.UpdateModMetadataInput{
+		ModID: mod.ID,
+		Version: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("2.0.0"),
+		},
+		Author: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		Description: dto.ModMetadataFieldUpdate{
+			Mode:  dto.ModMetadataFieldUpdateModeUser,
+			Value: serviceStringPtr("Updated description"),
+		},
+		SourceURL: dto.ModMetadataFieldUpdate{
+			Mode: dto.ModMetadataFieldUpdateModeReset,
+		},
+		Notes: serviceStringPtr("Local notes"),
+	}); err != nil {
+		t.Fatalf("UpdateModMetadata() error = %v", err)
+	}
+
+	mods, err := service.ListMods(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListMods() error = %v", err)
+	}
+	if len(mods) != 1 || mods[0].Metadata == nil {
+		t.Fatalf("ListMods() = %+v, want one mod with metadata", mods)
+	}
+	metadata := mods[0].Metadata
+	if metadata.Version.Detected == nil || *metadata.Version.Detected != "1.0.0" ||
+		metadata.Version.Effective == nil || *metadata.Version.Effective != "2.0.0" ||
+		metadata.Author.Effective == nil || *metadata.Author.Effective != "Detected Author" ||
+		metadata.Notes == nil || *metadata.Notes != "Local notes" {
+		t.Fatalf("ListMods() metadata = %+v, want detected, user, effective, and notes fields", metadata)
+	}
 }
 
 func TestModServiceRenamesMod(t *testing.T) {

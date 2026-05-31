@@ -45,7 +45,19 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 		return nil, err
 	}
 
-	return mappers.ToDTOMods(storedMods), nil
+	mods = make([]dto.Mod, 0, len(storedMods))
+	for _, storedMod := range storedMods {
+		metadata, found, err := s.store.GetModMetadata(ctx, storedMod.ID)
+		if err != nil {
+			return nil, err
+		}
+		if !found {
+			return nil, fmt.Errorf("mod %d metadata was not found", storedMod.ID)
+		}
+		mods = append(mods, mappers.ToDTOModWithMetadata(storedMod, metadata))
+	}
+
+	return mods, nil
 }
 
 func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (mod dto.Mod, err error) {

@@ -3,6 +3,7 @@
 $game-mods-section-search-height: 2.75rem;
 $game-mods-section-icon-size: 1rem;
 $game-mods-section-import-width: 8.5rem;
+$game-mods-section-side-panel-width: 32rem;
 
 .game-mods-section {
   display: flex;
@@ -70,4 +71,22 @@ $game-mods-section-import-width: 8.5rem;
 
 .game-mods-section-button {
   min-height: $input-height;
+}
+
+.game-mods-section-content {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.game-mods-section-content-with-panel {
+  grid-template-columns: minmax(0, 1fr) $game-mods-section-side-panel-width;
+}
+
+.game-mods-section-list {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }

@@ -6,6 +6,7 @@ import {
   DeleteMod,
   GetModDeleteSummary,
   RenameMod,
+  UpdateModMetadata,
 } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
 import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -13,7 +14,12 @@ import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameModListItem } from '@components/Games/Details/Mods/GameModListItem/GameModListItem';
+import {
+  ModMetadataSidePanel,
+  type ModMetadataSaveInput,
+} from '@components/Games/Details/Mods/ModMetadataSidePanel/ModMetadataSidePanel';
 import type { UseGameModsResult } from '@hooks';
+import { getErrorMessage } from '@utils';
 
 import './GameModsSection.scss';
 
@@ -55,11 +61,11 @@ export const GameModsSection = ({
   const { isLoading, loadError, mods, refreshMods } = modManager;
   const [deleteCandidate, setDeleteCandidate] = useState<Mod | null>(null);
   const [deleteSummary, setDeleteSummary] = useState<ModDeleteSummary | null>(null);
-  const [editingModID, setEditingModID] = useState<number | null>(null);
-  const [editingModName, setEditingModName] = useState('');
+  const [editingMetadataModID, setEditingMetadataModID] = useState<number | null>(null);
+  const [metadataSaveError, setMetadataSaveError] = useState<string | null>(null);
   const [isDeleteSummaryLoading, setIsDeleteSummaryLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const [isSavingMetadata, setIsSavingMetadata] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
@@ -74,7 +80,11 @@ export const GameModsSection = ({
         mod.SourcePath.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourceType.toLowerCase().includes(trimmedSearchQuery) ||
         mod.OriginalSourcePath.toLowerCase().includes(trimmedSearchQuery) ||
-        (mod.OriginalSourceName ?? '').toLowerCase().includes(trimmedSearchQuery)
+        (mod.OriginalSourceName ?? '').toLowerCase().includes(trimmedSearchQuery) ||
+        (mod.Metadata?.Version.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
+        (mod.Metadata?.Author.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
+        (mod.Metadata?.SourceURL.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
+        (mod.Metadata?.Notes ?? '').toLowerCase().includes(trimmedSearchQuery)
       );
     });
   }, [mods, trimmedSearchQuery]);
@@ -98,51 +108,56 @@ export const GameModsSection = ({
     },
   ];
   const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
-  const isRowBusy = isDeleteBusy || isRenaming;
+  const isRowBusy = isDeleteBusy || isSavingMetadata;
+  const selectedMetadataMod = editingMetadataModID === null
+    ? null
+    : mods.find((mod) => mod.ID === editingMetadataModID) ?? null;
 
-  const startRenameMod = (mod: Mod) => {
+  const openMetadataEditor = (mod: Mod) => {
     if (isRowBusy) {
       return;
     }
 
-    setEditingModID(mod.ID);
-    setEditingModName(mod.Name);
+    setEditingMetadataModID(mod.ID);
+    setMetadataSaveError(null);
   };
 
-  const cancelRenameMod = () => {
-    if (isRenaming) {
+  const closeMetadataEditor = () => {
+    if (isSavingMetadata) {
       return;
     }
 
-    setEditingModID(null);
-    setEditingModName('');
+    setEditingMetadataModID(null);
+    setMetadataSaveError(null);
   };
 
-  const renameMod = async (modID: number) => {
-    const trimmedName = editingModName.trim();
-    if (trimmedName === '') {
-      addToast({
-        message: 'Mod name is required.',
-        tone: 'error',
-      });
+  const saveModMetadata = async (input: ModMetadataSaveInput) => {
+    const currentMod = mods.find((mod) => mod.ID === input.modID);
+    if (currentMod === undefined) {
       return;
     }
 
-    setIsRenaming(true);
+    setIsSavingMetadata(true);
+    setMetadataSaveError(null);
 
     try {
-      await RenameMod(modID, trimmedName);
-      setEditingModID(null);
-      setEditingModName('');
+      const trimmedName = input.name.trim();
+      if (trimmedName !== currentMod.Name) {
+        await RenameMod(input.modID, trimmedName);
+      }
+      await UpdateModMetadata(input.metadata);
       addToast({
-        message: 'Mod renamed.',
+        message: 'Mod metadata saved.',
         tone: 'success',
       });
       await refreshMods();
+      setEditingMetadataModID(null);
     } catch (error) {
+      const message = getErrorMessage(error);
+      setMetadataSaveError(message);
       addErrorToast(error);
     } finally {
-      setIsRenaming(false);
+      setIsSavingMetadata(false);
     }
   };
 
@@ -256,22 +271,27 @@ export const GameModsSection = ({
       )}
 
       {loadError === null && !isLoading && filteredMods.length > 0 && (
-        <ul className="game-mods-section-list">
-          {filteredMods.map((mod) => (
-            <GameModListItem
-              editingModName={editingModName}
-              isBusy={isRowBusy}
-              isEditing={editingModID === mod.ID}
-              key={mod.ID}
-              mod={mod}
-              onCancelRename={cancelRenameMod}
-              onDeleteMod={requestDeleteMod}
-              onEditingModNameChange={setEditingModName}
-              onRenameMod={renameMod}
-              onStartRename={startRenameMod}
-            />
-          ))}
-        </ul>
+        <div className={selectedMetadataMod === null ? 'game-mods-section-content' : 'game-mods-section-content game-mods-section-content-with-panel'}>
+          <ul className="game-mods-section-list">
+            {filteredMods.map((mod) => (
+              <GameModListItem
+                isBusy={isRowBusy}
+                key={mod.ID}
+                mod={mod}
+                onDeleteMod={requestDeleteMod}
+                onEditMod={openMetadataEditor}
+              />
+            ))}
+          </ul>
+
+          <ModMetadataSidePanel
+            error={metadataSaveError}
+            isBusy={isSavingMetadata}
+            mod={selectedMetadataMod}
+            onClose={closeMetadataEditor}
+            onSave={saveModMetadata}
+          />
+        </div>
       )}
 
       <ConfirmDialog

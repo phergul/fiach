@@ -1,0 +1,160 @@
+@use '@styles' as *;
+
+$mod-metadata-side-panel-width: 32rem;
+$mod-metadata-side-panel-control-height: 2.5rem;
+$mod-metadata-side-panel-reset-size: 1.75rem;
+$mod-metadata-side-panel-icon-size: 1rem;
+$mod-metadata-side-panel-textarea-min-height: 6rem;
+
+.mod-metadata-side-panel {
+  width: $mod-metadata-side-panel-width;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: $app-border;
+  background: $color-surface;
+}
+
+.mod-metadata-side-panel-form {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.mod-metadata-side-panel-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  border-bottom: $app-border;
+}
+
+.mod-metadata-side-panel-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.mod-metadata-side-panel-title {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.mod-metadata-side-panel-summary {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.mod-metadata-side-panel-close-button {
+  width: $mod-metadata-side-panel-control-height;
+  height: $mod-metadata-side-panel-control-height;
+  padding: 0;
+}
+
+.mod-metadata-side-panel-close-icon,
+.mod-metadata-side-panel-button-icon {
+  width: $mod-metadata-side-panel-icon-size;
+  height: $mod-metadata-side-panel-icon-size;
+  flex: 0 0 $mod-metadata-side-panel-icon-size;
+  stroke-width: 1.8;
+}
+
+.mod-metadata-side-panel-body {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: $spacing-md;
+  overflow-y: auto;
+  padding: $spacing-lg;
+}
+
+.mod-metadata-side-panel-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.mod-metadata-side-panel-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+}
+
+.mod-metadata-side-panel-label {
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.mod-metadata-side-panel-input,
+.mod-metadata-side-panel-textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0 $spacing-md;
+  border-radius: $radius-sm;
+}
+
+.mod-metadata-side-panel-input {
+  height: $mod-metadata-side-panel-control-height;
+}
+
+.mod-metadata-side-panel-textarea {
+  min-height: $mod-metadata-side-panel-textarea-min-height;
+  padding-top: $spacing-sm;
+  padding-bottom: $spacing-sm;
+  resize: vertical;
+}
+
+.mod-metadata-side-panel-status {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+}
+
+.mod-metadata-side-panel-status {
+  color: $color-text-subtle;
+}
+
+.mod-metadata-side-panel-error,
+.mod-metadata-side-panel-save-error {
+  overflow-wrap: anywhere;
+  color: $color-danger;
+  font-size: $font-size-sm;
+}
+
+.mod-metadata-side-panel-save-error {
+  padding: $spacing-sm $spacing-md;
+  border: $app-border-width solid color-mix(in srgb, $color-danger 70%, transparent);
+  border-radius: $radius-sm;
+  background: rgb(#{$color-danger-rgb} / 12%);
+}
+
+.mod-metadata-side-panel-reset-button {
+  width: $mod-metadata-side-panel-reset-size;
+  height: $mod-metadata-side-panel-reset-size;
+  min-height: $mod-metadata-side-panel-reset-size;
+  padding: 0;
+  color: $color-text-subtle;
+}
+
+.mod-metadata-side-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: $app-border;
+}
+
+.mod-metadata-side-panel-save-button,
+.mod-metadata-side-panel-cancel-button {
+  min-height: $mod-metadata-side-panel-control-height;
+}

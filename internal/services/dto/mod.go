@@ -19,6 +19,7 @@ type Mod struct {
 	DirectoryCount     *int64
 	TotalSizeBytes     *int64
 	MetadataJSON       *string
+	Metadata           *ModMetadata
 	CreatedAt          string
 	UpdatedAt          string
 }

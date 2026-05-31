@@ -31,6 +31,13 @@ func ToDTOMod(mod dbtypes.Mod) dto.Mod {
 	}
 }
 
+func ToDTOModWithMetadata(mod dbtypes.Mod, metadata dbtypes.ModMetadata) dto.Mod {
+	result := ToDTOMod(mod)
+	dtoMetadata := ToDTOModMetadata(metadata)
+	result.Metadata = &dtoMetadata
+	return result
+}
+
 func ToDTOMods(mods []dbtypes.Mod) []dto.Mod {
 	result := make([]dto.Mod, 0, len(mods))
 	for _, mod := range mods {
