@@ -191,9 +191,11 @@ func encodeProfileCompositionSnapshot(profileID int64, profileMods []dbtypes.Pro
 	mods := make([]appliedstate.ProfileCompositionMod, 0, len(profileMods))
 	for _, profileMod := range profileMods {
 		mods = append(mods, appliedstate.ProfileCompositionMod{
-			ModID:     profileMod.ModID,
-			Enabled:   profileMod.Enabled,
-			LoadOrder: profileMod.LoadOrder,
+			ModID:            profileMod.ModID,
+			Enabled:          profileMod.Enabled,
+			LoadOrder:        profileMod.LoadOrder,
+			SourcePath:       profileMod.SourcePath,
+			PackageUpdatedAt: profileMod.ModUpdatedAt,
 		})
 	}
 

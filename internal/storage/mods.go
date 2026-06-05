@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
@@ -134,6 +135,39 @@ func (s *Store) RenameMod(ctx context.Context, modID int64, name string) (mod db
 	}
 
 	return getModByID(ctx, s.db, modID)
+}
+
+func (s *Store) UpdateModPackage(ctx context.Context, input dbtypes.UpdateModPackageInput) (mod dbtypes.Mod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("update mod package row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return dbtypes.Mod{}, errors.New("store is not open")
+	}
+	if input.ModID <= 0 {
+		return dbtypes.Mod{}, errors.New("mod ID must be positive")
+	}
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+		updated, err := updateModPackage(ctx, tx, input)
+		if err != nil {
+			return err
+		}
+		if err := upsertDetectedModMetadata(ctx, tx, updated.ID, input.DetectedMetadata); err != nil {
+			return fmt.Errorf("update detected mod metadata: %w", err)
+		}
+
+		mod = updated
+		return nil
+	})
+	if err != nil {
+		return dbtypes.Mod{}, err
+	}
+
+	return mod, nil
 }
 
 func (s *Store) DeleteMod(ctx context.Context, modID int64) (err error) {
@@ -316,6 +350,56 @@ func insertMod(ctx context.Context, db interface {
 	}
 
 	return getModByID(ctx, db, modID)
+}
+
+func updateModPackage(ctx context.Context, db interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	GetContext(context.Context, any, string, ...any) error
+}, input dbtypes.UpdateModPackageInput) (dbtypes.Mod, error) {
+	if input.ModID <= 0 {
+		return dbtypes.Mod{}, errors.New("mod ID must be positive")
+	}
+
+	sourceType := input.SourceType
+	if sourceType == "" {
+		sourceType = dbtypes.ModSourceTypeFolder
+	}
+	if sourceType != dbtypes.ModSourceTypeFolder && sourceType != dbtypes.ModSourceTypeArchive {
+		return dbtypes.Mod{}, fmt.Errorf("unsupported mod source type %q", sourceType)
+	}
+
+	originalSourcePath, err := CanonicalModOriginalSourcePath(input.OriginalSourcePath)
+	if err != nil {
+		return dbtypes.Mod{}, err
+	}
+
+	originalSourceName := cleanOptionalString(input.OriginalSourceName)
+	metadataJSON := cleanOptionalString(input.MetadataJSON)
+	result, err := db.ExecContext(ctx, `
+		UPDATE mods
+		SET source_type = ?,
+			original_source_path = ?,
+			original_source_name = ?,
+			file_count = ?,
+			directory_count = ?,
+			total_size_bytes = ?,
+			metadata_json = ?,
+			updated_at = strftime('%Y-%m-%d %H:%M:%f', 'now')
+		WHERE id = ?
+	`, sourceType, originalSourcePath, nullableText(originalSourceName), input.FileCount, input.DirectoryCount, input.TotalSizeBytes, nullableText(metadataJSON), input.ModID)
+	if err != nil {
+		return dbtypes.Mod{}, err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return dbtypes.Mod{}, fmt.Errorf("get updated mod package count: %w", err)
+	}
+	if affected == 0 {
+		return dbtypes.Mod{}, sql.ErrNoRows
+	}
+
+	return getModByID(ctx, db, input.ModID)
 }
 
 type modGetter interface {

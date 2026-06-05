@@ -60,9 +60,11 @@ type ProfileCompositionDocument struct {
 }
 
 type ProfileCompositionMod struct {
-	ModID     int64 `json:"modId"`
-	Enabled   bool  `json:"enabled"`
-	LoadOrder int64 `json:"loadOrder"`
+	ModID            int64  `json:"modId"`
+	Enabled          bool   `json:"enabled"`
+	LoadOrder        int64  `json:"loadOrder"`
+	SourcePath       string `json:"sourcePath"`
+	PackageUpdatedAt string `json:"packageUpdatedAt"`
 }
 
 type SnapshotOperation struct {

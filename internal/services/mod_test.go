@@ -765,6 +765,255 @@ func TestModServiceImportPersistsDetectedEditableMetadata(t *testing.T) {
 	}
 }
 
+func TestModServiceUpdateModReplacesFolderAndPreservesProfileState(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "old"})
+	replacementPath := makeSourceFolder(t, map[string]string{
+		"Data/SkyUI.esp": "new",
+		"Docs/readme.md": "notes",
+	})
+	service := NewModService(store, testLogger())
+	imported, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeGenericCopy,
+		TargetRelativePath: "Data",
+	})
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+	if _, err := store.AddModToProfile(context.Background(), profileID, imported.Mod.ID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+	if _, err := store.SetProfileModEnabled(context.Background(), profileID, imported.Mod.ID, false); err != nil {
+		t.Fatalf("SetProfileModEnabled() error = %v", err)
+	}
+
+	result, err := service.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.Mod.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: replacementPath,
+	})
+	if err != nil {
+		t.Fatalf("UpdateMod() error = %v", err)
+	}
+
+	if result.Mod.ID != imported.Mod.ID || result.Mod.Name != "SkyUI" || result.Mod.SourcePath != imported.Mod.SourcePath || result.Mod.SourceType != dto.ModSourceTypeFolder {
+		t.Fatalf("UpdateMod() mod = %+v, want same identity/path/name with folder source", result.Mod)
+	}
+	if result.Before.FileCount == nil || *result.Before.FileCount != 1 || result.After.FileCount == nil || *result.After.FileCount != 2 {
+		t.Fatalf("UpdateMod() snapshots = %+v -> %+v, want before/after counts", result.Before, result.After)
+	}
+	assertFileContents(t, filepath.Join(imported.Mod.SourcePath, "Data", "SkyUI.esp"), "new")
+	assertFileContents(t, filepath.Join(imported.Mod.SourcePath, "Docs", "readme.md"), "notes")
+	config, found, err := store.GetModInstallConfig(context.Background(), imported.Mod.ID)
+	if err != nil {
+		t.Fatalf("GetModInstallConfig() error = %v", err)
+	}
+	if !found || config.TargetRelativePath != "Data" {
+		t.Fatalf("GetModInstallConfig() = %+v, %v; want preserved config", config, found)
+	}
+	profileMods, err := store.ListProfileMods(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 1 || profileMods[0].ModID != imported.Mod.ID || profileMods[0].Enabled || profileMods[0].LoadOrder != 0 {
+		t.Fatalf("ListProfileMods() = %+v, want preserved disabled profile membership", profileMods)
+	}
+}
+
+func TestModServiceUpdateModAcceptsArchiveReplacement(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "old"})
+	archivePath := makeZipArchive(t, map[string]string{"SkyUI/Data/SkyUI.esp": "new"})
+	service := NewModService(store, testLogger())
+	imported, err := importFolderMod(context.Background(), service, gameID, "SkyUI", sourcePath)
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+
+	result, err := service.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.ID,
+		SourceType: dto.ModSourceTypeArchive,
+		SourcePath: archivePath,
+	})
+	if err != nil {
+		t.Fatalf("UpdateMod() error = %v", err)
+	}
+
+	if result.Mod.ID != imported.ID || result.Mod.SourceType != dto.ModSourceTypeArchive || result.Mod.SourcePath != imported.SourcePath {
+		t.Fatalf("UpdateMod() = %+v, want same mod path with archive source", result.Mod)
+	}
+	if result.Mod.OriginalSourceName == nil || *result.Mod.OriginalSourceName != filepath.Base(archivePath) {
+		t.Fatalf("OriginalSourceName = %v, want archive file name", result.Mod.OriginalSourceName)
+	}
+	assertFileContents(t, filepath.Join(imported.SourcePath, "Data", "SkyUI.esp"), "new")
+}
+
+func TestModServiceUpdateModValidationFailureLeavesExistingPackage(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"Data/SkyUI.esp": "old"})
+	emptyReplacement := t.TempDir()
+	service := NewModService(store, testLogger())
+	imported, err := importFolderMod(context.Background(), service, gameID, "SkyUI", sourcePath)
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+
+	_, err = service.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: emptyReplacement,
+	})
+	if err == nil {
+		t.Fatal("UpdateMod() error = nil, want validation error")
+	}
+
+	stored, found, readErr := store.GetMod(context.Background(), imported.ID)
+	if readErr != nil {
+		t.Fatalf("GetMod() error = %v", readErr)
+	}
+	if !found || stored.OriginalSourcePath != imported.OriginalSourcePath {
+		t.Fatalf("GetMod() = %+v, %v; want original source metadata preserved", stored, found)
+	}
+	assertFileContents(t, filepath.Join(imported.SourcePath, "Data", "SkyUI.esp"), "old")
+}
+
+func TestModServiceUpdateModBlocksSourcePathUsedByAnotherMod(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	firstSource := makeSourceFolder(t, map[string]string{"first.esp": "one"})
+	secondSource := makeSourceFolder(t, map[string]string{"second.esp": "two"})
+	service := NewModService(store, testLogger())
+	first, err := importFolderMod(context.Background(), service, gameID, "First", firstSource)
+	if err != nil {
+		t.Fatalf("ImportMod() first error = %v", err)
+	}
+	second, err := importFolderMod(context.Background(), service, gameID, "Second", secondSource)
+	if err != nil {
+		t.Fatalf("ImportMod() second error = %v", err)
+	}
+
+	_, err = service.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      first.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: secondSource,
+	})
+	if err == nil || !strings.Contains(err.Error(), "already used by mod") {
+		t.Fatalf("UpdateMod() error = %v, want source conflict", err)
+	}
+	assertFileContents(t, filepath.Join(first.SourcePath, "first.esp"), "one")
+	assertFileContents(t, filepath.Join(second.SourcePath, "second.esp"), "two")
+}
+
+func TestModServiceUpdateModMetadataFailurePreservesPreviousMetadata(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "old"})
+	replacementPath := makeSourceFolder(t, map[string]string{"mod.esp": "new", "readme.txt": "notes"})
+	service := NewModService(store, testLogger())
+	imported, err := importFolderMod(context.Background(), service, gameID, "SkyUI", sourcePath)
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+	if _, err := store.UpdateModDetectedMetadata(context.Background(), imported.ID, dbtypes.ModMetadataDetectedInput{
+		Version: serviceStringPtr("1.0.0"),
+		Author:  serviceStringPtr("Original Author"),
+	}); err != nil {
+		t.Fatalf("UpdateModDetectedMetadata() error = %v", err)
+	}
+	service.metadataRegistry = modmetadata.NewRegistry(failingMetadataParser{})
+
+	result, err := service.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: replacementPath,
+	})
+	if err != nil {
+		t.Fatalf("UpdateMod() error = %v", err)
+	}
+
+	if result.MetadataWarning == nil || !strings.Contains(*result.MetadataWarning, "forced metadata failure") {
+		t.Fatalf("MetadataWarning = %v, want parser warning", result.MetadataWarning)
+	}
+	if result.After.FileCount == nil || *result.After.FileCount != 1 {
+		t.Fatalf("After.FileCount = %v, want previous count preserved", result.After.FileCount)
+	}
+	if result.After.DetectedMetadata.Version == nil || *result.After.DetectedMetadata.Version != "1.0.0" || result.After.DetectedMetadata.Author == nil || *result.After.DetectedMetadata.Author != "Original Author" {
+		t.Fatalf("After.DetectedMetadata = %+v, want previous detected metadata", result.After.DetectedMetadata)
+	}
+	assertFileContents(t, filepath.Join(imported.SourcePath, "mod.esp"), "new")
+	assertFileContents(t, filepath.Join(imported.SourcePath, "readme.txt"), "notes")
+}
+
+func TestModServiceUpdateModMarksAppliedProfileChanged(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeSourceFolder(t, map[string]string{"mod.esp": "old"})
+	replacementPath := makeSourceFolder(t, map[string]string{"mod.esp": "new"})
+	modService := NewModService(store, testLogger())
+	imported, err := importFolderMod(context.Background(), modService, gameID, "SkyUI", sourcePath)
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+	if _, err := store.AddModToProfile(context.Background(), profileID, imported.ID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+	saveServiceAppliedStateWithCurrentComposition(t, store, gameID, profileID)
+
+	result, err := modService.UpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: replacementPath,
+	})
+	if err != nil {
+		t.Fatalf("UpdateMod() error = %v", err)
+	}
+	if !result.IsInAppliedProfile || !result.RequiresReapply {
+		t.Fatalf("UpdateMod() applied flags = %v/%v, want true/true", result.IsInAppliedProfile, result.RequiresReapply)
+	}
+
+	profileService := NewProfileService(store, testLogger())
+	summary, err := profileService.GetAppliedProfileSummary(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileSummary() error = %v", err)
+	}
+	if summary == nil || summary.HasAppliedProfileChanged == nil || !*summary.HasAppliedProfileChanged {
+		t.Fatalf("GetAppliedProfileSummary() = %+v, want changed after package update", summary)
+	}
+}
+
 func TestModServiceImportReturnsExistingModAndConfig(t *testing.T) {
 	t.Parallel()
 

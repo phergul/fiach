@@ -9,12 +9,13 @@ type ModProfile struct {
 }
 
 type ProfileMod struct {
-	ProfileID  int64  `db:"profile_id"`
-	ModID      int64  `db:"mod_id"`
-	Name       string `db:"name"`
-	SourcePath string `db:"source_path"`
-	Enabled    bool   `db:"enabled"`
-	LoadOrder  int64  `db:"load_order"`
-	CreatedAt  string `db:"created_at"`
-	UpdatedAt  string `db:"updated_at"`
+	ProfileID    int64  `db:"profile_id"`
+	ModID        int64  `db:"mod_id"`
+	Name         string `db:"name"`
+	SourcePath   string `db:"source_path"`
+	ModUpdatedAt string `db:"mod_updated_at"`
+	Enabled      bool   `db:"enabled"`
+	LoadOrder    int64  `db:"load_order"`
+	CreatedAt    string `db:"created_at"`
+	UpdatedAt    string `db:"updated_at"`
 }

@@ -246,6 +246,88 @@ func TestUpdateModDetectedMetadataPreservesUserValues(t *testing.T) {
 	}
 }
 
+func TestUpdateModPackageChangesPackageFieldsAndPreservesRelatedRows(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	mod, err := store.CreateMod(context.Background(), dbtypes.CreateModInput{
+		GameID:             gameID,
+		Name:               "SkyUI",
+		SourcePath:         "/managed/skyui",
+		OriginalSourcePath: "/imports/skyui-v1",
+		FileCount:          int64TestPtr(1),
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version: stringPtr("1.0.0"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateMod() error = %v", err)
+	}
+	if _, err := store.CreateOrReplaceModInstallConfig(context.Background(), dbtypes.CreateModInstallConfigInput{
+		ModID:              mod.ID,
+		StrategyType:       "generic_copy",
+		TargetBase:         "game_root",
+		TargetRelativePath: "Data",
+	}); err != nil {
+		t.Fatalf("CreateOrReplaceModInstallConfig() error = %v", err)
+	}
+	if _, err := store.AddModToProfile(context.Background(), profile.ID, mod.ID); err != nil {
+		t.Fatalf("AddModToProfile() error = %v", err)
+	}
+
+	replacementOriginalPath, err := CanonicalModOriginalSourcePath("/imports/skyui-v2.zip")
+	if err != nil {
+		t.Fatalf("CanonicalModOriginalSourcePath() error = %v", err)
+	}
+	updated, err := store.UpdateModPackage(context.Background(), dbtypes.UpdateModPackageInput{
+		ModID:              mod.ID,
+		SourceType:         dbtypes.ModSourceTypeArchive,
+		OriginalSourcePath: replacementOriginalPath,
+		OriginalSourceName: stringPtr("skyui-v2.zip"),
+		FileCount:          int64TestPtr(2),
+		DirectoryCount:     int64TestPtr(1),
+		TotalSizeBytes:     int64TestPtr(10),
+		DetectedMetadata: dbtypes.ModMetadataDetectedInput{
+			Version: stringPtr("2.0.0"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateModPackage() error = %v", err)
+	}
+
+	if updated.ID != mod.ID || updated.Name != "SkyUI" || updated.SourcePath != filepath.Clean("/managed/skyui") || updated.SourceType != dbtypes.ModSourceTypeArchive || updated.OriginalSourcePath != replacementOriginalPath || updated.OriginalSourceName == nil || *updated.OriginalSourceName != "skyui-v2.zip" {
+		t.Fatalf("UpdateModPackage() = %+v, want same identity with updated package fields", updated)
+	}
+	if updated.FileCount == nil || *updated.FileCount != 2 || updated.DirectoryCount == nil || *updated.DirectoryCount != 1 || updated.TotalSizeBytes == nil || *updated.TotalSizeBytes != 10 {
+		t.Fatalf("UpdateModPackage() counts = %+v, want updated counts", updated)
+	}
+	config, found, err := store.GetModInstallConfig(context.Background(), mod.ID)
+	if err != nil {
+		t.Fatalf("GetModInstallConfig() error = %v", err)
+	}
+	if !found || config.TargetRelativePath != "Data" {
+		t.Fatalf("GetModInstallConfig() = %+v, %v; want preserved config", config, found)
+	}
+	profileMods, err := store.ListProfileMods(context.Background(), profile.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 1 || profileMods[0].ModID != mod.ID {
+		t.Fatalf("ListProfileMods() = %+v, want preserved profile membership", profileMods)
+	}
+	metadata, found, err := store.GetModMetadata(context.Background(), mod.ID)
+	if err != nil {
+		t.Fatalf("GetModMetadata() error = %v", err)
+	}
+	if !found || metadata.DetectedVersion == nil || *metadata.DetectedVersion != "2.0.0" {
+		t.Fatalf("GetModMetadata() = %+v, %v; want updated detected metadata", metadata, found)
+	}
+}
+
 func TestModMetadataCascadesWhenModDeleted(t *testing.T) {
 	t.Parallel()
 

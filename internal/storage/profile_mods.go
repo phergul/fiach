@@ -237,6 +237,7 @@ const profileModsSelectSQL = `
 		pm.mod_id,
 		m.name,
 		m.source_path,
+		m.updated_at AS mod_updated_at,
 		pm.enabled,
 		pm.load_order,
 		pm.created_at,

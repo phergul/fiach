@@ -9,14 +9,15 @@ type ModProfile struct {
 }
 
 type ProfileMod struct {
-	ProfileID  int64
-	ModID      int64
-	Name       string
-	SourcePath string
-	Enabled    bool
-	LoadOrder  int64
-	CreatedAt  string
-	UpdatedAt  string
+	ProfileID    int64
+	ModID        int64
+	Name         string
+	SourcePath   string
+	ModUpdatedAt string
+	Enabled      bool
+	LoadOrder    int64
+	CreatedAt    string
+	UpdatedAt    string
 }
 
 type AppliedProfileSummary struct {

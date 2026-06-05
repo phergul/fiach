@@ -149,6 +149,75 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	}, nil
 }
 
+func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (result dto.UpdateModResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationUpdateMod, "Mod update started",
+		slog.Int64("mod_id", input.ModID),
+		slog.String("source_type", string(input.SourceType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+	)
+	defer func() {
+		if err != nil {
+			diag.fail("Mod update failed", err)
+			err = fmt.Errorf("update mod: %w", err)
+		}
+	}()
+
+	source, err := importSource(input.SourceType, input.SourcePath)
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+
+	updateResult, err := modimport.Update(ctx, s.store, input.ModID, source, modimport.ImportOptions{
+		MetadataRegistry: s.metadataRegistry,
+	})
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+
+	var metadataWarning *string
+	if updateResult.MetadataError != nil {
+		warning := updateResult.MetadataError.Error()
+		metadataWarning = &warning
+		s.logger.WarnContext(ctx, "Mod metadata unavailable",
+			slog.String("operation", diagnostics.OperationUpdateMod),
+			slog.String("event", "metadata_unavailable"),
+			slog.Int64("game_id", updateResult.After.GameID),
+			slog.Int64("mod_id", updateResult.After.ID),
+			slog.String("source_type", string(input.SourceType)),
+			diagnostics.PathAttr("source_path", input.SourcePath),
+			diagnostics.ErrorAttr(updateResult.MetadataError),
+		)
+	}
+
+	isInAppliedProfile := false
+	appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, updateResult.After.GameID)
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+	if appliedFound {
+		isInAppliedProfile, err = s.store.ProfileUsesMod(ctx, appliedState.ProfileID, updateResult.After.ID)
+		if err != nil {
+			return dto.UpdateModResult{}, err
+		}
+	}
+
+	result = dto.UpdateModResult{
+		Mod:                mappers.ToDTOMod(updateResult.After),
+		Before:             toModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
+		After:              toModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
+		MetadataWarning:    metadataWarning,
+		IsInAppliedProfile: isInAppliedProfile,
+		RequiresReapply:    isInAppliedProfile,
+	}
+	diag.complete("Mod update completed",
+		slog.Int64("game_id", updateResult.After.GameID),
+		slog.Int64("mod_id", updateResult.After.ID),
+		slog.Bool("requires_reapply", result.RequiresReapply),
+	)
+
+	return result, nil
+}
+
 func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.Source, error) {
 	switch mappers.ToDBModSourceType(sourceType) {
 	case dbtypes.ModSourceTypeFolder:
@@ -159,5 +228,22 @@ func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.So
 		return nil, errors.New("import source type is required")
 	default:
 		return nil, fmt.Errorf("unsupported import source type %q", sourceType)
+	}
+}
+
+func toModPackageSnapshot(mod dbtypes.Mod, metadata dbtypes.ModMetadata) dto.ModPackageSnapshot {
+	return dto.ModPackageSnapshot{
+		SourceType:         mappers.ToDTOModSourceType(mod.SourceType),
+		OriginalSourcePath: mod.OriginalSourcePath,
+		OriginalSourceName: mod.OriginalSourceName,
+		FileCount:          mod.FileCount,
+		DirectoryCount:     mod.DirectoryCount,
+		TotalSizeBytes:     mod.TotalSizeBytes,
+		DetectedMetadata: dto.ModDetectedMetadataSnapshot{
+			Version:     metadata.DetectedVersion,
+			Author:      metadata.DetectedAuthor,
+			Description: metadata.DetectedDescription,
+			SourceURL:   metadata.DetectedSourceURL,
+		},
 	}
 }

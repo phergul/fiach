@@ -63,6 +63,12 @@ export function RenameMod(modID: number, name: string): $CancellablePromise<dto$
     });
 }
 
+export function UpdateMod(input: dto$0.UpdateModInput): $CancellablePromise<dto$0.UpdateModResult> {
+    return $Call.ByID(4122963090, input).then(($result: any) => {
+        return $$createType8($result);
+    });
+}
+
 export function UpdateModMetadata(input: dto$0.UpdateModMetadataInput): $CancellablePromise<dto$0.ModMetadata> {
     return $Call.ByID(3991595271, input).then(($result: any) => {
         return $$createType1($result);
@@ -78,3 +84,4 @@ const $$createType4 = $Create.Array($$createType3);
 const $$createType5 = dto$0.Mod.createFrom;
 const $$createType6 = $Create.Array($$createType5);
 const $$createType7 = dto$0.Preview.createFrom;
+const $$createType8 = dto$0.UpdateModResult.createFrom;

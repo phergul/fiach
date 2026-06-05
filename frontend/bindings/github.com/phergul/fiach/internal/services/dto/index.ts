@@ -18,11 +18,13 @@ export {
     Mod,
     ModContext,
     ModDeleteSummary,
+    ModDetectedMetadataSnapshot,
     ModInstallConfig,
     ModMetadata,
     ModMetadataField,
     ModMetadataFieldUpdate,
     ModMetadataFieldUpdateMode,
+    ModPackageSnapshot,
     ModProfile,
     ModSourceType,
     Operation,
@@ -51,5 +53,7 @@ export {
     StrategyDescriptor,
     StrategyType,
     StrategyVisibility,
-    UpdateModMetadataInput
+    UpdateModInput,
+    UpdateModMetadataInput,
+    UpdateModResult
 } from "./models.js";

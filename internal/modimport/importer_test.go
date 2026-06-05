@@ -2,12 +2,16 @@ package modimport
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestNormalizeName(t *testing.T) {
@@ -394,6 +398,72 @@ func TestArchiveSourceRejectsSymlinkEntries(t *testing.T) {
 	if !strings.Contains(err.Error(), "is a symlink") {
 		t.Fatalf("Validate() error = %q, want symlink context", err.Error())
 	}
+}
+
+func TestUpdateRestoresCurrentPackageWhenStorageUpdateFails(t *testing.T) {
+	t.Parallel()
+
+	gameStoragePath := t.TempDir()
+	managedPath := filepath.Join(gameStoragePath, "SkyUI")
+	if err := os.Mkdir(managedPath, 0o755); err != nil {
+		t.Fatalf("create managed folder: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(managedPath, "mod.esp"), []byte("old"), 0o644); err != nil {
+		t.Fatalf("write managed file: %v", err)
+	}
+	replacementPath := makeSourceFolder(t, map[string]string{"mod.esp": "new"})
+	source, err := NewFolderSource(replacementPath)
+	if err != nil {
+		t.Fatalf("NewFolderSource() error = %v", err)
+	}
+	store := failingUpdateStore{
+		mod: dbtypes.Mod{
+			ID:                 10,
+			GameID:             20,
+			Name:               "SkyUI",
+			SourceType:         dbtypes.ModSourceTypeFolder,
+			SourcePath:         managedPath,
+			OriginalSourcePath: filepath.Join(t.TempDir(), "source"),
+		},
+		gameStoragePath: gameStoragePath,
+		updateErr:       fmt.Errorf("forced update failure"),
+	}
+
+	_, err = Update(context.Background(), store, store.mod.ID, source, ImportOptions{})
+	if err == nil || !strings.Contains(err.Error(), "forced update failure") {
+		t.Fatalf("Update() error = %v, want storage failure", err)
+	}
+	assertFileContents(t, filepath.Join(managedPath, "mod.esp"), "old")
+}
+
+type failingUpdateStore struct {
+	mod             dbtypes.Mod
+	gameStoragePath string
+	updateErr       error
+}
+
+func (s failingUpdateStore) GetMod(context.Context, int64) (dbtypes.Mod, bool, error) {
+	return s.mod, true, nil
+}
+
+func (s failingUpdateStore) FindModByOriginalSourcePath(context.Context, int64, string) (dbtypes.Mod, bool, error) {
+	return dbtypes.Mod{}, false, nil
+}
+
+func (s failingUpdateStore) GetGlobalModStorageRoot(context.Context) (string, error) {
+	return filepath.Dir(s.gameStoragePath), nil
+}
+
+func (s failingUpdateStore) ResolveGameModStoragePath(context.Context, int64, string) (string, error) {
+	return s.gameStoragePath, nil
+}
+
+func (s failingUpdateStore) GetModMetadata(context.Context, int64) (dbtypes.ModMetadata, bool, error) {
+	return dbtypes.ModMetadata{ModID: s.mod.ID}, true, nil
+}
+
+func (s failingUpdateStore) UpdateModPackage(context.Context, dbtypes.UpdateModPackageInput) (dbtypes.Mod, error) {
+	return dbtypes.Mod{}, s.updateErr
 }
 
 func makeSourceFolder(t *testing.T, files map[string]string) string {

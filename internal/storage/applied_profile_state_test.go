@@ -315,3 +315,7 @@ func TestSaveAppliedProfileStateRejectsProfileFromAnotherGame(t *testing.T) {
 func stringPtr(value string) *string {
 	return &value
 }
+
+func int64TestPtr(value int64) *int64 {
+	return &value
+}

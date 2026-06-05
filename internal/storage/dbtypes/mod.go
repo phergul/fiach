@@ -36,3 +36,15 @@ type CreateModInput struct {
 	MetadataJSON       *string
 	DetectedMetadata   ModMetadataDetectedInput
 }
+
+type UpdateModPackageInput struct {
+	ModID              int64
+	SourceType         ModSourceType
+	OriginalSourcePath string
+	OriginalSourceName *string
+	FileCount          *int64
+	DirectoryCount     *int64
+	TotalSizeBytes     *int64
+	MetadataJSON       *string
+	DetectedMetadata   ModMetadataDetectedInput
+}

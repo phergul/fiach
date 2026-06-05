@@ -26,3 +26,35 @@ type ImportModResult struct {
 	Mod    Mod
 	Config ModInstallConfig
 }
+
+type UpdateModInput struct {
+	ModID      int64
+	SourceType ModSourceType
+	SourcePath string
+}
+
+type UpdateModResult struct {
+	Mod                Mod
+	Before             ModPackageSnapshot
+	After              ModPackageSnapshot
+	MetadataWarning    *string
+	IsInAppliedProfile bool
+	RequiresReapply    bool
+}
+
+type ModPackageSnapshot struct {
+	SourceType         ModSourceType
+	OriginalSourcePath string
+	OriginalSourceName *string
+	FileCount          *int64
+	DirectoryCount     *int64
+	TotalSizeBytes     *int64
+	DetectedMetadata   ModDetectedMetadataSnapshot
+}
+
+type ModDetectedMetadataSnapshot struct {
+	Version     *string
+	Author      *string
+	Description *string
+	SourceURL   *string
+}
