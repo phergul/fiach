@@ -1,0 +1,111 @@
+@use '@styles' as *;
+
+$game-mod-update-modal-comparison-label-width: 7.5rem;
+$game-mod-update-modal-value-min: 0;
+
+.game-mod-update-modal-body {
+  padding: $spacing-md $spacing-xl;
+}
+
+.game-mod-update-modal {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.game-mod-update-modal-summary {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-md;
+}
+
+.game-mod-update-modal-summary-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-update-modal-summary-item-wide {
+  grid-column: 1 / -1;
+}
+
+.game-mod-update-modal-label,
+.game-mod-update-modal-comparison-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-update-modal-value,
+.game-mod-update-modal-path,
+.game-mod-update-modal-comparison-current,
+.game-mod-update-modal-comparison-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.game-mod-update-modal-path {
+  font-family: $font-family-monospace;
+}
+
+.game-mod-update-modal-comparison {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-top: $app-border;
+}
+
+.game-mod-update-modal-comparison-header,
+.game-mod-update-modal-comparison-row {
+  display: grid;
+  grid-template-columns:
+    $game-mod-update-modal-comparison-label-width
+    minmax($game-mod-update-modal-value-min, 1fr)
+    minmax($game-mod-update-modal-value-min, 1fr);
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+}
+
+.game-mod-update-modal-comparison-header {
+  border-bottom: $app-border;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-update-modal-comparison-row {
+  border-top: $app-border;
+}
+
+.game-mod-update-modal-comparison-current {
+  color: $color-text-subtle;
+}
+
+.game-mod-update-modal-comparison-value-changed {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-update-modal-warning,
+.game-mod-update-modal-error {
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.game-mod-update-modal-warning {
+  color: $color-warning;
+}
+
+.game-mod-update-modal-error {
+  color: $color-danger;
+}
+
+.game-mod-update-modal-primary-button,
+.game-mod-update-modal-secondary-button {
+  min-height: $input-height;
+}

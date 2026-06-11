@@ -57,6 +57,12 @@ export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurati
     });
 }
 
+export function PreviewUpdateMod(input: dto$0.UpdateModInput): $CancellablePromise<dto$0.UpdateModResult> {
+    return $Call.ByID(2400039676, input).then(($result: any) => {
+        return $$createType8($result);
+    });
+}
+
 export function RenameMod(modID: number, name: string): $CancellablePromise<dto$0.Mod> {
     return $Call.ByID(4073359283, modID, name).then(($result: any) => {
         return $$createType5($result);

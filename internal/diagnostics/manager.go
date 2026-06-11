@@ -32,6 +32,7 @@ const (
 	OperationPreValidateMod            = "pre_validate_mod_import"
 	OperationPreviewMod                = "preview_mod_import"
 	OperationImportMod                 = "import_mod"
+	OperationPreviewUpdateMod          = "preview_mod_update"
 	OperationUpdateMod                 = "update_mod"
 	OperationRenameMod                 = "rename_mod"
 	OperationGetModDeleteSummary       = "get_mod_delete_summary"
@@ -137,6 +138,7 @@ func Operations() []OperationDescriptor {
 		{Value: OperationPreValidateMod, Label: "Pre-validate mod import"},
 		{Value: OperationPreviewMod, Label: "Preview mod import"},
 		{Value: OperationImportMod, Label: "Import mod"},
+		{Value: OperationPreviewUpdateMod, Label: "Preview mod update"},
 		{Value: OperationUpdateMod, Label: "Update mod"},
 		{Value: OperationRenameMod, Label: "Rename mod"},
 		{Value: OperationGetModDeleteSummary, Label: "Get mod delete summary"},

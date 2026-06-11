@@ -28,6 +28,35 @@ type UpdateResult struct {
 	MetadataError  error
 }
 
+type preparedUpdate struct {
+	before          dbtypes.Mod
+	after           dbtypes.Mod
+	beforeMetadata  dbtypes.ModMetadata
+	afterMetadata   dbtypes.ModMetadata
+	metadataError   error
+	gameStoragePath string
+	tempPath        string
+	updateInput     dbtypes.UpdateModPackageInput
+}
+
+func PreviewUpdate(ctx context.Context, store UpdateStore, modID int64, source Source, options ImportOptions) (result UpdateResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("preview mod source update: %w", err)
+		}
+	}()
+
+	prepared, cleanup, err := prepareUpdate(ctx, store, modID, source, options)
+	if cleanup != nil {
+		defer cleanup()
+	}
+	if err != nil {
+		return UpdateResult{}, err
+	}
+
+	return prepared.result(), nil
+}
+
 func Update(ctx context.Context, store UpdateStore, modID int64, source Source, options ImportOptions) (result UpdateResult, err error) {
 	defer func() {
 		if err != nil {
@@ -35,93 +64,17 @@ func Update(ctx context.Context, store UpdateStore, modID int64, source Source, 
 		}
 	}()
 
-	if store == nil {
-		return UpdateResult{}, errors.New("store is not configured")
+	prepared, cleanup, err := prepareUpdate(ctx, store, modID, source, options)
+	if cleanup != nil {
+		defer cleanup()
 	}
-	if modID <= 0 {
-		return UpdateResult{}, errors.New("mod ID must be positive")
-	}
-	if source == nil {
-		return UpdateResult{}, errors.New("update source is required")
-	}
-	if err := source.Validate(); err != nil {
-		return UpdateResult{}, err
-	}
-
-	mod, found, err := store.GetMod(ctx, modID)
 	if err != nil {
 		return UpdateResult{}, err
 	}
-	if !found {
-		return UpdateResult{}, fmt.Errorf("mod %d was not found", modID)
-	}
 
-	if existing, found, err := store.FindModByOriginalSourcePath(ctx, mod.GameID, source.OriginalPath()); err != nil {
-		return UpdateResult{}, err
-	} else if found && existing.ID != mod.ID {
-		return UpdateResult{}, fmt.Errorf("replacement source is already used by mod %d", existing.ID)
-	}
-
-	globalRoot, err := store.GetGlobalModStorageRoot(ctx)
-	if err != nil {
-		return UpdateResult{}, err
-	}
-	gameStoragePath, err := store.ResolveGameModStoragePath(ctx, mod.GameID, globalRoot)
-	if err != nil {
-		return UpdateResult{}, err
-	}
-	if err := requireManagedSourcePath(gameStoragePath, mod.SourcePath); err != nil {
-		return UpdateResult{}, err
-	}
-	if pathContains(source.OriginalPath(), gameStoragePath) {
-		return UpdateResult{}, fmt.Errorf("source %q is inside the managed mod storage folder %q", source.OriginalPath(), gameStoragePath)
-	}
-	if pathContains(gameStoragePath, source.OriginalPath()) {
-		return UpdateResult{}, fmt.Errorf("source %q contains the managed mod storage folder %q", source.OriginalPath(), gameStoragePath)
-	}
-
-	beforeMetadata, metadataFound, err := store.GetModMetadata(ctx, mod.ID)
-	if err != nil {
-		return UpdateResult{}, err
-	}
-	if !metadataFound {
-		beforeMetadata = dbtypes.ModMetadata{ModID: mod.ID}
-	}
-
-	tempPath, err := makeImportTempDir(gameStoragePath, filepath.Base(mod.SourcePath))
-	if err != nil {
-		return UpdateResult{}, err
-	}
-	removeTemp := true
-	defer func() {
-		if removeTemp {
-			_ = os.RemoveAll(tempPath)
-		}
-	}()
-
-	if err := source.Materialize(tempPath); err != nil {
-		return UpdateResult{}, err
-	}
-
-	metadata, metadataErr := parseImportMetadata(ctx, options.MetadataRegistry, mod.GameID, source.Type(), tempPath)
-	updateInput := updateInputFromMetadata(mod, source, metadata)
-	afterMetadataInput := dbtypes.ModMetadataDetectedInput{
-		Version:     metadata.Version,
-		Author:      metadata.Author,
-		Description: metadata.Description,
-		SourceURL:   metadata.SourceURL,
-	}
-	if metadataErr != nil {
-		updateInput = updateInputFromExisting(mod, source, beforeMetadata)
-		afterMetadataInput = dbtypes.ModMetadataDetectedInput{
-			Version:     beforeMetadata.DetectedVersion,
-			Author:      beforeMetadata.DetectedAuthor,
-			Description: beforeMetadata.DetectedDescription,
-			SourceURL:   beforeMetadata.DetectedSourceURL,
-		}
-	}
-
-	backupPath, err := makeImportTempDir(gameStoragePath, filepath.Base(mod.SourcePath)+"-backup")
+	mod := prepared.before
+	tempPath := prepared.tempPath
+	backupPath, err := makeImportTempDir(prepared.gameStoragePath, filepath.Base(mod.SourcePath)+"-backup")
 	if err != nil {
 		return UpdateResult{}, err
 	}
@@ -146,10 +99,10 @@ func Update(ctx context.Context, store UpdateStore, modID int64, source Source, 
 		}
 		return UpdateResult{}, fmt.Errorf("move replacement managed mod folder into place: %w", err)
 	}
-	removeTemp = false
+	cleanup = nil
 	replacementInPlace := true
 
-	updatedMod, err := store.UpdateModPackage(ctx, updateInput)
+	updatedMod, err := store.UpdateModPackage(ctx, prepared.updateInput)
 	if err != nil {
 		if replacementInPlace {
 			_ = os.RemoveAll(mod.SourcePath)
@@ -167,6 +120,102 @@ func Update(ctx context.Context, store UpdateStore, modID int64, source Source, 
 		return UpdateResult{}, fmt.Errorf("remove previous managed mod backup: %w", err)
 	}
 
+	return UpdateResult{
+		Before:         prepared.before,
+		After:          updatedMod,
+		BeforeMetadata: prepared.beforeMetadata,
+		AfterMetadata:  prepared.afterMetadata,
+		MetadataError:  prepared.metadataError,
+	}, nil
+}
+
+func prepareUpdate(ctx context.Context, store UpdateStore, modID int64, source Source, options ImportOptions) (prepared preparedUpdate, cleanup func(), err error) {
+	if store == nil {
+		return preparedUpdate{}, nil, errors.New("store is not configured")
+	}
+	if modID <= 0 {
+		return preparedUpdate{}, nil, errors.New("mod ID must be positive")
+	}
+	if source == nil {
+		return preparedUpdate{}, nil, errors.New("update source is required")
+	}
+	if err := source.Validate(); err != nil {
+		return preparedUpdate{}, nil, err
+	}
+
+	mod, found, err := store.GetMod(ctx, modID)
+	if err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	if !found {
+		return preparedUpdate{}, nil, fmt.Errorf("mod %d was not found", modID)
+	}
+
+	if existing, found, err := store.FindModByOriginalSourcePath(ctx, mod.GameID, source.OriginalPath()); err != nil {
+		return preparedUpdate{}, nil, err
+	} else if found && existing.ID != mod.ID {
+		return preparedUpdate{}, nil, fmt.Errorf("replacement source is already used by mod %d", existing.ID)
+	}
+
+	globalRoot, err := store.GetGlobalModStorageRoot(ctx)
+	if err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	gameStoragePath, err := store.ResolveGameModStoragePath(ctx, mod.GameID, globalRoot)
+	if err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	if err := requireManagedSourcePath(gameStoragePath, mod.SourcePath); err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	if pathContains(source.OriginalPath(), gameStoragePath) {
+		return preparedUpdate{}, nil, fmt.Errorf("source %q is inside the managed mod storage folder %q", source.OriginalPath(), gameStoragePath)
+	}
+	if pathContains(gameStoragePath, source.OriginalPath()) {
+		return preparedUpdate{}, nil, fmt.Errorf("source %q contains the managed mod storage folder %q", source.OriginalPath(), gameStoragePath)
+	}
+
+	beforeMetadata, metadataFound, err := store.GetModMetadata(ctx, mod.ID)
+	if err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	if !metadataFound {
+		beforeMetadata = dbtypes.ModMetadata{ModID: mod.ID}
+	}
+
+	tempPath, err := makeImportTempDir(gameStoragePath, filepath.Base(mod.SourcePath))
+	if err != nil {
+		return preparedUpdate{}, nil, err
+	}
+	cleanup = func() {
+		if tempPath != "" {
+			_ = os.RemoveAll(tempPath)
+		}
+	}
+
+	if err := source.Materialize(tempPath); err != nil {
+		cleanup()
+		return preparedUpdate{}, nil, err
+	}
+
+	metadata, metadataErr := parseImportMetadata(ctx, options.MetadataRegistry, mod.GameID, source.Type(), tempPath)
+	updateInput := updateInputFromMetadata(mod, source, metadata)
+	afterMetadataInput := dbtypes.ModMetadataDetectedInput{
+		Version:     metadata.Version,
+		Author:      metadata.Author,
+		Description: metadata.Description,
+		SourceURL:   metadata.SourceURL,
+	}
+	if metadataErr != nil {
+		updateInput = updateInputFromExisting(mod, source, beforeMetadata)
+		afterMetadataInput = dbtypes.ModMetadataDetectedInput{
+			Version:     beforeMetadata.DetectedVersion,
+			Author:      beforeMetadata.DetectedAuthor,
+			Description: beforeMetadata.DetectedDescription,
+			SourceURL:   beforeMetadata.DetectedSourceURL,
+		}
+	}
+
 	afterMetadata := beforeMetadata
 	afterMetadata.ModID = mod.ID
 	afterMetadata.DetectedVersion = afterMetadataInput.Version
@@ -174,13 +223,35 @@ func Update(ctx context.Context, store UpdateStore, modID int64, source Source, 
 	afterMetadata.DetectedDescription = afterMetadataInput.Description
 	afterMetadata.DetectedSourceURL = afterMetadataInput.SourceURL
 
+	after := mod
+	after.SourceType = updateInput.SourceType
+	after.OriginalSourcePath = updateInput.OriginalSourcePath
+	after.OriginalSourceName = updateInput.OriginalSourceName
+	after.FileCount = updateInput.FileCount
+	after.DirectoryCount = updateInput.DirectoryCount
+	after.TotalSizeBytes = updateInput.TotalSizeBytes
+	after.MetadataJSON = updateInput.MetadataJSON
+
+	return preparedUpdate{
+		before:          mod,
+		after:           after,
+		beforeMetadata:  beforeMetadata,
+		afterMetadata:   afterMetadata,
+		metadataError:   metadataErr,
+		gameStoragePath: gameStoragePath,
+		tempPath:        tempPath,
+		updateInput:     updateInput,
+	}, cleanup, nil
+}
+
+func (p preparedUpdate) result() UpdateResult {
 	return UpdateResult{
-		Before:         mod,
-		After:          updatedMod,
-		BeforeMetadata: beforeMetadata,
-		AfterMetadata:  afterMetadata,
-		MetadataError:  metadataErr,
-	}, nil
+		Before:         p.before,
+		After:          p.after,
+		BeforeMetadata: p.beforeMetadata,
+		AfterMetadata:  p.afterMetadata,
+		MetadataError:  p.metadataError,
+	}
 }
 
 func updateInputFromMetadata(mod dbtypes.Mod, source Source, metadata modmetadata.Metadata) dbtypes.UpdateModPackageInput {

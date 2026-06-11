@@ -149,6 +149,44 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	}, nil
 }
 
+func (s *ModService) PreviewUpdateMod(ctx context.Context, input dto.UpdateModInput) (result dto.UpdateModResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationPreviewUpdateMod, "Mod update preview started",
+		slog.Int64("mod_id", input.ModID),
+		slog.String("source_type", string(input.SourceType)),
+		diagnostics.PathAttr("source_path", input.SourcePath),
+	)
+	defer func() {
+		if err != nil {
+			diag.fail("Mod update preview failed", err)
+			err = fmt.Errorf("preview mod update: %w", err)
+		}
+	}()
+
+	source, err := importSource(input.SourceType, input.SourcePath)
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+
+	updateResult, err := modimport.PreviewUpdate(ctx, s.store, input.ModID, source, modimport.ImportOptions{
+		MetadataRegistry: s.metadataRegistry,
+	})
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+
+	result, err = s.toUpdateModResult(ctx, updateResult)
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+	diag.complete("Mod update preview completed",
+		slog.Int64("game_id", updateResult.After.GameID),
+		slog.Int64("mod_id", updateResult.After.ID),
+		slog.Bool("requires_reapply", result.RequiresReapply),
+	)
+
+	return result, nil
+}
+
 func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (result dto.UpdateModResult, err error) {
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationUpdateMod, "Mod update started",
 		slog.Int64("mod_id", input.ModID),
@@ -174,10 +212,11 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 		return dto.UpdateModResult{}, err
 	}
 
-	var metadataWarning *string
+	result, err = s.toUpdateModResult(ctx, updateResult)
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
 	if updateResult.MetadataError != nil {
-		warning := updateResult.MetadataError.Error()
-		metadataWarning = &warning
 		s.logger.WarnContext(ctx, "Mod metadata unavailable",
 			slog.String("operation", diagnostics.OperationUpdateMod),
 			slog.String("event", "metadata_unavailable"),
@@ -187,6 +226,22 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 			diagnostics.PathAttr("source_path", input.SourcePath),
 			diagnostics.ErrorAttr(updateResult.MetadataError),
 		)
+	}
+
+	diag.complete("Mod update completed",
+		slog.Int64("game_id", updateResult.After.GameID),
+		slog.Int64("mod_id", updateResult.After.ID),
+		slog.Bool("requires_reapply", result.RequiresReapply),
+	)
+
+	return result, nil
+}
+
+func (s *ModService) toUpdateModResult(ctx context.Context, updateResult modimport.UpdateResult) (dto.UpdateModResult, error) {
+	var metadataWarning *string
+	if updateResult.MetadataError != nil {
+		warning := updateResult.MetadataError.Error()
+		metadataWarning = &warning
 	}
 
 	isInAppliedProfile := false
@@ -201,21 +256,14 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 		}
 	}
 
-	result = dto.UpdateModResult{
+	return dto.UpdateModResult{
 		Mod:                mappers.ToDTOMod(updateResult.After),
 		Before:             toModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
 		After:              toModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
 		MetadataWarning:    metadataWarning,
 		IsInAppliedProfile: isInAppliedProfile,
 		RequiresReapply:    isInAppliedProfile,
-	}
-	diag.complete("Mod update completed",
-		slog.Int64("game_id", updateResult.After.GameID),
-		slog.Int64("mod_id", updateResult.After.ID),
-		slog.Bool("requires_reapply", result.RequiresReapply),
-	)
-
-	return result, nil
+	}, nil
 }
 
 func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.Source, error) {

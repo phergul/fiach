@@ -25,10 +25,13 @@ import './GameModsSection.scss';
 
 interface GameModsSectionProps {
   isImportDisabled?: boolean;
+  isUpdateDisabled?: boolean;
   modManager: UseGameModsResult;
   onModDeleted: () => Promise<void> | void;
   onImportArchive: () => void;
   onImportFolder: () => void;
+  onUpdateArchiveMod: (mod: Mod) => void;
+  onUpdateFolderMod: (mod: Mod) => void;
 }
 
 const deleteSummaryMessage = (mod: Mod | null, summary: ModDeleteSummary | null) => {
@@ -52,10 +55,13 @@ const deleteSummaryMessage = (mod: Mod | null, summary: ModDeleteSummary | null)
 
 export const GameModsSection = ({
   isImportDisabled = false,
+  isUpdateDisabled = false,
   modManager,
   onModDeleted,
   onImportArchive,
   onImportFolder,
+  onUpdateArchiveMod,
+  onUpdateFolderMod,
 }: GameModsSectionProps) => {
   const { addErrorToast, addToast } = useToast();
   const { isLoading, loadError, mods, refreshMods } = modManager;
@@ -108,7 +114,7 @@ export const GameModsSection = ({
     },
   ];
   const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
-  const isRowBusy = isDeleteBusy || isSavingMetadata;
+  const isRowBusy = isDeleteBusy || isSavingMetadata || isUpdateDisabled;
   const selectedMetadataMod = editingMetadataModID === null
     ? null
     : mods.find((mod) => mod.ID === editingMetadataModID) ?? null;
@@ -280,6 +286,8 @@ export const GameModsSection = ({
                 mod={mod}
                 onDeleteMod={requestDeleteMod}
                 onEditMod={openMetadataEditor}
+                onUpdateArchiveMod={onUpdateArchiveMod}
+                onUpdateFolderMod={onUpdateFolderMod}
               />
             ))}
           </ul>

@@ -1,7 +1,7 @@
 @use '@styles' as *;
 
 $game-mod-list-item-control-height: 2.5rem;
-$game-mod-list-item-actions-width: 5.5rem;
+$game-mod-list-item-actions-width: 8.25rem;
 $game-mod-list-item-icon-size: 1rem;
 
 .game-mod-list-item {
@@ -41,10 +41,14 @@ $game-mod-list-item-icon-size: 1rem;
 
 .game-mod-list-item-actions {
   display: grid;
-  grid-template-columns: repeat(2, $game-mod-list-item-control-height);
+  grid-template-columns: repeat(3, $game-mod-list-item-control-height);
   align-items: center;
   justify-content: flex-end;
   gap: $spacing-xs;
+}
+
+.game-mod-list-item-update-anchor {
+  position: relative;
 }
 
 .game-mod-list-item-input {

@@ -12,12 +12,14 @@ import { GameDetailsState } from '@components/Games/Details/GameDetailsState/Gam
 import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
 import { GameModImportWizard } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizard';
+import { GameModUpdateModal } from '@components/Games/Details/Mods/GameModUpdateModal/GameModUpdateModal';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
 import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProfilesSection/GameProfilesSection';
 import {
   useAppliedProfile,
   useGameArtwork,
   useGameModImportFlow,
+  useGameModUpdateFlow,
   useGameMods,
   useGameProfiles,
   useGameReShadeDetection,
@@ -61,6 +63,16 @@ export const GameDetails = () => {
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
+  });
+  const refreshAfterModUpdated = async () => {
+    await Promise.all([
+      gameModManager.refreshMods(),
+      profileManager.refreshProfiles(),
+      appliedProfileManager.refreshAppliedProfile(),
+    ]);
+  };
+  const updateFlow = useGameModUpdateFlow({
+    refreshAfterUpdate: refreshAfterModUpdated,
   });
   const storageOverride = useGameStorageOverride({
     game,
@@ -246,10 +258,13 @@ export const GameDetails = () => {
           {activeTab === 'mods' ? (
             <GameModsSection
               isImportDisabled={importFlow.isImporting}
+              isUpdateDisabled={updateFlow.isBusy}
               modManager={gameModManager}
               onModDeleted={refreshAfterModDeleted}
               onImportArchive={importFlow.startArchiveImportFlow}
               onImportFolder={importFlow.startFolderImportFlow}
+              onUpdateArchiveMod={updateFlow.startArchiveUpdateFlow}
+              onUpdateFolderMod={updateFlow.startFolderUpdateFlow}
             />
           ) : (
             <GameProfilesSection
@@ -275,6 +290,15 @@ export const GameDetails = () => {
         sourcePath={importFlow.importWizard?.sourcePath ?? ''}
         sourceType={importFlow.importWizard?.sourceType ?? ModSourceType.$zero}
         targetPath={importFlow.importWizard?.targetPath ?? ''}
+      />
+
+      <GameModUpdateModal
+        error={updateFlow.updateError}
+        isBusy={updateFlow.isUpdatingMod}
+        isOpen={updateFlow.updateReview !== null}
+        onClose={updateFlow.closeUpdateReview}
+        onConfirm={updateFlow.confirmUpdateMod}
+        result={updateFlow.updateReview?.preview ?? null}
       />
 
       <ConfirmDialog

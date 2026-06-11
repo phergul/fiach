@@ -13,6 +13,8 @@ export { useStoredGames } from './useStoredGames';
 //games
 export { useGameModImportFlow } from './games/useGameModImportFlow';
 export type { UseGameModImportFlowResult } from './games/useGameModImportFlow';
+export { useGameModUpdateFlow } from './games/useGameModUpdateFlow';
+export type { UseGameModUpdateFlowResult } from './games/useGameModUpdateFlow';
 export { useGameReShadeDetection } from './games/useGameReShadeDetection';
 export type { UseGameReShadeDetectionResult } from './games/useGameReShadeDetection';
 export { useGameReShadeInstall } from './games/useGameReShadeInstall';
