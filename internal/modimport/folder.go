@@ -1,6 +1,7 @@
 package modimport
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -48,7 +49,11 @@ func (s FolderSource) SuggestedName() string {
 	return folderName(s.originalPath)
 }
 
-func (s FolderSource) Validate() error {
+func (s FolderSource) Validate(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	info, err := os.Stat(s.originalPath)
 	if err != nil {
 		return fmt.Errorf("read source folder: %w", err)
@@ -68,7 +73,11 @@ func (s FolderSource) Validate() error {
 	return nil
 }
 
-func (s FolderSource) Materialize(destinationPath string) error {
+func (s FolderSource) Materialize(ctx context.Context, destinationPath string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	if err := copyImportFolder(s.originalPath, destinationPath); err != nil {
 		return fmt.Errorf("copy source folder: %w", err)
 	}

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 var recognizedExtensions = map[string]struct{}{
@@ -62,12 +63,9 @@ func Inspect(sourceRoot string) (inspection Inspection, err error) {
 			return nil
 		}
 
-		info, infoErr := entry.Info()
+		info, infoErr := fileops.ValidateDirEntryIsRegularFile("source file", entry)
 		if infoErr != nil {
 			return infoErr
-		}
-		if !info.Mode().IsRegular() {
-			return fmt.Errorf("source path %q is not a regular file", sourcePath)
 		}
 
 		extension := strings.ToLower(filepath.Ext(entry.Name()))

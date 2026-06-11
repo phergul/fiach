@@ -144,7 +144,7 @@ func prepareUpdate(ctx context.Context, store UpdateStore, modID int64, source S
 	if source == nil {
 		return preparedUpdate{}, nil, errors.New("update source is required")
 	}
-	if err := source.Validate(); err != nil {
+	if err := source.Validate(ctx); err != nil {
 		return preparedUpdate{}, nil, err
 	}
 
@@ -198,7 +198,7 @@ func prepareUpdate(ctx context.Context, store UpdateStore, modID int64, source S
 		}
 	}
 
-	if err := source.Materialize(tempPath); err != nil {
+	if err := source.Materialize(ctx, tempPath); err != nil {
 		cleanup()
 		return preparedUpdate{}, nil, err
 	}

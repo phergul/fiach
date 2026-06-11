@@ -2,15 +2,15 @@ import { Dialogs } from '@wailsio/runtime';
 
 import { isDialogCancelError } from './dialogErrors';
 
-interface OpenZipArchiveOptions {
+interface OpenArchiveOptions {
   buttonText: string;
   title: string;
 }
 
-export const openZipArchive = async ({
+export const openArchive = async ({
   buttonText,
   title,
-}: OpenZipArchiveOptions) => {
+}: OpenArchiveOptions) => {
   let selectedPath: string | string[] | null;
 
   try {
@@ -21,8 +21,8 @@ export const openZipArchive = async ({
       CanChooseFiles: true,
       Filters: [
         {
-          DisplayName: 'ZIP Archives',
-          Pattern: '*.zip',
+          DisplayName: 'Mod Archives',
+          Pattern: '*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.bz2;*.tbz2;*.tar.xz;*.txz;*.tar.zst;*.tzst',
         },
       ],
       Title: title,

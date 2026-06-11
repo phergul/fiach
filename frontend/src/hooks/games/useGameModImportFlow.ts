@@ -5,7 +5,7 @@ import { ImportMod, PreValidateImport } from '@bindings/github.com/phergul/fiach
 import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { useToast } from '@components/Common/Toast/Toast';
-import { getErrorMessage, openDirectory, openZipArchive } from '@utils';
+import { getErrorMessage, openArchive, openDirectory } from '@utils';
 
 interface ImportReviewState {
   initialName: string;
@@ -36,7 +36,10 @@ const getFolderName = (path: string) => {
 
 const getArchiveName = (path: string) => {
   const fileName = getFolderName(path);
-  const archiveName = fileName.replace(/\.zip$/i, '');
+  const archiveName = fileName.replace(
+    /\.(?:tar\.(?:bz2|gz|xz|zst)|tbz2|tgz|txz|tzst|7z|rar|tar|zip)$/i,
+    '',
+  );
 
   return archiveName.trim() === '' ? 'Imported Mod' : archiveName;
 };
@@ -113,7 +116,7 @@ export const useGameModImportFlow = ({
   const startArchiveImportFlow = () => startImportFlow({
     buttonText: 'Configure Import',
     initialNameForPath: getArchiveName,
-    selectPath: openZipArchive,
+    selectPath: openArchive,
     sourceLabel: 'Source archive',
     sourceType: ModSourceType.ModSourceTypeArchive,
     title: 'Select mod archive',

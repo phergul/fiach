@@ -22,8 +22,8 @@ type Source interface {
 	OriginalPath() string
 	OriginalName() *string
 	SuggestedName() string
-	Validate() error
-	Materialize(destinationPath string) error
+	Validate(ctx context.Context) error
+	Materialize(ctx context.Context, destinationPath string) error
 }
 
 type Store interface {
@@ -102,7 +102,7 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 		}, nil
 	}
 
-	if err := source.Validate(); err != nil {
+	if err := source.Validate(ctx); err != nil {
 		return Result{}, err
 	}
 
@@ -139,7 +139,7 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 		}
 	}()
 
-	if err := source.Materialize(tempPath); err != nil {
+	if err := source.Materialize(ctx, tempPath); err != nil {
 		return Result{}, err
 	}
 

@@ -1,7 +1,7 @@
 package modimport
 
 import (
-	"archive/zip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,12 +12,41 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/bodgit/sevenzip"
+	"github.com/mholt/archives"
+	"github.com/nwaples/rardecode/v2"
+
 	"github.com/phergul/fiach/internal/fileignore"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 var windowsVolumePath = regexp.MustCompile(`^[A-Za-z]:`)
+var multipartRARName = regexp.MustCompile(`(?i)\.part\d+\.rar$`)
+var multipartSevenZipName = regexp.MustCompile(`(?i)\.7z\.\d{3}$`)
+var multipartOldRARName = regexp.MustCompile(`(?i)\.r\d{2}$`)
+
+type archiveFormatSpec struct {
+	suffix             string
+	canonicalExtension string
+	label              string
+	extractor          archives.Extraction
+}
+
+var supportedArchiveFormats = []archiveFormatSpec{
+	{suffix: ".tar.bz2", canonicalExtension: ".tar.bz2", label: "tar.bz2", extractor: compressedTar(archives.Bz2{})},
+	{suffix: ".tar.gz", canonicalExtension: ".tar.gz", label: "tar.gz", extractor: compressedTar(archives.Gz{})},
+	{suffix: ".tar.xz", canonicalExtension: ".tar.xz", label: "tar.xz", extractor: compressedTar(archives.Xz{})},
+	{suffix: ".tar.zst", canonicalExtension: ".tar.zst", label: "tar.zst", extractor: compressedTar(archives.Zstd{})},
+	{suffix: ".tbz2", canonicalExtension: ".tar.bz2", label: "tar.bz2", extractor: compressedTar(archives.Bz2{})},
+	{suffix: ".tgz", canonicalExtension: ".tar.gz", label: "tar.gz", extractor: compressedTar(archives.Gz{})},
+	{suffix: ".txz", canonicalExtension: ".tar.xz", label: "tar.xz", extractor: compressedTar(archives.Xz{})},
+	{suffix: ".tzst", canonicalExtension: ".tar.zst", label: "tar.zst", extractor: compressedTar(archives.Zstd{})},
+	{suffix: ".7z", canonicalExtension: ".7z", label: "7z", extractor: archives.SevenZip{}},
+	{suffix: ".rar", canonicalExtension: ".rar", label: "RAR", extractor: archives.Rar{}},
+	{suffix: ".tar", canonicalExtension: ".tar", label: "tar", extractor: archives.Tar{}},
+	{suffix: ".zip", canonicalExtension: ".zip", label: "zip", extractor: archives.Zip{}},
+}
 
 type ArchiveSource struct {
 	originalPath string
@@ -60,7 +89,12 @@ func (s ArchiveSource) OriginalName() *string {
 }
 
 func (s ArchiveSource) SuggestedName() string {
-	name := strings.TrimSuffix(s.originalName, filepath.Ext(s.originalName))
+	name := s.originalName
+	if spec, found := archiveFormatForPath(name); found {
+		name = name[:len(name)-len(spec.suffix)]
+	} else {
+		name = strings.TrimSuffix(name, filepath.Ext(name))
+	}
 	if strings.TrimSpace(name) == "" {
 		return "Imported Mod"
 	}
@@ -68,50 +102,35 @@ func (s ArchiveSource) SuggestedName() string {
 	return name
 }
 
-func (s ArchiveSource) Validate() error {
-	if !strings.EqualFold(filepath.Ext(s.originalPath), ".zip") {
-		return fmt.Errorf("archive path %q is not a .zip file", s.originalPath)
-	}
-
-	reader, err := zip.OpenReader(s.originalPath)
-	if err != nil {
-		return fmt.Errorf("open zip archive: %w", err)
-	}
-	defer func() {
-		_ = reader.Close()
-	}()
-
-	if _, err := archiveLayout(reader.File); err != nil {
-		return err
-	}
-
-	return nil
+func (s ArchiveSource) Validate(ctx context.Context) error {
+	_, err := s.layout(ctx)
+	return err
 }
 
-func (s ArchiveSource) Materialize(destinationPath string) error {
-	reader, err := zip.OpenReader(s.originalPath)
-	if err != nil {
-		return fmt.Errorf("open zip archive: %w", err)
-	}
-	defer func() {
-		_ = reader.Close()
-	}()
-
-	layout, err := archiveLayout(reader.File)
+func (s ArchiveSource) Materialize(ctx context.Context, destinationPath string) error {
+	layout, err := s.layout(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, entry := range layout.entries {
+	return s.walk(ctx, func(_ context.Context, info archives.FileInfo) error {
+		entry, ignored, err := archiveEntryFromInfo(info)
+		if err != nil {
+			return err
+		}
+		if ignored {
+			return nil
+		}
+
 		targetName := entry.cleanName
 		if layout.stripRoot != "" {
 			targetName = strings.TrimPrefix(targetName, layout.stripRoot+"/")
 			if targetName == layout.stripRoot {
-				continue
+				return nil
 			}
 		}
 		if targetName == "" || targetName == "." {
-			continue
+			return nil
 		}
 
 		destinationEntryPath, err := safeDestinationPath(destinationPath, targetName)
@@ -123,22 +142,21 @@ func (s ArchiveSource) Materialize(destinationPath string) error {
 			if err := os.MkdirAll(destinationEntryPath, archiveDirectoryPermissions(entry.mode)); err != nil {
 				return fmt.Errorf("create archive folder %q: %w", destinationEntryPath, err)
 			}
-			continue
+			return nil
 		}
 
 		if err := os.MkdirAll(filepath.Dir(destinationEntryPath), 0o755); err != nil {
 			return fmt.Errorf("create archive file parent %q: %w", filepath.Dir(destinationEntryPath), err)
 		}
-		if err := extractArchiveFile(entry.file, destinationEntryPath, entry.mode.Perm()); err != nil {
+		if err := extractArchiveFile(ctx, info, destinationEntryPath, entry.mode.Perm()); err != nil {
 			return err
 		}
-	}
 
-	return nil
+		return nil
+	})
 }
 
 type archiveEntry struct {
-	file      *zip.File
 	cleanName string
 	mode      os.FileMode
 	isDir     bool
@@ -149,55 +167,190 @@ type archiveImportLayout struct {
 	stripRoot string
 }
 
-func archiveLayout(files []*zip.File) (archiveImportLayout, error) {
-	if len(files) == 0 {
-		return archiveImportLayout{}, errors.New("zip archive is empty")
+func (s ArchiveSource) layout(ctx context.Context) (archiveImportLayout, error) {
+	entries := make([]archiveEntry, 0)
+	err := s.walk(ctx, func(_ context.Context, info archives.FileInfo) error {
+		entry, ignored, err := archiveEntryFromInfo(info)
+		if err != nil {
+			return err
+		}
+		if !ignored {
+			entries = append(entries, entry)
+		}
+		return nil
+	})
+	if err != nil {
+		return archiveImportLayout{}, err
 	}
 
-	entries := make([]archiveEntry, 0, len(files))
+	spec, _ := archiveFormatForPath(s.originalPath)
+	return archiveLayout(entries, spec.label)
+}
+
+func (s ArchiveSource) walk(ctx context.Context, handleFile archives.FileHandler) (err error) {
+	spec, err := validateArchivePath(s.originalPath)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open(s.originalPath)
+	if err != nil {
+		return fmt.Errorf("open archive file: %w", err)
+	}
+	defer func() {
+		if closeErr := file.Close(); err == nil && closeErr != nil {
+			err = fmt.Errorf("close archive file: %w", closeErr)
+		}
+	}()
+
+	extractor, err := identifyArchiveFormat(ctx, file, spec)
+	if err != nil {
+		return fmt.Errorf("open %s archive: %w", spec.label, normalizeArchiveError(err))
+	}
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("rewind archive file: %w", err)
+	}
+
+	if err := extractor.Extract(ctx, file, handleFile); err != nil {
+		return fmt.Errorf("open %s archive: %w", spec.label, normalizeArchiveError(err))
+	}
+
+	return nil
+}
+
+func validateArchivePath(archivePath string) (archiveFormatSpec, error) {
+	name := filepath.Base(archivePath)
+	if multipartRARName.MatchString(name) || multipartSevenZipName.MatchString(name) || multipartOldRARName.MatchString(name) {
+		return archiveFormatSpec{}, errors.New("multipart archives are not supported")
+	}
+
+	spec, found := archiveFormatForPath(name)
+	if !found {
+		return archiveFormatSpec{}, fmt.Errorf("archive path %q has an unsupported archive type", archivePath)
+	}
+
+	return spec, nil
+}
+
+func archiveFormatForPath(archivePath string) (archiveFormatSpec, bool) {
+	name := strings.ToLower(filepath.Base(archivePath))
+	for _, spec := range supportedArchiveFormats {
+		if strings.HasSuffix(name, spec.suffix) {
+			return spec, true
+		}
+	}
+
+	return archiveFormatSpec{}, false
+}
+
+func identifyArchiveFormat(ctx context.Context, file *os.File, expected archiveFormatSpec) (archives.Extraction, error) {
+	format, _, err := archives.Identify(ctx, "", file)
+	if err != nil {
+		if errors.Is(err, archives.NoMatch) {
+			if expected.canonicalExtension == ".zip" && fileHasHeader(file, []byte("PK\x05\x06")) {
+				return expected.extractor, nil
+			}
+			if expected.canonicalExtension == ".tar" {
+				return expected.extractor, nil
+			}
+			return nil, errors.New("archive format was not recognized")
+		}
+		return nil, fmt.Errorf("identify archive format: %w", err)
+	}
+
+	extractor, ok := format.(archives.Extraction)
+	if !ok {
+		if strings.HasPrefix(expected.canonicalExtension, ".tar.") &&
+			strings.EqualFold(format.Extension(), strings.TrimPrefix(expected.canonicalExtension, ".tar")) {
+			return expected.extractor, nil
+		}
+		return nil, fmt.Errorf("archive content is %s compression without an archive", format.Extension())
+	}
+	if !strings.EqualFold(format.Extension(), expected.canonicalExtension) {
+		return nil, fmt.Errorf(
+			"archive content format %q does not match file extension %q",
+			format.Extension(),
+			expected.suffix,
+		)
+	}
+
+	return extractor, nil
+}
+
+func fileHasHeader(file *os.File, header []byte) bool {
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return false
+	}
+
+	buffer := make([]byte, len(header))
+	if _, err := io.ReadFull(file, buffer); err != nil {
+		return false
+	}
+
+	return slices.Equal(buffer, header)
+}
+
+func compressedTar(compression archives.Compression) archives.CompressedArchive {
+	return archives.CompressedArchive{
+		Extraction:  archives.Tar{},
+		Compression: compression,
+	}
+}
+
+func archiveEntryFromInfo(info archives.FileInfo) (archiveEntry, bool, error) {
+	cleanName, err := cleanArchiveEntryName(info.NameInArchive)
+	if err != nil {
+		return archiveEntry{}, false, err
+	}
+	if archiveEntryIgnored(cleanName) {
+		return archiveEntry{}, true, nil
+	}
+
+	mode := info.Mode()
+	if mode&os.ModeSymlink != 0 {
+		return archiveEntry{}, false, fmt.Errorf("archive entry %q is a symlink", info.NameInArchive)
+	}
+	if info.LinkTarget != "" {
+		return archiveEntry{}, false, fmt.Errorf("archive entry %q is a link", info.NameInArchive)
+	}
+
+	isDir := info.IsDir()
+	if !isDir && !mode.IsRegular() {
+		return archiveEntry{}, false, fmt.Errorf("archive entry %q is not a regular file or folder", info.NameInArchive)
+	}
+
+	return archiveEntry{
+		cleanName: cleanName,
+		mode:      mode,
+		isDir:     isDir,
+	}, false, nil
+}
+
+func archiveLayout(entries []archiveEntry, formatLabel string) (archiveImportLayout, error) {
+	if len(entries) == 0 {
+		return archiveImportLayout{}, fmt.Errorf("%s archive is empty", formatLabel)
+	}
+
 	rootNames := map[string]struct{}{}
 	hasRootFile := false
 	regularFiles := 0
 
-	for _, file := range files {
-		cleanName, err := cleanArchiveEntryName(file.Name)
-		if err != nil {
-			return archiveImportLayout{}, err
-		}
-		if archiveEntryIgnored(cleanName) {
-			continue
-		}
-
-		mode := file.FileInfo().Mode()
-		isDir := file.FileInfo().IsDir()
-		if mode&os.ModeSymlink != 0 {
-			return archiveImportLayout{}, fmt.Errorf("archive entry %q is a symlink", file.Name)
-		}
-		if !isDir && !mode.IsRegular() {
-			return archiveImportLayout{}, fmt.Errorf("archive entry %q is not a regular file or folder", file.Name)
-		}
-		if !isDir {
+	for _, entry := range entries {
+		if !entry.isDir {
 			regularFiles++
 		}
 
-		root, hasChild := topLevelArchiveName(cleanName)
+		root, hasChild := topLevelArchiveName(entry.cleanName)
 		if root != "" {
 			rootNames[root] = struct{}{}
 		}
-		if !isDir && !hasChild {
+		if !entry.isDir && !hasChild {
 			hasRootFile = true
 		}
-
-		entries = append(entries, archiveEntry{
-			file:      file,
-			cleanName: cleanName,
-			mode:      mode,
-			isDir:     isDir,
-		})
 	}
 
 	if regularFiles == 0 {
-		return archiveImportLayout{}, errors.New("zip archive contains no files")
+		return archiveImportLayout{}, fmt.Errorf("%s archive contains no files", formatLabel)
 	}
 
 	stripRoot := ""
@@ -272,14 +425,14 @@ func archiveDirectoryPermissions(mode os.FileMode) os.FileMode {
 	return permissions
 }
 
-func extractArchiveFile(file *zip.File, destinationPath string, permissions os.FileMode) (err error) {
-	source, err := file.Open()
+func extractArchiveFile(ctx context.Context, info archives.FileInfo, destinationPath string, permissions os.FileMode) (err error) {
+	source, err := info.Open()
 	if err != nil {
-		return fmt.Errorf("open archive entry %q: %w", file.Name, err)
+		return fmt.Errorf("open archive entry %q: %w", info.NameInArchive, err)
 	}
 	defer func() {
 		if closeErr := source.Close(); err == nil && closeErr != nil {
-			err = fmt.Errorf("close archive entry %q: %w", file.Name, closeErr)
+			err = fmt.Errorf("close archive entry %q: %w", info.NameInArchive, closeErr)
 		}
 	}()
 
@@ -296,9 +449,39 @@ func extractArchiveFile(file *zip.File, destinationPath string, permissions os.F
 		}
 	}()
 
-	if _, err := io.Copy(destination, source); err != nil {
-		return fmt.Errorf("extract archive entry %q: %w", file.Name, err)
+	if _, err := io.Copy(destination, contextReader{ctx: ctx, reader: source}); err != nil {
+		return fmt.Errorf("extract archive entry %q: %w", info.NameInArchive, err)
 	}
 
 	return nil
+}
+
+func normalizeArchiveError(err error) error {
+	if errors.Is(err, rardecode.ErrArchiveEncrypted) ||
+		errors.Is(err, rardecode.ErrArchivedFileEncrypted) ||
+		errors.Is(err, rardecode.ErrBadPassword) {
+		return errors.New("password-protected archives are not supported")
+	}
+	if errors.Is(err, rardecode.ErrMultiVolume) {
+		return errors.New("multipart archives are not supported")
+	}
+
+	var readErr *sevenzip.ReadError
+	if errors.As(err, &readErr) && readErr.Encrypted {
+		return errors.New("password-protected archives are not supported")
+	}
+
+	return err
+}
+
+type contextReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r contextReader) Read(bytes []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.reader.Read(bytes)
 }

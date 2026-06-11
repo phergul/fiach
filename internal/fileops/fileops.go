@@ -190,6 +190,18 @@ func StatRegularFile(label string, path string) (fs.FileInfo, error) {
 	return info, nil
 }
 
+func ValidateDirEntryIsRegularFile(label string, entry fs.DirEntry) (fs.FileInfo, error) {
+	info, err := entry.Info()
+	if err != nil {
+		return nil, fmt.Errorf("stat %s %q: %w", label, entry.Name(), err)
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s %q is not a regular file", label, entry.Name())
+	}
+
+	return info, nil
+}
+
 func RemoveEmptyParentDirectories(startPath string, root string) error {
 	current := filepath.Clean(startPath)
 	root = filepath.Clean(root)

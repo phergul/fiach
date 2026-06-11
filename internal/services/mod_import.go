@@ -33,7 +33,7 @@ func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidat
 		return dto.PreValidateImportResult{}, err
 	}
 
-	if err := source.Validate(); err != nil {
+	if err := source.Validate(ctx); err != nil {
 		return dto.PreValidateImportResult{}, err
 	}
 
@@ -45,7 +45,7 @@ func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidat
 		_ = os.RemoveAll(tempPath)
 	}()
 
-	if err := source.Materialize(tempPath); err != nil {
+	if err := source.Materialize(ctx, tempPath); err != nil {
 		return dto.PreValidateImportResult{}, err
 	}
 	if _, inspectErr := unrealpak.Inspect(tempPath); inspectErr == nil {
@@ -107,7 +107,7 @@ func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.P
 	if err != nil {
 		return dto.Preview{}, err
 	}
-	if err := source.Validate(); err != nil {
+	if err := source.Validate(ctx); err != nil {
 		return dto.Preview{}, err
 	}
 
@@ -119,7 +119,7 @@ func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.P
 		_ = os.RemoveAll(tempPath)
 	}()
 
-	if err := source.Materialize(tempPath); err != nil {
+	if err := source.Materialize(ctx, tempPath); err != nil {
 		return dto.Preview{}, err
 	}
 

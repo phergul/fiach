@@ -1,7 +1,9 @@
 package modimport
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/mholt/archives"
 
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -141,7 +145,7 @@ func TestFolderSourceValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFolderSource() error = %v", err)
 	}
-	if err := source.Validate(); err != nil {
+	if err := source.Validate(context.Background()); err != nil {
 		t.Fatalf("Validate() hidden file error = %v", err)
 	}
 
@@ -149,7 +153,7 @@ func TestFolderSourceValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFolderSource() empty error = %v", err)
 	}
-	if err := emptySource.Validate(); err == nil || !strings.Contains(err.Error(), "is empty") {
+	if err := emptySource.Validate(context.Background()); err == nil || !strings.Contains(err.Error(), "is empty") {
 		t.Fatalf("Validate() empty error = %v, want empty context", err)
 	}
 
@@ -161,7 +165,7 @@ func TestFolderSourceValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFolderSource() file error = %v", err)
 	}
-	if err := fileSource.Validate(); err == nil || !strings.Contains(err.Error(), "is not a folder") {
+	if err := fileSource.Validate(context.Background()); err == nil || !strings.Contains(err.Error(), "is not a folder") {
 		t.Fatalf("Validate() file error = %v, want not folder context", err)
 	}
 
@@ -169,7 +173,7 @@ func TestFolderSourceValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFolderSource() ignored-only error = %v", err)
 	}
-	if err := ignoredOnlySource.Validate(); err == nil || !strings.Contains(err.Error(), "is empty") {
+	if err := ignoredOnlySource.Validate(context.Background()); err == nil || !strings.Contains(err.Error(), "is empty") {
 		t.Fatalf("Validate() ignored-only error = %v, want empty context", err)
 	}
 }
@@ -189,7 +193,7 @@ func TestFolderSourceCopiesNestedFiles(t *testing.T) {
 	}
 	destinationPath := t.TempDir()
 
-	if err := source.Materialize(destinationPath); err != nil {
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
 		t.Fatalf("Materialize() error = %v", err)
 	}
 
@@ -223,7 +227,7 @@ func TestFolderSourceFollowsSymlinkTargets(t *testing.T) {
 		t.Fatalf("NewFolderSource() error = %v", err)
 	}
 
-	if err := source.Materialize(destinationPath); err != nil {
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
 		t.Fatalf("Materialize() error = %v", err)
 	}
 
@@ -245,7 +249,7 @@ func TestArchiveSourceExtractsAndStripsSingleRoot(t *testing.T) {
 	}
 	destinationPath := t.TempDir()
 
-	if err := source.Materialize(destinationPath); err != nil {
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
 		t.Fatalf("Materialize() error = %v", err)
 	}
 
@@ -275,12 +279,218 @@ func TestArchiveSourcePreservesMultiRootLayout(t *testing.T) {
 	}
 	destinationPath := t.TempDir()
 
-	if err := source.Materialize(destinationPath); err != nil {
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
 		t.Fatalf("Materialize() error = %v", err)
 	}
 
 	assertFileContents(t, filepath.Join(destinationPath, "Data", "SkyUI.esp"), "plugin")
 	assertFileContents(t, filepath.Join(destinationPath, "Docs", "readme.txt"), "hello")
+}
+
+func TestArchiveSourceExtractsTarFormats(t *testing.T) {
+	t.Parallel()
+
+	extensions := []string{
+		".tar",
+		".tar.gz",
+		".tgz",
+		".tar.bz2",
+		".tbz2",
+		".tar.xz",
+		".txz",
+		".tar.zst",
+		".tzst",
+	}
+	for _, extension := range extensions {
+		t.Run(extension, func(t *testing.T) {
+			t.Parallel()
+
+			archivePath := makeTarArchive(t, extension, map[string]string{
+				"SkyUI/Data/SkyUI.esp": "plugin",
+				"SkyUI/readme.txt":     "hello",
+			})
+			source, err := NewArchiveSource(archivePath)
+			if err != nil {
+				t.Fatalf("NewArchiveSource() error = %v", err)
+			}
+			destinationPath := t.TempDir()
+
+			if err := source.Materialize(context.Background(), destinationPath); err != nil {
+				t.Fatalf("Materialize() error = %v", err)
+			}
+
+			assertFileContents(t, filepath.Join(destinationPath, "Data", "SkyUI.esp"), "plugin")
+			assertFileContents(t, filepath.Join(destinationPath, "readme.txt"), "hello")
+		})
+	}
+}
+
+func TestArchiveSourceExtractsSevenZip(t *testing.T) {
+	t.Parallel()
+
+	source, err := NewArchiveSource(filepath.Join("testdata", "basic.7z"))
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+	destinationPath := t.TempDir()
+
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
+		t.Fatalf("Materialize() error = %v", err)
+	}
+
+	assertDirectoryHasRegularFile(t, destinationPath)
+}
+
+func TestArchiveSourceExtractsRAR(t *testing.T) {
+	t.Parallel()
+
+	source, err := NewArchiveSource(filepath.Join("testdata", "basic.rar"))
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+	destinationPath := t.TempDir()
+
+	if err := source.Materialize(context.Background(), destinationPath); err != nil {
+		t.Fatalf("Materialize() error = %v", err)
+	}
+
+	assertFileContents(t, filepath.Join(destinationPath, "helloworld.txt"), "hello libarchive test suite!\n")
+}
+
+func TestArchiveSourceRejectsPasswordProtectedSevenZip(t *testing.T) {
+	t.Parallel()
+
+	source, err := NewArchiveSource(filepath.Join("testdata", "encrypted.7z"))
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+
+	err = source.Materialize(context.Background(), t.TempDir())
+	if err == nil {
+		t.Fatal("Materialize() error = nil, want password-protected archive error")
+	}
+	if !strings.Contains(err.Error(), "password-protected archives are not supported") {
+		t.Fatalf("Materialize() error = %q, want password-protected archive context", err.Error())
+	}
+}
+
+func TestArchiveSourceRejectsMismatchedContent(t *testing.T) {
+	t.Parallel()
+
+	zipPath := makeZipArchive(t, map[string]string{"mod.txt": "content"})
+	rarPath := filepath.Join(t.TempDir(), "mod.rar")
+	contents, err := os.ReadFile(zipPath)
+	if err != nil {
+		t.Fatalf("read zip fixture: %v", err)
+	}
+	if err := os.WriteFile(rarPath, contents, 0o644); err != nil {
+		t.Fatalf("write mismatched archive: %v", err)
+	}
+
+	source, err := NewArchiveSource(rarPath)
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+	err = source.Validate(context.Background())
+	if err == nil {
+		t.Fatal("Validate() error = nil, want content mismatch error")
+	}
+	if !strings.Contains(err.Error(), "does not match file extension") {
+		t.Fatalf("Validate() error = %q, want content mismatch context", err.Error())
+	}
+}
+
+func TestArchiveSourceRejectsMultipartNames(t *testing.T) {
+	t.Parallel()
+
+	names := []string{"mod.part01.rar", "mod.7z.001", "mod.r00"}
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			archivePath := filepath.Join(t.TempDir(), name)
+			if err := os.WriteFile(archivePath, []byte("archive"), 0o644); err != nil {
+				t.Fatalf("write multipart archive: %v", err)
+			}
+			source, err := NewArchiveSource(archivePath)
+			if err != nil {
+				t.Fatalf("NewArchiveSource() error = %v", err)
+			}
+
+			err = source.Validate(context.Background())
+			if err == nil {
+				t.Fatal("Validate() error = nil, want multipart error")
+			}
+			if !strings.Contains(err.Error(), "multipart archives are not supported") {
+				t.Fatalf("Validate() error = %q, want multipart context", err.Error())
+			}
+		})
+	}
+}
+
+func TestArchiveSourceSuggestedNameStripsSupportedExtension(t *testing.T) {
+	t.Parallel()
+
+	names := map[string]string{
+		"SkyUI.zip":     "SkyUI",
+		"SkyUI.7z":      "SkyUI",
+		"SkyUI.rar":     "SkyUI",
+		"SkyUI.tar.gz":  "SkyUI",
+		"SkyUI.TAR.ZST": "SkyUI",
+		"SkyUI.tbz2":    "SkyUI",
+		"SkyUI.archive": "SkyUI",
+	}
+	for filename, want := range names {
+		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
+
+			archivePath := filepath.Join(t.TempDir(), filename)
+			if err := os.WriteFile(archivePath, []byte("archive"), 0o644); err != nil {
+				t.Fatalf("write archive: %v", err)
+			}
+			source, err := NewArchiveSource(archivePath)
+			if err != nil {
+				t.Fatalf("NewArchiveSource() error = %v", err)
+			}
+			if got := source.SuggestedName(); got != want {
+				t.Fatalf("SuggestedName() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestArchiveSourceHonorsCancelledContext(t *testing.T) {
+	t.Parallel()
+
+	source, err := NewArchiveSource(makeZipArchive(t, map[string]string{"mod.txt": "content"}))
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err = source.Validate(ctx)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Validate() error = %v, want context canceled", err)
+	}
+}
+
+func TestArchiveSourceRejectsTarHardLinks(t *testing.T) {
+	t.Parallel()
+
+	archivePath := makeTarWithHardLink(t)
+	source, err := NewArchiveSource(archivePath)
+	if err != nil {
+		t.Fatalf("NewArchiveSource() error = %v", err)
+	}
+
+	err = source.Validate(context.Background())
+	if err == nil {
+		t.Fatal("Validate() error = nil, want hard link error")
+	}
+	if !strings.Contains(err.Error(), "is a link") {
+		t.Fatalf("Validate() error = %q, want link context", err.Error())
+	}
 }
 
 func TestArchiveSourceRejectsInvalidArchives(t *testing.T) {
@@ -292,15 +502,15 @@ func TestArchiveSourceRejectsInvalidArchives(t *testing.T) {
 		wantError string
 	}{
 		{
-			name: "invalid extension",
+			name: "unsupported extension",
 			path: func(t *testing.T) string {
-				path := filepath.Join(t.TempDir(), "mod.rar")
-				if err := os.WriteFile(path, []byte("not zip"), 0o644); err != nil {
-					t.Fatalf("write invalid extension: %v", err)
+				path := filepath.Join(t.TempDir(), "mod.exe")
+				if err := os.WriteFile(path, []byte("not archive"), 0o644); err != nil {
+					t.Fatalf("write unsupported extension: %v", err)
 				}
 				return path
 			},
-			wantError: "is not a .zip file",
+			wantError: "unsupported archive type",
 		},
 		{
 			name: "corrupt",
@@ -312,6 +522,17 @@ func TestArchiveSourceRejectsInvalidArchives(t *testing.T) {
 				return path
 			},
 			wantError: "open zip archive",
+		},
+		{
+			name: "corrupt rar",
+			path: func(t *testing.T) string {
+				path := filepath.Join(t.TempDir(), "mod.rar")
+				if err := os.WriteFile(path, []byte("not rar"), 0o644); err != nil {
+					t.Fatalf("write corrupt rar: %v", err)
+				}
+				return path
+			},
+			wantError: "open RAR archive",
 		},
 		{
 			name: "empty",
@@ -351,7 +572,7 @@ func TestArchiveSourceRejectsInvalidArchives(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewArchiveSource() error = %v", err)
 			}
-			err = source.Validate()
+			err = source.Validate(context.Background())
 			if err == nil {
 				t.Fatal("Validate() error = nil, want error")
 			}
@@ -391,7 +612,7 @@ func TestArchiveSourceRejectsSymlinkEntries(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewArchiveSource() error = %v", err)
 	}
-	err = source.Validate()
+	err = source.Validate(context.Background())
 	if err == nil {
 		t.Fatal("Validate() error = nil, want symlink error")
 	}
@@ -518,6 +739,116 @@ func makeZipArchive(t *testing.T, files map[string]string) string {
 	}
 
 	return archivePath
+}
+
+func makeTarArchive(t *testing.T, extension string, files map[string]string) string {
+	t.Helper()
+
+	var tarContents bytes.Buffer
+	writer := tar.NewWriter(&tarContents)
+	for name, contents := range files {
+		header := &tar.Header{
+			Name: name,
+			Mode: 0o644,
+			Size: int64(len(contents)),
+		}
+		if err := writer.WriteHeader(header); err != nil {
+			t.Fatalf("create tar entry %q: %v", name, err)
+		}
+		if _, err := writer.Write([]byte(contents)); err != nil {
+			t.Fatalf("write tar entry %q: %v", name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close tar writer: %v", err)
+	}
+
+	archiveContents := tarContents.Bytes()
+	if compression := tarCompressionForExtension(extension); compression != nil {
+		var compressed bytes.Buffer
+		compressor, err := compression.OpenWriter(&compressed)
+		if err != nil {
+			t.Fatalf("create %s compressor: %v", extension, err)
+		}
+		if _, err := compressor.Write(archiveContents); err != nil {
+			t.Fatalf("compress %s archive: %v", extension, err)
+		}
+		if err := compressor.Close(); err != nil {
+			t.Fatalf("close %s compressor: %v", extension, err)
+		}
+		archiveContents = compressed.Bytes()
+	}
+
+	archivePath := filepath.Join(t.TempDir(), "mod"+extension)
+	if err := os.WriteFile(archivePath, archiveContents, 0o644); err != nil {
+		t.Fatalf("write %s archive: %v", extension, err)
+	}
+
+	return archivePath
+}
+
+func tarCompressionForExtension(extension string) archives.Compression {
+	switch extension {
+	case ".tar.gz", ".tgz":
+		return archives.Gz{}
+	case ".tar.bz2", ".tbz2":
+		return archives.Bz2{}
+	case ".tar.xz", ".txz":
+		return archives.Xz{}
+	case ".tar.zst", ".tzst":
+		return archives.Zstd{}
+	default:
+		return nil
+	}
+}
+
+func makeTarWithHardLink(t *testing.T) string {
+	t.Helper()
+
+	var contents bytes.Buffer
+	writer := tar.NewWriter(&contents)
+	if err := writer.WriteHeader(&tar.Header{
+		Name:     "linked.txt",
+		Mode:     0o644,
+		Typeflag: tar.TypeLink,
+		Linkname: "target.txt",
+	}); err != nil {
+		t.Fatalf("create tar hard link: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close tar writer: %v", err)
+	}
+
+	archivePath := filepath.Join(t.TempDir(), "linked.tar")
+	if err := os.WriteFile(archivePath, contents.Bytes(), 0o644); err != nil {
+		t.Fatalf("write tar archive: %v", err)
+	}
+	return archivePath
+}
+
+func assertDirectoryHasRegularFile(t *testing.T, root string) {
+	t.Helper()
+
+	found := false
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entry.IsDir() {
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			found = found || info.Mode().IsRegular()
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk extracted archive: %v", err)
+	}
+	if !found {
+		t.Fatal("extracted archive contains no regular files")
+	}
 }
 
 func assertFileContents(t *testing.T, path string, want string) {

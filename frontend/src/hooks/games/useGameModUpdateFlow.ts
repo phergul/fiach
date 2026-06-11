@@ -7,7 +7,7 @@ import {
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { PreviewUpdateMod, UpdateMod } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
 import { useToast } from '@components/Common/Toast/Toast';
-import { getErrorMessage, openDirectory, openZipArchive } from '@utils';
+import { getErrorMessage, openArchive, openDirectory } from '@utils';
 
 interface UpdateReviewState {
   mod: Mod;
@@ -87,7 +87,7 @@ export const useGameModUpdateFlow = ({
   const startArchiveUpdateFlow = (mod: Mod) => startUpdateFlow({
     buttonText: 'Review Update',
     mod,
-    selectPath: openZipArchive,
+    selectPath: openArchive,
     sourceType: ModSourceType.ModSourceTypeArchive,
     title: `Select replacement archive for ${mod.Name}`,
   });
