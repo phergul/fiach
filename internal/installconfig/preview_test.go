@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -82,6 +83,33 @@ func TestBuildPreviewCapsTargetPathList(t *testing.T) {
 
 	if !preview.IsCapped || preview.Cap != 2 || preview.TotalFileCount != 3 || len(preview.TargetFilePaths) != 2 || len(preview.Warnings) == 0 {
 		t.Fatalf("BuildPreview() = %+v, want capped preview", preview)
+	}
+}
+
+func TestBuildPreviewMapsUnrealPackageFilesFlat(t *testing.T) {
+	t.Parallel()
+
+	sourcePath := makePreviewSource(t, map[string]string{
+		"Nested/Example_P.pak": "pak",
+		"docs/readme.txt":      "ignored",
+	})
+
+	preview, err := BuildPreview(PreviewInput{
+		SourcePath:         sourcePath,
+		StrategyType:       StrategyTypeUnrealPak,
+		TargetRelativePath: "Example/Content/Paks/~mods",
+		FileCap:            100,
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview() error = %v", err)
+	}
+
+	wantPaths := []string{"Example/Content/Paks/~mods/Example_P.pak"}
+	if preview.TotalFileCount != 1 || preview.TotalDirectoryCount != 0 || !reflect.DeepEqual(preview.TargetFilePaths, wantPaths) {
+		t.Fatalf("BuildPreview() = %+v, want flat Unreal package preview", preview)
+	}
+	if len(preview.Warnings) != 1 || !strings.Contains(preview.Warnings[0], "Ignored 1") {
+		t.Fatalf("BuildPreview() warnings = %v, want ignored-file warning", preview.Warnings)
 	}
 }
 

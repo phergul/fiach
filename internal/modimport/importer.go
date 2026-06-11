@@ -14,6 +14,7 @@ import (
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/modmetadata"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/unrealpak"
 )
 
 type Source interface {
@@ -38,6 +39,7 @@ type Result struct {
 	Mod           dbtypes.Mod
 	Config        dbtypes.ModInstallConfig
 	MetadataError error
+	Warnings      []string
 }
 
 type ImportOptions struct {
@@ -141,6 +143,11 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 		return Result{}, err
 	}
 
+	strategyWarnings, err := validateMaterializedStrategy(strategyType, tempPath)
+	if err != nil {
+		return Result{}, err
+	}
+
 	if _, err := os.Stat(destinationPath); err == nil {
 		return Result{}, fmt.Errorf("managed mod destination %q already exists", destinationPath)
 	} else if !errors.Is(err, os.ErrNotExist) {
@@ -191,7 +198,23 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 		Mod:           storedResult.Mod,
 		Config:        storedResult.Config,
 		MetadataError: metadataErr,
+		Warnings:      strategyWarnings,
 	}, nil
+}
+
+func validateMaterializedStrategy(strategyType installconfig.StrategyType, sourcePath string) ([]string, error) {
+	switch strategyType {
+	case installconfig.StrategyTypeGenericCopy:
+		return []string{}, nil
+	case installconfig.StrategyTypeUnrealPak:
+		inspection, err := unrealpak.Inspect(sourcePath)
+		if err != nil {
+			return nil, err
+		}
+		return inspection.Warnings, nil
+	default:
+		return nil, fmt.Errorf("unsupported import strategy %q", strategyType)
+	}
 }
 
 func parseImportMetadata(ctx context.Context, registry *modmetadata.Registry, gameID int64, sourceType dbtypes.ModSourceType, destinationPath string) (modmetadata.Metadata, error) {

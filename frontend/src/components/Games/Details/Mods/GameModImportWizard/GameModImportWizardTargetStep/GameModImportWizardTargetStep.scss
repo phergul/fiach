@@ -1,10 +1,27 @@
 @use '@styles' as *;
 
+$game-mod-import-wizard-target-step-icon-size: 1rem;
+
 .game-mod-import-wizard-target-step {
   display: flex;
   min-width: 0;
   flex-direction: column;
+  gap: $spacing-md;
+  overflow-y: auto;
+}
+
+.game-mod-import-wizard-target-step-field,
+.game-mod-import-wizard-target-step-candidates {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   gap: $spacing-xs;
+}
+
+.game-mod-import-wizard-target-step-candidates {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .game-mod-import-wizard-target-step-label {
@@ -20,7 +37,51 @@
   border: $app-border;
 }
 
+.game-mod-import-wizard-target-step-candidate {
+  width: 100%;
+  min-height: $input-height;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
+  text-align: left;
+}
+
+.game-mod-import-wizard-target-step-candidate-selected {
+  background: $color-surface;
+  border-color: $color-text-subtle;
+}
+
 .game-mod-import-wizard-target-step-help {
   color: $color-text-muted;
   font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-target-step-status,
+.game-mod-import-wizard-target-step-warning,
+.game-mod-import-wizard-target-step-error {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  overflow-wrap: anywhere;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-wizard-target-step-status {
+  color: $color-text-subtle;
+}
+
+.game-mod-import-wizard-target-step-warning {
+  color: $color-warning;
+}
+
+.game-mod-import-wizard-target-step-error {
+  color: $color-danger;
+}
+
+.game-mod-import-wizard-target-step-status-icon {
+  width: $game-mod-import-wizard-target-step-icon-size;
+  height: $game-mod-import-wizard-target-step-icon-size;
+  flex: 0 0 $game-mod-import-wizard-target-step-icon-size;
 }

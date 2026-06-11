@@ -129,6 +129,12 @@ export const useGameModUpdateFlow = ({
           : `Updated ${result.Mod.Name}.`,
         tone: 'success',
       });
+      result.Warnings.forEach((warning) => {
+        addToast({
+          message: warning,
+          tone: 'info',
+        });
+      });
     } catch (error) {
       const message = getErrorMessage(error);
       setUpdateError(message);

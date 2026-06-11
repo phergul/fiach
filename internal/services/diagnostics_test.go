@@ -106,7 +106,7 @@ func TestModServicePreValidateImportFailureWritesDiagnostics(t *testing.T) {
 
 	sourcePath := t.TempDir()
 	service := NewModService(store, manager.Logger())
-	err := service.PreValidateImport(context.Background(), dto.PreValidateImportInput{
+	_, err := service.PreValidateImport(context.Background(), dto.PreValidateImportInput{
 		SourceType: dto.ModSourceTypeFolder,
 		SourcePath: sourcePath,
 	})

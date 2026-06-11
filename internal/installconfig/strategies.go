@@ -21,11 +21,12 @@ const (
 )
 
 type StrategyDescriptor struct {
-	Type               StrategyType
-	Label              string
-	Description        string
-	Visibility         StrategyVisibility
-	RequiresTargetPath bool
+	Type                    StrategyType
+	Label                   string
+	Description             string
+	Visibility              StrategyVisibility
+	RequiresTargetPath      bool
+	SupportsTargetDetection bool
 }
 
 var strategies = []StrategyDescriptor{
@@ -44,11 +45,12 @@ var strategies = []StrategyDescriptor{
 		RequiresTargetPath: true,
 	},
 	{
-		Type:               StrategyTypeUnrealPak,
-		Label:              "Unreal PAK",
-		Description:        "Install pak files into an Unreal Engine pak folder.",
-		Visibility:         StrategyVisibilityInternal,
-		RequiresTargetPath: true,
+		Type:                    StrategyTypeUnrealPak,
+		Label:                   "Unreal PAK",
+		Description:             "Install .pak, .ucas, and .utoc package groups into an Unreal Engine ~mods folder.",
+		Visibility:              StrategyVisibilitySelectable,
+		RequiresTargetPath:      true,
+		SupportsTargetDetection: true,
 	},
 }
 

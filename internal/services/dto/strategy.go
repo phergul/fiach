@@ -16,11 +16,12 @@ const (
 )
 
 type StrategyDescriptor struct {
-	Type               StrategyType
-	Label              string
-	Description        string
-	Visibility         StrategyVisibility
-	RequiresTargetPath bool
+	Type                    StrategyType
+	Label                   string
+	Description             string
+	Visibility              StrategyVisibility
+	RequiresTargetPath      bool
+	SupportsTargetDetection bool
 }
 
 type Preview struct {

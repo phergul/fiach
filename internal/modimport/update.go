@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/modmetadata"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -17,6 +18,7 @@ type UpdateStore interface {
 	GetGlobalModStorageRoot(ctx context.Context) (string, error)
 	ResolveGameModStoragePath(ctx context.Context, gameID int64, globalRoot string) (string, error)
 	GetModMetadata(ctx context.Context, modID int64) (dbtypes.ModMetadata, bool, error)
+	GetModInstallConfig(ctx context.Context, modID int64) (dbtypes.ModInstallConfig, bool, error)
 	UpdateModPackage(ctx context.Context, input dbtypes.UpdateModPackageInput) (dbtypes.Mod, error)
 }
 
@@ -26,6 +28,7 @@ type UpdateResult struct {
 	BeforeMetadata dbtypes.ModMetadata
 	AfterMetadata  dbtypes.ModMetadata
 	MetadataError  error
+	Warnings       []string
 }
 
 type preparedUpdate struct {
@@ -34,6 +37,7 @@ type preparedUpdate struct {
 	beforeMetadata  dbtypes.ModMetadata
 	afterMetadata   dbtypes.ModMetadata
 	metadataError   error
+	warnings        []string
 	gameStoragePath string
 	tempPath        string
 	updateInput     dbtypes.UpdateModPackageInput
@@ -126,6 +130,7 @@ func Update(ctx context.Context, store UpdateStore, modID int64, source Source, 
 		BeforeMetadata: prepared.beforeMetadata,
 		AfterMetadata:  prepared.afterMetadata,
 		MetadataError:  prepared.metadataError,
+		Warnings:       prepared.warnings,
 	}, nil
 }
 
@@ -198,6 +203,18 @@ func prepareUpdate(ctx context.Context, store UpdateStore, modID int64, source S
 		return preparedUpdate{}, nil, err
 	}
 
+	config, configFound, err := store.GetModInstallConfig(ctx, mod.ID)
+	if err != nil {
+		return preparedUpdate{}, cleanup, err
+	}
+	if !configFound {
+		return preparedUpdate{}, cleanup, fmt.Errorf("mod %d install configuration was not found", mod.ID)
+	}
+	strategyWarnings, err := validateMaterializedStrategy(installconfig.StrategyType(config.StrategyType), tempPath)
+	if err != nil {
+		return preparedUpdate{}, cleanup, err
+	}
+
 	metadata, metadataErr := parseImportMetadata(ctx, options.MetadataRegistry, mod.GameID, source.Type(), tempPath)
 	updateInput := updateInputFromMetadata(mod, source, metadata)
 	afterMetadataInput := dbtypes.ModMetadataDetectedInput{
@@ -238,6 +255,7 @@ func prepareUpdate(ctx context.Context, store UpdateStore, modID int64, source S
 		beforeMetadata:  beforeMetadata,
 		afterMetadata:   afterMetadata,
 		metadataError:   metadataErr,
+		warnings:        strategyWarnings,
 		gameStoragePath: gameStoragePath,
 		tempPath:        tempPath,
 		updateInput:     updateInput,
@@ -251,6 +269,7 @@ func (p preparedUpdate) result() UpdateResult {
 		BeforeMetadata: p.beforeMetadata,
 		AfterMetadata:  p.afterMetadata,
 		MetadataError:  p.metadataError,
+		Warnings:       p.warnings,
 	}
 }
 

@@ -19,11 +19,12 @@ func ToDTOStrategyVisibility(visibility installconfig.StrategyVisibility) dto.St
 
 func ToDTOStrategyDescriptor(strategy installconfig.StrategyDescriptor) dto.StrategyDescriptor {
 	return dto.StrategyDescriptor{
-		Type:               ToDTOStrategyType(strategy.Type),
-		Label:              strategy.Label,
-		Description:        strategy.Description,
-		Visibility:         ToDTOStrategyVisibility(strategy.Visibility),
-		RequiresTargetPath: strategy.RequiresTargetPath,
+		Type:                    ToDTOStrategyType(strategy.Type),
+		Label:                   strategy.Label,
+		Description:             strategy.Description,
+		Visibility:              ToDTOStrategyVisibility(strategy.Visibility),
+		RequiresTargetPath:      strategy.RequiresTargetPath,
+		SupportsTargetDetection: strategy.SupportsTargetDetection,
 	}
 }
 

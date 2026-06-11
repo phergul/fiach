@@ -130,6 +130,106 @@ func TestBuildOperationPlanIgnoresConfiguredFileNames(t *testing.T) {
 	}
 }
 
+func TestBuildOperationPlanUsesUnrealAdapterAndCreatesOnlyModsDirectory(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	paksPath := filepath.Join(gameRoot, "Example", "Content", "Paks")
+	if err := os.MkdirAll(paksPath, 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertPlannerGame(t, store, "Example", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+	sourcePath := makePlannerSourceTree(t, map[string]string{
+		"Nested/Example_P.pak": "pak",
+		"readme.txt":           "ignored",
+	})
+	modID := insertPlannerMod(t, store, gameID, "Example", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeUnrealPak), installconfig.TargetBaseGameRoot, "Example/Content/Paks/~mods", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if !plan.CanApply || len(plan.Issues) != 0 || len(plan.Operations) != 2 {
+		t.Fatalf("BuildOperationPlan() = %+v, want create ~mods and copy package", plan)
+	}
+	if plan.Operations[0].Type != OperationTypeCreateDirectory || plan.Operations[0].TargetPath != filepath.Join(paksPath, "~mods") {
+		t.Fatalf("directory operation = %+v, want only ~mods target", plan.Operations[0])
+	}
+	if plan.Operations[1].Type != OperationTypeCopy || plan.Operations[1].TargetPath != filepath.Join(paksPath, "~mods", "Example_P.pak") {
+		t.Fatalf("file operation = %+v, want flattened package", plan.Operations[1])
+	}
+}
+
+func TestBuildOperationPlanDoesNotCreateMissingStandardUnrealPaksFolder(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertPlannerGame(t, store, "Example", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+	sourcePath := makePlannerSourceTree(t, map[string]string{"Example_P.pak": "pak"})
+	modID := insertPlannerMod(t, store, gameID, "Example", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeUnrealPak), installconfig.TargetBaseGameRoot, "Example/Content/Paks/~mods", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if plan.CanApply || !hasIssueKind(plan.Issues, PlanIssueMissingUnrealPaksTarget) || len(plan.Operations) != 0 {
+		t.Fatalf("BuildOperationPlan() = %+v, want missing Paks blocking issue", plan)
+	}
+}
+
+func TestBuildOperationPlanReportsInvalidUnrealPackageSource(t *testing.T) {
+	t.Parallel()
+
+	store := openPlannerStore(t)
+	defer closePlannerStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertPlannerGame(t, store, "Example", gameRoot)
+	profileID := insertPlannerProfile(t, store, gameID, "Default")
+	sourcePath := makePlannerSourceTree(t, map[string]string{"Example_P.ucas": "ucas"})
+	modID := insertPlannerMod(t, store, gameID, "Example", sourcePath)
+	addPlannerProfileMod(t, store, profileID, modID, true, 0)
+	addPlannerInstallConfig(t, store, modID, string(installconfig.StrategyTypeUnrealPak), installconfig.TargetBaseGameRoot, "Example/Content/Paks/~mods", nil)
+
+	resolved, err := ResolveProfilePlan(context.Background(), store, profileID)
+	if err != nil {
+		t.Fatalf("ResolveProfilePlan() error = %v", err)
+	}
+	plan, err := BuildOperationPlan(resolved)
+	if err != nil {
+		t.Fatalf("BuildOperationPlan() error = %v", err)
+	}
+
+	if plan.CanApply || !hasIssueKind(plan.Issues, PlanIssueInvalidUnrealPakSource) || len(plan.Operations) != 0 {
+		t.Fatalf("BuildOperationPlan() = %+v, want invalid Unreal source issue", plan)
+	}
+}
+
 func TestBuildOperationPlanMarksExistingTargetsAsReplaceWithWarningAndManagedBackupPath(t *testing.T) {
 	t.Parallel()
 

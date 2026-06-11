@@ -13,9 +13,10 @@ import (
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/unrealpak"
 )
 
-func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidateImportInput) (err error) {
+func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidateImportInput) (result dto.PreValidateImportResult, err error) {
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationPreValidateMod, "Mod import validation started",
 		slog.String("source_type", string(input.SourceType)),
 		diagnostics.PathAttr("source_path", input.SourcePath),
@@ -29,16 +30,64 @@ func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidat
 
 	source, err := importSource(input.SourceType, input.SourcePath)
 	if err != nil {
-		return err
+		return dto.PreValidateImportResult{}, err
 	}
 
 	if err := source.Validate(); err != nil {
-		return err
+		return dto.PreValidateImportResult{}, err
+	}
+
+	tempPath, err := os.MkdirTemp("", "fiach-import-inspection-*")
+	if err != nil {
+		return dto.PreValidateImportResult{}, fmt.Errorf("create import inspection folder: %w", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempPath)
+	}()
+
+	if err := source.Materialize(tempPath); err != nil {
+		return dto.PreValidateImportResult{}, err
+	}
+	if _, inspectErr := unrealpak.Inspect(tempPath); inspectErr == nil {
+		strategy := dto.StrategyTypeUnrealPak
+		result.SuggestedStrategy = &strategy
 	}
 
 	diag.complete("Mod import validation completed")
 
-	return nil
+	return result, nil
+}
+
+func (s *ModService) DetectImportTargets(ctx context.Context, gameID int64, strategyType dto.StrategyType) (result dto.ImportTargetDetectionResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("detect import targets: %w", err)
+		}
+	}()
+
+	if gameID <= 0 {
+		return dto.ImportTargetDetectionResult{}, errors.New("game ID must be positive")
+	}
+	if strategyType != dto.StrategyTypeUnrealPak {
+		return dto.ImportTargetDetectionResult{
+			Candidates: []string{},
+			Warnings:   []string{},
+		}, nil
+	}
+
+	game, err := s.store.GetStoredGame(ctx, gameID)
+	if err != nil {
+		return dto.ImportTargetDetectionResult{}, err
+	}
+	detection, err := unrealpak.DetectTargets(game.InstallPath)
+	if err != nil {
+		return dto.ImportTargetDetectionResult{}, err
+	}
+
+	return dto.ImportTargetDetectionResult{
+		Candidates: detection.Candidates,
+		Warnings:   detection.Warnings,
+	}, nil
 }
 
 func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
@@ -83,6 +132,11 @@ func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.P
 	if err != nil {
 		return dto.Preview{}, err
 	}
+	targetWarnings, err := s.importTargetWarnings(ctx, input.GameID, input.StrategyType, previewResult.TargetRelativePath)
+	if err != nil {
+		return dto.Preview{}, err
+	}
+	previewResult.Warnings = appendUniqueWarnings(previewResult.Warnings, targetWarnings...)
 
 	preview = mappers.ToDTOPreview(previewResult)
 	diag.complete("Mod import preview completed",
@@ -111,6 +165,14 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	if err != nil {
 		return dto.ImportModResult{}, err
 	}
+	targetRelativePath, err := installconfig.NormalizeTargetRelativePath(input.TargetRelativePath)
+	if err != nil {
+		return dto.ImportModResult{}, err
+	}
+	targetWarnings, err := s.importTargetWarnings(ctx, input.GameID, input.StrategyType, targetRelativePath)
+	if err != nil {
+		return dto.ImportModResult{}, err
+	}
 
 	importResult, err := modimport.Import(
 		ctx,
@@ -119,7 +181,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		input.Name,
 		source,
 		mappers.ToInstallStrategyType(input.StrategyType),
-		input.TargetRelativePath,
+		targetRelativePath,
 		modimport.ImportOptions{
 			MetadataRegistry: s.metadataRegistry,
 		},
@@ -144,8 +206,9 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	)
 
 	return dto.ImportModResult{
-		Mod:    mappers.ToDTOMod(importResult.Mod),
-		Config: mappers.ToDTOModInstallConfig(importResult.Config),
+		Mod:      mappers.ToDTOMod(importResult.Mod),
+		Config:   mappers.ToDTOModInstallConfig(importResult.Config),
+		Warnings: appendUniqueWarnings(targetWarnings, importResult.Warnings...),
 	}, nil
 }
 
@@ -261,9 +324,45 @@ func (s *ModService) toUpdateModResult(ctx context.Context, updateResult modimpo
 		Before:             toModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
 		After:              toModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
 		MetadataWarning:    metadataWarning,
+		Warnings:           updateResult.Warnings,
 		IsInAppliedProfile: isInAppliedProfile,
 		RequiresReapply:    isInAppliedProfile,
 	}, nil
+}
+
+func (s *ModService) importTargetWarnings(ctx context.Context, gameID int64, strategyType dto.StrategyType, targetRelativePath string) ([]string, error) {
+	if strategyType != dto.StrategyTypeUnrealPak {
+		return []string{}, nil
+	}
+
+	detection, err := s.DetectImportTargets(ctx, gameID, strategyType)
+	if err != nil {
+		return nil, err
+	}
+	warnings := append([]string{}, detection.Warnings...)
+	if !unrealpak.TargetWasDetected(targetRelativePath, detection.Candidates) {
+		warnings = append(
+			warnings,
+			fmt.Sprintf("Target path %q was not detected as an existing Unreal Content/Paks/~mods location.", targetRelativePath),
+		)
+	}
+	return appendUniqueWarnings(nil, warnings...), nil
+}
+
+func appendUniqueWarnings(existing []string, warnings ...string) []string {
+	result := append([]string{}, existing...)
+	seen := make(map[string]struct{}, len(result))
+	for _, warning := range result {
+		seen[warning] = struct{}{}
+	}
+	for _, warning := range warnings {
+		if _, found := seen[warning]; found {
+			continue
+		}
+		seen[warning] = struct{}{}
+		result = append(result, warning)
+	}
+	return result
 }
 
 func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.Source, error) {

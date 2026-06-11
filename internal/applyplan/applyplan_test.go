@@ -37,6 +37,35 @@ func TestExecuteAppliesDirectoriesBeforeDependentFiles(t *testing.T) {
 	assertFileContents(t, targetPath, "plugin")
 }
 
+func TestExecuteCreatesMissingUnrealModsDirectoryUnderExistingPaks(t *testing.T) {
+	t.Parallel()
+
+	gameRoot := t.TempDir()
+	storageRoot := t.TempDir()
+	paksPath := filepath.Join(gameRoot, "Example", "Content", "Paks")
+	if err := os.MkdirAll(paksPath, 0o755); err != nil {
+		t.Fatalf("create existing Paks folder: %v", err)
+	}
+	modsPath := filepath.Join(paksPath, "~mods")
+	sourcePath := writeApplyTestFile(t, t.TempDir(), "Example_P.pak", "pak", 0o644)
+	targetPath := filepath.Join(modsPath, "Example_P.pak")
+
+	result, err := Execute(applicablePlan(
+		directoryOperation(modsPath),
+		copyOperation(sourcePath, targetPath),
+	), Context{
+		GameInstallPath:    gameRoot,
+		GameModStoragePath: storageRoot,
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if !result.Success || result.CompletedCount != 2 {
+		t.Fatalf("Execute() result = %+v, want ~mods creation and package copy", result)
+	}
+	assertFileContents(t, targetPath, "pak")
+}
+
 func TestExecuteCopyWritesContentsAndPreservesMode(t *testing.T) {
 	gameRoot := t.TempDir()
 	storageRoot := t.TempDir()

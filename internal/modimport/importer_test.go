@@ -462,6 +462,15 @@ func (s failingUpdateStore) GetModMetadata(context.Context, int64) (dbtypes.ModM
 	return dbtypes.ModMetadata{ModID: s.mod.ID}, true, nil
 }
 
+func (s failingUpdateStore) GetModInstallConfig(context.Context, int64) (dbtypes.ModInstallConfig, bool, error) {
+	return dbtypes.ModInstallConfig{
+		ModID:              s.mod.ID,
+		StrategyType:       "generic_copy",
+		TargetBase:         "game_root",
+		TargetRelativePath: ".",
+	}, true, nil
+}
+
 func (s failingUpdateStore) UpdateModPackage(context.Context, dbtypes.UpdateModPackageInput) (dbtypes.Mod, error) {
 	return dbtypes.Mod{}, s.updateErr
 }

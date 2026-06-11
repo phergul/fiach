@@ -2,17 +2,21 @@ package installconfig
 
 import "testing"
 
-func TestSelectableStrategiesReturnsOnlyGenericCopy(t *testing.T) {
+func TestSelectableStrategiesReturnsGenericCopyAndUnrealPak(t *testing.T) {
 	t.Parallel()
 
 	strategies := SelectableStrategies()
-	if len(strategies) != 1 {
-		t.Fatalf("SelectableStrategies() length = %d, want 1: %+v", len(strategies), strategies)
+	if len(strategies) != 2 {
+		t.Fatalf("SelectableStrategies() length = %d, want 2: %+v", len(strategies), strategies)
 	}
 
-	strategy := strategies[0]
-	if strategy.Type != StrategyTypeGenericCopy || strategy.Visibility != StrategyVisibilitySelectable || !strategy.RequiresTargetPath {
-		t.Fatalf("SelectableStrategies()[0] = %+v, want selectable generic copy", strategy)
+	genericStrategy := strategies[0]
+	if genericStrategy.Type != StrategyTypeGenericCopy || genericStrategy.Visibility != StrategyVisibilitySelectable || !genericStrategy.RequiresTargetPath {
+		t.Fatalf("SelectableStrategies()[0] = %+v, want selectable generic copy", genericStrategy)
+	}
+	unrealStrategy := strategies[1]
+	if unrealStrategy.Type != StrategyTypeUnrealPak || unrealStrategy.Visibility != StrategyVisibilitySelectable || !unrealStrategy.RequiresTargetPath || !unrealStrategy.SupportsTargetDetection {
+		t.Fatalf("SelectableStrategies()[1] = %+v, want selectable Unreal PAK with target detection", unrealStrategy)
 	}
 }
 
@@ -35,10 +39,7 @@ func TestAllStrategiesIncludesFutureInternalDescriptors(t *testing.T) {
 		}
 	}
 
-	for _, strategyType := range []StrategyType{
-		StrategyTypeBepInEx,
-		StrategyTypeUnrealPak,
-	} {
+	for _, strategyType := range []StrategyType{StrategyTypeBepInEx} {
 		strategy := byType[strategyType]
 		if strategy.Visibility != StrategyVisibilityInternal {
 			t.Fatalf("future strategy %q = %+v, want internal descriptor", strategyType, strategy)
@@ -57,6 +58,11 @@ func TestValidateSelectableStrategy(t *testing.T) {
 		{
 			name:         "generic copy",
 			strategyType: StrategyTypeGenericCopy,
+			wantError:    false,
+		},
+		{
+			name:         "Unreal PAK",
+			strategyType: StrategyTypeUnrealPak,
 			wantError:    false,
 		},
 		{

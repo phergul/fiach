@@ -13,6 +13,7 @@ import (
 	"github.com/phergul/fiach/internal/fileignore"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/installpath"
+	"github.com/phergul/fiach/internal/unrealpak"
 )
 
 const backupRootDirName = "operation-backups"
@@ -36,7 +37,7 @@ type StrategyAdapter interface {
 var strategyAdapters = map[installconfig.StrategyType]StrategyAdapter{
 	installconfig.StrategyTypeGenericCopy: fileTreeStrategyAdapter{},
 	installconfig.StrategyTypeBepInEx:     fileTreeStrategyAdapter{},
-	installconfig.StrategyTypeUnrealPak:   fileTreeStrategyAdapter{},
+	installconfig.StrategyTypeUnrealPak:   unrealPakStrategyAdapter{},
 }
 
 func BuildOperationPlan(resolved ResolveProfilePlanResult) (plan OperationPlan, err error) {
@@ -164,6 +165,88 @@ func (a fileTreeStrategyAdapter) BuildOperations(input StrategyBuildInput) (Stra
 	return builder.result(), nil
 }
 
+type unrealPakStrategyAdapter struct{}
+
+func (a unrealPakStrategyAdapter) BuildOperations(input StrategyBuildInput) (StrategyBuildResult, error) {
+	if input.Mod.TargetBase != installconfig.TargetBaseGameRoot {
+		return StrategyBuildResult{}, fmt.Errorf("unsupported target base %q", input.Mod.TargetBase)
+	}
+
+	sourceRoot := installpath.ResolveSourceRoot(input.Mod.ManagedSourcePath, input.Mod.SourceSubpath)
+	builder, err := newModPlanBuilder(input, sourceRoot)
+	if err != nil {
+		return StrategyBuildResult{}, err
+	}
+	if builder.hasBlockingIssue() {
+		return builder.result(), nil
+	}
+
+	inspection, err := unrealpak.Inspect(sourceRoot)
+	if err != nil {
+		issue := newPlanIssue(
+			PlanIssueSeverityError,
+			PlanIssueInvalidUnrealPakSource,
+			input.ProfileID,
+			fmt.Sprintf("mod %q has an invalid Unreal package source: %v", input.Mod.ModName, err),
+			modContextPtr(input.Mod.ModID, input.Mod.ModName),
+			stringPtr(sourceRoot),
+			nil,
+		)
+		return StrategyBuildResult{Issues: []PlanIssue{issue}}, nil
+	}
+
+	if issue, err := validateExistingStandardUnrealTarget(input); err != nil {
+		return StrategyBuildResult{}, err
+	} else if issue != nil {
+		return StrategyBuildResult{Issues: []PlanIssue{*issue}}, nil
+	}
+
+	for _, file := range inspection.Files {
+		targetRelativePath := installpath.JoinTargetRelativePath(input.Mod.TargetRelativePath, file.Name)
+		if err := builder.handleMappedSourceFile(file.SourcePath, targetRelativePath); err != nil {
+			return StrategyBuildResult{}, err
+		}
+		if builder.hasBlockingIssue() {
+			break
+		}
+	}
+
+	builder.sortFileOperations()
+	return builder.result(), nil
+}
+
+func validateExistingStandardUnrealTarget(input StrategyBuildInput) (*PlanIssue, error) {
+	targetParts := strings.Split(filepath.ToSlash(filepath.Clean(input.Mod.TargetRelativePath)), "/")
+	if len(targetParts) < 3 ||
+		!strings.EqualFold(targetParts[len(targetParts)-3], "Content") ||
+		!strings.EqualFold(targetParts[len(targetParts)-2], "Paks") ||
+		!strings.EqualFold(targetParts[len(targetParts)-1], "~mods") {
+		return nil, nil
+	}
+
+	paksRelativePath := filepath.Join(targetParts[:len(targetParts)-1]...)
+	paksPath := filepath.Join(input.GameInstallPath, filepath.FromSlash(filepath.ToSlash(paksRelativePath)))
+	info, err := os.Stat(paksPath)
+	if err == nil {
+		if info.IsDir() {
+			return nil, nil
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("stat Unreal Paks target %q: %w", paksPath, err)
+	}
+
+	issue := newPlanIssue(
+		PlanIssueSeverityError,
+		PlanIssueMissingUnrealPaksTarget,
+		input.ProfileID,
+		fmt.Sprintf("mod %q targets %q, but its Content/Paks folder does not exist", input.Mod.ModName, input.Mod.TargetRelativePath),
+		modContextPtr(input.Mod.ModID, input.Mod.ModName),
+		nil,
+		stringPtr(paksPath),
+	)
+	return &issue, nil
+}
+
 type modPlanBuilder struct {
 	input StrategyBuildInput
 
@@ -257,11 +340,15 @@ func (b *modPlanBuilder) handleSourceDirectory(sourceRoot string, sourceDirector
 }
 
 func (b *modPlanBuilder) handleSourceFile(sourceRoot string, sourceFilePath string) error {
-	targetPath, targetRelativePath, err := b.resolveTargetPaths(sourceRoot, sourceFilePath)
+	_, targetRelativePath, err := b.resolveTargetPaths(sourceRoot, sourceFilePath)
 	if err != nil {
 		return err
 	}
+	return b.handleMappedSourceFile(sourceFilePath, targetRelativePath)
+}
 
+func (b *modPlanBuilder) handleMappedSourceFile(sourceFilePath string, targetRelativePath string) error {
+	targetPath := filepath.Join(b.input.GameInstallPath, filepath.FromSlash(targetRelativePath))
 	if err := b.ensureTargetDirectories(filepath.Dir(targetPath)); err != nil {
 		return err
 	}

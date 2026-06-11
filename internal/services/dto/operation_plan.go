@@ -31,6 +31,8 @@ const (
 	PlanIssueTargetFilePathDirectory  PlanIssueKind = "target_file_path_is_directory"
 	PlanIssueTargetPathConflict       PlanIssueKind = "target_path_conflict"
 	PlanIssueReplaceExistingTarget    PlanIssueKind = "replace_existing_target"
+	PlanIssueInvalidUnrealPakSource   PlanIssueKind = "invalid_unreal_pak_source"
+	PlanIssueMissingUnrealPaksTarget  PlanIssueKind = "missing_unreal_paks_target"
 )
 
 type ModContext struct {

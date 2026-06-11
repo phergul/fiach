@@ -5,6 +5,15 @@ type PreValidateImportInput struct {
 	SourcePath string
 }
 
+type PreValidateImportResult struct {
+	SuggestedStrategy *StrategyType
+}
+
+type ImportTargetDetectionResult struct {
+	Candidates []string
+	Warnings   []string
+}
+
 type PreviewImportConfigurationInput struct {
 	GameID             int64
 	SourceType         ModSourceType
@@ -23,8 +32,9 @@ type ImportModInput struct {
 }
 
 type ImportModResult struct {
-	Mod    Mod
-	Config ModInstallConfig
+	Mod      Mod
+	Config   ModInstallConfig
+	Warnings []string
 }
 
 type UpdateModInput struct {
@@ -38,6 +48,7 @@ type UpdateModResult struct {
 	Before             ModPackageSnapshot
 	After              ModPackageSnapshot
 	MetadataWarning    *string
+	Warnings           []string
 	IsInAppliedProfile bool
 	RequiresReapply    bool
 }

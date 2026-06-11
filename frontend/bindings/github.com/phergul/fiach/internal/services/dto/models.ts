@@ -401,6 +401,7 @@ export class ImportModInput {
 export class ImportModResult {
     "Mod": Mod;
     "Config": ModInstallConfig;
+    "Warnings": string[];
 
     /** Creates a new ImportModResult instance. */
     constructor($$source: Partial<ImportModResult> = {}) {
@@ -409,6 +410,9 @@ export class ImportModResult {
         }
         if (!("Config" in $$source)) {
             this["Config"] = (new ModInstallConfig());
+        }
+        if (!("Warnings" in $$source)) {
+            this["Warnings"] = [];
         }
 
         Object.assign(this, $$source);
@@ -420,6 +424,7 @@ export class ImportModResult {
     static createFrom($$source: any = {}): ImportModResult {
         const $$createField0_0 = $$createType14;
         const $$createField1_0 = $$createType15;
+        const $$createField2_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -427,7 +432,43 @@ export class ImportModResult {
         if ("Config" in $$parsedSource) {
             $$parsedSource["Config"] = $$createField1_0($$parsedSource["Config"]);
         }
+        if ("Warnings" in $$parsedSource) {
+            $$parsedSource["Warnings"] = $$createField2_0($$parsedSource["Warnings"]);
+        }
         return new ImportModResult($$parsedSource as Partial<ImportModResult>);
+    }
+}
+
+export class ImportTargetDetectionResult {
+    "Candidates": string[];
+    "Warnings": string[];
+
+    /** Creates a new ImportTargetDetectionResult instance. */
+    constructor($$source: Partial<ImportTargetDetectionResult> = {}) {
+        if (!("Candidates" in $$source)) {
+            this["Candidates"] = [];
+        }
+        if (!("Warnings" in $$source)) {
+            this["Warnings"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ImportTargetDetectionResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ImportTargetDetectionResult {
+        const $$createField0_0 = $$createType16;
+        const $$createField1_0 = $$createType16;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Candidates" in $$parsedSource) {
+            $$parsedSource["Candidates"] = $$createField0_0($$parsedSource["Candidates"]);
+        }
+        if ("Warnings" in $$parsedSource) {
+            $$parsedSource["Warnings"] = $$createField1_0($$parsedSource["Warnings"]);
+        }
+        return new ImportTargetDetectionResult($$parsedSource as Partial<ImportTargetDetectionResult>);
     }
 }
 
@@ -528,7 +569,7 @@ export class Mod {
      * Creates a new Mod instance from a string or object.
      */
     static createFrom($$source: any = {}): Mod {
-        const $$createField11_0 = $$createType17;
+        const $$createField11_0 = $$createType18;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Metadata" in $$parsedSource) {
             $$parsedSource["Metadata"] = $$createField11_0($$parsedSource["Metadata"]);
@@ -729,10 +770,10 @@ export class ModMetadata {
      * Creates a new ModMetadata instance from a string or object.
      */
     static createFrom($$source: any = {}): ModMetadata {
-        const $$createField1_0 = $$createType18;
-        const $$createField2_0 = $$createType18;
-        const $$createField3_0 = $$createType18;
-        const $$createField4_0 = $$createType18;
+        const $$createField1_0 = $$createType19;
+        const $$createField2_0 = $$createType19;
+        const $$createField3_0 = $$createType19;
+        const $$createField4_0 = $$createType19;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Version" in $$parsedSource) {
             $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
@@ -859,7 +900,7 @@ export class ModPackageSnapshot {
      * Creates a new ModPackageSnapshot instance from a string or object.
      */
     static createFrom($$source: any = {}): ModPackageSnapshot {
-        const $$createField6_0 = $$createType19;
+        const $$createField6_0 = $$createType20;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("DetectedMetadata" in $$parsedSource) {
             $$parsedSource["DetectedMetadata"] = $$createField6_0($$parsedSource["DetectedMetadata"]);
@@ -984,8 +1025,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType20;
-        const $$createField1_0 = $$createType22;
+        const $$createField0_0 = $$createType21;
+        const $$createField1_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -1052,8 +1093,8 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType23;
-        const $$createField7_0 = $$createType24;
+        const $$createField6_0 = $$createType24;
+        const $$createField7_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -1084,6 +1125,8 @@ export enum PlanIssueKind {
     PlanIssueTargetFilePathDirectory = "target_file_path_is_directory",
     PlanIssueTargetPathConflict = "target_path_conflict",
     PlanIssueReplaceExistingTarget = "replace_existing_target",
+    PlanIssueInvalidUnrealPakSource = "invalid_unreal_pak_source",
+    PlanIssueMissingUnrealPaksTarget = "missing_unreal_paks_target",
 };
 
 export enum PlanIssueSeverity {
@@ -1118,6 +1161,27 @@ export class PreValidateImportInput {
     static createFrom($$source: any = {}): PreValidateImportInput {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         return new PreValidateImportInput($$parsedSource as Partial<PreValidateImportInput>);
+    }
+}
+
+export class PreValidateImportResult {
+    "SuggestedStrategy": StrategyType | null;
+
+    /** Creates a new PreValidateImportResult instance. */
+    constructor($$source: Partial<PreValidateImportResult> = {}) {
+        if (!("SuggestedStrategy" in $$source)) {
+            this["SuggestedStrategy"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new PreValidateImportResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): PreValidateImportResult {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new PreValidateImportResult($$parsedSource as Partial<PreValidateImportResult>);
     }
 }
 
@@ -1177,8 +1241,8 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField7_0 = $$createType25;
-        const $$createField10_0 = $$createType25;
+        const $$createField7_0 = $$createType16;
+        const $$createField10_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
             $$parsedSource["TargetFilePaths"] = $$createField7_0($$parsedSource["TargetFilePaths"]);
@@ -1365,7 +1429,7 @@ export class ReShadeTarget {
      * Creates a new ReShadeTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ReShadeTarget {
-        const $$createField1_0 = $$createType25;
+        const $$createField1_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Executables" in $$parsedSource) {
             $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
@@ -1698,6 +1762,7 @@ export class StrategyDescriptor {
     "Description": string;
     "Visibility": StrategyVisibility;
     "RequiresTargetPath": boolean;
+    "SupportsTargetDetection": boolean;
 
     /** Creates a new StrategyDescriptor instance. */
     constructor($$source: Partial<StrategyDescriptor> = {}) {
@@ -1715,6 +1780,9 @@ export class StrategyDescriptor {
         }
         if (!("RequiresTargetPath" in $$source)) {
             this["RequiresTargetPath"] = false;
+        }
+        if (!("SupportsTargetDetection" in $$source)) {
+            this["SupportsTargetDetection"] = false;
         }
 
         Object.assign(this, $$source);
@@ -1842,6 +1910,7 @@ export class UpdateModResult {
     "Before": ModPackageSnapshot;
     "After": ModPackageSnapshot;
     "MetadataWarning": string | null;
+    "Warnings": string[];
     "IsInAppliedProfile": boolean;
     "RequiresReapply": boolean;
 
@@ -1858,6 +1927,9 @@ export class UpdateModResult {
         }
         if (!("MetadataWarning" in $$source)) {
             this["MetadataWarning"] = null;
+        }
+        if (!("Warnings" in $$source)) {
+            this["Warnings"] = [];
         }
         if (!("IsInAppliedProfile" in $$source)) {
             this["IsInAppliedProfile"] = false;
@@ -1876,6 +1948,7 @@ export class UpdateModResult {
         const $$createField0_0 = $$createType14;
         const $$createField1_0 = $$createType35;
         const $$createField2_0 = $$createType35;
+        const $$createField4_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -1885,6 +1958,9 @@ export class UpdateModResult {
         }
         if ("After" in $$parsedSource) {
             $$parsedSource["After"] = $$createField2_0($$parsedSource["After"]);
+        }
+        if ("Warnings" in $$parsedSource) {
+            $$parsedSource["Warnings"] = $$createField4_0($$parsedSource["Warnings"]);
         }
         return new UpdateModResult($$parsedSource as Partial<UpdateModResult>);
     }
@@ -1907,15 +1983,15 @@ const $$createType12 = DiagnosticLogEntry.createFrom;
 const $$createType13 = $Create.Array($$createType12);
 const $$createType14 = Mod.createFrom;
 const $$createType15 = ModInstallConfig.createFrom;
-const $$createType16 = ModMetadata.createFrom;
-const $$createType17 = $Create.Nullable($$createType16);
-const $$createType18 = ModMetadataField.createFrom;
-const $$createType19 = ModDetectedMetadataSnapshot.createFrom;
-const $$createType20 = $Create.Array($$createType10);
-const $$createType21 = PlanIssue.createFrom;
-const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = $Create.Nullable($$createType0);
-const $$createType24 = $Create.Array($Create.Any);
+const $$createType16 = $Create.Array($Create.Any);
+const $$createType17 = ModMetadata.createFrom;
+const $$createType18 = $Create.Nullable($$createType17);
+const $$createType19 = ModMetadataField.createFrom;
+const $$createType20 = ModDetectedMetadataSnapshot.createFrom;
+const $$createType21 = $Create.Array($$createType10);
+const $$createType22 = PlanIssue.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = $Create.Nullable($$createType0);
 const $$createType25 = $Create.Array($Create.Any);
 const $$createType26 = ReShadeTarget.createFrom;
 const $$createType27 = $Create.Array($$createType26);

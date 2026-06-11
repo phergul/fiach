@@ -157,6 +157,10 @@ export const GameModUpdateModal = ({
             </p>
           )}
 
+          {result.Warnings.map((warning) => (
+            <p className="game-mod-update-modal-warning" key={warning}>{warning}</p>
+          ))}
+
           {result.RequiresReapply && (
             <p className="game-mod-update-modal-warning">
               This mod is part of the currently applied profile. Reapply that profile when you want the game files to use this update.

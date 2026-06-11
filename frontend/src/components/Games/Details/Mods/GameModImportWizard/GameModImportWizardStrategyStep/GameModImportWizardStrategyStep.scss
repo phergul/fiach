@@ -67,9 +67,22 @@ $game-mod-import-wizard-strategy-step-icon-size: 1rem;
   gap: $spacing-xs;
 }
 
+.game-mod-import-wizard-strategy-step-option-heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: $spacing-sm;
+}
+
 .game-mod-import-wizard-strategy-step-option-label {
   color: $color-text-primary;
   font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-wizard-strategy-step-detected {
+  color: $color-success;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
 }
 

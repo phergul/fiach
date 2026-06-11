@@ -1,8 +1,16 @@
 import { FormEvent, useEffect, useState } from 'react';
 
-import type { Preview, StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import type { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { ListImportStrategies, PreviewImportConfiguration } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import {
+  StrategyType,
+  type ModSourceType,
+  type Preview,
+  type StrategyDescriptor,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import {
+  DetectImportTargets,
+  ListImportStrategies,
+  PreviewImportConfiguration,
+} from '@bindings/github.com/phergul/fiach/internal/services/modservice';
 import { Modal } from '@components/Common/Modal/Modal';
 import { GameModImportWizardDetailsStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardDetailsStep/GameModImportWizardDetailsStep';
 import { GameModImportWizardPreviewStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardPreviewStep/GameModImportWizardPreviewStep';
@@ -31,6 +39,7 @@ interface GameModImportWizardProps {
   sourceLabel: string;
   sourcePath: string;
   sourceType: ModSourceType;
+  suggestedStrategyType: StrategyType | null;
   targetPath: string;
 }
 
@@ -54,6 +63,7 @@ export const GameModImportWizard = ({
   sourceLabel,
   sourcePath,
   sourceType,
+  suggestedStrategyType,
   targetPath,
 }: GameModImportWizardProps) => {
   const [step, setStep] = useState<GameModImportWizardStep>('details');
@@ -66,6 +76,10 @@ export const GameModImportWizard = ({
   const [strategies, setStrategies] = useState<StrategyDescriptor[]>([]);
   const [strategyLoadError, setStrategyLoadError] = useState<string | null>(null);
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(false);
+  const [targetCandidates, setTargetCandidates] = useState<string[]>([]);
+  const [targetDetectionWarnings, setTargetDetectionWarnings] = useState<string[]>([]);
+  const [targetDetectionError, setTargetDetectionError] = useState<string | null>(null);
+  const [isDetectingTargets, setIsDetectingTargets] = useState(false);
   const trimmedName = name.trim();
   const selectedStrategy = strategies.find((strategy) => strategy.Type === selectedStrategyType);
   const isDetailsStep = step === 'details';
@@ -77,6 +91,7 @@ export const GameModImportWizard = ({
   const canPreviewTarget = selectedStrategyType !== null && targetRelativePath.trim() !== '';
   const isNextDisabled = isBusy ||
     isPreviewing ||
+    isDetectingTargets ||
     (isDetailsStep && !canContinueFromDetails) ||
     (isStrategyStep && !canContinueFromStrategy) ||
     (isTargetStep && !canPreviewTarget) ||
@@ -98,6 +113,10 @@ export const GameModImportWizard = ({
     setStrategyLoadError(null);
     setStrategies([]);
     setIsLoadingStrategies(true);
+    setTargetCandidates([]);
+    setTargetDetectionWarnings([]);
+    setTargetDetectionError(null);
+    setIsDetectingTargets(false);
 
     ListImportStrategies()
       .then((loadedStrategies) => {
@@ -106,7 +125,12 @@ export const GameModImportWizard = ({
         }
 
         setStrategies(loadedStrategies);
-        if (loadedStrategies.length === 1) {
+        if (
+          suggestedStrategyType !== null &&
+          loadedStrategies.some((strategy) => strategy.Type === suggestedStrategyType)
+        ) {
+          setSelectedStrategyType(suggestedStrategyType);
+        } else if (loadedStrategies.length === 1) {
           setSelectedStrategyType(loadedStrategies[0].Type);
         }
       })
@@ -126,7 +150,65 @@ export const GameModImportWizard = ({
     return () => {
       isCancelled = true;
     };
-  }, [initialName, isOpen]);
+  }, [initialName, isOpen, suggestedStrategyType]);
+
+  useEffect(() => {
+    if (!isOpen || !isTargetStep || selectedStrategy === undefined) {
+      return;
+    }
+    if (!selectedStrategy.SupportsTargetDetection) {
+      setTargetCandidates([]);
+      setTargetDetectionWarnings([]);
+      setTargetDetectionError(null);
+      setIsDetectingTargets(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setTargetCandidates([]);
+    setTargetDetectionWarnings([]);
+    setTargetDetectionError(null);
+    setIsDetectingTargets(true);
+
+    DetectImportTargets(gameID, selectedStrategy.Type)
+      .then((detection) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setTargetCandidates(detection.Candidates);
+        setTargetDetectionWarnings(detection.Warnings);
+        if (detection.Candidates.length === 1) {
+          setTargetRelativePath((currentPath) => (
+            currentPath.trim() === '' ? detection.Candidates[0] : currentPath
+          ));
+        }
+      })
+      .catch((detectionError) => {
+        if (!isCancelled) {
+          setTargetDetectionError(getErrorMessage(detectionError));
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsDetectingTargets(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [gameID, isOpen, isTargetStep, selectedStrategy]);
+
+  const handleStrategySelect = (strategyType: StrategyType) => {
+    setSelectedStrategyType(strategyType);
+    setTargetRelativePath(strategyType === StrategyType.StrategyTypeUnrealPak ? '' : '.');
+    setTargetCandidates([]);
+    setTargetDetectionWarnings([]);
+    setTargetDetectionError(null);
+    setPreview(null);
+    setPreviewError(null);
+  };
 
   const handleTargetRelativePathChange = (nextTargetRelativePath: string) => {
     setTargetRelativePath(nextTargetRelativePath);
@@ -177,6 +259,7 @@ export const GameModImportWizard = ({
 
     if (isStrategyStep) {
       if (canContinueFromStrategy) {
+        setTargetRelativePath(selectedStrategy?.SupportsTargetDetection ? '' : '.');
         setStep('target');
       }
       return;
@@ -285,16 +368,21 @@ export const GameModImportWizard = ({
         <GameModImportWizardStrategyStep
           isBusy={isBusy}
           isLoadingStrategies={isLoadingStrategies}
-          onStrategySelect={setSelectedStrategyType}
+          onStrategySelect={handleStrategySelect}
           selectedStrategyType={selectedStrategyType}
           strategies={strategies}
           strategyLoadError={strategyLoadError}
+          suggestedStrategyType={suggestedStrategyType}
         />
       )}
 
       {isTargetStep && (
         <GameModImportWizardTargetStep
-          isBusy={isBusy || isPreviewing}
+          candidates={targetCandidates}
+          detectionError={targetDetectionError}
+          detectionWarnings={targetDetectionWarnings}
+          isBusy={isBusy || isPreviewing || isDetectingTargets}
+          isDetecting={isDetectingTargets}
           onTargetRelativePathChange={handleTargetRelativePathChange}
           targetRelativePath={targetRelativePath}
         />

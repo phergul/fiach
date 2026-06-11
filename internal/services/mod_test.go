@@ -533,12 +533,202 @@ func TestModServiceListsImportStrategies(t *testing.T) {
 		t.Fatalf("ListImportStrategies() error = %v", err)
 	}
 
-	if len(strategies) != 1 {
-		t.Fatalf("ListImportStrategies() length = %d, want 1: %+v", len(strategies), strategies)
+	if len(strategies) != 2 {
+		t.Fatalf("ListImportStrategies() length = %d, want 2: %+v", len(strategies), strategies)
 	}
 	if strategies[0].Type != dto.StrategyTypeGenericCopy || strategies[0].Visibility != dto.StrategyVisibilitySelectable {
 		t.Fatalf("ListImportStrategies()[0] = %+v, want selectable generic copy", strategies[0])
 	}
+	if strategies[1].Type != dto.StrategyTypeUnrealPak || strategies[1].Visibility != dto.StrategyVisibilitySelectable || !strategies[1].SupportsTargetDetection {
+		t.Fatalf("ListImportStrategies()[1] = %+v, want detectable selectable Unreal PAK", strategies[1])
+	}
+}
+
+func TestModServiceSuggestsUnrealPakForPackageSource(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	sourcePath := makeSourceFolder(t, map[string]string{"Nested/Example_P.pak": "pak"})
+	service := NewModService(store, testLogger())
+
+	result, err := service.PreValidateImport(context.Background(), dto.PreValidateImportInput{
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: sourcePath,
+	})
+	if err != nil {
+		t.Fatalf("PreValidateImport() error = %v", err)
+	}
+	if result.SuggestedStrategy == nil || *result.SuggestedStrategy != dto.StrategyTypeUnrealPak {
+		t.Fatalf("PreValidateImport() = %+v, want Unreal suggestion", result)
+	}
+}
+
+func TestModServiceDetectsUnrealPakTargets(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertServiceProfileTestGame(t, store, "Example", gameRoot)
+	service := NewModService(store, testLogger())
+
+	result, err := service.DetectImportTargets(context.Background(), gameID, dto.StrategyTypeUnrealPak)
+	if err != nil {
+		t.Fatalf("DetectImportTargets() error = %v", err)
+	}
+	if len(result.Candidates) != 1 || result.Candidates[0] != "Example/Content/Paks/~mods" {
+		t.Fatalf("DetectImportTargets() = %+v, want Unreal target", result)
+	}
+}
+
+func TestModServicePreviewsAndImportsUnrealPak(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertServiceProfileTestGame(t, store, "Example", gameRoot)
+	sourcePath := makeSourceFolder(t, map[string]string{
+		"Nested/Example_P.ucas": "ucas",
+		"Nested/Example_P.utoc": "utoc",
+		"readme.txt":            "ignored",
+	})
+	service := NewModService(store, testLogger())
+	targetPath := "Example/Content/Paks/~mods"
+
+	preview, err := service.PreviewImportConfiguration(context.Background(), dto.PreviewImportConfigurationInput{
+		GameID:             gameID,
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeUnrealPak,
+		TargetRelativePath: targetPath,
+	})
+	if err != nil {
+		t.Fatalf("PreviewImportConfiguration() error = %v", err)
+	}
+	wantTargets := targetPath + "/Example_P.ucas|" + targetPath + "/Example_P.utoc"
+	if preview.TotalFileCount != 2 || strings.Join(preview.TargetFilePaths, "|") != wantTargets {
+		t.Fatalf("PreviewImportConfiguration() = %+v, want flattened Unreal files", preview)
+	}
+
+	result, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "Example",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeUnrealPak,
+		TargetRelativePath: targetPath,
+	})
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+	if result.Config.StrategyType != string(dto.StrategyTypeUnrealPak) || len(result.Warnings) != 1 || !strings.Contains(result.Warnings[0], "Ignored 1") {
+		t.Fatalf("ImportMod() = %+v, want Unreal config and ignored-file warning", result)
+	}
+}
+
+func TestModServiceWarnsForManualUnrealTarget(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertServiceProfileTestGame(t, store, "Example", gameRoot)
+	sourcePath := makeSourceFolder(t, map[string]string{"Example_P.pak": "pak"})
+	service := NewModService(store, testLogger())
+
+	preview, err := service.PreviewImportConfiguration(context.Background(), dto.PreviewImportConfigurationInput{
+		GameID:             gameID,
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeUnrealPak,
+		TargetRelativePath: "Custom/Mods",
+	})
+	if err != nil {
+		t.Fatalf("PreviewImportConfiguration() error = %v", err)
+	}
+	if len(preview.Warnings) != 1 || !strings.Contains(preview.Warnings[0], "was not detected") {
+		t.Fatalf("PreviewImportConfiguration() warnings = %v, want manual target warning", preview.Warnings)
+	}
+}
+
+func TestModServiceRejectsInvalidUnrealPakImport(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertServiceProfileTestGame(t, store, "Example", gameRoot)
+	sourcePath := makeSourceFolder(t, map[string]string{"Example_P.ucas": "ucas"})
+	service := NewModService(store, testLogger())
+
+	_, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "Example",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         sourcePath,
+		StrategyType:       dto.StrategyTypeUnrealPak,
+		TargetRelativePath: "Example/Content/Paks/~mods",
+	})
+	if err == nil || !strings.Contains(err.Error(), ".utoc") {
+		t.Fatalf("ImportMod() error = %v, want incomplete IoStore rejection", err)
+	}
+}
+
+func TestModServiceRejectsInvalidUnrealPakUpdate(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(gameRoot, "Example", "Content", "Paks"), 0o755); err != nil {
+		t.Fatalf("create Paks folder: %v", err)
+	}
+	gameID := insertServiceProfileTestGame(t, store, "Example", gameRoot)
+	initialSource := makeSourceFolder(t, map[string]string{"Example_P.pak": "pak"})
+	replacementSource := makeSourceFolder(t, map[string]string{"Example_P.utoc": "utoc"})
+	service := NewModService(store, testLogger())
+
+	imported, err := service.ImportMod(context.Background(), dto.ImportModInput{
+		GameID:             gameID,
+		Name:               "Example",
+		SourceType:         dto.ModSourceTypeFolder,
+		SourcePath:         initialSource,
+		StrategyType:       dto.StrategyTypeUnrealPak,
+		TargetRelativePath: "Example/Content/Paks/~mods",
+	})
+	if err != nil {
+		t.Fatalf("ImportMod() error = %v", err)
+	}
+
+	_, err = service.PreviewUpdateMod(context.Background(), dto.UpdateModInput{
+		ModID:      imported.Mod.ID,
+		SourceType: dto.ModSourceTypeFolder,
+		SourcePath: replacementSource,
+	})
+	if err == nil || !strings.Contains(err.Error(), ".ucas") {
+		t.Fatalf("PreviewUpdateMod() error = %v, want incomplete IoStore rejection", err)
+	}
+	assertFileContents(t, filepath.Join(imported.Mod.SourcePath, "Example_P.pak"), "pak")
 }
 
 func TestModServiceImportsModFolder(t *testing.T) {

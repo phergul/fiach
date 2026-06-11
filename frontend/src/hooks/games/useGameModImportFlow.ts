@@ -9,6 +9,7 @@ import { getErrorMessage, openDirectory, openZipArchive } from '@utils';
 
 interface ImportReviewState {
   initialName: string;
+  suggestedStrategy: StrategyType | null;
   sourceLabel: string;
   sourcePath: string;
   sourceType: ModSourceType;
@@ -81,7 +82,7 @@ export const useGameModImportFlow = ({
         return;
       }
 
-      await PreValidateImport({
+      const validation = await PreValidateImport({
         SourceType: sourceType,
         SourcePath: sourcePath,
       });
@@ -89,6 +90,7 @@ export const useGameModImportFlow = ({
       const targetPath = await ResolveGameModStoragePath(gameID);
       setImportWizard({
         initialName: initialNameForPath(sourcePath),
+        suggestedStrategy: validation.SuggestedStrategy,
         sourceLabel,
         sourcePath,
         sourceType,
@@ -158,6 +160,12 @@ export const useGameModImportFlow = ({
       addToast({
         message: `Imported ${importResult.Mod.Name}.`,
         tone: 'success',
+      });
+      importResult.Warnings.forEach((warning) => {
+        addToast({
+          message: warning,
+          tone: 'info',
+        });
       });
     } catch (error) {
       const message = getErrorMessage(error);

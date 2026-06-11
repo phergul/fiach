@@ -9,6 +9,7 @@ interface GameModImportWizardStrategyStepProps {
   isLoadingStrategies: boolean;
   onStrategySelect: (strategyType: StrategyType) => void;
   selectedStrategyType: StrategyType | null;
+  suggestedStrategyType: StrategyType | null;
   strategies: StrategyDescriptor[];
   strategyLoadError: string | null;
 }
@@ -18,6 +19,7 @@ export const GameModImportWizardStrategyStep = ({
   isLoadingStrategies,
   onStrategySelect,
   selectedStrategyType,
+  suggestedStrategyType,
   strategies,
   strategyLoadError,
 }: GameModImportWizardStrategyStepProps) => {
@@ -56,7 +58,12 @@ export const GameModImportWizardStrategyStep = ({
             aria-pressed={isSelected}
           >
             <span className="game-mod-import-wizard-strategy-step-copy">
-              <span className="game-mod-import-wizard-strategy-step-option-label">{strategy.Label}</span>
+              <span className="game-mod-import-wizard-strategy-step-option-heading">
+                <span className="game-mod-import-wizard-strategy-step-option-label">{strategy.Label}</span>
+                {suggestedStrategyType === strategy.Type && (
+                  <span className="game-mod-import-wizard-strategy-step-detected">Detected</span>
+                )}
+              </span>
               <span className="game-mod-import-wizard-strategy-step-description">{strategy.Description}</span>
             </span>
             {isSelected && <Check className="game-mod-import-wizard-strategy-step-option-icon" aria-hidden="true" />}

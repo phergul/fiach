@@ -289,6 +289,7 @@ export const GameDetails = () => {
         sourceLabel={importFlow.importWizard?.sourceLabel ?? 'Source'}
         sourcePath={importFlow.importWizard?.sourcePath ?? ''}
         sourceType={importFlow.importWizard?.sourceType ?? ModSourceType.$zero}
+        suggestedStrategyType={importFlow.importWizard?.suggestedStrategy ?? null}
         targetPath={importFlow.importWizard?.targetPath ?? ''}
       />
 
