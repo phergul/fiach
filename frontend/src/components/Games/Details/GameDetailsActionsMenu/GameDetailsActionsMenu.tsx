@@ -1,4 +1,4 @@
-import { FolderCog, RotateCcw, Sparkles } from 'lucide-react';
+import { Blocks, FolderCog, RotateCcw, Sparkles } from 'lucide-react';
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -8,18 +8,22 @@ import './GameDetailsActionsMenu.scss';
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
   isOpen: boolean;
+  onOpenReShadeAddonInstaller: () => void;
   onOpenReShadeInstaller: () => void;
   onClearStorageOverride: () => void;
   onSetStorageOverride: () => void;
+  reShadeAddonInstallerActionLabel: string | null;
   reShadeInstallerActionLabel: string | null;
 }
 
 export const GameDetailsActionsMenu = ({
   game,
   isOpen,
+  onOpenReShadeAddonInstaller,
   onOpenReShadeInstaller,
   onClearStorageOverride,
   onSetStorageOverride,
+  reShadeAddonInstallerActionLabel,
   reShadeInstallerActionLabel,
 }: GameDetailsActionsMenuProps) => {
   if (!isOpen) {
@@ -37,6 +41,11 @@ export const GameDetailsActionsMenu = ({
           icon: Sparkles,
           label: reShadeInstallerActionLabel,
           onSelect: onOpenReShadeInstaller,
+        }] : []),
+        ...(reShadeAddonInstallerActionLabel !== null ? [{
+          icon: Blocks,
+          label: reShadeAddonInstallerActionLabel,
+          onSelect: onOpenReShadeAddonInstaller,
         }] : []),
         {
           icon: FolderCog,

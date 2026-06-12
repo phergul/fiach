@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
-import { DownloadAndOpenReShadeInstaller } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
+import {
+  DownloadAndOpenReShadeAddonInstaller,
+  DownloadAndOpenReShadeInstaller,
+} from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import {
   ReShadeDetectionStatus,
   type StoredGame,
@@ -23,21 +26,33 @@ export const useGameReShadeInstall = ({
   const { addErrorToast, addToast } = useToast();
   const [isLaunchingInstaller, setIsLaunchingInstaller] = useState(false);
   const reShadeStatus = reShadeDetection.result?.Status;
-  const reShadeInstallerActionLabel = (() => {
+  const reShadeInstallerActionLabels = (() => {
     if (game === undefined) {
-      return null;
+      return {
+        addon: null,
+        standard: null,
+      };
     }
 
     switch (reShadeStatus) {
       case ReShadeDetectionStatus.ReShadeDetectionStatusInstalled:
-        return 'Update/Reinstall ReShade';
+        return {
+          addon: 'Update/Reinstall ReShade with Add-on Support',
+          standard: 'Update/Reinstall ReShade',
+        };
       case ReShadeDetectionStatus.ReShadeDetectionStatusNotInstalled:
-        return 'Install ReShade';
+        return {
+          addon: 'Install ReShade with Add-on Support',
+          standard: 'Install ReShade',
+        };
       default:
-        return null;
+        return {
+          addon: null,
+          standard: null,
+        };
     }
   })();
-  const canLaunchInstaller = reShadeInstallerActionLabel !== null;
+  const canLaunchInstaller = reShadeInstallerActionLabels.standard !== null;
 
   const downloadAndOpenInstaller = async () => {
     if (game === undefined || !canLaunchInstaller || isLaunchingInstaller) {
@@ -60,10 +75,33 @@ export const useGameReShadeInstall = ({
     }
   };
 
+  const downloadAndOpenAddonInstaller = async () => {
+    if (game === undefined || !canLaunchInstaller || isLaunchingInstaller) {
+      return;
+    }
+
+    onMenuClose();
+    setIsLaunchingInstaller(true);
+
+    try {
+      const result = await DownloadAndOpenReShadeAddonInstaller();
+      addToast({
+        message: `ReShade ${result.Version} add-on installer opened.`,
+        tone: 'success',
+      });
+    } catch (error) {
+      addErrorToast(error);
+    } finally {
+      setIsLaunchingInstaller(false);
+    }
+  };
+
   return {
+    downloadAndOpenAddonInstaller,
     downloadAndOpenInstaller,
     isLaunchingInstaller,
-    reShadeInstallerActionLabel,
+    reShadeAddonInstallerActionLabel: reShadeInstallerActionLabels.addon,
+    reShadeInstallerActionLabel: reShadeInstallerActionLabels.standard,
   };
 };
 

@@ -100,7 +100,9 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 }
 
 func (s *ReshadeService) DownloadAndOpenReShadeInstaller(ctx context.Context) (result dto.ReShadeInstallerLaunchResult, err error) {
-	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationLaunchReShadeInstaller, "ReShade installer launch started")
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationLaunchReShadeInstaller, "ReShade installer launch started",
+		slog.String("installer_variant", "standard"),
+	)
 	defer func() {
 		if err != nil {
 			diag.fail("ReShade installer launch failed", err)
@@ -121,6 +123,39 @@ func (s *ReshadeService) DownloadAndOpenReShadeInstaller(ctx context.Context) (r
 		Version: launchResult.Version,
 	}
 	diag.complete("ReShade installer launch completed",
+		slog.String("version", result.Version),
+	)
+
+	return result, nil
+}
+
+func (s *ReshadeService) DownloadAndOpenReShadeAddonInstaller(ctx context.Context) (result dto.ReShadeInstallerLaunchResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationLaunchReShadeInstaller, "ReShade add-on installer launch started",
+		slog.String("installer_variant", "addon"),
+	)
+	defer func() {
+		if err != nil {
+			diag.fail("ReShade add-on installer launch failed", err)
+			err = fmt.Errorf("download and open ReShade add-on installer: %w", err)
+		}
+	}()
+
+	if s.operatingSystem != "windows" {
+		return dto.ReShadeInstallerLaunchResult{}, errors.New("ReShade add-on installer launch is only supported on Windows")
+	}
+
+	launchResult, err := reshade.DownloadAndOpenInstaller(ctx, reshade.InstallerOptions{
+		Variant: reshade.InstallerVariantAddon,
+	})
+	if err != nil {
+		return dto.ReShadeInstallerLaunchResult{}, err
+	}
+
+	result = dto.ReShadeInstallerLaunchResult{
+		Version: launchResult.Version,
+	}
+	diag.complete("ReShade add-on installer launch completed",
+		slog.String("installer_variant", "addon"),
 		slog.String("version", result.Version),
 	)
 

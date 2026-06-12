@@ -25,12 +25,20 @@ const (
 
 type OpenInstallerFunc func(ctx context.Context, path string) error
 
+type InstallerVariant string
+
+const (
+	InstallerVariantStandard InstallerVariant = ""
+	InstallerVariantAddon    InstallerVariant = "addon"
+)
+
 type InstallerOptions struct {
 	TagsURL         string
 	DownloadBaseURL string
 	CacheDir        string
 	HTTPClient      *http.Client
 	OpenInstaller   OpenInstallerFunc
+	Variant         InstallerVariant
 }
 
 type InstallerLaunchResult struct {
@@ -43,25 +51,25 @@ type tagResponse struct {
 }
 
 func DownloadAndOpenInstaller(ctx context.Context, opts InstallerOptions) (result InstallerLaunchResult, err error) {
+	opts = normalizeInstallerOptions(opts)
+
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("prepare ReShade installer: %w", err)
+			err = fmt.Errorf("prepare %s: %w", installerDescription(opts.Variant), err)
 		}
 	}()
-
-	opts = normalizeInstallerOptions(opts)
 
 	latestVersion, err := latestVersion(ctx, opts.HTTPClient, opts.TagsURL)
 	if err != nil {
 		return InstallerLaunchResult{}, err
 	}
 
-	installerPath, err := ensureInstaller(ctx, opts.HTTPClient, opts.DownloadBaseURL, opts.CacheDir, latestVersion)
+	installerPath, err := ensureInstaller(ctx, opts.HTTPClient, opts.DownloadBaseURL, opts.CacheDir, latestVersion, opts.Variant)
 	if err != nil {
 		return InstallerLaunchResult{}, err
 	}
 
-	if err := removeStaleInstallers(opts.CacheDir, filepath.Base(installerPath)); err != nil {
+	if err := removeStaleInstallers(opts.CacheDir, filepath.Base(installerPath), opts.Variant); err != nil {
 		return InstallerLaunchResult{}, err
 	}
 
@@ -143,12 +151,19 @@ func latestVersion(ctx context.Context, client *http.Client, tagsURL string) (st
 	return strings.TrimPrefix(latest, "v"), nil
 }
 
-func ensureInstaller(ctx context.Context, client *http.Client, downloadBaseURL string, cacheDir string, installerVersion string) (string, error) {
+func ensureInstaller(
+	ctx context.Context,
+	client *http.Client,
+	downloadBaseURL string,
+	cacheDir string,
+	installerVersion string,
+	variant InstallerVariant,
+) (string, error) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return "", fmt.Errorf("create ReShade installer cache: %w", err)
 	}
 
-	name := installerFileName(installerVersion)
+	name := installerFileName(installerVersion, variant)
 	path := filepath.Join(cacheDir, name)
 	if info, err := os.Stat(path); err == nil && info.Size() > 0 {
 		return path, nil
@@ -156,7 +171,7 @@ func ensureInstaller(ctx context.Context, client *http.Client, downloadBaseURL s
 		return "", fmt.Errorf("inspect cached ReShade installer: %w", err)
 	}
 
-	downloadURL, err := installerDownloadURL(downloadBaseURL, installerVersion)
+	downloadURL, err := installerDownloadURL(downloadBaseURL, installerVersion, variant)
 	if err != nil {
 		return "", err
 	}
@@ -211,7 +226,7 @@ func ensureInstaller(ctx context.Context, client *http.Client, downloadBaseURL s
 	return path, nil
 }
 
-func installerDownloadURL(downloadBaseURL string, installerVersion string) (string, error) {
+func installerDownloadURL(downloadBaseURL string, installerVersion string, variant InstallerVariant) (string, error) {
 	base, err := url.Parse(downloadBaseURL)
 	if err != nil {
 		return "", fmt.Errorf("parse ReShade download base URL: %w", err)
@@ -220,22 +235,34 @@ func installerDownloadURL(downloadBaseURL string, installerVersion string) (stri
 		return "", fmt.Errorf("parse ReShade download base URL: %q is not absolute", downloadBaseURL)
 	}
 
-	base.Path = strings.TrimRight(base.Path, "/") + "/" + installerFileName(installerVersion)
+	base.Path = strings.TrimRight(base.Path, "/") + "/" + installerFileName(installerVersion, variant)
 	return base.String(), nil
 }
 
-func installerFileName(installerVersion string) string {
+func installerFileName(installerVersion string, variant InstallerVariant) string {
+	if variant == InstallerVariantAddon {
+		return fmt.Sprintf("ReShade_Setup_%s_Addon.exe", installerVersion)
+	}
+
 	return fmt.Sprintf("ReShade_Setup_%s.exe", installerVersion)
 }
 
-func removeStaleInstallers(cacheDir string, keepName string) error {
+func installerDescription(variant InstallerVariant) string {
+	if variant == InstallerVariantAddon {
+		return "ReShade add-on installer"
+	}
+
+	return "ReShade installer"
+}
+
+func removeStaleInstallers(cacheDir string, keepName string, variant InstallerVariant) error {
 	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
 		return fmt.Errorf("read ReShade installer cache: %w", err)
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() || entry.Name() == keepName || !isReShadeInstallerName(entry.Name()) {
+		if entry.IsDir() || entry.Name() == keepName || !isReShadeInstallerNameForVariant(entry.Name(), variant) {
 			continue
 		}
 		if err := os.Remove(filepath.Join(cacheDir, entry.Name())); err != nil {
@@ -246,6 +273,11 @@ func removeStaleInstallers(cacheDir string, keepName string) error {
 	return nil
 }
 
-func isReShadeInstallerName(name string) bool {
-	return strings.HasPrefix(name, "ReShade_Setup_") && strings.HasSuffix(name, ".exe")
+func isReShadeInstallerNameForVariant(name string, variant InstallerVariant) bool {
+	if !strings.HasPrefix(name, "ReShade_Setup_") || !strings.HasSuffix(name, ".exe") {
+		return false
+	}
+
+	isAddon := strings.HasSuffix(name, "_Addon.exe")
+	return isAddon == (variant == InstallerVariantAddon)
 }

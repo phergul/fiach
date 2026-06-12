@@ -97,3 +97,19 @@ func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunchin
 		t.Fatalf("DownloadAndOpenReShadeInstaller() error = %q, want service and unsupported context", err.Error())
 	}
 }
+
+func TestReshadeServiceDownloadAndOpenAddonInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
+	t.Parallel()
+
+	service := NewReshadeService(nil)
+	service.operatingSystem = "darwin"
+
+	_, err := service.DownloadAndOpenReShadeAddonInstaller(context.Background())
+	if err == nil {
+		t.Fatal("DownloadAndOpenReShadeAddonInstaller() error = nil, want error")
+	}
+	if !contains(err.Error(), "download and open ReShade add-on installer") ||
+		!contains(err.Error(), "add-on installer launch is only supported on Windows") {
+		t.Fatalf("DownloadAndOpenReShadeAddonInstaller() error = %q, want service and unsupported context", err.Error())
+	}
+}
