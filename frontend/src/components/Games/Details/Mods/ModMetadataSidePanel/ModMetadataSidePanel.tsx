@@ -8,23 +8,32 @@ import {
   type Mod,
   type ModMetadata,
   type ModMetadataField,
+  type Tag,
+  type TagColor,
   type UpdateModMetadataInput,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import {
+  ModTagEditor,
+  type ModTagSelection,
+} from '@components/Games/Details/Mods/ModTags/ModTagEditor/ModTagEditor';
 
 import './ModMetadataSidePanel.scss';
 
 interface ModMetadataSidePanelProps {
   error: string | null;
+  availableTags: Tag[];
   isBusy: boolean;
   mod: Mod | null;
   onClose: () => void;
   onSave: (input: ModMetadataSaveInput) => Promise<void> | void;
+  onRenameTag: (tagID: number, name: string, color: TagColor) => Promise<Tag>;
 }
 
 export interface ModMetadataSaveInput {
   modID: number;
   name: string;
   metadata: UpdateModMetadataInput;
+  tags: ModTagSelection[];
 }
 
 interface FieldState {
@@ -98,10 +107,12 @@ const getMetadata = (mod: Mod | null): ModMetadata | null => mod?.Metadata ?? nu
 
 export const ModMetadataSidePanel = ({
   error,
+  availableTags,
   isBusy,
   mod,
   onClose,
   onSave,
+  onRenameTag,
 }: ModMetadataSidePanelProps) => {
   const metadata = getMetadata(mod);
   const [name, setName] = useState('');
@@ -110,6 +121,7 @@ export const ModMetadataSidePanel = ({
   const [description, setDescription] = useState<FieldState>(() => emptyFieldState());
   const [sourceURL, setSourceURL] = useState<FieldState>(() => emptyFieldState());
   const [notes, setNotes] = useState('');
+  const [tags, setTags] = useState<ModTagSelection[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const panelTitle = mod === null ? 'Mod Metadata' : `Edit ${mod.Name}`;
 
@@ -120,8 +132,13 @@ export const ModMetadataSidePanel = ({
     setDescription(buildFieldState(metadata?.Description));
     setSourceURL(buildFieldState(metadata?.SourceURL));
     setNotes(metadata?.Notes ?? '');
+    setTags((mod?.Tags ?? []).map((tag) => ({
+      ID: tag.ID,
+      Name: tag.Name,
+      Color: tag.Color,
+    })));
     setFieldErrors({});
-  }, [metadata, mod]);
+  }, [mod?.ID]);
 
   if (mod === null) {
     return null;
@@ -167,6 +184,7 @@ export const ModMetadataSidePanel = ({
         SourceURL: buildFieldStateForSave(sourceURL),
         Notes: notes.trim() === '' ? null : notes,
       },
+      tags,
     });
   };
 
@@ -237,6 +255,17 @@ export const ModMetadataSidePanel = ({
               <span className="mod-metadata-side-panel-error">{fieldErrors.name}</span>
             )}
           </label>
+
+          <div className="mod-metadata-side-panel-field">
+            <span className="mod-metadata-side-panel-label">Tags</span>
+            <ModTagEditor
+              availableTags={availableTags}
+              isBusy={isBusy}
+              onChange={setTags}
+              onRenameTag={onRenameTag}
+              selectedTags={tags}
+            />
+          </div>
 
           {buildTextInput('Version', metadata?.Version, version, setVersion)}
           {buildTextInput('Author', metadata?.Author, author, setAuthor)}

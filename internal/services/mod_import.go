@@ -184,6 +184,8 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		targetRelativePath,
 		modimport.ImportOptions{
 			MetadataRegistry: s.metadataRegistry,
+			TagIDs:           input.TagIDs,
+			NewTags:          toStorageCreateTagInputs(input.NewTags),
 		},
 	)
 	if err != nil {
@@ -205,8 +207,10 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		slog.Int64("mod_id", importResult.Mod.ID),
 	)
 
+	resultMod := mappers.ToDTOMod(importResult.Mod)
+	resultMod.Tags = mappers.ToDTOTags(importResult.Tags)
 	return dto.ImportModResult{
-		Mod:      mappers.ToDTOMod(importResult.Mod),
+		Mod:      resultMod,
 		Config:   mappers.ToDTOModInstallConfig(importResult.Config),
 		Warnings: appendUniqueWarnings(targetWarnings, importResult.Warnings...),
 	}, nil
@@ -319,8 +323,15 @@ func (s *ModService) toUpdateModResult(ctx context.Context, updateResult modimpo
 		}
 	}
 
+	resultMod := mappers.ToDTOMod(updateResult.After)
+	tagsByModID, err := s.store.ListTagsForMods(ctx, []int64{updateResult.After.ID})
+	if err != nil {
+		return dto.UpdateModResult{}, err
+	}
+	resultMod.Tags = mappers.ToDTOTags(tagsByModID[updateResult.After.ID])
+
 	return dto.UpdateModResult{
-		Mod:                mappers.ToDTOMod(updateResult.After),
+		Mod:                resultMod,
 		Before:             toModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
 		After:              toModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
 		MetadataWarning:    metadataWarning,

@@ -6,6 +6,7 @@ import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/servi
 import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage, openArchive, openDirectory } from '@utils';
+import type { ModTagSelection } from '@components/Games/Details/Mods/ModTags/ModTagEditor/ModTagEditor';
 
 interface ImportReviewState {
   initialName: string;
@@ -20,6 +21,7 @@ interface ImportWizardSubmitInput {
   name: string;
   strategyType: StrategyType;
   targetRelativePath: string;
+  tags: ModTagSelection[];
 }
 
 interface UseGameModImportFlowInput {
@@ -135,6 +137,7 @@ export const useGameModImportFlow = ({
     name,
     strategyType,
     targetRelativePath,
+    tags,
   }: ImportWizardSubmitInput) => {
     if (gameID === null || importWizard === null || isImporting) {
       return;
@@ -151,6 +154,10 @@ export const useGameModImportFlow = ({
         SourcePath: importWizard.sourcePath,
         StrategyType: strategyType,
         TargetRelativePath: targetRelativePath,
+        TagIDs: tags.flatMap((tag) => tag.ID === null ? [] : [tag.ID]),
+        NewTags: tags.flatMap((tag) => tag.ID === null
+          ? [{ Name: tag.Name, Color: tag.Color }]
+          : []),
       });
       setImportWizard(null);
 

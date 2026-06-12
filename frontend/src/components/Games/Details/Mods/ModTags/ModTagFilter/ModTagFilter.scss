@@ -1,0 +1,89 @@
+@use '@styles' as *;
+
+$mod-tag-filter-control-height: 2.75rem;
+$mod-tag-filter-icon-size: 1rem;
+$mod-tag-filter-popover-width: 16rem;
+$mod-tag-filter-popover-max-height: 16rem;
+
+.mod-tag-filter {
+  min-width: 0;
+}
+
+.mod-tag-filter-control {
+  position: relative;
+}
+
+.mod-tag-filter-button {
+  min-height: $mod-tag-filter-control-height;
+  color: $color-text-subtle;
+  background: $color-surface;
+}
+
+.mod-tag-filter-button-active {
+  color: $color-success;
+  border-color: $color-success;
+}
+
+.mod-tag-filter-icon {
+  width: $mod-tag-filter-icon-size;
+  height: $mod-tag-filter-icon-size;
+  stroke-width: 1.8;
+}
+
+.mod-tag-filter-popover {
+  position: absolute;
+  top: calc(100% + $spacing-xs);
+  right: 0;
+  z-index: $z-index-toast;
+  width: $mod-tag-filter-popover-width;
+  padding: $spacing-xs;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-subtle;
+}
+
+.mod-tag-filter-search {
+  position: relative;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.mod-tag-filter-search-icon {
+  position: absolute;
+  top: 50%;
+  left: $spacing-sm;
+  width: $mod-tag-filter-icon-size;
+  height: $mod-tag-filter-icon-size;
+  color: $color-text-muted;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.mod-tag-filter-search-input {
+  width: 100%;
+  height: $input-height;
+  padding: 0 $spacing-sm 0 calc($spacing-lg + $spacing-xs);
+  border-radius: $radius-sm;
+}
+
+.mod-tag-filter-options {
+  max-height: $mod-tag-filter-popover-max-height;
+  overflow-y: auto;
+}
+
+.mod-tag-filter-option {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-sm;
+  border: $app-border-width solid transparent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+}
+
+.mod-tag-filter-option:hover,
+.mod-tag-filter-option:focus-within {
+  background: $color-surface-elevated;
+}

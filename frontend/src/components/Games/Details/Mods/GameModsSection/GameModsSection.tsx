@@ -1,19 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 
 import {
   DeleteMod,
   GetModDeleteSummary,
-  RenameMod,
-  UpdateModMetadata,
+  RenameTag,
+  UpdateModDetails,
 } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
-import type { Mod, ModDeleteSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  Mod,
+  ModDeleteSummary,
+  TagColor,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameModListItem } from '@components/Games/Details/Mods/GameModListItem/GameModListItem';
+import { ModTagFilter } from '@components/Games/Details/Mods/ModTags/ModTagFilter/ModTagFilter';
 import {
   ModMetadataSidePanel,
   type ModMetadataSaveInput,
@@ -64,7 +69,7 @@ export const GameModsSection = ({
   onUpdateFolderMod,
 }: GameModsSectionProps) => {
   const { addErrorToast, addToast } = useToast();
-  const { isLoading, loadError, mods, refreshMods } = modManager;
+  const { gameTags, isLoading, loadError, mods, refreshMods } = modManager;
   const [deleteCandidate, setDeleteCandidate] = useState<Mod | null>(null);
   const [deleteSummary, setDeleteSummary] = useState<ModDeleteSummary | null>(null);
   const [editingMetadataModID, setEditingMetadataModID] = useState<number | null>(null);
@@ -74,14 +79,11 @@ export const GameModsSection = ({
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredMods = useMemo(() => {
-    if (trimmedSearchQuery === '') {
-      return mods;
-    }
-
     return mods.filter((mod) => {
-      return (
+      const matchesSearch = trimmedSearchQuery === '' || (
         mod.Name.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourcePath.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourceType.toLowerCase().includes(trimmedSearchQuery) ||
@@ -91,9 +93,12 @@ export const GameModsSection = ({
         (mod.Metadata?.Author.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
         (mod.Metadata?.SourceURL.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
         (mod.Metadata?.Notes ?? '').toLowerCase().includes(trimmedSearchQuery)
+        || mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery))
       );
+      const matchesTags = selectedTagIDs.every((tagID) => mod.Tags.some((tag) => tag.ID === tagID));
+      return matchesSearch && matchesTags;
     });
-  }, [mods, trimmedSearchQuery]);
+  }, [mods, selectedTagIDs, trimmedSearchQuery]);
 
   const importMenuItems = [
     {
@@ -118,6 +123,11 @@ export const GameModsSection = ({
   const selectedMetadataMod = editingMetadataModID === null
     ? null
     : mods.find((mod) => mod.ID === editingMetadataModID) ?? null;
+
+  useEffect(() => {
+    const availableTagIDs = new Set(mods.flatMap((mod) => mod.Tags.map((tag) => tag.ID)));
+    setSelectedTagIDs((currentTagIDs) => currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)));
+  }, [mods]);
 
   const openMetadataEditor = (mod: Mod) => {
     if (isRowBusy) {
@@ -147,11 +157,15 @@ export const GameModsSection = ({
     setMetadataSaveError(null);
 
     try {
-      const trimmedName = input.name.trim();
-      if (trimmedName !== currentMod.Name) {
-        await RenameMod(input.modID, trimmedName);
-      }
-      await UpdateModMetadata(input.metadata);
+      await UpdateModDetails({
+        ModID: input.modID,
+        Name: input.name.trim(),
+        Metadata: input.metadata,
+        TagIDs: input.tags.flatMap((tag) => tag.ID === null ? [] : [tag.ID]),
+        NewTags: input.tags.flatMap((tag) => tag.ID === null
+          ? [{ Name: tag.Name, Color: tag.Color }]
+          : []),
+      });
       addToast({
         message: 'Mod metadata saved.',
         tone: 'success',
@@ -164,6 +178,17 @@ export const GameModsSection = ({
       addErrorToast(error);
     } finally {
       setIsSavingMetadata(false);
+    }
+  };
+
+  const renameTag = async (tagID: number, name: string, color: TagColor) => {
+    try {
+      const tag = await RenameTag(tagID, name, color);
+      await refreshMods();
+      return tag;
+    } catch (error) {
+      addErrorToast(error);
+      throw error;
     }
   };
 
@@ -236,6 +261,12 @@ export const GameModsSection = ({
           />
         </div>
 
+        <ModTagFilter
+          candidateMods={mods}
+          onChange={setSelectedTagIDs}
+          selectedTagIDs={selectedTagIDs}
+        />
+
         <div className="game-mods-section-import-anchor">
           <button
             className="game-mods-section-import-button"
@@ -293,10 +324,12 @@ export const GameModsSection = ({
           </ul>
 
           <ModMetadataSidePanel
+            availableTags={gameTags}
             error={metadataSaveError}
             isBusy={isSavingMetadata}
             mod={selectedMetadataMod}
             onClose={closeMetadataEditor}
+            onRenameTag={renameTag}
             onSave={saveModMetadata}
           />
         </div>

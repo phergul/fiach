@@ -19,11 +19,14 @@ type CreateModInstallConfigInput struct {
 }
 
 type CreateModWithInstallConfigInput struct {
-	Mod    CreateModInput
-	Config CreateModInstallConfigInput
+	Mod     CreateModInput
+	Config  CreateModInstallConfigInput
+	TagIDs  []int64
+	NewTags []CreateTagInput
 }
 
 type CreateModWithInstallConfigResult struct {
 	Mod    Mod
 	Config ModInstallConfig
+	Tags   []Tag
 }

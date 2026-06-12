@@ -18,16 +18,23 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
   overflow: hidden;
 }
 
-.game-profile-add-mods-modal-search {
-  position: relative;
+.game-profile-add-mods-modal-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-sm;
   padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
+}
+
+.game-profile-add-mods-modal-search {
+  position: relative;
 }
 
 .game-profile-add-mods-modal-search-icon {
   position: absolute;
   top: 50%;
-  left: calc($spacing-xl + $spacing-md);
+  left: $spacing-md;
   width: $game-profile-add-mods-modal-icon-size;
   height: $game-profile-add-mods-modal-icon-size;
   color: $color-text-muted;

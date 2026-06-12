@@ -279,6 +279,7 @@ export const GameDetails = () => {
       )}
 
       <GameModImportWizard
+        availableTags={gameModManager.gameTags}
         error={importFlow.importError}
         gameID={game?.ID ?? 0}
         initialName={importFlow.importWizard?.initialName ?? ''}

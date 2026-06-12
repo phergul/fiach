@@ -5,6 +5,7 @@ import {
   type ModSourceType,
   type Preview,
   type StrategyDescriptor,
+  type Tag,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   DetectImportTargets,
@@ -16,6 +17,7 @@ import { GameModImportWizardDetailsStep } from '@components/Games/Details/Mods/G
 import { GameModImportWizardPreviewStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardPreviewStep/GameModImportWizardPreviewStep';
 import { GameModImportWizardStrategyStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardStrategyStep/GameModImportWizardStrategyStep';
 import { GameModImportWizardTargetStep } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizardTargetStep/GameModImportWizardTargetStep';
+import type { ModTagSelection } from '@components/Games/Details/Mods/ModTags/ModTagEditor/ModTagEditor';
 import { getErrorMessage } from '@utils';
 
 import './GameModImportWizard.scss';
@@ -26,10 +28,12 @@ interface GameModImportWizardSubmitInput {
   name: string;
   strategyType: StrategyType;
   targetRelativePath: string;
+  tags: ModTagSelection[];
 }
 
 interface GameModImportWizardProps {
   error: string | null;
+  availableTags: Tag[];
   gameID: number;
   initialName: string;
   isBusy: boolean;
@@ -54,6 +58,7 @@ const stepOrder: GameModImportWizardStep[] = ['details', 'strategy', 'target', '
 
 export const GameModImportWizard = ({
   error,
+  availableTags,
   gameID,
   initialName,
   isBusy,
@@ -70,6 +75,7 @@ export const GameModImportWizard = ({
   const [name, setName] = useState(initialName);
   const [selectedStrategyType, setSelectedStrategyType] = useState<StrategyType | null>(null);
   const [targetRelativePath, setTargetRelativePath] = useState('.');
+  const [tags, setTags] = useState<ModTagSelection[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -107,6 +113,7 @@ export const GameModImportWizard = ({
     setName(initialName);
     setSelectedStrategyType(null);
     setTargetRelativePath('.');
+    setTags([]);
     setPreview(null);
     setPreviewError(null);
     setIsPreviewing(false);
@@ -275,6 +282,7 @@ export const GameModImportWizard = ({
         name: trimmedName,
         strategyType: selectedStrategyType,
         targetRelativePath: preview.TargetRelativePath,
+        tags,
       });
     }
   };
@@ -356,10 +364,13 @@ export const GameModImportWizard = ({
       {isDetailsStep && (
         <GameModImportWizardDetailsStep
           isBusy={isBusy}
+          availableTags={availableTags}
           name={name}
           onNameChange={setName}
+          onTagsChange={setTags}
           sourceLabel={sourceLabel}
           sourcePath={sourcePath}
+          tags={tags}
           targetPath={targetPath}
         />
       )}
@@ -395,6 +406,7 @@ export const GameModImportWizard = ({
           selectedStrategy={selectedStrategy}
           sourceLabel={sourceLabel}
           sourcePath={sourcePath}
+          tags={tags}
         />
       )}
 

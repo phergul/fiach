@@ -31,6 +31,23 @@ func ToDTOMod(mod dbtypes.Mod) dto.Mod {
 	}
 }
 
+func ToDTOTag(tag dbtypes.Tag) dto.Tag {
+	return dto.Tag{
+		ID:     tag.ID,
+		GameID: tag.GameID,
+		Name:   tag.Name,
+		Color:  dto.TagColor(tag.Color),
+	}
+}
+
+func ToDTOTags(tags []dbtypes.Tag) []dto.Tag {
+	result := make([]dto.Tag, 0, len(tags))
+	for _, tag := range tags {
+		result = append(result, ToDTOTag(tag))
+	}
+	return result
+}
+
 func ToDTOModWithMetadata(mod dbtypes.Mod, metadata dbtypes.ModMetadata) dto.Mod {
 	result := ToDTOMod(mod)
 	dtoMetadata := ToDTOModMetadata(metadata)

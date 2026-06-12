@@ -62,3 +62,9 @@ $game-mod-import-wizard-preview-step-list-height: 13rem;
 .game-mod-import-wizard-preview-step-file {
   font-family: $font-family-monospace;
 }
+.game-mod-import-wizard-preview-step-tags {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}

@@ -30,20 +30,22 @@ type Store interface {
 	FindModByOriginalSourcePath(ctx context.Context, gameID int64, originalSourcePath string) (dbtypes.Mod, bool, error)
 	GetGlobalModStorageRoot(ctx context.Context) (string, error)
 	ResolveGameModStoragePath(ctx context.Context, gameID int64, globalRoot string) (string, error)
-	CreateOrReplaceModInstallConfig(ctx context.Context, input dbtypes.CreateModInstallConfigInput) (dbtypes.ModInstallConfig, error)
 	CreateModWithInstallConfig(ctx context.Context, input dbtypes.CreateModWithInstallConfigInput) (dbtypes.CreateModWithInstallConfigResult, error)
-	GetModInstallConfig(ctx context.Context, modID int64) (dbtypes.ModInstallConfig, bool, error)
+	EnsureModInstallConfigAndMergeTags(ctx context.Context, configInput dbtypes.CreateModInstallConfigInput, tagInput dbtypes.SetModTagsInput) (dbtypes.ModInstallConfig, []dbtypes.Tag, error)
 }
 
 type Result struct {
 	Mod           dbtypes.Mod
 	Config        dbtypes.ModInstallConfig
+	Tags          []dbtypes.Tag
 	MetadataError error
 	Warnings      []string
 }
 
 type ImportOptions struct {
 	MetadataRegistry *modmetadata.Registry
+	TagIDs           []int64
+	NewTags          []dbtypes.CreateTagInput
 }
 
 var unsafeManagedModFolderNameChars = regexp.MustCompile(`[<>:"/\\|?*\x00-\x1F]+`)
@@ -85,20 +87,23 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 		TargetRelativePath: targetRelativePath,
 	}
 	if found {
-		config, configFound, err := store.GetModInstallConfig(ctx, existing.ID)
+		configInput.ModID = existing.ID
+		config, tags, err := store.EnsureModInstallConfigAndMergeTags(
+			ctx,
+			configInput,
+			dbtypes.SetModTagsInput{
+				ModID:   existing.ID,
+				TagIDs:  options.TagIDs,
+				NewTags: options.NewTags,
+			},
+		)
 		if err != nil {
 			return Result{}, err
-		}
-		if !configFound {
-			configInput.ModID = existing.ID
-			config, err = store.CreateOrReplaceModInstallConfig(ctx, configInput)
-			if err != nil {
-				return Result{}, err
-			}
 		}
 		return Result{
 			Mod:    existing,
 			Config: config,
+			Tags:   tags,
 		}, nil
 	}
 
@@ -187,7 +192,9 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 				SourceURL:   metadata.SourceURL,
 			},
 		},
-		Config: configInput,
+		Config:  configInput,
+		TagIDs:  options.TagIDs,
+		NewTags: options.NewTags,
 	})
 	if err != nil {
 		return Result{}, err
@@ -197,6 +204,7 @@ func Import(ctx context.Context, store Store, gameID int64, name string, source 
 	return Result{
 		Mod:           storedResult.Mod,
 		Config:        storedResult.Config,
+		Tags:          storedResult.Tags,
 		MetadataError: metadataErr,
 		Warnings:      strategyWarnings,
 	}, nil

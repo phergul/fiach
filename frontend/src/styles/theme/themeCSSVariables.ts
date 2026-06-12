@@ -21,6 +21,14 @@ const themeTokenVariableEntries = (
   ['--color-border-subtle', tokens.borderSubtle],
   ['--color-border', tokens.border],
   ['--color-border-strong', tokens.borderStrong],
+  ['--color-tag-red', tokens.tagRed],
+  ['--color-tag-orange', tokens.tagOrange],
+  ['--color-tag-yellow', tokens.tagYellow],
+  ['--color-tag-green', tokens.tagGreen],
+  ['--color-tag-teal', tokens.tagTeal],
+  ['--color-tag-blue', tokens.tagBlue],
+  ['--color-tag-purple', tokens.tagPurple],
+  ['--color-tag-pink', tokens.tagPink],
   ['--shadow-subtle', tokens.shadowSubtle],
 ];
 

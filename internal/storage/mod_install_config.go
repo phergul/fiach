@@ -76,10 +76,18 @@ func (s *Store) CreateModWithInstallConfig(ctx context.Context, input dbtypes.Cr
 		if err != nil {
 			return err
 		}
-
+		tags, err := setModTags(ctx, tx, dbtypes.SetModTagsInput{
+			ModID:   mod.ID,
+			TagIDs:  input.TagIDs,
+			NewTags: input.NewTags,
+		})
+		if err != nil {
+			return err
+		}
 		result = dbtypes.CreateModWithInstallConfigResult{
 			Mod:    mod,
 			Config: config,
+			Tags:   tags,
 		}
 		return nil
 	})
@@ -88,6 +96,50 @@ func (s *Store) CreateModWithInstallConfig(ctx context.Context, input dbtypes.Cr
 	}
 
 	return result, nil
+}
+
+func (s *Store) EnsureModInstallConfigAndMergeTags(
+	ctx context.Context,
+	configInput dbtypes.CreateModInstallConfigInput,
+	tagInput dbtypes.SetModTagsInput,
+) (config dbtypes.ModInstallConfig, tags []dbtypes.Tag, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("ensure mod install config and merge tags: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return dbtypes.ModInstallConfig{}, nil, errors.New("store is not open")
+	}
+	if configInput.ModID <= 0 {
+		return dbtypes.ModInstallConfig{}, nil, errors.New("mod ID must be positive")
+	}
+	tagInput.ModID = configInput.ModID
+	tagInput.MergeOnly = true
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+		var found bool
+		var txErr error
+		config, found, txErr = getModInstallConfig(ctx, tx, configInput.ModID)
+		if txErr != nil {
+			return txErr
+		}
+		if !found {
+			config, txErr = upsertModInstallConfig(ctx, tx, configInput)
+			if txErr != nil {
+				return txErr
+			}
+		}
+
+		tags, txErr = setModTags(ctx, tx, tagInput)
+		return txErr
+	})
+	if err != nil {
+		return dbtypes.ModInstallConfig{}, nil, err
+	}
+
+	return config, tags, nil
 }
 
 func upsertModInstallConfig(ctx context.Context, db interface {

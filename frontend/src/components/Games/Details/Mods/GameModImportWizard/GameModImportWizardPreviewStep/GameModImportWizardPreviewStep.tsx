@@ -1,5 +1,7 @@
 import type { Preview, StrategyDescriptor } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { formatModMetadataBytes } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
+import type { ModTagSelection } from '@components/Games/Details/Mods/ModTags/ModTagEditor/ModTagEditor';
+import { ModTagChip } from '@components/Games/Details/Mods/ModTags/ModTagChip/ModTagChip';
 
 import './GameModImportWizardPreviewStep.scss';
 
@@ -9,6 +11,7 @@ interface GameModImportWizardPreviewStepProps {
   selectedStrategy: StrategyDescriptor | undefined;
   sourceLabel: string;
   sourcePath: string;
+  tags: ModTagSelection[];
 }
 
 export const GameModImportWizardPreviewStep = ({
@@ -17,6 +20,7 @@ export const GameModImportWizardPreviewStep = ({
   selectedStrategy,
   sourceLabel,
   sourcePath,
+  tags,
 }: GameModImportWizardPreviewStepProps) => {
   const extraWarnings = preview.Warnings.filter((warning) => !warning.includes(`first ${preview.Cap}`));
 
@@ -26,6 +30,21 @@ export const GameModImportWizardPreviewStep = ({
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Mod name</span>
           <span className="game-mod-import-wizard-preview-step-value">{name}</span>
+        </div>
+
+        <div className="game-mod-import-wizard-preview-step-row">
+          <span className="game-mod-import-wizard-preview-step-label">Tags</span>
+          <span className="game-mod-import-wizard-preview-step-tags">
+            {tags.length === 0 ? (
+              <span className="game-mod-import-wizard-preview-step-value">None</span>
+            ) : tags.map((tag, index) => (
+              <ModTagChip
+                color={tag.Color}
+                key={tag.ID ?? `new-${tag.Name}-${index}`}
+                name={tag.Name}
+              />
+            ))}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">

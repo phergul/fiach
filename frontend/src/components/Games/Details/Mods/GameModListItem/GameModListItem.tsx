@@ -8,6 +8,7 @@ import {
   buildModMetadataSummaryItems,
   ModMetadataSummary,
 } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
+import { ModTagList } from '@components/Games/Details/Mods/ModTags/ModTagList/ModTagList';
 
 import './GameModListItem.scss';
 
@@ -56,6 +57,7 @@ export const GameModListItem = ({
       <div className="game-mod-list-item-copy">
         <span className="game-mod-list-item-name">{mod.Name}</span>
         <ModMetadataSummary items={buildModMetadataSummaryItems(mod)} />
+        <ModTagList tags={mod.Tags} />
         <span className="game-mod-list-item-source">{sourceLabel(mod)}</span>
       </div>
 

@@ -1,0 +1,75 @@
+@use '@styles' as *;
+
+$mod-tag-chip-icon-size: 0.75rem;
+$mod-tag-chip-border-alpha: 62%;
+$mod-tag-chip-bg-alpha: 34%;
+
+.mod-tag-chip {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  overflow: hidden;
+  border: $app-border-width solid color-mix(
+    in srgb,
+    var(--mod-tag-color) $mod-tag-chip-border-alpha,
+    $color-border
+  );
+  background: rgb(#{$color-surface-rgb} / #{$mod-tag-chip-bg-alpha});
+  color: var(--mod-tag-color);
+  font-size: $font-size-sm;
+  line-height: $line-height-heading;
+}
+
+.mod-tag-chip-content {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  padding: $spacing-xs $spacing-sm;
+  color: inherit;
+  font-weight: $font-weight-semibold;
+}
+
+.mod-tag-chip-edit,
+.mod-tag-chip-remove {
+  align-self: stretch;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.mod-tag-chip-edit:hover:not(:disabled),
+.mod-tag-chip-edit:focus-visible:not(:disabled),
+.mod-tag-chip-remove:hover:not(:disabled),
+.mod-tag-chip-remove:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--mod-tag-color) 12%, transparent);
+}
+
+.mod-tag-chip-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mod-tag-chip-remove {
+  padding: $spacing-xs $spacing-sm;
+  color: inherit;
+  border-left: $app-border-width solid color-mix(
+    in srgb,
+    var(--mod-tag-color) 48%,
+    $color-border-subtle
+  );
+}
+
+.mod-tag-chip-remove-icon {
+  width: $mod-tag-chip-icon-size;
+  height: $mod-tag-chip-icon-size;
+  stroke-width: 2;
+}
+
+.mod-tag-chip-red { --mod-tag-color: #{$color-tag-red}; }
+.mod-tag-chip-orange { --mod-tag-color: #{$color-tag-orange}; }
+.mod-tag-chip-yellow { --mod-tag-color: #{$color-tag-yellow}; }
+.mod-tag-chip-green { --mod-tag-color: #{$color-tag-green}; }
+.mod-tag-chip-teal { --mod-tag-color: #{$color-tag-teal}; }
+.mod-tag-chip-blue { --mod-tag-color: #{$color-tag-blue}; }
+.mod-tag-chip-purple { --mod-tag-color: #{$color-tag-purple}; }
+.mod-tag-chip-pink { --mod-tag-color: #{$color-tag-pink}; }

@@ -17,6 +17,14 @@ export interface ThemeTokens {
   borderSubtle: string;
   border: string;
   borderStrong: string;
+  tagRed: string;
+  tagOrange: string;
+  tagYellow: string;
+  tagGreen: string;
+  tagTeal: string;
+  tagBlue: string;
+  tagPurple: string;
+  tagPink: string;
   shadowSubtle: string;
 }
 

@@ -9,6 +9,8 @@ import {
   buildModMetadataSummaryItems,
   ModMetadataSummary,
 } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
+import { ModTagFilter } from '@components/Games/Details/Mods/ModTags/ModTagFilter/ModTagFilter';
+import { ModTagList } from '@components/Games/Details/Mods/ModTags/ModTagList/ModTagList';
 
 import './GameProfileAddModsModal.scss';
 
@@ -33,25 +35,26 @@ export const GameProfileAddModsModal = ({
 }: GameProfileAddModsModalProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedModIDs, setSelectedModIDs] = useState<Set<number>>(() => new Set());
+  const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredMods = useMemo(() => {
-    if (trimmedSearchQuery === '') {
-      return availableMods;
-    }
-
     return availableMods.filter((mod) => {
-      return (
+      const matchesSearch = trimmedSearchQuery === '' || (
         mod.Name.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourcePath.toLowerCase().includes(trimmedSearchQuery)
+        || mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery))
       );
+      const matchesTags = selectedTagIDs.every((tagID) => mod.Tags.some((tag) => tag.ID === tagID));
+      return matchesSearch && matchesTags;
     });
-  }, [availableMods, trimmedSearchQuery]);
+  }, [availableMods, selectedTagIDs, trimmedSearchQuery]);
   const selectedCount = selectedModIDs.size;
 
   useEffect(() => {
     if (!isOpen) {
       setSearchQuery('');
       setSelectedModIDs(new Set());
+      setSelectedTagIDs([]);
     }
   }, [isOpen]);
 
@@ -123,15 +126,22 @@ export const GameProfileAddModsModal = ({
       )}
     >
       <>
-        <div className="game-profile-add-mods-modal-search">
-          <Search className="game-profile-add-mods-modal-search-icon" aria-hidden="true" />
-          <input
-            className="game-profile-add-mods-modal-search-input"
-            disabled={isBusy || isGameModsLoading || availableMods.length === 0}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search available mods..."
-            type="search"
-            value={searchQuery}
+        <div className="game-profile-add-mods-modal-controls">
+          <div className="game-profile-add-mods-modal-search">
+            <Search className="game-profile-add-mods-modal-search-icon" aria-hidden="true" />
+            <input
+              className="game-profile-add-mods-modal-search-input"
+              disabled={isBusy || isGameModsLoading || availableMods.length === 0}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search available mods..."
+              type="search"
+              value={searchQuery}
+            />
+          </div>
+          <ModTagFilter
+            candidateMods={availableMods}
+            onChange={setSelectedTagIDs}
+            selectedTagIDs={selectedTagIDs}
           />
         </div>
 
@@ -166,6 +176,7 @@ export const GameProfileAddModsModal = ({
                       <span className="game-profile-add-mods-modal-option-copy">
                         <span className="game-profile-add-mods-modal-option-name">{mod.Name}</span>
                         <ModMetadataSummary items={buildModMetadataSummaryItems(mod)} />
+                        <ModTagList tags={mod.Tags} />
                       </span>
                     </label>
                   </li>

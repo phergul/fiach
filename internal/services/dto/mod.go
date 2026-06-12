@@ -22,6 +22,32 @@ type Mod struct {
 	Metadata           *ModMetadata
 	CreatedAt          string
 	UpdatedAt          string
+	Tags               []Tag
+}
+
+type TagColor string
+
+const (
+	TagColorRed    TagColor = "red"
+	TagColorOrange TagColor = "orange"
+	TagColorYellow TagColor = "yellow"
+	TagColorGreen  TagColor = "green"
+	TagColorTeal   TagColor = "teal"
+	TagColorBlue   TagColor = "blue"
+	TagColorPurple TagColor = "purple"
+	TagColorPink   TagColor = "pink"
+)
+
+type Tag struct {
+	ID     int64
+	GameID int64
+	Name   string
+	Color  TagColor
+}
+
+type CreateTagInput struct {
+	Name  string
+	Color TagColor
 }
 
 type ModDeleteSummary struct {
@@ -67,6 +93,14 @@ type UpdateModMetadataInput struct {
 	Description ModMetadataFieldUpdate
 	SourceURL   ModMetadataFieldUpdate
 	Notes       *string
+}
+
+type UpdateModDetailsInput struct {
+	ModID    int64
+	Name     string
+	Metadata UpdateModMetadataInput
+	TagIDs   []int64
+	NewTags  []CreateTagInput
 }
 
 type ModMetadataFieldUpdate struct {

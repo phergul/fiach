@@ -9,6 +9,7 @@ export {
     ApplyOperationPlanResult,
     ApplyOperationResult,
     ApplyOperationStatus,
+    CreateTagInput,
     DiagnosticLogEntry,
     DiagnosticOperation,
     ExportDiagnosticLogsInput,
@@ -55,6 +56,9 @@ export {
     StrategyDescriptor,
     StrategyType,
     StrategyVisibility,
+    Tag,
+    TagColor,
+    UpdateModDetailsInput,
     UpdateModInput,
     UpdateModMetadataInput,
     UpdateModResult

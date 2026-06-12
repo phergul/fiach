@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   GetGameManagedModStorageUsage,
+  ListGameTags,
   ListMods,
 } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
-import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { Mod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
 export const useGameMods = (gameID: number | null) => {
   const [mods, setMods] = useState<Mod[]>([]);
+  const [gameTags, setGameTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isStorageUsageLoading, setIsStorageUsageLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -38,6 +40,7 @@ export const useGameMods = (gameID: number | null) => {
   const loadMods = useCallback(async () => {
     if (gameID === null) {
       setMods([]);
+      setGameTags([]);
       setIsLoading(false);
       setLoadError(null);
       setStorageUsedBytes(null);
@@ -49,8 +52,13 @@ export const useGameMods = (gameID: number | null) => {
     setLoadError(null);
 
     try {
-      const [loadedMods] = await Promise.all([ListMods(gameID), loadStorageUsage()]);
+      const [loadedMods, loadedTags] = await Promise.all([
+        ListMods(gameID),
+        ListGameTags(gameID),
+        loadStorageUsage(),
+      ]);
       setMods(loadedMods);
+      setGameTags(loadedTags);
       return loadedMods;
     } catch (error) {
       const message = getErrorMessage(error);
@@ -67,6 +75,7 @@ export const useGameMods = (gameID: number | null) => {
     const loadInitialMods = async () => {
       if (gameID === null) {
         setMods([]);
+        setGameTags([]);
         setLoadError(null);
         setIsLoading(false);
         setStorageUsedBytes(null);
@@ -96,9 +105,14 @@ export const useGameMods = (gameID: number | null) => {
             }
           });
 
-        const [loadedMods] = await Promise.all([ListMods(gameID), storageUsagePromise]);
+        const [loadedMods, loadedTags] = await Promise.all([
+          ListMods(gameID),
+          ListGameTags(gameID),
+          storageUsagePromise,
+        ]);
         if (isMounted) {
           setMods(loadedMods);
+          setGameTags(loadedTags);
         }
       } catch (error) {
         if (isMounted) {
@@ -123,6 +137,7 @@ export const useGameMods = (gameID: number | null) => {
     isStorageUsageLoading,
     loadError,
     mods,
+    gameTags,
     refreshMods: loadMods,
     storageUsedBytes,
   };

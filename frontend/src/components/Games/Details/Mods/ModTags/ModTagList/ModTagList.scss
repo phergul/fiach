@@ -1,0 +1,8 @@
+@use '@styles' as *;
+
+.mod-tag-list {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}

@@ -41,45 +41,63 @@ export function ImportMod(input: dto$0.ImportModInput): $CancellablePromise<dto$
     });
 }
 
+export function ListGameTags(gameID: number): $CancellablePromise<dto$0.Tag[]> {
+    return $Call.ByID(1728348392, gameID).then(($result: any) => {
+        return $$createType5($result);
+    });
+}
+
 export function ListImportStrategies(): $CancellablePromise<dto$0.StrategyDescriptor[]> {
     return $Call.ByID(2113312407).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType7($result);
     });
 }
 
 export function ListMods(gameID: number): $CancellablePromise<dto$0.Mod[]> {
     return $Call.ByID(3338520162, gameID).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType9($result);
     });
 }
 
 export function PreValidateImport(input: dto$0.PreValidateImportInput): $CancellablePromise<dto$0.PreValidateImportResult> {
     return $Call.ByID(3054738227, input).then(($result: any) => {
-        return $$createType8($result);
+        return $$createType10($result);
     });
 }
 
 export function PreviewImportConfiguration(input: dto$0.PreviewImportConfigurationInput): $CancellablePromise<dto$0.Preview> {
     return $Call.ByID(3729111778, input).then(($result: any) => {
-        return $$createType9($result);
+        return $$createType11($result);
     });
 }
 
 export function PreviewUpdateMod(input: dto$0.UpdateModInput): $CancellablePromise<dto$0.UpdateModResult> {
     return $Call.ByID(2400039676, input).then(($result: any) => {
-        return $$createType10($result);
+        return $$createType12($result);
     });
 }
 
 export function RenameMod(modID: number, name: string): $CancellablePromise<dto$0.Mod> {
     return $Call.ByID(4073359283, modID, name).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType8($result);
+    });
+}
+
+export function RenameTag(tagID: number, name: string, color: dto$0.TagColor): $CancellablePromise<dto$0.Tag> {
+    return $Call.ByID(1280155363, tagID, name, color).then(($result: any) => {
+        return $$createType4($result);
     });
 }
 
 export function UpdateMod(input: dto$0.UpdateModInput): $CancellablePromise<dto$0.UpdateModResult> {
     return $Call.ByID(4122963090, input).then(($result: any) => {
-        return $$createType10($result);
+        return $$createType12($result);
+    });
+}
+
+export function UpdateModDetails(input: dto$0.UpdateModDetailsInput): $CancellablePromise<dto$0.Mod> {
+    return $Call.ByID(3416247536, input).then(($result: any) => {
+        return $$createType8($result);
     });
 }
 
@@ -94,10 +112,12 @@ const $$createType0 = dto$0.ImportTargetDetectionResult.createFrom;
 const $$createType1 = dto$0.ModDeleteSummary.createFrom;
 const $$createType2 = dto$0.ModMetadata.createFrom;
 const $$createType3 = dto$0.ImportModResult.createFrom;
-const $$createType4 = dto$0.StrategyDescriptor.createFrom;
+const $$createType4 = dto$0.Tag.createFrom;
 const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = dto$0.Mod.createFrom;
+const $$createType6 = dto$0.StrategyDescriptor.createFrom;
 const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = dto$0.PreValidateImportResult.createFrom;
-const $$createType9 = dto$0.Preview.createFrom;
-const $$createType10 = dto$0.UpdateModResult.createFrom;
+const $$createType8 = dto$0.Mod.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = dto$0.PreValidateImportResult.createFrom;
+const $$createType11 = dto$0.Preview.createFrom;
+const $$createType12 = dto$0.UpdateModResult.createFrom;

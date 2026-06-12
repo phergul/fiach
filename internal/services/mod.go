@@ -45,6 +45,15 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 		return nil, err
 	}
 
+	modIDs := make([]int64, 0, len(storedMods))
+	for _, storedMod := range storedMods {
+		modIDs = append(modIDs, storedMod.ID)
+	}
+	tagsByModID, err := s.store.ListTagsForMods(ctx, modIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	mods = make([]dto.Mod, 0, len(storedMods))
 	for _, storedMod := range storedMods {
 		metadata, found, err := s.store.GetModMetadata(ctx, storedMod.ID)
@@ -54,7 +63,9 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 		if !found {
 			return nil, fmt.Errorf("mod %d metadata was not found", storedMod.ID)
 		}
-		mods = append(mods, mappers.ToDTOModWithMetadata(storedMod, metadata))
+		dtoMod := mappers.ToDTOModWithMetadata(storedMod, metadata)
+		dtoMod.Tags = mappers.ToDTOTags(tagsByModID[storedMod.ID])
+		mods = append(mods, dtoMod)
 	}
 
 	return mods, nil
@@ -77,6 +88,11 @@ func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (m
 	}
 
 	mod = mappers.ToDTOMod(storedMod)
+	tagsByModID, err := s.store.ListTagsForMods(ctx, []int64{storedMod.ID})
+	if err != nil {
+		return dto.Mod{}, err
+	}
+	mod.Tags = mappers.ToDTOTags(tagsByModID[storedMod.ID])
 	diag.complete("Mod rename completed",
 		slog.Int64("game_id", storedMod.GameID),
 		slog.String("mod_name", storedMod.Name),

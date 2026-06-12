@@ -29,6 +29,8 @@ type ImportModInput struct {
 	SourcePath         string
 	StrategyType       StrategyType
 	TargetRelativePath string
+	TagIDs             []int64
+	NewTags            []CreateTagInput
 }
 
 type ImportModResult struct {
