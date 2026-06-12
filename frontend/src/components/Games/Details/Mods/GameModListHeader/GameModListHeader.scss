@@ -1,0 +1,35 @@
+@use '@styles' as *;
+
+.game-mod-list-header {
+  display: grid;
+  grid-template-columns:
+    minmax(16rem, 1.45fr)
+    minmax(10rem, 1fr)
+    auto
+    $game-mod-list-actions-width;
+  align-items: center;
+  gap: $spacing-lg;
+  min-height: 2.5rem;
+  padding: 0 $spacing-xl;
+  color: $color-text-muted;
+  background: $color-surface;
+  border-bottom: $app-border;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-list-header-metadata {
+  display: grid;
+  grid-template-columns:
+    $game-mod-list-source-width
+    $game-mod-list-contents-width
+    $game-mod-list-size-width;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+@container game-mod-list (max-width: 68rem) {
+  .game-mod-list-header {
+    display: none;
+  }
+}

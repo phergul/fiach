@@ -5,8 +5,9 @@ import { Archive, FolderOpen, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import {
-  buildModMetadataSummaryItems,
-  ModMetadataSummary,
+  formatModMetadataBytes,
+  formatModMetadataCount,
+  formatModSourceType,
 } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 import { ModTagList } from '@components/Games/Details/Mods/ModTags/ModTagList/ModTagList';
 
@@ -14,6 +15,7 @@ import './GameModListItem.scss';
 
 interface GameModListItemProps {
   isBusy: boolean;
+  isEditing: boolean;
   mod: Mod;
   onDeleteMod: (mod: Mod) => void;
   onEditMod: (mod: Mod) => void;
@@ -25,6 +27,7 @@ const sourceLabel = (mod: Mod) => mod.OriginalSourceName ?? mod.OriginalSourcePa
 
 export const GameModListItem = ({
   isBusy,
+  isEditing,
   mod,
   onDeleteMod,
   onEditMod,
@@ -32,6 +35,12 @@ export const GameModListItem = ({
   onUpdateFolderMod,
 }: GameModListItemProps) => {
   const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
+  const version = mod.Metadata?.Version.Effective?.trim() ?? '';
+  const author = mod.Metadata?.Author.Effective?.trim() ?? '';
+  const identityMetadata = [
+    version === '' ? null : `Version ${version}`,
+    author === '' ? null : `by ${author}`,
+  ].filter((value): value is string => value !== null);
 
   const updateMenuItems = [
     {
@@ -53,12 +62,50 @@ export const GameModListItem = ({
   ];
 
   return (
-    <li className="game-mod-list-item">
-      <div className="game-mod-list-item-copy">
+    <li className={isEditing
+      ? 'game-mod-list-item game-mod-list-item-editing'
+      : 'game-mod-list-item'}
+    >
+      <div className="game-mod-list-item-identity">
         <span className="game-mod-list-item-name">{mod.Name}</span>
-        <ModMetadataSummary items={buildModMetadataSummaryItems(mod)} />
-        <ModTagList tags={mod.Tags} />
-        <span className="game-mod-list-item-source">{sourceLabel(mod)}</span>
+        {identityMetadata.length > 0 && (
+          <span className="game-mod-list-item-identity-metadata">
+            {identityMetadata.join(' ')}
+          </span>
+        )}
+        <span className="game-mod-list-item-path" title={sourceLabel(mod)}>
+          {sourceLabel(mod)}
+        </span>
+      </div>
+
+      <div className="game-mod-list-item-tags">
+        {mod.Tags.length > 0
+          ? <ModTagList tags={mod.Tags} />
+          : <span className="game-mod-list-item-empty-value">No tags</span>}
+      </div>
+
+      <div className="game-mod-list-item-metadata">
+        <div className="game-mod-list-item-metadata-field">
+          <span className="game-mod-list-item-metadata-label">Source</span>
+          <span className="game-mod-list-item-metadata-value">
+            {formatModSourceType(mod.SourceType)}
+          </span>
+        </div>
+        <div className="game-mod-list-item-metadata-field game-mod-list-item-contents">
+          <span className="game-mod-list-item-metadata-label">Contents</span>
+          <span className="game-mod-list-item-metadata-value">
+            {formatModMetadataCount(mod.FileCount, 'file')}
+          </span>
+          <span className="game-mod-list-item-metadata-secondary">
+            {formatModMetadataCount(mod.DirectoryCount, 'folder')}
+          </span>
+        </div>
+        <div className="game-mod-list-item-metadata-field">
+          <span className="game-mod-list-item-metadata-label">Size</span>
+          <span className="game-mod-list-item-metadata-value game-mod-list-item-numeric">
+            {formatModMetadataBytes(mod.TotalSizeBytes)}
+          </span>
+        </div>
       </div>
 
       <div className="game-mod-list-item-actions">

@@ -13,7 +13,7 @@ interface ModMetadataSummaryProps {
   items: ModMetadataSummaryItem[];
 }
 
-const sourceTypeLabel = (sourceType: ModSourceType) => {
+export const formatModSourceType = (sourceType: ModSourceType) => {
   return sourceType === ModSourceType.ModSourceTypeArchive ? 'Archive' : 'Folder';
 };
 
@@ -24,7 +24,7 @@ const metadataValue = (value: string | null | undefined) => {
 
 const numberFormatter = new Intl.NumberFormat(undefined);
 
-const formatCount = (value: number | null | undefined, noun: string) => {
+export const formatModMetadataCount = (value: number | null | undefined, noun: string) => {
   if (value === null || value === undefined) {
     return 'Unavailable';
   }
@@ -75,16 +75,16 @@ export const buildModMetadataSummaryItems = (mod: Mod): ModMetadataSummaryItem[]
   items.push(
     {
       label: 'Source',
-      value: sourceTypeLabel(mod.SourceType),
+      value: formatModSourceType(mod.SourceType),
     },
     {
       label: 'Files',
-      value: formatCount(mod.FileCount, 'file'),
+      value: formatModMetadataCount(mod.FileCount, 'file'),
       tone: 'count',
     },
     {
       label: 'Folders',
-      value: formatCount(mod.DirectoryCount, 'folder'),
+      value: formatModMetadataCount(mod.DirectoryCount, 'folder'),
       tone: 'count',
     },
     {

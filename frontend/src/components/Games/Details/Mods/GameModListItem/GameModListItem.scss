@@ -1,19 +1,31 @@
 @use '@styles' as *;
 
 $game-mod-list-item-control-height: 2.5rem;
-$game-mod-list-item-actions-width: 8.25rem;
 $game-mod-list-item-icon-size: 1rem;
 
 .game-mod-list-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) $game-mod-list-item-actions-width;
+  grid-template-columns:
+    minmax(16rem, 1.45fr)
+    minmax(10rem, 1fr)
+    auto
+    $game-mod-list-actions-width;
   align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-lg $spacing-xl;
+  gap: $spacing-lg;
+  min-height: 5.5rem;
+  padding: $spacing-md $spacing-xl;
   border-bottom: $app-border;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    box-shadow $transition-duration-fast $transition-easing-standard;
 }
 
-.game-mod-list-item-copy {
+.game-mod-list-item-editing {
+  background: color-mix(in srgb, $color-success 10%, $color-background);
+  box-shadow: inset $spacing-xs 0 0 $color-success;
+}
+
+.game-mod-list-item-identity {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -27,16 +39,75 @@ $game-mod-list-item-icon-size: 1rem;
   font-weight: $font-weight-semibold;
 }
 
-.game-mod-list-item-source {
+.game-mod-list-item-identity-metadata {
   overflow-wrap: anywhere;
   color: $color-text-subtle;
   font-size: $font-size-sm;
 }
 
 .game-mod-list-item-path {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
   overflow-wrap: anywhere;
   color: $color-text-muted;
   font-size: $font-size-sm;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.game-mod-list-item-tags {
+  min-width: 0;
+}
+
+.game-mod-list-item-empty-value {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-mod-list-item-metadata {
+  display: grid;
+  grid-template-columns:
+    $game-mod-list-source-width
+    $game-mod-list-contents-width
+    $game-mod-list-size-width;
+  align-items: start;
+  gap: $spacing-md;
+}
+
+.game-mod-list-item-metadata-field {
+  display: flex;
+  min-width: 0;
+  align-self: center;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-list-item-contents {
+  align-self: start;
+}
+
+.game-mod-list-item-metadata-label {
+  display: none;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-list-item-metadata-value,
+.game-mod-list-item-metadata-secondary {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.game-mod-list-item-metadata-secondary {
+  color: $color-text-subtle;
+}
+
+.game-mod-list-item-numeric {
+  font-variant-numeric: tabular-nums;
 }
 
 .game-mod-list-item-actions {
@@ -74,4 +145,49 @@ $game-mod-list-item-icon-size: 1rem;
   height: $game-mod-list-item-icon-size;
   flex: 0 0 $game-mod-list-item-icon-size;
   stroke-width: 1.8;
+}
+
+@container game-mod-list (max-width: 68rem) {
+  .game-mod-list-item {
+    grid-template-columns: minmax(0, 1fr) $game-mod-list-actions-width;
+    align-items: start;
+    gap: $spacing-sm $spacing-lg;
+  }
+
+  .game-mod-list-item-identity,
+  .game-mod-list-item-tags,
+  .game-mod-list-item-metadata {
+    grid-column: 1;
+  }
+
+  .game-mod-list-item-tags {
+    grid-row: 2;
+  }
+
+  .game-mod-list-item-metadata {
+    grid-row: 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: $spacing-sm;
+    border-top: $app-border;
+  }
+
+  .game-mod-list-item-metadata-field {
+    align-self: start;
+  }
+
+  .game-mod-list-item-metadata-label {
+    display: block;
+  }
+
+  .game-mod-list-item-actions {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+  }
+
+  .game-mod-list-item-path {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+  }
 }

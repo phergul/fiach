@@ -17,6 +17,7 @@ import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
+import { GameModListHeader } from '@components/Games/Details/Mods/GameModListHeader/GameModListHeader';
 import { GameModListItem } from '@components/Games/Details/Mods/GameModListItem/GameModListItem';
 import { ModTagFilter } from '@components/Games/Details/Mods/ModTags/ModTagFilter/ModTagFilter';
 import {
@@ -309,19 +310,23 @@ export const GameModsSection = ({
 
       {loadError === null && !isLoading && filteredMods.length > 0 && (
         <div className={selectedMetadataMod === null ? 'game-mods-section-content' : 'game-mods-section-content game-mods-section-content-with-panel'}>
-          <ul className="game-mods-section-list">
-            {filteredMods.map((mod) => (
-              <GameModListItem
-                isBusy={isRowBusy}
-                key={mod.ID}
-                mod={mod}
-                onDeleteMod={requestDeleteMod}
-                onEditMod={openMetadataEditor}
-                onUpdateArchiveMod={onUpdateArchiveMod}
-                onUpdateFolderMod={onUpdateFolderMod}
-              />
-            ))}
-          </ul>
+          <div className="game-mods-section-list-shell">
+            <GameModListHeader />
+            <ul className="game-mods-section-list">
+              {filteredMods.map((mod) => (
+                <GameModListItem
+                  isBusy={isRowBusy}
+                  isEditing={editingMetadataModID === mod.ID}
+                  key={mod.ID}
+                  mod={mod}
+                  onDeleteMod={requestDeleteMod}
+                  onEditMod={openMetadataEditor}
+                  onUpdateArchiveMod={onUpdateArchiveMod}
+                  onUpdateFolderMod={onUpdateFolderMod}
+                />
+              ))}
+            </ul>
+          </div>
 
           <ModMetadataSidePanel
             availableTags={gameTags}

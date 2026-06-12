@@ -85,8 +85,19 @@ $game-mods-section-side-panel-width: 32rem;
   grid-template-columns: minmax(0, 1fr) $game-mods-section-side-panel-width;
 }
 
+.game-mods-section-list-shell {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  container-name: game-mod-list;
+  container-type: inline-size;
+}
+
 .game-mods-section-list {
   min-width: 0;
   min-height: 0;
+  flex: 1;
   overflow-y: auto;
 }
