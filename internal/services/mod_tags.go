@@ -56,7 +56,7 @@ func (s *ModService) UpdateModDetails(ctx context.Context, input dto.UpdateModDe
 		Name:     input.Name,
 		Metadata: storageMetadata,
 		TagIDs:   input.TagIDs,
-		NewTags:  toStorageCreateTagInputs(input.NewTags),
+		NewTags:  mappers.ToStorageCreateTagInputs(input.NewTags),
 	})
 	if err != nil {
 		return dto.Mod{}, err
@@ -67,13 +67,3 @@ func (s *ModService) UpdateModDetails(ctx context.Context, input dto.UpdateModDe
 	return result, nil
 }
 
-func toStorageCreateTagInputs(inputs []dto.CreateTagInput) []dbtypes.CreateTagInput {
-	result := make([]dbtypes.CreateTagInput, 0, len(inputs))
-	for _, input := range inputs {
-		result = append(result, dbtypes.CreateTagInput{
-			Name:  input.Name,
-			Color: dbtypes.TagColor(input.Color),
-		})
-	}
-	return result
-}

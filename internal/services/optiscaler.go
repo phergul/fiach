@@ -10,8 +10,8 @@ import (
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/optiscaler"
 	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
-	"github.com/phergul/fiach/internal/storage/dbtypes"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -27,8 +27,9 @@ func NewOptiScalerService(store *storage.Store, logger *slog.Logger) *OptiScaler
 		logger = slog.Default()
 	}
 	return &OptiScalerService{
-		store: store, manager: optiscaler.NewManager(store, optiscaler.ManagerOptions{}),
-		logger: logger, operatingSystem: runtime.GOOS,
+		store:   store,
+		manager: optiscaler.NewManager(store, optiscaler.ManagerOptions{}),
+		logger:  logger, operatingSystem: runtime.GOOS,
 	}
 }
 
@@ -86,7 +87,7 @@ func (s *OptiScalerService) ListOptiScalerTargets(ctx context.Context, gameID in
 	}
 	result = make([]dto.OptiScalerTarget, 0, len(targets))
 	for _, target := range targets {
-		result = append(result, toDTOOptiScalerTarget(target))
+		result = append(result, mappers.ToDTOOptiScalerTarget(target))
 	}
 	return result, nil
 }
@@ -172,18 +173,4 @@ func (s *OptiScalerService) requireWindows() error {
 		return errors.New("OptiScaler management is only supported on Windows")
 	}
 	return nil
-}
-
-func toDTOOptiScalerTarget(target dbtypes.OptiScalerTarget) dto.OptiScalerTarget {
-	return dto.OptiScalerTarget{
-		ID: target.ID, GameID: target.GameID, TargetRelativePath: target.TargetRelativePath,
-		ExecutableRelativePath: target.ExecutableRelativePath, GraphicsAPI: target.GraphicsAPI,
-		ProxyFilename: target.ProxyFilename, DXGISpoofing: target.DXGISpoofing,
-		ProcessFilter: target.ProcessFilter, ReleaseTag: target.ReleaseTag,
-		ReleaseVersion: target.ReleaseVersion, ReleaseAssetName: target.ReleaseAssetName,
-		ReleaseDigest: target.ReleaseDigest, ManagementOrigin: target.ManagementOrigin,
-		Status: target.Status, WarningVersion: target.WarningVersion,
-		WarningAcknowledgedAt: target.WarningAcknowledgedAt, CreatedAt: target.CreatedAt,
-		UpdatedAt: target.UpdatedAt, LastVerifiedAt: target.LastVerifiedAt,
-	}
 }

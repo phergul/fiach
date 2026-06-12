@@ -48,6 +48,17 @@ func ToDTOTags(tags []dbtypes.Tag) []dto.Tag {
 	return result
 }
 
+func ToStorageCreateTagInputs(inputs []dto.CreateTagInput) []dbtypes.CreateTagInput {
+	result := make([]dbtypes.CreateTagInput, 0, len(inputs))
+	for _, input := range inputs {
+		result = append(result, dbtypes.CreateTagInput{
+			Name:  input.Name,
+			Color: dbtypes.TagColor(input.Color),
+		})
+	}
+	return result
+}
+
 func ToDTOModWithMetadata(mod dbtypes.Mod, metadata dbtypes.ModMetadata) dto.Mod {
 	result := ToDTOMod(mod)
 	dtoMetadata := ToDTOModMetadata(metadata)

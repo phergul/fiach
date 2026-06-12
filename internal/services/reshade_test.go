@@ -11,7 +11,7 @@ import (
 func TestReshadeServiceDetectGameReShadeReturnsUnsupportedWithoutStorageAccess(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	result, err := service.DetectGameReShade(context.Background(), 1)
@@ -36,7 +36,7 @@ func TestReshadeServiceDetectGameReShadeValidatesInstallPath(t *testing.T) {
 	writeFile(t, filePath)
 	gameID := insertServiceTestGame(t, store, "Portal", filePath)
 
-	service := NewReshadeService(store)
+	service := NewReshadeService(store, testLogger())
 	service.operatingSystem = "windows"
 
 	_, err := service.DetectGameReShade(context.Background(), gameID)
@@ -62,7 +62,7 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 	writeFile(t, filepath.Join(target, "ReShade.ini"))
 	gameID := insertServiceTestGame(t, store, "Portal", root)
 
-	service := NewReshadeService(store)
+	service := NewReshadeService(store, testLogger())
 	service.operatingSystem = "windows"
 
 	result, err := service.DetectGameReShade(context.Background(), gameID)
@@ -86,7 +86,7 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	_, err := service.DownloadAndOpenReShadeInstaller(context.Background())
@@ -101,7 +101,7 @@ func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunchin
 func TestReshadeServiceDownloadAndOpenAddonInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	_, err := service.DownloadAndOpenReShadeAddonInstaller(context.Background())

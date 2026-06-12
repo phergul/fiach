@@ -22,15 +22,14 @@ type ReshadeService struct {
 	operatingSystem string
 }
 
-func NewReshadeService(store *storage.Store, logger ...*slog.Logger) *ReshadeService {
-	serviceLogger := slog.Default()
-	if len(logger) > 0 && logger[0] != nil {
-		serviceLogger = logger[0]
+func NewReshadeService(store *storage.Store, logger *slog.Logger) *ReshadeService {
+	if logger == nil {
+		logger = slog.Default()
 	}
 
 	return &ReshadeService{
 		store:           store,
-		logger:          serviceLogger,
+		logger:          logger,
 		operatingSystem: runtime.GOOS,
 	}
 }

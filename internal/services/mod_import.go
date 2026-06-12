@@ -185,7 +185,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		modimport.ImportOptions{
 			MetadataRegistry: s.metadataRegistry,
 			TagIDs:           input.TagIDs,
-			NewTags:          toStorageCreateTagInputs(input.NewTags),
+			NewTags:          mappers.ToStorageCreateTagInputs(input.NewTags),
 		},
 	)
 	if err != nil {
@@ -332,8 +332,8 @@ func (s *ModService) toUpdateModResult(ctx context.Context, updateResult modimpo
 
 	return dto.UpdateModResult{
 		Mod:                resultMod,
-		Before:             toModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
-		After:              toModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
+		Before:             mappers.ToModPackageSnapshot(updateResult.Before, updateResult.BeforeMetadata),
+		After:              mappers.ToModPackageSnapshot(updateResult.After, updateResult.AfterMetadata),
 		MetadataWarning:    metadataWarning,
 		Warnings:           updateResult.Warnings,
 		IsInAppliedProfile: isInAppliedProfile,
@@ -389,19 +389,3 @@ func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.So
 	}
 }
 
-func toModPackageSnapshot(mod dbtypes.Mod, metadata dbtypes.ModMetadata) dto.ModPackageSnapshot {
-	return dto.ModPackageSnapshot{
-		SourceType:         mappers.ToDTOModSourceType(mod.SourceType),
-		OriginalSourcePath: mod.OriginalSourcePath,
-		OriginalSourceName: mod.OriginalSourceName,
-		FileCount:          mod.FileCount,
-		DirectoryCount:     mod.DirectoryCount,
-		TotalSizeBytes:     mod.TotalSizeBytes,
-		DetectedMetadata: dto.ModDetectedMetadataSnapshot{
-			Version:     metadata.DetectedVersion,
-			Author:      metadata.DetectedAuthor,
-			Description: metadata.DetectedDescription,
-			SourceURL:   metadata.DetectedSourceURL,
-		},
-	}
-}
