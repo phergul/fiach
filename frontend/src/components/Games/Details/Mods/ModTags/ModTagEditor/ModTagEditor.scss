@@ -4,6 +4,9 @@ $mod-tag-editor-control-height: 2rem;
 $mod-tag-editor-icon-size: 0.875rem;
 $mod-tag-editor-color-size: 1.25rem;
 $mod-tag-editor-border: $app-border-width solid $color-border;
+$mod-tag-editor-chip-height: calc(
+  #{$font-size-sm * $line-height-heading} + #{2 * $spacing-xs} + #{2 * $app-border-width}
+);
 
 .mod-tag-editor {
   display: flex;
@@ -34,7 +37,10 @@ $mod-tag-editor-border: $app-border-width solid $color-border;
 }
 
 .mod-tag-editor-add-button {
-  align-self: stretch;
+  flex: 0 0 $mod-tag-editor-chip-height;
+  width: $mod-tag-editor-chip-height;
+  height: $mod-tag-editor-chip-height;
+  padding: 0;
 }
 
 .mod-tag-editor-icon {
