@@ -22,6 +22,7 @@ import { GameProfileAssignedModRow } from '@components/Games/Details/Profiles/Ga
 import './GameProfileAssignedModsList.scss';
 
 interface GameProfileAssignedModsListProps {
+  canReorder: boolean;
   isBusy: boolean;
   mods: ProfileMod[];
   onMoveMod: (modID: number, direction: -1 | 1) => void;
@@ -31,6 +32,7 @@ interface GameProfileAssignedModsListProps {
 }
 
 export const GameProfileAssignedModsList = ({
+  canReorder,
   isBusy,
   mods,
   onMoveMod,
@@ -50,7 +52,7 @@ export const GameProfileAssignedModsList = ({
   }, [mods]);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (isBusy || event.over === null || event.active.id === event.over.id) {
+    if (!canReorder || isBusy || event.over === null || event.active.id === event.over.id) {
       return;
     }
 
@@ -77,6 +79,7 @@ export const GameProfileAssignedModsList = ({
               key={mod.ModID}
               canMoveDown={index < orderedMods.length - 1}
               canMoveUp={index > 0}
+              canReorder={canReorder}
               isBusy={isBusy}
               mod={mod}
               onMoveDown={() => onMoveMod(mod.ModID, 1)}

@@ -12,6 +12,7 @@ import './GameProfileAssignedModRow.scss';
 interface GameProfileAssignedModRowProps {
   canMoveDown: boolean;
   canMoveUp: boolean;
+  canReorder: boolean;
   isBusy: boolean;
   mod: ProfileMod;
   onMoveDown: () => void;
@@ -23,6 +24,7 @@ interface GameProfileAssignedModRowProps {
 export const GameProfileAssignedModRow = ({
   canMoveDown,
   canMoveUp,
+  canReorder,
   isBusy,
   mod,
   onMoveDown,
@@ -38,7 +40,7 @@ export const GameProfileAssignedModRow = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: mod.ModID, disabled: isBusy });
+  } = useSortable({ id: mod.ModID, disabled: isBusy || !canReorder });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -60,7 +62,7 @@ export const GameProfileAssignedModRow = ({
         <button
           aria-label={`Drag ${mod.Name}`}
           className="game-profile-assigned-mod-row-handle-button"
-          disabled={isBusy}
+          disabled={isBusy || !canReorder}
           type="button"
           {...attributes}
           {...listeners}
@@ -78,7 +80,7 @@ export const GameProfileAssignedModRow = ({
           <button
             aria-label={`Move ${mod.Name} up`}
             className="game-profile-assigned-mod-row-icon-button"
-            disabled={isBusy || !canMoveUp}
+            disabled={isBusy || !canReorder || !canMoveUp}
             onClick={onMoveUp}
             title="Move mod up"
             type="button"
@@ -89,7 +91,7 @@ export const GameProfileAssignedModRow = ({
           <button
             aria-label={`Move ${mod.Name} down`}
             className="game-profile-assigned-mod-row-icon-button"
-            disabled={isBusy || !canMoveDown}
+            disabled={isBusy || !canReorder || !canMoveDown}
             onClick={onMoveDown}
             title="Move mod down"
             type="button"

@@ -8,6 +8,7 @@ import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/f
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
 import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/GameProfileAssignedModsList/GameProfileAssignedModsList';
+import { GameProfileModsFilter } from '@components/Games/Details/Profiles/GameProfileModsFilter/GameProfileModsFilter';
 
 import './GameProfileModsPanel.scss';
 
@@ -43,7 +44,16 @@ export const GameProfileModsPanel = ({
   onSetProfileModEnabled,
 }: GameProfileModsPanelProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEnabledOnly, setIsEnabledOnly] = useState(false);
   const assignedModIDs = useMemo(() => new Set(profileMods.map((profileMod) => profileMod.ModID)), [profileMods]);
+  const enabledModCount = useMemo(
+    () => profileMods.filter((profileMod) => profileMod.Enabled).length,
+    [profileMods],
+  );
+  const visibleProfileMods = useMemo(
+    () => isEnabledOnly ? profileMods.filter((profileMod) => profileMod.Enabled) : profileMods,
+    [isEnabledOnly, profileMods],
+  );
   const availableMods = useMemo(
     () => gameMods.filter((mod) => !assignedModIDs.has(mod.ID)),
     [assignedModIDs, gameMods],
@@ -57,6 +67,7 @@ export const GameProfileModsPanel = ({
 
   useEffect(() => {
     setIsAddModalOpen(false);
+    setIsEnabledOnly(false);
   }, [profile?.ID]);
 
   const handleAddMods = async (modIDs: number[]) => {
@@ -123,27 +134,48 @@ export const GameProfileModsPanel = ({
         )}
 
         {profileMods.length > 0 && (
-          <GameProfileAssignedModsList
-            isBusy={isBusy}
-            mods={profileMods}
-            onMoveMod={handleMoveProfileMod}
-            onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
-            onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
-            onSetModEnabled={(modID, enabled) => onSetProfileModEnabled(profile.ID, modID, enabled)}
-          />
+          <>
+            {visibleProfileMods.length === 0 ? (
+              <StateBlock
+                className="game-profile-mods-panel-empty game-profile-mods-panel-empty-row"
+                message="No enabled mods are assigned to this profile."
+              />
+            ) : (
+              <GameProfileAssignedModsList
+                canReorder={!isEnabledOnly}
+                isBusy={isBusy}
+                mods={visibleProfileMods}
+                onMoveMod={handleMoveProfileMod}
+                onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
+                onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
+                onSetModEnabled={(modID, enabled) => onSetProfileModEnabled(profile.ID, modID, enabled)}
+              />
+            )}
+          </>
         )}
       </div>
 
       <div className="game-profile-mods-panel-footer">
-        <button
-          className="game-profile-mods-panel-add-button"
-          disabled={!canOpenAddModal}
-          onClick={() => setIsAddModalOpen(true)}
-          type="button"
-        >
-          <Plus className="game-profile-mods-panel-icon" aria-hidden="true" />
-          <span>Add Mods from Library</span>
-        </button>
+        <div className="game-profile-mods-panel-footer-actions">
+          <button
+            className="game-profile-mods-panel-add-button"
+            disabled={!canOpenAddModal}
+            onClick={() => setIsAddModalOpen(true)}
+            type="button"
+          >
+            <Plus className="game-profile-mods-panel-icon" aria-hidden="true" />
+            <span>Add Mods from Library</span>
+          </button>
+
+          {profileMods.length > 0 && (
+            <GameProfileModsFilter
+              enabledCount={enabledModCount}
+              isEnabledOnly={isEnabledOnly}
+              totalCount={profileMods.length}
+              onEnabledOnlyChange={setIsEnabledOnly}
+            />
+          )}
+        </div>
 
         {isSelectedProfileApplied ? (
           <button

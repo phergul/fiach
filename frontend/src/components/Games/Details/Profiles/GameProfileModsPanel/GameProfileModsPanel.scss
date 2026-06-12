@@ -44,6 +44,13 @@ $game-profile-mods-panel-icon-size: 1rem;
   border-top: $app-border;
 }
 
+.game-profile-mods-panel-footer-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
 .game-profile-mods-panel-add-button,
 .game-profile-mods-panel-apply-button,
 .game-profile-mods-panel-restore-button {
@@ -53,7 +60,11 @@ $game-profile-mods-panel-icon-size: 1rem;
 }
 
 .game-profile-mods-panel-add-button {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0 $spacing-md;
   color: $color-text-subtle;
+  background: $color-surface-elevated;
 }
 
 .game-profile-mods-panel-apply-button,

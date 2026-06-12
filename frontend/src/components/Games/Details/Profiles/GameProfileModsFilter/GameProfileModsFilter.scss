@@ -1,0 +1,30 @@
+@use '@styles' as *;
+
+$game-profile-mods-filter-control-height: 2.5rem;
+$game-profile-mods-filter-icon-size: 1rem;
+
+.game-profile-mods-filter {
+  min-height: $game-profile-mods-filter-control-height;
+  padding: 0 $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  white-space: nowrap;
+}
+
+.game-profile-mods-filter-active {
+  color: $color-success;
+  border-color: $color-success;
+  background: $color-surface-elevated;
+}
+
+.game-profile-mods-filter-active:hover:not(:disabled),
+.game-profile-mods-filter-active:focus-visible:not(:disabled) {
+  border-color: $color-success;
+}
+
+.game-profile-mods-filter-icon {
+  width: $game-profile-mods-filter-icon-size;
+  height: $game-profile-mods-filter-icon-size;
+  flex: 0 0 $game-profile-mods-filter-icon-size;
+  stroke-width: 1.8;
+}
