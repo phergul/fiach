@@ -162,9 +162,9 @@ jobs:
         run: |
           mkdir -p artifacts/linux
           cp "bin/${APP_NAME}" "artifacts/linux/${APP_NAME}-linux-x64"
-          cp "bin/${APP_NAME}.AppImage" "artifacts/linux/${APP_NAME}-linux-x64.AppImage"
-          cp "bin/${APP_NAME}.deb" "artifacts/linux/${APP_NAME}-linux-amd64.deb"
-          cp "bin/${APP_NAME}.rpm" "artifacts/linux/${APP_NAME}-linux-x86_64.rpm"
+          cp bin/*.AppImage "artifacts/linux/${APP_NAME}-linux-x64.AppImage"
+          cp bin/*.deb "artifacts/linux/${APP_NAME}-linux-amd64.deb"
+          cp bin/*.rpm "artifacts/linux/${APP_NAME}-linux-x86_64.rpm"
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
