@@ -5,7 +5,8 @@ import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import type { ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ProfileMod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { ModTagList } from '@components/Games/Details/Mods/ModTags/ModTagList/ModTagList';
 
 import './GameProfileAssignedModRow.scss';
 
@@ -15,6 +16,7 @@ interface GameProfileAssignedModRowProps {
   canReorder: boolean;
   isBusy: boolean;
   mod: ProfileMod;
+  tags: Tag[];
   onMoveDown: () => void;
   onMoveUp: () => void;
   onRemoveMod: (modID: number) => void;
@@ -27,6 +29,7 @@ export const GameProfileAssignedModRow = ({
   canReorder,
   isBusy,
   mod,
+  tags,
   onMoveDown,
   onMoveUp,
   onRemoveMod,
@@ -73,6 +76,7 @@ export const GameProfileAssignedModRow = ({
 
       <div className="game-profile-assigned-mod-row-main">
         <span className="game-profile-assigned-mod-row-name">{mod.Name}</span>
+        <ModTagList tags={tags} />
       </div>
 
       <div className="game-profile-assigned-mod-row-actions">
@@ -100,8 +104,9 @@ export const GameProfileAssignedModRow = ({
           </button>
         </div>
 
-        <label className="game-profile-assigned-mod-row-toggle">
+        <label className="game-profile-assigned-mod-row-toggle" title={mod.Enabled ? 'Disable mod' : 'Enable mod'}>
           <input
+            aria-label={`${mod.Enabled ? 'Disable' : 'Enable'} ${mod.Name}`}
             checked={mod.Enabled}
             disabled={isBusy}
             onChange={(event) => onSetModEnabled(mod.ModID, event.target.checked)}

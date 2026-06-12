@@ -33,7 +33,11 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
 }
 
 .game-profile-assigned-mod-row-main {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-xs;
 }
 
 .game-profile-assigned-mod-row-handle {
@@ -90,10 +94,13 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
 .game-profile-assigned-mod-row-toggle {
   position: relative;
   display: inline-flex;
-  min-height: $game-profile-assigned-mod-row-control-height;
+  width: $game-profile-assigned-mod-row-control-height;
+  height: $game-profile-assigned-mod-row-control-height;
+  flex: 0 0 $game-profile-assigned-mod-row-control-height;
   align-items: center;
-  gap: $spacing-sm;
+  justify-content: center;
   color: $color-text-subtle;
+  background: transparent;
   font-size: $font-size-sm;
   cursor: pointer;
 }

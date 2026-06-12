@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
-import type { ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ProfileMod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { GameProfileAssignedModRow } from '@components/Games/Details/Profiles/GameProfileAssignedModRow/GameProfileAssignedModRow';
 
 import './GameProfileAssignedModsList.scss';
@@ -25,6 +25,7 @@ interface GameProfileAssignedModsListProps {
   canReorder: boolean;
   isBusy: boolean;
   mods: ProfileMod[];
+  tagsByModID: Record<number, Tag[]>;
   onMoveMod: (modID: number, direction: -1 | 1) => void;
   onReorderMods: (orderedModIDs: number[]) => Promise<void> | void;
   onRemoveMod: (modID: number) => void;
@@ -35,6 +36,7 @@ export const GameProfileAssignedModsList = ({
   canReorder,
   isBusy,
   mods,
+  tagsByModID,
   onMoveMod,
   onReorderMods,
   onRemoveMod,
@@ -82,6 +84,7 @@ export const GameProfileAssignedModsList = ({
               canReorder={canReorder}
               isBusy={isBusy}
               mod={mod}
+              tags={tagsByModID[mod.ModID] ?? []}
               onMoveDown={() => onMoveMod(mod.ModID, 1)}
               onMoveUp={() => onMoveMod(mod.ModID, -1)}
               onRemoveMod={onRemoveMod}

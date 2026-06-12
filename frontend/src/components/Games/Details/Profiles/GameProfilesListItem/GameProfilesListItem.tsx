@@ -8,8 +8,8 @@ interface GameProfilesListItemProps {
   editingProfileName: string;
   isBusy: boolean;
   isEditing: boolean;
-  isApplied: boolean;
   isSelected: boolean;
+  enabledModCount: number;
   modCount: number;
   pendingAction: string | null;
   profile: ModProfile;
@@ -42,9 +42,9 @@ const formatProfileEditedAt = (updatedAt: string) => {
 
 export const GameProfilesListItem = ({
   editingProfileName,
+  enabledModCount,
   isBusy,
   isEditing,
-  isApplied,
   isSelected,
   modCount,
   pendingAction,
@@ -56,9 +56,9 @@ export const GameProfilesListItem = ({
   onSelectProfile,
   onStartRename,
 }: GameProfilesListItemProps) => {
-  const modSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
+  const assignedSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
+  const enabledSummary = `${enabledModCount} ${enabledModCount === 1 ? 'mod' : 'mods'} enabled`;
   const editedSummary = formatProfileEditedAt(profile.UpdatedAt);
-  const appliedSummary = isApplied ? 'Applied' : 'Not applied';
 
   return (
     <li
@@ -93,9 +93,12 @@ export const GameProfilesListItem = ({
               <span className="game-profiles-list-item-name">{profile.Name}</span>
             </span>
             <span className="game-profiles-list-item-meta">
-              <span className="game-profiles-list-item-meta-part">{modSummary}</span>
+              <span className="game-profiles-list-item-meta-part">
+                {assignedSummary}
+                <span className="game-profiles-list-item-meta-separator" aria-hidden="true">·</span>
+                {enabledSummary}
+              </span>
               <span className="game-profiles-list-item-meta-part">{editedSummary}</span>
-              <span className="game-profiles-list-item-meta-part">{appliedSummary}</span>
             </span>
           </button>
         )}

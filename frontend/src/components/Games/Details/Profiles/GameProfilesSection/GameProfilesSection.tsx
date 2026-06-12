@@ -213,7 +213,6 @@ export const GameProfilesSection = ({
             <GameProfilesList
               editingProfileID={editingProfileID}
               editingProfileName={editingProfileName}
-              appliedProfileID={appliedProfile?.ProfileID ?? null}
               isBusy={isBusy}
               isLoading={isLoading}
               pendingAction={pendingAction}

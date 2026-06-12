@@ -24,6 +24,24 @@ $mod-tag-filter-popover-max-height: 16rem;
   border-color: $color-success;
 }
 
+.mod-tag-filter-profile-footer .mod-tag-filter-button {
+  min-height: 2.5rem;
+  min-width: 7.5rem;
+  padding: 0 $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  white-space: nowrap;
+}
+
+.mod-tag-filter-profile-footer .mod-tag-filter-button-active {
+  color: $color-success;
+  border-color: $color-success;
+}
+
+.mod-tag-filter-count {
+  font-variant-numeric: tabular-nums;
+}
+
 .mod-tag-filter-icon {
   width: $mod-tag-filter-icon-size;
   height: $mod-tag-filter-icon-size;
@@ -43,10 +61,20 @@ $mod-tag-filter-popover-max-height: 16rem;
   box-shadow: $shadow-subtle;
 }
 
+.mod-tag-filter-above .mod-tag-filter-popover {
+  top: auto;
+  bottom: calc(100% + $spacing-xs);
+}
+
 .mod-tag-filter-search {
   position: relative;
   display: block;
   margin-bottom: $spacing-xs;
+}
+
+.mod-tag-filter-profile-footer .mod-tag-filter-search {
+  margin-top: $spacing-xs;
+  margin-bottom: 0;
 }
 
 .mod-tag-filter-search-icon {

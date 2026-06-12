@@ -9,6 +9,7 @@ import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
 import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/GameProfileAssignedModsList/GameProfileAssignedModsList';
 import { GameProfileModsFilter } from '@components/Games/Details/Profiles/GameProfileModsFilter/GameProfileModsFilter';
+import { ModTagFilter } from '@components/Games/Details/Mods/ModTags/ModTagFilter/ModTagFilter';
 
 import './GameProfileModsPanel.scss';
 
@@ -45,14 +46,37 @@ export const GameProfileModsPanel = ({
 }: GameProfileModsPanelProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEnabledOnly, setIsEnabledOnly] = useState(false);
+  const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const assignedModIDs = useMemo(() => new Set(profileMods.map((profileMod) => profileMod.ModID)), [profileMods]);
+  const modsByID = useMemo(
+    () => new Map(gameMods.map((mod) => [mod.ID, mod])),
+    [gameMods],
+  );
+  const assignedMods = useMemo(
+    () => profileMods.flatMap((profileMod) => {
+      const mod = modsByID.get(profileMod.ModID);
+      return mod === undefined ? [] : [mod];
+    }),
+    [modsByID, profileMods],
+  );
+  const tagsByModID = useMemo(
+    () => Object.fromEntries(assignedMods.map((mod) => [mod.ID, mod.Tags])),
+    [assignedMods],
+  );
   const enabledModCount = useMemo(
     () => profileMods.filter((profileMod) => profileMod.Enabled).length,
     [profileMods],
   );
   const visibleProfileMods = useMemo(
-    () => isEnabledOnly ? profileMods.filter((profileMod) => profileMod.Enabled) : profileMods,
-    [isEnabledOnly, profileMods],
+    () => profileMods.filter((profileMod) => {
+      if (isEnabledOnly && !profileMod.Enabled) {
+        return false;
+      }
+
+      const modTags = modsByID.get(profileMod.ModID)?.Tags ?? [];
+      return selectedTagIDs.every((tagID) => modTags.some((tag) => tag.ID === tagID));
+    }),
+    [isEnabledOnly, modsByID, profileMods, selectedTagIDs],
   );
   const availableMods = useMemo(
     () => gameMods.filter((mod) => !assignedModIDs.has(mod.ID)),
@@ -68,7 +92,13 @@ export const GameProfileModsPanel = ({
   useEffect(() => {
     setIsAddModalOpen(false);
     setIsEnabledOnly(false);
+    setSelectedTagIDs([]);
   }, [profile?.ID]);
+
+  useEffect(() => {
+    const availableTagIDs = new Set(assignedMods.flatMap((mod) => mod.Tags.map((tag) => tag.ID)));
+    setSelectedTagIDs((currentTagIDs) => currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)));
+  }, [assignedMods]);
 
   const handleAddMods = async (modIDs: number[]) => {
     if (profile === null || modIDs.length === 0) {
@@ -138,13 +168,14 @@ export const GameProfileModsPanel = ({
             {visibleProfileMods.length === 0 ? (
               <StateBlock
                 className="game-profile-mods-panel-empty game-profile-mods-panel-empty-row"
-                message="No enabled mods are assigned to this profile."
+                message="No assigned mods match the active filters."
               />
             ) : (
               <GameProfileAssignedModsList
-                canReorder={!isEnabledOnly}
+                canReorder={!isEnabledOnly && selectedTagIDs.length === 0}
                 isBusy={isBusy}
                 mods={visibleProfileMods}
+                tagsByModID={tagsByModID}
                 onMoveMod={handleMoveProfileMod}
                 onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
                 onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
@@ -168,12 +199,21 @@ export const GameProfileModsPanel = ({
           </button>
 
           {profileMods.length > 0 && (
-            <GameProfileModsFilter
-              enabledCount={enabledModCount}
-              isEnabledOnly={isEnabledOnly}
-              totalCount={profileMods.length}
-              onEnabledOnlyChange={setIsEnabledOnly}
-            />
+            <>
+              <GameProfileModsFilter
+                enabledCount={enabledModCount}
+                isEnabledOnly={isEnabledOnly}
+                totalCount={profileMods.length}
+                onEnabledOnlyChange={setIsEnabledOnly}
+              />
+              <ModTagFilter
+                candidateMods={assignedMods}
+                popoverPlacement="above"
+                selectedTagIDs={selectedTagIDs}
+                variant="profile-footer"
+                onChange={setSelectedTagIDs}
+              />
+            </>
           )}
         </div>
 

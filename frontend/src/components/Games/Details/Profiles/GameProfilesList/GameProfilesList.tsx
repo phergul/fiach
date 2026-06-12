@@ -8,7 +8,6 @@ import './GameProfilesList.scss';
 interface GameProfilesListProps {
   editingProfileID: number | null;
   editingProfileName: string;
-  appliedProfileID: number | null;
   isBusy: boolean;
   isLoading: boolean;
   pendingAction: string | null;
@@ -26,7 +25,6 @@ interface GameProfilesListProps {
 export const GameProfilesList = ({
   editingProfileID,
   editingProfileName,
-  appliedProfileID,
   isBusy,
   isLoading,
   pendingAction,
@@ -53,8 +51,10 @@ export const GameProfilesList = ({
           {profiles.map((profile) => (
             <GameProfilesListItem
               editingProfileName={editingProfileName}
+              enabledModCount={
+                profileModsByProfileID[profile.ID]?.filter((profileMod) => profileMod.Enabled).length ?? 0
+              }
               isBusy={isBusy}
-              isApplied={appliedProfileID === profile.ID}
               isEditing={editingProfileID === profile.ID}
               isSelected={selectedProfileID === profile.ID}
               key={profile.ID}

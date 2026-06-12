@@ -3,7 +3,7 @@
 $game-profiles-list-item-control-height: 2.5rem;
 $game-profiles-list-item-actions-width: 5.5rem;
 $game-profiles-list-item-icon-size: 1rem;
-$game-profiles-list-item-min-height: 5.25rem;
+$game-profiles-list-item-min-height: 4.5rem;
 
 .game-profiles-list-item {
   display: grid;
@@ -43,7 +43,7 @@ $game-profiles-list-item-min-height: 5.25rem;
   flex-direction: column;
   justify-content: center;
   gap: $spacing-xs;
-  padding: $spacing-md 0 $spacing-md $spacing-xl;
+  padding: $spacing-sm 0 $spacing-sm $spacing-xl;
   color: inherit;
   background: transparent;
   border: 0;
@@ -83,6 +83,11 @@ $game-profiles-list-item-min-height: 5.25rem;
 
 .game-profiles-list-item-meta-part {
   min-width: 0;
+}
+
+.game-profiles-list-item-meta-separator {
+  margin: 0 $spacing-sm;
+  color: $color-text-muted;
 }
 
 .game-profiles-list-item-actions {

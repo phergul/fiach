@@ -9,13 +9,17 @@ import './ModTagFilter.scss';
 
 interface ModTagFilterProps {
   candidateMods: Mod[];
+  popoverPlacement?: 'above' | 'below';
   selectedTagIDs: number[];
+  variant?: 'default' | 'profile-footer';
   onChange: (tagIDs: number[]) => void;
 }
 
 export const ModTagFilter = ({
   candidateMods,
+  popoverPlacement = 'below',
   selectedTagIDs,
+  variant = 'default',
   onChange,
 }: ModTagFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,8 +39,21 @@ export const ModTagFilter = ({
     );
   };
 
+  const searchField = (
+    <label className="mod-tag-filter-search">
+      <Search className="mod-tag-filter-search-icon" aria-hidden="true" />
+      <input
+        className="mod-tag-filter-search-input"
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Find tags"
+        type="search"
+        value={query}
+      />
+    </label>
+  );
+
   return (
-    <div className="mod-tag-filter">
+    <div className={`mod-tag-filter mod-tag-filter-${popoverPlacement} mod-tag-filter-${variant}`}>
       <div className="mod-tag-filter-control">
         <button
           aria-expanded={isOpen}
@@ -49,23 +66,23 @@ export const ModTagFilter = ({
           type="button"
         >
           <ListFilter className="mod-tag-filter-icon" aria-hidden="true" />
-          {tags.length === 0
-            ? 'No tags'
-            : `Tags${selectedTagIDs.length > 0 ? ` (${selectedTagIDs.length})` : ''}`}
+          {tags.length === 0 ? (
+            'No tags'
+          ) : variant === 'profile-footer' ? (
+            <>
+              <span>Tags</span>
+              {selectedTagIDs.length > 0 && (
+                <span className="mod-tag-filter-count">({selectedTagIDs.length})</span>
+              )}
+            </>
+          ) : (
+            `Tags${selectedTagIDs.length > 0 ? ` (${selectedTagIDs.length})` : ''}`
+          )}
         </button>
 
         {isOpen && tags.length > 0 && (
           <div className="mod-tag-filter-popover">
-            <label className="mod-tag-filter-search">
-              <Search className="mod-tag-filter-search-icon" aria-hidden="true" />
-              <input
-                className="mod-tag-filter-search-input"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Find tags"
-                type="search"
-                value={query}
-              />
-            </label>
+            {variant !== 'profile-footer' && searchField}
             <div className="mod-tag-filter-options">
               {filteredTags.map((tag) => (
                 <label className="mod-tag-filter-option" key={tag.ID}>
@@ -78,6 +95,7 @@ export const ModTagFilter = ({
                 </label>
               ))}
             </div>
+            {variant === 'profile-footer' && searchField}
           </div>
         )}
       </div>

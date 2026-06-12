@@ -40,7 +40,7 @@ $game-profile-mods-panel-icon-size: 1rem;
   grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem);
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-xl;
+  padding: $spacing-sm;
   border-top: $app-border;
 }
 
