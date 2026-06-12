@@ -150,12 +150,13 @@ jobs:
 
       - name: Package Linux artifacts
         env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
           GIT_COMMITTER_NAME: phergul
           GIT_COMMITTER_EMAIL: actions@github.com
         run: |
-          wails3 task linux:create:appimage || true
-          wails3 task linux:create:deb || true
-          wails3 task linux:create:rpm || true
+          wails3 task linux:create:appimage
+          wails3 task linux:create:deb
+          wails3 task linux:create:rpm
 
       - name: Collect Linux artifacts
         run: |
