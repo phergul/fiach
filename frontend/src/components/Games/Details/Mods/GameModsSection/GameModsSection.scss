@@ -19,7 +19,7 @@ $game-mods-section-side-panel-width: 32rem;
   grid-template-columns: minmax(0, 1fr) auto $game-mods-section-import-width;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-xl;
+  padding: $spacing-md;
   border-bottom: $app-border;
 }
 

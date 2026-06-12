@@ -68,8 +68,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 
 	for _, table := range []string{
@@ -83,6 +83,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
+		"optiscaler_targets",
 	} {
 		if !tableExists(t, store, table) {
 			t.Fatalf("expected table %q to exist", table)
@@ -185,6 +186,7 @@ func TestMigrateDownDropsCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
+		"optiscaler_targets",
 	} {
 		if tableExists(t, store, table) {
 			t.Fatalf("expected table %q to be dropped", table)
@@ -512,8 +514,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 }
 

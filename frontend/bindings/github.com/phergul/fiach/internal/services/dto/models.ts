@@ -5,6 +5,10 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as optiscaler$0 from "../../optiscaler/models.js";
+
 export class AppliedDirectoryManifestEntry {
     "OperationIndex": number;
     "Mod": ModContext;
@@ -1097,6 +1101,117 @@ export enum OperationType {
     OperationTypeReplace = "replace",
     OperationTypeCreateDirectory = "create_directory",
 };
+
+export const OptiScalerApplyResult = optiscaler$0.ApplyResult;
+export type OptiScalerApplyResult = optiscaler$0.ApplyResult;
+
+export const OptiScalerCandidate = optiscaler$0.Candidate;
+export type OptiScalerCandidate = optiscaler$0.Candidate;
+
+export const OptiScalerPreview = optiscaler$0.Preview;
+export type OptiScalerPreview = optiscaler$0.Preview;
+
+export const OptiScalerRecoveryState = optiscaler$0.RecoveryState;
+export type OptiScalerRecoveryState = optiscaler$0.RecoveryState;
+
+export const OptiScalerRelease = optiscaler$0.Release;
+export type OptiScalerRelease = optiscaler$0.Release;
+
+export const OptiScalerRequest = optiscaler$0.Request;
+export type OptiScalerRequest = optiscaler$0.Request;
+
+export class OptiScalerTarget {
+    "ID": number;
+    "GameID": number;
+    "TargetRelativePath": string;
+    "ExecutableRelativePath": string;
+    "GraphicsAPI": string;
+    "ProxyFilename": string;
+    "DXGISpoofing": boolean;
+    "ProcessFilter": string | null;
+    "ReleaseTag": string;
+    "ReleaseVersion": string;
+    "ReleaseAssetName": string;
+    "ReleaseDigest": string;
+    "ManagementOrigin": string;
+    "Status": string;
+    "WarningVersion": string;
+    "WarningAcknowledgedAt": string | null;
+    "CreatedAt": string;
+    "UpdatedAt": string;
+    "LastVerifiedAt": string | null;
+
+    /** Creates a new OptiScalerTarget instance. */
+    constructor($$source: Partial<OptiScalerTarget> = {}) {
+        if (!("ID" in $$source)) {
+            this["ID"] = 0;
+        }
+        if (!("GameID" in $$source)) {
+            this["GameID"] = 0;
+        }
+        if (!("TargetRelativePath" in $$source)) {
+            this["TargetRelativePath"] = "";
+        }
+        if (!("ExecutableRelativePath" in $$source)) {
+            this["ExecutableRelativePath"] = "";
+        }
+        if (!("GraphicsAPI" in $$source)) {
+            this["GraphicsAPI"] = "";
+        }
+        if (!("ProxyFilename" in $$source)) {
+            this["ProxyFilename"] = "";
+        }
+        if (!("DXGISpoofing" in $$source)) {
+            this["DXGISpoofing"] = false;
+        }
+        if (!("ProcessFilter" in $$source)) {
+            this["ProcessFilter"] = null;
+        }
+        if (!("ReleaseTag" in $$source)) {
+            this["ReleaseTag"] = "";
+        }
+        if (!("ReleaseVersion" in $$source)) {
+            this["ReleaseVersion"] = "";
+        }
+        if (!("ReleaseAssetName" in $$source)) {
+            this["ReleaseAssetName"] = "";
+        }
+        if (!("ReleaseDigest" in $$source)) {
+            this["ReleaseDigest"] = "";
+        }
+        if (!("ManagementOrigin" in $$source)) {
+            this["ManagementOrigin"] = "";
+        }
+        if (!("Status" in $$source)) {
+            this["Status"] = "";
+        }
+        if (!("WarningVersion" in $$source)) {
+            this["WarningVersion"] = "";
+        }
+        if (!("WarningAcknowledgedAt" in $$source)) {
+            this["WarningAcknowledgedAt"] = null;
+        }
+        if (!("CreatedAt" in $$source)) {
+            this["CreatedAt"] = "";
+        }
+        if (!("UpdatedAt" in $$source)) {
+            this["UpdatedAt"] = "";
+        }
+        if (!("LastVerifiedAt" in $$source)) {
+            this["LastVerifiedAt"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new OptiScalerTarget instance from a string or object.
+     */
+    static createFrom($$source: any = {}): OptiScalerTarget {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new OptiScalerTarget($$parsedSource as Partial<OptiScalerTarget>);
+    }
+}
 
 export class PlanIssue {
     "Severity": PlanIssueSeverity;
