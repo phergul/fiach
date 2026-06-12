@@ -12,17 +12,10 @@ $game-profile-add-mods-modal-check-height: 0.625rem;
 $game-profile-add-mods-modal-hidden-input-size: 0.0625rem;
 $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 
-.modal-footer {
-  border-top: 0;
-}
-
-.game-profile-add-mods-modal-panel {
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-}
-
 .game-profile-add-mods-modal-body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .game-profile-add-mods-modal-search {

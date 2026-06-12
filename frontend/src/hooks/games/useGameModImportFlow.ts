@@ -164,12 +164,6 @@ export const useGameModImportFlow = ({
         message: `Imported ${importResult.Mod.Name}.`,
         tone: 'success',
       });
-      importResult.Warnings.forEach((warning) => {
-        addToast({
-          message: warning,
-          tone: 'info',
-        });
-      });
     } catch (error) {
       const message = getErrorMessage(error);
       setImportError(message);
