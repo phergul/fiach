@@ -2,14 +2,15 @@
 
 .optiscaler-preview {
   display: grid;
-  gap: $spacing-md;
+  border-top: $app-border;
+  border-right: $app-border;
+  border-left: $app-border;
 }
 
 .optiscaler-preview-group {
   padding: $spacing-md;
   background: $color-background;
-  border: $app-border;
-  border-radius: $radius-sm;
+  border-bottom: $app-border;
 }
 
 .optiscaler-preview-group-blocked {

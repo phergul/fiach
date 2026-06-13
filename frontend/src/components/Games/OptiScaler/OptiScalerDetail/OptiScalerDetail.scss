@@ -1,0 +1,121 @@
+@use '@styles/variables' as *;
+
+.optiscaler-detail {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.optiscaler-detail-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  border-bottom: $app-border;
+}
+
+.optiscaler-detail-header h2 {
+  font-size: $font-size-lg;
+}
+
+.optiscaler-detail-header p {
+  margin-top: $spacing-xs;
+  color: $color-text-muted;
+}
+
+.optiscaler-detail-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.optiscaler-detail-actions button {
+  min-height: $input-height;
+}
+
+.optiscaler-detail-body,
+.optiscaler-detail-overview-grid {
+  min-height: 0;
+  padding: $spacing-lg $spacing-xl;
+  overflow-y: auto;
+}
+
+.optiscaler-detail-properties,
+.optiscaler-detail-overview-grid dl {
+  display: grid;
+  gap: $spacing-sm;
+}
+
+.optiscaler-detail-properties div,
+.optiscaler-detail-overview-grid dl div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: $spacing-md;
+}
+
+.optiscaler-detail-properties dt,
+.optiscaler-detail-overview-grid dt {
+  color: $color-text-muted;
+}
+
+.optiscaler-detail-properties dd {
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-detail-evidence {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: $app-border;
+}
+
+.optiscaler-detail-evidence h3 {
+  font-size: $font-size-base;
+}
+
+.optiscaler-detail-evidence ul {
+  display: grid;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  color: $color-text-subtle;
+}
+
+.optiscaler-detail-evidence li::before {
+  content: '•';
+  margin-right: $spacing-sm;
+}
+
+.optiscaler-detail-note {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-lg;
+  color: $color-text-muted;
+}
+
+.optiscaler-detail-note svg,
+.optiscaler-detail-boundaries svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.optiscaler-detail-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.7fr) minmax(20rem, 1.3fr);
+  gap: $spacing-xl;
+}
+
+.optiscaler-detail-boundaries {
+  display: grid;
+  align-content: start;
+  gap: $spacing-md;
+}
+
+.optiscaler-detail-boundaries p {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  color: $color-text-subtle;
+}

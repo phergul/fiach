@@ -5,8 +5,6 @@ import type {
   OptiScalerCandidate,
   OptiScalerTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { Action } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
-
 import { OptiScalerTargetList } from './OptiScalerTargetList';
 
 describe('OptiScalerTargetList', () => {
@@ -40,6 +38,7 @@ describe('OptiScalerTargetList', () => {
         disabled={false}
         onSelect={onSelect}
         release={{ digest: 'new-digest', tag: 'v2' } as never}
+        selectedKey={null}
         targets={[target]}
       />,
     );
@@ -49,9 +48,8 @@ describe('OptiScalerTargetList', () => {
     expect(screen.getByText('OptiScaler detected')).toBeInTheDocument();
     expect(screen.getByText('ReShade detected')).toBeInTheDocument();
     expect(screen.getByText('Update available')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Adopt' }));
+    fireEvent.click(screen.getByRole('button', { name: /Game-Win64-Shipping.exe/ }));
     expect(onSelect).toHaveBeenCalledWith({
-      action: Action.ActionAdopt,
       candidate,
       target: null,
     });

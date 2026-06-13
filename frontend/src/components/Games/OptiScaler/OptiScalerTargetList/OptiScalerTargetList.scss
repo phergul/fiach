@@ -1,16 +1,14 @@
 @use '@styles/variables' as *;
 
 .optiscaler-target-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: $spacing-lg;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .optiscaler-target-list-section {
   min-width: 0;
-  background: $color-surface;
-  border: $app-border;
-  border-radius: $radius-md;
+  border-bottom: $app-border;
 }
 
 .optiscaler-target-list-heading {
@@ -18,12 +16,13 @@
   align-items: center;
   justify-content: space-between;
   gap: $spacing-md;
-  padding: $spacing-md $spacing-lg;
+  min-height: $input-height;
+  padding: $spacing-sm $spacing-md;
   border-bottom: $app-border;
 }
 
 .optiscaler-target-list-heading h2 {
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
 }
 
 .optiscaler-target-list-heading span {
@@ -31,21 +30,35 @@
 }
 
 .optiscaler-target-list-empty {
-  padding: $spacing-lg;
+  padding: $spacing-md;
   color: $color-text-muted;
 }
 
 .optiscaler-target-list-item {
-  display: flex;
+  display: block;
+  width: 100%;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: $spacing-md;
-  padding: $spacing-lg;
+  padding: $spacing-md;
+  color: inherit;
+  background: transparent;
+  border: 0;
   border-bottom: $app-border;
+  border-radius: 0;
+  text-align: left;
 }
 
-.optiscaler-target-list-item:last-child {
-  border-bottom: 0;
+.optiscaler-target-list-item:hover:not(:disabled),
+.optiscaler-target-list-item:focus-visible:not(:disabled),
+.optiscaler-target-list-candidate:hover:not(:disabled),
+.optiscaler-target-list-candidate:focus-visible:not(:disabled) {
+  background: rgb(#{$color-surface-rgb} / 42%);
+  border-color: $color-border-subtle;
+}
+
+.optiscaler-target-list-item-selected,
+.optiscaler-target-list-item-selected:hover:not(:disabled),
+.optiscaler-target-list-item-selected:focus-visible:not(:disabled) {
+  background: $color-surface;
 }
 
 .optiscaler-target-list-item-main {
@@ -76,7 +89,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-sm $spacing-md;
-  margin-top: $spacing-md;
+  margin-top: $spacing-xs;
   color: $color-text-muted;
   font-size: $font-size-sm;
 }
@@ -100,40 +113,32 @@
   margin-right: $spacing-sm;
 }
 
-.optiscaler-target-list-actions {
-  display: flex;
-  flex: 0 0 auto;
-  gap: $spacing-sm;
-}
-
-.optiscaler-target-list-actions button {
-  min-height: $input-height;
-}
-
 .optiscaler-target-list-candidates {
   display: grid;
-  gap: $spacing-md;
-  margin-top: $spacing-md;
+  margin-top: $spacing-sm;
 }
 
 .optiscaler-target-list-candidate {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: $spacing-sm $spacing-md;
-  padding-top: $spacing-md;
+  display: block;
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  color: inherit;
+  background: transparent;
+  border: 0;
   border-top: $app-border;
+  border-radius: 0;
+  text-align: left;
 }
 
 .optiscaler-target-list-candidate > p,
 .optiscaler-target-list-candidate > ul {
-  grid-column: 1;
+  width: 100%;
 }
 
 .optiscaler-target-list-candidate > p {
   overflow-wrap: anywhere;
 }
 
-.optiscaler-target-list-candidate > .optiscaler-target-list-actions {
-  grid-column: 2;
-  grid-row: 1 / span 3;
+.optiscaler-target-list-group > .optiscaler-target-list-item-main > .optiscaler-target-list-item-title {
+  padding: $spacing-md $spacing-md 0;
 }

@@ -1,9 +1,11 @@
 @use '@styles/variables' as *;
 
 .optiscaler-wizard {
-  background: $color-surface;
-  border: $app-border;
-  border-radius: $radius-md;
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  background: $color-background;
 }
 
 .optiscaler-wizard-header {
@@ -11,7 +13,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: $spacing-md;
-  padding: $spacing-lg;
+  min-height: 4.5rem;
+  padding: $spacing-sm $spacing-xl;
   border-bottom: $app-border;
 }
 
@@ -38,7 +41,8 @@
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md;
+  min-height: $input-height;
+  padding: $spacing-sm $spacing-md;
   color: $color-text-muted;
   border-right: $app-border;
 }
@@ -51,8 +55,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border: $app-border-width solid $color-border;
   border-radius: 50%;
   font-size: $font-size-sm;
@@ -64,13 +68,20 @@
 }
 
 .optiscaler-wizard-form {
-  display: grid;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 .optiscaler-wizard-content {
   display: grid;
+  min-height: 0;
+  align-content: start;
+  flex: 1 1 auto;
   gap: $spacing-md;
-  padding: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+  overflow-y: auto;
 }
 
 .optiscaler-wizard-content h3 {
@@ -141,7 +152,6 @@
   padding: $spacing-md;
   background: color-mix(in srgb, $color-warning 10%, $color-background);
   border: $app-border-width solid color-mix(in srgb, $color-warning 65%, $color-border);
-  border-radius: $radius-sm;
 }
 
 .optiscaler-wizard-warning a {
@@ -156,7 +166,6 @@
   gap: $spacing-md;
   padding: $spacing-md;
   border: $app-border-width solid color-mix(in srgb, $color-warning 65%, $color-border);
-  border-radius: $radius-sm;
 }
 
 .optiscaler-wizard-error {
@@ -165,11 +174,13 @@
 }
 
 .optiscaler-wizard-footer {
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-lg;
   border-top: $app-border;
+  background: $color-background;
 }
 
 .optiscaler-wizard-footer button {

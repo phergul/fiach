@@ -25,7 +25,11 @@ interface OptiScalerWizardProps {
   onClose: () => void;
   onRecoveryRequired: () => Promise<void>;
   onRefresh: () => Promise<void>;
-  selection: OptiScalerSelection;
+  selection: OptiScalerOperationSelection;
+}
+
+export interface OptiScalerOperationSelection extends OptiScalerSelection {
+  action: Action;
 }
 
 const steps: WizardStep[] = ['target', 'configuration', 'safety', 'preview', 'result'];

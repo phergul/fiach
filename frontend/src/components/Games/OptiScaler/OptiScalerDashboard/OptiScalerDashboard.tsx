@@ -3,15 +3,21 @@ import { useState } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
+import { Action } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
+import { OptiScalerDetail } from '@components/Games/OptiScaler/OptiScalerDetail/OptiScalerDetail';
 import { OptiScalerRecoveryPanel } from '@components/Games/OptiScaler/OptiScalerRecoveryPanel/OptiScalerRecoveryPanel';
 import {
+  optiScalerSelectionKey,
   OptiScalerTargetList,
   type OptiScalerSelection,
 } from '@components/Games/OptiScaler/OptiScalerTargetList/OptiScalerTargetList';
-import { OptiScalerWizard } from '@components/Games/OptiScaler/OptiScalerWizard/OptiScalerWizard';
+import {
+  OptiScalerWizard,
+  type OptiScalerOperationSelection,
+} from '@components/Games/OptiScaler/OptiScalerWizard/OptiScalerWizard';
 import { useGameArtwork, useGameOptiScaler, useStoredGames } from '@hooks';
 
 import './OptiScalerDashboard.scss';
@@ -28,7 +34,15 @@ export const OptiScalerDashboard = () => {
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
-  const [selection, setSelection] = useState<OptiScalerSelection | null>(null);
+  const [targetSelection, setTargetSelection] = useState<OptiScalerSelection | null>(null);
+  const [operationSelection, setOperationSelection] = useState<OptiScalerOperationSelection | null>(null);
+  const {
+    artworkSource: heroArtworkSource,
+    handleArtworkError: handleHeroArtworkError,
+  } = useGameArtwork(
+    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
+    'hero',
+  );
   const {
     artworkSource: logoArtworkSource,
     handleArtworkError: handleLogoArtworkError,
@@ -41,6 +55,18 @@ export const OptiScalerDashboard = () => {
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
   const isRecoveryRequired = optiScaler.recovery?.required === true;
+  const detectedCandidateCount = optiScaler.candidates.filter((candidate) => !candidate.managed).length;
+
+  const selectTarget = (selection: OptiScalerSelection) => {
+    setTargetSelection(selection);
+    setOperationSelection(null);
+  };
+
+  const startAction = (action: Action) => {
+    if (targetSelection !== null) {
+      setOperationSelection({ ...targetSelection, action });
+    }
+  };
 
   const rollbackRecovery = async () => {
     try {
@@ -54,7 +80,12 @@ export const OptiScalerDashboard = () => {
   };
 
   return (
-    <section className="optiscaler-dashboard" aria-label="OptiScaler management">
+    <section
+      className={heroArtworkSource === ''
+        ? 'optiscaler-dashboard'
+        : 'optiscaler-dashboard optiscaler-dashboard-with-backdrop'}
+      aria-label="OptiScaler management"
+    >
       <div className="optiscaler-dashboard-toolbar">
         <Link className="optiscaler-dashboard-back-link" to={gameDetailsPath}>
           <ArrowLeft aria-hidden="true" />
@@ -69,6 +100,17 @@ export const OptiScalerDashboard = () => {
           Refresh
         </button>
       </div>
+
+      {heroArtworkSource !== '' && (
+        <div className="optiscaler-dashboard-backdrop" aria-hidden="true">
+          <img
+            className="optiscaler-dashboard-backdrop-image"
+            src={heroArtworkSource}
+            alt=""
+            onError={handleHeroArtworkError}
+          />
+        </div>
+      )}
 
       {isWaitingForGame && <GameDetailsState />}
       {hasLoadError && (
@@ -97,7 +139,7 @@ export const OptiScalerDashboard = () => {
 
           <div className="optiscaler-dashboard-heading">
             <div>
-              <h1>OptiScaler</h1>
+              <h2>OptiScaler</h2>
               <p>Manage each executable directory independently and review every file change before apply.</p>
             </div>
             <div className="optiscaler-dashboard-release">
@@ -122,38 +164,48 @@ export const OptiScalerDashboard = () => {
             />
           )}
 
-          {optiScaler.isLoading && optiScaler.targets.length === 0 && optiScaler.candidates.length === 0 && (
-            <GameDetailsState title="Discovering OptiScaler targets." />
-          )}
-
-          {!optiScaler.isLoading && optiScaler.loadError !== null && (
-            <GameDetailsState
-              actionLabel="Retry"
-              message={optiScaler.loadError}
-              onAction={() => void optiScaler.refresh()}
-              title="Could not load OptiScaler state."
-            />
-          )}
-
-          {optiScaler.loadError === null && (
-            <OptiScalerTargetList
-              candidates={optiScaler.candidates}
-              disabled={isRecoveryRequired}
-              onSelect={setSelection}
-              release={optiScaler.release}
-              targets={optiScaler.targets}
-            />
-          )}
-
-          {selection !== null && !isRecoveryRequired && (
-            <OptiScalerWizard
-              gameID={game.ID}
-              onClose={() => setSelection(null)}
-              onRecoveryRequired={optiScaler.refresh}
-              onRefresh={optiScaler.refresh}
-              selection={selection}
-            />
-          )}
+          <div className="optiscaler-dashboard-workspace">
+            <aside className="optiscaler-dashboard-sidebar" aria-label="OptiScaler targets">
+              {optiScaler.isLoading && optiScaler.targets.length === 0 && optiScaler.candidates.length === 0 ? (
+                <GameDetailsState title="Discovering OptiScaler targets." />
+              ) : optiScaler.loadError !== null ? (
+                <GameDetailsState
+                  actionLabel="Retry"
+                  message={optiScaler.loadError}
+                  onAction={() => void optiScaler.refresh()}
+                  title="Could not load OptiScaler state."
+                />
+              ) : (
+                <OptiScalerTargetList
+                  candidates={optiScaler.candidates}
+                  disabled={isRecoveryRequired}
+                  onSelect={selectTarget}
+                  release={optiScaler.release}
+                  selectedKey={targetSelection === null ? null : optiScalerSelectionKey(targetSelection)}
+                  targets={optiScaler.targets}
+                />
+              )}
+            </aside>
+            <main className="optiscaler-dashboard-detail">
+              {operationSelection !== null && !isRecoveryRequired ? (
+                <OptiScalerWizard
+                  gameID={game.ID}
+                  onClose={() => setOperationSelection(null)}
+                  onRecoveryRequired={optiScaler.refresh}
+                  onRefresh={optiScaler.refresh}
+                  selection={operationSelection}
+                />
+              ) : (
+                <OptiScalerDetail
+                  candidateCount={detectedCandidateCount}
+                  managedCount={optiScaler.targets.length}
+                  onStartAction={startAction}
+                  release={optiScaler.release}
+                  selection={targetSelection}
+                />
+              )}
+            </main>
+          </div>
         </>
       )}
     </section>

@@ -1,14 +1,16 @@
 @use '@styles/variables' as *;
 
 .optiscaler-recovery-panel {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   justify-content: space-between;
   gap: $spacing-lg;
-  padding: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
   background: color-mix(in srgb, $color-danger 10%, $color-surface);
-  border: $app-border-width solid color-mix(in srgb, $color-danger 65%, $color-border);
-  border-radius: $radius-md;
+  border-bottom: $app-border-width solid color-mix(in srgb, $color-danger 65%, $color-border);
 }
 
 .optiscaler-recovery-panel-title {
@@ -21,14 +23,14 @@
 }
 
 .optiscaler-recovery-panel-details {
-  display: grid;
-  gap: $spacing-sm;
-  margin-top: $spacing-md;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm $spacing-lg;
+  margin-top: $spacing-sm;
 }
 
 .optiscaler-recovery-panel-details div {
-  display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr);
+  display: flex;
   gap: $spacing-sm;
 }
 

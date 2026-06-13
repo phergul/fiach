@@ -5,12 +5,9 @@ import type {
   OptiScalerRelease,
   OptiScalerTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { Action } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
-
 import './OptiScalerTargetList.scss';
 
 export interface OptiScalerSelection {
-  action: Action;
   candidate: OptiScalerCandidate | null;
   target: OptiScalerTarget | null;
 }
@@ -20,17 +17,22 @@ interface OptiScalerTargetListProps {
   disabled: boolean;
   onSelect: (selection: OptiScalerSelection) => void;
   release: OptiScalerRelease | null;
+  selectedKey: string | null;
   targets: OptiScalerTarget[];
 }
 
 const candidateKey = (candidate: OptiScalerCandidate) =>
   `${candidate.targetRelativePath}:${candidate.executableRelativePath}`;
+const targetKey = (target: OptiScalerTarget) => `managed:${target.ID}`;
+export const optiScalerSelectionKey = (selection: OptiScalerSelection) =>
+  selection.target === null ? candidateKey(selection.candidate!) : targetKey(selection.target);
 
 export const OptiScalerTargetList = ({
   candidates,
   disabled,
   onSelect,
   release,
+  selectedKey,
   targets,
 }: OptiScalerTargetListProps) => {
   const unmanagedCandidates = candidates.filter((candidate) => !candidate.managed);
@@ -58,7 +60,16 @@ export const OptiScalerTargetList = ({
             (target.ReleaseDigest !== '' && target.ReleaseDigest !== release.digest)
           );
           return (
-            <article className="optiscaler-target-list-item" key={target.ID}>
+            <button
+              aria-current={selectedKey === targetKey(target) ? 'true' : undefined}
+              className={selectedKey === targetKey(target)
+                ? 'optiscaler-target-list-item optiscaler-target-list-item-selected'
+                : 'optiscaler-target-list-item'}
+              disabled={disabled}
+              key={target.ID}
+              onClick={() => onSelect({ candidate: null, target })}
+              type="button"
+            >
               <div className="optiscaler-target-list-item-main">
                 <div className="optiscaler-target-list-item-title">
                   {target.Status === 'drifted' ? (
@@ -72,36 +83,11 @@ export const OptiScalerTargetList = ({
                 <ul className="optiscaler-target-list-facts">
                   <li>{target.GraphicsAPI === 'vulkan' ? 'Vulkan' : 'DirectX'}</li>
                   <li>{target.ProxyFilename}</li>
-                  <li>{target.ReleaseVersion || target.ReleaseTag}</li>
-                  <li>{target.ManagementOrigin === 'adopted' ? 'Adopted' : 'Installed by Fiach'}</li>
                   {target.Status === 'drifted' && <li>Drift detected</li>}
                   {updateAvailable && <li>Update available</li>}
                 </ul>
               </div>
-              <div className="optiscaler-target-list-actions">
-                <button
-                  disabled={disabled}
-                  onClick={() => onSelect({ action: Action.ActionUpdate, candidate: null, target })}
-                  type="button"
-                >
-                  Update
-                </button>
-                <button
-                  disabled={disabled}
-                  onClick={() => onSelect({ action: Action.ActionRepair, candidate: null, target })}
-                  type="button"
-                >
-                  Repair
-                </button>
-                <button
-                  disabled={disabled}
-                  onClick={() => onSelect({ action: Action.ActionUninstall, candidate: null, target })}
-                  type="button"
-                >
-                  Uninstall
-                </button>
-              </div>
-            </article>
+            </button>
           );
         })}
       </section>
@@ -115,7 +101,7 @@ export const OptiScalerTargetList = ({
           <p className="optiscaler-target-list-empty">No unmanaged x64 executable targets were detected.</p>
         )}
         {unmanagedGroups.map((group) => (
-          <article className="optiscaler-target-list-item" key={group[0].targetRelativePath}>
+          <div className="optiscaler-target-list-group" key={group[0].targetRelativePath}>
             <div className="optiscaler-target-list-item-main">
               <div className="optiscaler-target-list-item-title">
                 <FolderOpen aria-hidden="true" />
@@ -123,7 +109,16 @@ export const OptiScalerTargetList = ({
               </div>
               <div className="optiscaler-target-list-candidates">
                 {group.map((candidate) => (
-                  <div className="optiscaler-target-list-candidate" key={candidateKey(candidate)}>
+                  <button
+                    aria-current={selectedKey === candidateKey(candidate) ? 'true' : undefined}
+                    className={selectedKey === candidateKey(candidate)
+                      ? 'optiscaler-target-list-candidate optiscaler-target-list-item-selected'
+                      : 'optiscaler-target-list-candidate'}
+                    disabled={disabled}
+                    key={candidateKey(candidate)}
+                    onClick={() => onSelect({ candidate, target: null })}
+                    type="button"
+                  >
                     <p>{candidate.executableRelativePath}</p>
                     <ul className="optiscaler-target-list-facts">
                       <li><Cpu aria-hidden="true" /> {candidate.architecture}</li>
@@ -131,29 +126,13 @@ export const OptiScalerTargetList = ({
                       {candidate.hasReShade && <li>ReShade detected</li>}
                     </ul>
                     <ul className="optiscaler-target-list-evidence" aria-label="Ranking evidence">
-                      {candidate.evidence.map((evidence) => <li key={evidence}>{evidence}</li>)}
+                      {candidate.evidence.slice(0, 1).map((evidence) => <li key={evidence}>{evidence}</li>)}
                     </ul>
-                    <div className="optiscaler-target-list-actions">
-                      <button
-                        disabled={disabled || candidate.hasOptiScaler}
-                        onClick={() => onSelect({ action: Action.ActionInstall, candidate, target: null })}
-                        type="button"
-                      >
-                        Install
-                      </button>
-                      <button
-                        disabled={disabled || !candidate.hasOptiScaler}
-                        onClick={() => onSelect({ action: Action.ActionAdopt, candidate, target: null })}
-                        type="button"
-                      >
-                        Adopt
-                      </button>
-                    </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
-          </article>
+          </div>
         ))}
       </section>
     </div>
