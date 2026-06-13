@@ -12,10 +12,9 @@ $optiscaler-page-header-icon-size: 1rem;
   justify-content: space-between;
   gap: $spacing-lg;
   padding: $spacing-md $spacing-xl;
-  background: rgb(#{$color-background-rgb} / 78%);
-  border-top: $app-border;
-  border-bottom: $app-border;
+  background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .optiscaler-page-header-title {
@@ -29,7 +28,9 @@ $optiscaler-page-header-icon-size: 1rem;
 }
 
 .optiscaler-page-header-title span {
-  color: $color-success;
+  padding: $spacing-xs $spacing-sm;
+  color: $color-background;
+  background: $color-success;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
 }
@@ -42,6 +43,11 @@ $optiscaler-page-header-icon-size: 1rem;
 .optiscaler-page-header button {
   min-height: $table-control-height;
   flex: 0 0 auto;
+}
+
+.optiscaler-page-header button:hover:not(:disabled),
+.optiscaler-page-header button:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
 }
 
 .optiscaler-page-header svg {

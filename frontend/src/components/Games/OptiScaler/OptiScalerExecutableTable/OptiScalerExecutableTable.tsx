@@ -47,7 +47,6 @@ const statusFacts = (target: OptiScalerTarget, updateAvailable: boolean) => [
 ];
 
 const candidateFacts = (candidate: OptiScalerCandidate) => [
-  { label: 'Not installed', tone: 'muted' },
   ...(candidate.hasOptiScaler ? [{ label: 'Files present', tone: 'info' }, { label: 'OptiScaler', tone: 'success' }] : []),
   ...(candidate.hasReShade ? [{ label: 'ReShade', tone: 'warning' }] : []),
 ];

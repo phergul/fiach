@@ -34,6 +34,7 @@ export const ConfirmDialog = ({
       isOpen={isOpen}
       labelledByID="confirm-dialog-title"
       onClose={onCancel}
+      panelClassName="confirm-dialog"
       size="sm"
       title={title}
       footer={(

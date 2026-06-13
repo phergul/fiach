@@ -33,6 +33,8 @@ export const GameDetailsActionsMenu = ({
   }
 
   const hasOverride = game.ModStoragePathOverride !== null && game.ModStoragePathOverride.trim() !== '';
+  const supportsWindowsGraphicsTools =
+    reShadeInstallerActionLabel !== null || reShadeAddonInstallerActionLabel !== null;
 
   return (
     <DropdownMenu
@@ -41,11 +43,11 @@ export const GameDetailsActionsMenu = ({
       items={[
         {
           children: [
-            {
+            ...(supportsWindowsGraphicsTools ? [{
               icon: Gauge,
               label: 'OptiScaler',
               onSelect: onOpenOptiScaler,
-            },
+            }] : []),
             ...(reShadeInstallerActionLabel !== null ? [{
               icon: Sparkles,
               label: reShadeInstallerActionLabel,

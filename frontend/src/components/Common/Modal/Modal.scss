@@ -29,9 +29,11 @@ $modal-icon-size: 1rem;
   width: min($modal-width-md, 100%);
   max-height: $modal-max-height;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-subtle;
+  gap: $spacing-separator;
+  background: $color-background;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .modal-panel-sm {
@@ -43,11 +45,11 @@ $modal-icon-size: 1rem;
 }
 
 .modal-panel-background {
-  background: $color-background;
+  --modal-content-background: #{$color-background};
 }
 
 .modal-panel-surface {
-  background: $color-surface;
+  --modal-content-background: #{$color-surface};
 }
 
 .modal-header {
@@ -56,7 +58,7 @@ $modal-icon-size: 1rem;
   align-items: start;
   gap: $spacing-md;
   padding: $spacing-lg $spacing-xl $spacing-md;
-  border-bottom: $app-border;
+  background: $color-surface-elevated;
 }
 
 .modal-heading {
@@ -89,6 +91,7 @@ $modal-icon-size: 1rem;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  background: var(--modal-content-background, #{$color-background});
 }
 
 .modal-footer {
@@ -96,7 +99,7 @@ $modal-icon-size: 1rem;
   justify-content: flex-end;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-xl $spacing-lg;
-  border-top: $app-border;
+  background: $color-surface-elevated;
 }
 
 .modal-icon {

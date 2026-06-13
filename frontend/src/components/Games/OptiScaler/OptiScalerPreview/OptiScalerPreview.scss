@@ -6,7 +6,9 @@
 }
 
 .optiscaler-preview-group {
-  background: $color-surface;
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
 }
 
 .optiscaler-preview-group h3 {
@@ -36,24 +38,20 @@
 .optiscaler-preview-group ul,
 .optiscaler-preview-group p {
   display: grid;
-  gap: $spacing-sm;
+  gap: $spacing-separator;
   padding: $spacing-md;
   color: $color-text-subtle;
+  background: $color-surface;
 }
 
 .optiscaler-preview-group li {
   display: flex;
   gap: $spacing-md;
   overflow-wrap: anywhere;
-  padding-bottom: $spacing-sm;
-  border-bottom: $app-border;
+  padding: $spacing-sm;
+  background: $color-surface-elevated;
   font-family: $font-family-monospace;
   font-size: $font-size-sm;
-}
-
-.optiscaler-preview-group li:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
 }
 
 .optiscaler-preview-symbol {

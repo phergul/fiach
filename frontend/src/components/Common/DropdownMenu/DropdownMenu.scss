@@ -10,11 +10,12 @@ $dropdown-menu-icon-size: 1rem;
   display: flex;
   width: $dropdown-menu-width;
   flex-direction: column;
-  padding: $spacing-xs;
-  background: $color-surface;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-subtle;
+  gap: $spacing-separator;
+  padding: $spacing-separator;
+  background: $color-background;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .dropdown-menu-left {
@@ -30,7 +31,8 @@ $dropdown-menu-icon-size: 1rem;
   justify-content: flex-start;
   min-height: $input-height;
   padding: 0 $spacing-sm;
-  border-color: transparent;
+  background: $color-surface;
+  border: 0;
   text-align: left;
 }
 
@@ -46,7 +48,6 @@ $dropdown-menu-icon-size: 1rem;
 .dropdown-menu-item:hover:not(:disabled),
 .dropdown-menu-item:focus-visible:not(:disabled) {
   background: $color-surface-elevated;
-  border-color: transparent;
 }
 
 .dropdown-menu-submenu {

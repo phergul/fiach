@@ -11,13 +11,14 @@ export const OptiScalerWizardTargetStep = ({
 }: OptiScalerWizardTargetStepProps) => {
   const executableRelativePath =
     selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
+  const executableName = executableRelativePath.split(/[\\/]/).pop() ?? executableRelativePath;
   const targetRelativePath =
     selection.candidate?.targetRelativePath ?? selection.target?.TargetRelativePath ?? '';
 
   return (
     <div className="optiscaler-wizard-content">
       <dl className="optiscaler-wizard-summary">
-        <div><dt>Executable</dt><dd>{executableRelativePath}</dd></div>
+        <div><dt>Executable</dt><dd>{executableName}</dd></div>
         <div><dt>Directory</dt><dd>{targetRelativePath}</dd></div>
         <div><dt>Architecture</dt><dd>{selection.candidate?.architecture ?? 'x64'}</dd></div>
         <div><dt>Action</dt><dd>{actionLabel}</dd></div>

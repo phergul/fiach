@@ -24,7 +24,6 @@ export const OptiScalerPageHeader = ({
           <h2>OptiScaler</h2>
           {version && <span>{version}</span>}
         </div>
-        <p>Manage each executable directory independently and review every file change before applying.</p>
       </div>
       <button disabled={isLoading} onClick={onRefresh} type="button">
         <RefreshCw aria-hidden="true" />

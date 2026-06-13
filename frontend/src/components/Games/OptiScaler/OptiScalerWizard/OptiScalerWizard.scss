@@ -20,7 +20,7 @@ $optiscaler-wizard-label-width: 10rem;
   justify-content: space-between;
   gap: $spacing-md;
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  background: $color-surface;
 }
 
 .optiscaler-wizard-header h2 {
@@ -38,7 +38,7 @@ $optiscaler-wizard-label-width: 10rem;
   width: $optiscaler-wizard-close-size;
   height: $optiscaler-wizard-close-size;
   padding: 0;
-  border-color: transparent;
+  background: transparent;
 }
 
 .optiscaler-wizard-header svg {
@@ -48,9 +48,11 @@ $optiscaler-wizard-label-width: 10rem;
 
 .optiscaler-wizard-steps {
   display: grid;
+  gap: $spacing-separator;
   flex: 0 0 auto;
   padding: 0 $spacing-xl $spacing-md;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
 }
 
 .optiscaler-wizard-steps li {
@@ -60,13 +62,8 @@ $optiscaler-wizard-label-width: 10rem;
   justify-content: center;
   padding: $spacing-sm $spacing-md;
   color: $color-text-muted;
-  background: $color-surface;
-  border-right: $app-border;
+  background: $color-surface-elevated;
   font-size: $font-size-sm;
-}
-
-.optiscaler-wizard-steps li:last-child {
-  border-right: 0;
 }
 
 .optiscaler-wizard-steps .optiscaler-wizard-step-complete {
@@ -84,12 +81,14 @@ $optiscaler-wizard-label-width: 10rem;
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
+  gap: $spacing-separator;
 }
 
 .optiscaler-wizard-scroll {
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
+  background: $color-background;
 }
 
 .optiscaler-wizard-content {
@@ -103,7 +102,8 @@ $optiscaler-wizard-label-width: 10rem;
 
 .optiscaler-wizard-summary {
   display: grid;
-  background: $color-surface;
+  gap: $spacing-separator;
+  background: $color-background;
 }
 
 .optiscaler-wizard-summary div {
@@ -113,11 +113,7 @@ $optiscaler-wizard-label-width: 10rem;
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-sm $spacing-md;
-  border-bottom: $app-border;
-}
-
-.optiscaler-wizard-summary div:last-child {
-  border-bottom: 0;
+  background: $color-surface-elevated;
 }
 
 .optiscaler-wizard-summary dt {
@@ -143,15 +139,16 @@ $optiscaler-wizard-label-width: 10rem;
 
 .optiscaler-wizard-fields > label:not(.optiscaler-wizard-checkbox) {
   display: grid;
+  align-content: start;
   gap: $spacing-sm;
 }
 
 .optiscaler-wizard-fields select,
-.optiscaler-wizard-fields input {
+.optiscaler-wizard-fields input:not([type='checkbox']):not([type='radio']) {
   width: 100%;
   min-height: $input-height;
   padding: 0 $spacing-sm;
-  border-radius: $radius-sm;
+  background: $color-background;
 }
 
 .optiscaler-wizard-fields label > span {
@@ -161,13 +158,19 @@ $optiscaler-wizard-label-width: 10rem;
 
 .optiscaler-wizard-checkbox {
   display: flex;
-  align-items: flex-start;
+  min-width: 0;
+  align-items: center;
   gap: $spacing-sm;
   grid-column: 1 / -1;
+  color: $color-text-primary;
 }
 
 .optiscaler-wizard-checkbox input {
-  margin-top: $spacing-xs;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  margin: 0;
+  accent-color: $color-info;
 }
 
 .optiscaler-wizard-note {
@@ -180,7 +183,6 @@ $optiscaler-wizard-label-width: 10rem;
   padding: $spacing-md;
   color: $color-warning;
   background: color-mix(in srgb, $color-warning 10%, $color-surface);
-  border: $app-border-width solid color-mix(in srgb, $color-warning 55%, $color-border);
 }
 
 .optiscaler-wizard-warning a {
@@ -194,7 +196,8 @@ $optiscaler-wizard-label-width: 10rem;
   justify-content: space-between;
   gap: $spacing-md;
   padding: $spacing-md;
-  border: $app-border-width solid color-mix(in srgb, $color-warning 65%, $color-border);
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 10%, $color-surface-elevated);
 }
 
 .optiscaler-wizard-error,
@@ -216,15 +219,14 @@ $optiscaler-wizard-label-width: 10rem;
   gap: $spacing-sm;
   padding: $spacing-lg;
   background: $color-surface;
-  border: $app-border;
 }
 
 .optiscaler-wizard-result-success {
-  border-color: color-mix(in srgb, $color-success 65%, $color-border);
+  background: color-mix(in srgb, $color-success 12%, $color-surface);
 }
 
 .optiscaler-wizard-result-error {
-  border-color: color-mix(in srgb, $color-danger 65%, $color-border);
+  background: color-mix(in srgb, $color-danger 12%, $color-surface);
 }
 
 .optiscaler-wizard-result p {
@@ -239,8 +241,7 @@ $optiscaler-wizard-label-width: 10rem;
   justify-content: space-between;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-xl;
-  border-top: $app-border;
-  background: $color-background;
+  background: $color-surface;
 }
 
 .optiscaler-wizard-footer button {
@@ -250,4 +251,8 @@ $optiscaler-wizard-label-width: 10rem;
 
 .optiscaler-wizard-footer .button-main {
   margin-left: auto;
+}
+
+.optiscaler-wizard-footer > button:not(.button-main) {
+  background: $color-surface-elevated;
 }

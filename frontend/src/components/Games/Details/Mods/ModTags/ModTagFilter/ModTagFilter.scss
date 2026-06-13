@@ -21,7 +21,7 @@ $mod-tag-filter-popover-max-height: 16rem;
 
 .mod-tag-filter-button-active {
   color: $color-success;
-  border-color: $color-success;
+  border: $app-border-width solid $color-success;
 }
 
 .mod-tag-filter-profile-footer .mod-tag-filter-button {
@@ -35,7 +35,7 @@ $mod-tag-filter-popover-max-height: 16rem;
 
 .mod-tag-filter-profile-footer .mod-tag-filter-button-active {
   color: $color-success;
-  border-color: $color-success;
+  border: $app-border-width solid $color-success;
 }
 
 .mod-tag-filter-count {

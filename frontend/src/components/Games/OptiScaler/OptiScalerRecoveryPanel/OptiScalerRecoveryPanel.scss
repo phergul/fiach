@@ -9,8 +9,8 @@
   justify-content: space-between;
   gap: $spacing-lg;
   padding: $spacing-md $spacing-xl;
+  margin-bottom: $spacing-separator;
   background: color-mix(in srgb, $color-danger 10%, $color-surface);
-  border-bottom: $app-border-width solid color-mix(in srgb, $color-danger 65%, $color-border);
 }
 
 .optiscaler-recovery-panel-title {
@@ -45,5 +45,11 @@
 .optiscaler-recovery-panel-action {
   min-height: $input-height;
   flex: 0 0 auto;
-  border-color: color-mix(in srgb, $color-danger 70%, $color-border);
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-danger 24%, $color-surface-elevated);
+}
+
+.optiscaler-recovery-panel-action:hover:not(:disabled),
+.optiscaler-recovery-panel-action:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 34%, $color-surface-elevated);
 }
