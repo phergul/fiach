@@ -161,12 +161,15 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		}
 		preview.Release = release
 		if found && request.Action == ActionRepair {
-			preview.Request = requestFromStoredTarget(request.Action, target, request)
+			preview.Request.TargetRelativePath = target.TargetRelativePath
+			preview.Request.ExecutableRelativePath = target.ExecutableRelativePath
 			manifest, manifestErr := decodeManifest(target.ManifestJSON)
 			if manifestErr != nil {
 				return Preview{}, manifestErr
 			}
-			preview.Request.EnableReShadeCoexistence = manifest.Config.LoadReShade
+			if request.EnableReShadeCoexistence != manifest.Config.LoadReShade {
+				preview.Warnings = append(preview.Warnings, "ReShade coexistence configuration will change during repair.")
+			}
 		}
 		operations, configChanges, conflicts, err := m.packageOperations(targetPath, preview.Request, pkg)
 		if err != nil {
@@ -221,12 +224,85 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			}
 		}
 	}
+	if err := m.annotateOperationBackups(targetPath, request, found, target, preview.Operations); err != nil {
+		return Preview{}, err
+	}
+	if found && request.Action != ActionAdopt {
+		preview.Warnings = append(
+			preview.Warnings,
+			"Fiach creates a transaction snapshot before changing managed files.",
+		)
+	}
 	preview.CanApply = len(preview.Conflicts) == 0
 	preview.PreviewHash, err = hashPreview(preview)
 	if err != nil {
 		return Preview{}, err
 	}
 	return preview, nil
+}
+
+func (m *Manager) annotateOperationBackups(
+	targetPath string,
+	request Request,
+	found bool,
+	target dbtypes.OptiScalerTarget,
+	operations []Operation,
+) error {
+	previousBackups := map[string]string{}
+	previouslyManaged := map[string]bool{}
+	if found {
+		manifest, err := decodeManifest(target.ManifestJSON)
+		if err != nil {
+			return err
+		}
+		for _, file := range manifest.Files {
+			previouslyManaged[strings.ToLower(filepath.Clean(file.RelativePath))] = true
+			if file.BackupPath != "" {
+				previousBackups[strings.ToLower(filepath.Clean(file.RelativePath))] = file.BackupPath
+			}
+		}
+	}
+	targetKey := hashBytes([]byte(strings.ToLower(request.TargetRelativePath)))[:16]
+	for index := range operations {
+		operation := &operations[index]
+		if operation.Type == "adopt" || operation.Type == "delete" || operation.Type == "restore" {
+			continue
+		}
+		info, err := os.Stat(operation.TargetPath)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			continue
+		}
+		relative, err := filepath.Rel(targetPath, operation.TargetPath)
+		if err != nil {
+			return err
+		}
+		if existing := previousBackups[strings.ToLower(filepath.Clean(relative))]; existing != "" {
+			operation.BackupPath = existing
+			continue
+		}
+		if previouslyManaged[strings.ToLower(filepath.Clean(relative))] {
+			continue
+		}
+		hash, _, err := fileops.FileIntegrity(operation.TargetPath)
+		if err != nil {
+			return err
+		}
+		name := fmt.Sprintf("%s-%s.bak", hash[:16], safePathSegment(filepath.Base(relative)))
+		operation.BackupPath = filepath.Join(
+			m.dataDir,
+			"backups",
+			fmt.Sprintf("%d", request.GameID),
+			targetKey,
+			name,
+		)
+	}
+	return nil
 }
 
 func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, previewHash string) (result ApplyResult, err error) {
@@ -508,17 +584,6 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 		}
 	}
 	return operations
-}
-
-func requestFromStoredTarget(action Action, target dbtypes.OptiScalerTarget, request Request) Request {
-	request.Action = action
-	request.TargetRelativePath = target.TargetRelativePath
-	request.ExecutableRelativePath = target.ExecutableRelativePath
-	request.GraphicsAPI = GraphicsAPI(target.GraphicsAPI)
-	request.ProxyFilename = target.ProxyFilename
-	request.DXGISpoofing = target.DXGISpoofing
-	request.ProcessFilter = target.ProcessFilter
-	return request
 }
 
 func releaseFromStoredTarget(target dbtypes.OptiScalerTarget) Release {

@@ -55,6 +55,7 @@ export class Candidate {
     "targetRelativePath": string;
     "executableRelativePath": string;
     "executableName": string;
+    "architecture": string;
     "evidence": string[];
     "managed": boolean;
     "hasOptiScaler": boolean;
@@ -70,6 +71,9 @@ export class Candidate {
         }
         if (!("executableName" in $$source)) {
             this["executableName"] = "";
+        }
+        if (!("architecture" in $$source)) {
+            this["architecture"] = "";
         }
         if (!("evidence" in $$source)) {
             this["evidence"] = [];
@@ -91,10 +95,10 @@ export class Candidate {
      * Creates a new Candidate instance from a string or object.
      */
     static createFrom($$source: any = {}): Candidate {
-        const $$createField3_0 = $$createType0;
+        const $$createField4_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("evidence" in $$parsedSource) {
-            $$parsedSource["evidence"] = $$createField3_0($$parsedSource["evidence"]);
+            $$parsedSource["evidence"] = $$createField4_0($$parsedSource["evidence"]);
         }
         return new Candidate($$parsedSource as Partial<Candidate>);
     }
@@ -144,6 +148,7 @@ export class Operation {
     "type": string;
     "sourcePath"?: string;
     "targetPath": string;
+    "backupPath"?: string;
     "sha256"?: string;
     "sizeBytes"?: number;
 

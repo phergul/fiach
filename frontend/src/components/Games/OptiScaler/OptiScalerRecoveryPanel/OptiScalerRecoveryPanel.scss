@@ -1,0 +1,47 @@
+@use '@styles/variables' as *;
+
+.optiscaler-recovery-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
+  background: color-mix(in srgb, $color-danger 10%, $color-surface);
+  border: $app-border-width solid color-mix(in srgb, $color-danger 65%, $color-border);
+  border-radius: $radius-md;
+}
+
+.optiscaler-recovery-panel-title {
+  font-size: $font-size-lg;
+}
+
+.optiscaler-recovery-panel-message {
+  margin-top: $spacing-xs;
+  color: $color-text-subtle;
+}
+
+.optiscaler-recovery-panel-details {
+  display: grid;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.optiscaler-recovery-panel-details div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: $spacing-sm;
+}
+
+.optiscaler-recovery-panel-details dt {
+  color: $color-text-muted;
+}
+
+.optiscaler-recovery-panel-details dd {
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-recovery-panel-action {
+  min-height: $input-height;
+  flex: 0 0 auto;
+  border-color: color-mix(in srgb, $color-danger 70%, $color-border);
+}

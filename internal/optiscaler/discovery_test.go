@@ -26,6 +26,9 @@ func TestDiscoverCandidatesRanksManagedAndCommonWin64Evidence(t *testing.T) {
 	if !candidates[0].Managed || candidates[0].ExecutableName != "Game-Win64-Shipping.exe" {
 		t.Fatalf("first candidate = %+v, want managed Win64 shipping executable", candidates[0])
 	}
+	if candidates[0].Architecture != "x64" {
+		t.Fatalf("Architecture = %q, want x64", candidates[0].Architecture)
+	}
 }
 
 func TestResolveWithinRootRejectsEscape(t *testing.T) {

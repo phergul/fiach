@@ -15,6 +15,8 @@ export { useGameModImportFlow } from './games/useGameModImportFlow';
 export type { UseGameModImportFlowResult } from './games/useGameModImportFlow';
 export { useGameModUpdateFlow } from './games/useGameModUpdateFlow';
 export type { UseGameModUpdateFlowResult } from './games/useGameModUpdateFlow';
+export { getOptiScalerAggregateStatus, useGameOptiScaler } from './games/useGameOptiScaler';
+export type { OptiScalerAggregateStatus, UseGameOptiScalerResult } from './games/useGameOptiScaler';
 export { useGameReShadeDetection } from './games/useGameReShadeDetection';
 export type { UseGameReShadeDetectionResult } from './games/useGameReShadeDetection';
 export { useGameReShadeInstall } from './games/useGameReShadeInstall';

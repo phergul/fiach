@@ -1,0 +1,62 @@
+@use '@styles/variables' as *;
+
+.optiscaler-dashboard {
+  display: grid;
+  gap: $spacing-lg;
+}
+
+.optiscaler-dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.optiscaler-dashboard-back-link,
+.optiscaler-dashboard-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-height: $input-height;
+}
+
+.optiscaler-dashboard-back-link {
+  color: $color-text-primary;
+  text-decoration: none;
+}
+
+.optiscaler-dashboard-back-link svg,
+.optiscaler-dashboard-toolbar svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.optiscaler-dashboard-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-lg;
+}
+
+.optiscaler-dashboard-heading h1 {
+  font-size: $font-size-xl;
+}
+
+.optiscaler-dashboard-heading p {
+  margin-top: $spacing-xs;
+  color: $color-text-subtle;
+}
+
+.optiscaler-dashboard-release {
+  display: grid;
+  gap: $spacing-xs;
+  text-align: right;
+}
+
+.optiscaler-dashboard-release span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-dashboard-error {
+  color: $color-danger;
+}

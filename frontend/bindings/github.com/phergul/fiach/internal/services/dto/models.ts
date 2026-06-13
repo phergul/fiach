@@ -1129,6 +1129,7 @@ export class OptiScalerTarget {
     "ProxyFilename": string;
     "DXGISpoofing": boolean;
     "ProcessFilter": string | null;
+    "EnableReShadeCoexistence": boolean;
     "ReleaseTag": string;
     "ReleaseVersion": string;
     "ReleaseAssetName": string;
@@ -1166,6 +1167,9 @@ export class OptiScalerTarget {
         }
         if (!("ProcessFilter" in $$source)) {
             this["ProcessFilter"] = null;
+        }
+        if (!("EnableReShadeCoexistence" in $$source)) {
+            this["EnableReShadeCoexistence"] = false;
         }
         if (!("ReleaseTag" in $$source)) {
             this["ReleaseTag"] = "";

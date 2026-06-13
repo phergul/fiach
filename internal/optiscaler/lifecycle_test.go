@@ -101,6 +101,9 @@ func TestManagerDirectXChainingAndUninstallRestoreReShadeProxy(t *testing.T) {
 	if err := os.WriteFile(proxyPath, []byte("reshade"), 0o644); err != nil {
 		t.Fatalf("WriteFile(ReShade proxy) error = %v", err)
 	}
+	if err := os.WriteFile(filepath.Join(gameRoot, "ReShade64.dll"), []byte("older-reshade"), 0o644); err != nil {
+		t.Fatalf("WriteFile(existing chained ReShade) error = %v", err)
+	}
 	pkg := testPreparedPackageWithRuntime(t, "optiscaler")
 	store := newMemoryStore()
 	manager := lifecycleManager(t, store, pkg, func(path string) (Ownership, error) {
@@ -114,7 +117,13 @@ func TestManagerDirectXChainingAndUninstallRestoreReShadeProxy(t *testing.T) {
 	request.Action = ActionInstall
 	request.AcknowledgeWarning = true
 	request.EnableReShadeCoexistence = true
-	previewAndApply(t, manager, gameRoot, request)
+	preview := previewAndApply(t, manager, gameRoot, request)
+	if preview.Operations[0].BackupPath == "" {
+		t.Fatal("install preview does not expose the existing proxy backup path")
+	}
+	if _, err := os.Stat(preview.Operations[0].BackupPath); err != nil {
+		t.Fatalf("planned proxy backup was not created: %v", err)
+	}
 
 	if got, err := os.ReadFile(filepath.Join(gameRoot, "ReShade64.dll")); err != nil || string(got) != "reshade" {
 		t.Fatalf("chained ReShade = %q, %v", got, err)

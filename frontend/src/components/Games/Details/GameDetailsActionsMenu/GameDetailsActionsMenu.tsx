@@ -1,4 +1,4 @@
-import { Blocks, FolderCog, RotateCcw, Sparkles } from 'lucide-react';
+import { Blocks, FolderCog, Gauge, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -8,6 +8,7 @@ import './GameDetailsActionsMenu.scss';
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
   isOpen: boolean;
+  onOpenOptiScaler: () => void;
   onOpenReShadeAddonInstaller: () => void;
   onOpenReShadeInstaller: () => void;
   onClearStorageOverride: () => void;
@@ -19,6 +20,7 @@ interface GameDetailsActionsMenuProps {
 export const GameDetailsActionsMenu = ({
   game,
   isOpen,
+  onOpenOptiScaler,
   onOpenReShadeAddonInstaller,
   onOpenReShadeInstaller,
   onClearStorageOverride,
@@ -37,16 +39,27 @@ export const GameDetailsActionsMenu = ({
       ariaLabel="Game actions"
       isOpen={isOpen}
       items={[
-        ...(reShadeInstallerActionLabel !== null ? [{
-          icon: Sparkles,
-          label: reShadeInstallerActionLabel,
-          onSelect: onOpenReShadeInstaller,
-        }] : []),
-        ...(reShadeAddonInstallerActionLabel !== null ? [{
-          icon: Blocks,
-          label: reShadeAddonInstallerActionLabel,
-          onSelect: onOpenReShadeAddonInstaller,
-        }] : []),
+        {
+          children: [
+            {
+              icon: Gauge,
+              label: 'OptiScaler',
+              onSelect: onOpenOptiScaler,
+            },
+            ...(reShadeInstallerActionLabel !== null ? [{
+              icon: Sparkles,
+              label: reShadeInstallerActionLabel,
+              onSelect: onOpenReShadeInstaller,
+            }] : []),
+            ...(reShadeAddonInstallerActionLabel !== null ? [{
+              icon: Blocks,
+              label: reShadeAddonInstallerActionLabel,
+              onSelect: onOpenReShadeAddonInstaller,
+            }] : []),
+          ],
+          icon: SlidersHorizontal,
+          label: 'Manage graphics tools',
+        },
         {
           icon: FolderCog,
           label: 'Set mod storage override',

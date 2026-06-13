@@ -2,11 +2,12 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ThemeProvider } from '@components/Common/ThemeProvider/ThemeProvider';
 import { ToastProvider } from '@components/Common/Toast/Toast';
+import { OptiScalerSessionProvider } from '@components/Games/OptiScaler/OptiScalerSessionProvider/OptiScalerSessionProvider';
 import { Layout } from '@components/Layout/Layout';
 import { LogsWindow } from '@components/Logs/LogsWindow/LogsWindow';
-import { GameApply, GameDetails, Library, Profiles, Settings } from '@pages';
+import { GameApply, GameDetails, GameOptiScaler, Library, Profiles, Settings } from '@pages';
 
-const providers = [ThemeProvider, ToastProvider];
+const providers = [ThemeProvider, ToastProvider, OptiScalerSessionProvider];
 
 const wrapWithProviders = (Component: React.FC) => {
   return providers.reduce((AccumulatedComponent, Provider) => {
@@ -29,6 +30,7 @@ export const App = () => {
           <Route path="library" element={<Library />} />
           <Route path="library/:gameId/apply/:profileId" element={<GameApply />} />
           <Route path="library/:gameId/apply" element={<GameApply />} />
+          <Route path="library/:gameId/optiscaler" element={<GameOptiScaler />} />
           <Route path="library/:gameId" element={<GameDetails />} />
           <Route path="profiles" element={<Profiles />} />
           <Route path="settings" element={<Settings />} />

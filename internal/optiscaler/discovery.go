@@ -77,7 +77,7 @@ func DiscoverCandidates(gameRoot string, managedTargetPaths []string) (candidate
 		}
 		candidates = append(candidates, Candidate{
 			TargetRelativePath: targetRelative, ExecutableRelativePath: executableRelative,
-			ExecutableName: entry.Name(), Evidence: evidence,
+			ExecutableName: entry.Name(), Architecture: "x64", Evidence: evidence,
 			Managed:       managed[strings.ToLower(targetRelative)],
 			HasOptiScaler: hasOptiScaler, HasReShade: hasReShade,
 		})

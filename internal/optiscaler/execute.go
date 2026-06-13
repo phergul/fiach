@@ -216,13 +216,11 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 			previousFiles[strings.ToLower(filepath.Clean(file.RelativePath))] = file
 		}
 	}
-	permanentRoot := filepath.Join(m.dataDir, "backups", fmt.Sprintf("%d", preview.Request.GameID),
-		hashBytes([]byte(strings.ToLower(preview.Request.TargetRelativePath)))[:16], fmt.Sprintf("%d", m.now().UnixNano()))
 	snapshotByPath := map[string]journalSnapshot{}
 	for _, snapshot := range snapshots {
 		snapshotByPath[strings.ToLower(filepath.Clean(snapshot.TargetPath))] = snapshot
 	}
-	for index, operation := range preview.Operations {
+	for _, operation := range preview.Operations {
 		if operation.Type != "copy" && operation.Type != "adopt" && operation.Type != "move" {
 			continue
 		}
@@ -246,15 +244,20 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 		}
 		snapshot := snapshotByPath[strings.ToLower(filepath.Clean(managedPath))]
 		if !previouslyManaged && snapshot.Existed && preview.Request.Action != ActionAdopt {
-			if err := os.MkdirAll(permanentRoot, 0o755); err != nil {
+			if operation.BackupPath == "" {
+				return fmt.Errorf("planned backup path is missing for %q", managedPath)
+			}
+			if err := os.MkdirAll(filepath.Dir(operation.BackupPath), 0o755); err != nil {
 				return err
 			}
-			entry.BackupPath = filepath.Join(permanentRoot, fmt.Sprintf("%03d.bak", index))
-			if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-				SourcePath: snapshot.BackupPath, TargetPath: entry.BackupPath,
-				Mode: 0o644, Replace: false, OpenLabel: "journal backup",
-			}); err != nil {
-				return err
+			entry.BackupPath = operation.BackupPath
+			if matches, matchErr := fileops.FileMatchesIntegrity(entry.BackupPath, snapshot.SHA256, snapshot.SizeBytes); matchErr != nil || !matches {
+				if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
+					SourcePath: snapshot.BackupPath, TargetPath: entry.BackupPath,
+					Mode: 0o644, Replace: true, OpenLabel: "journal backup",
+				}); err != nil {
+					return err
+				}
 			}
 			entry.BackupSHA256, entry.BackupSize, err = fileops.FileIntegrity(entry.BackupPath)
 			if err != nil {

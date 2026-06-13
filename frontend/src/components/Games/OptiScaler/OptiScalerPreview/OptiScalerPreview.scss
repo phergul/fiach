@@ -1,0 +1,44 @@
+@use '@styles/variables' as *;
+
+.optiscaler-preview {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.optiscaler-preview-group {
+  padding: $spacing-md;
+  background: $color-background;
+  border: $app-border;
+  border-radius: $radius-sm;
+}
+
+.optiscaler-preview-group-blocked {
+  border-color: color-mix(in srgb, $color-danger 65%, $color-border);
+}
+
+.optiscaler-preview-group-warning {
+  border-color: color-mix(in srgb, $color-warning 65%, $color-border);
+}
+
+.optiscaler-preview-group h3 {
+  font-size: $font-size-base;
+}
+
+.optiscaler-preview-group ul,
+.optiscaler-preview-group p {
+  display: grid;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  color: $color-text-subtle;
+}
+
+.optiscaler-preview-group li {
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-preview-group li span {
+  display: block;
+  margin-top: $spacing-xs;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}

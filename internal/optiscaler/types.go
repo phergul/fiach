@@ -46,6 +46,7 @@ type Candidate struct {
 	TargetRelativePath     string   `json:"targetRelativePath"`
 	ExecutableRelativePath string   `json:"executableRelativePath"`
 	ExecutableName         string   `json:"executableName"`
+	Architecture           string   `json:"architecture"`
 	Evidence               []string `json:"evidence"`
 	Managed                bool     `json:"managed"`
 	HasOptiScaler          bool     `json:"hasOptiScaler"`
@@ -95,6 +96,7 @@ type Operation struct {
 	Type       string `json:"type"`
 	SourcePath string `json:"sourcePath,omitempty"`
 	TargetPath string `json:"targetPath"`
+	BackupPath string `json:"backupPath,omitempty"`
 	SHA256     string `json:"sha256,omitempty"`
 	SizeBytes  int64  `json:"sizeBytes,omitempty"`
 }

@@ -25,6 +25,8 @@ export const useGameReShadeInstall = ({
 }: UseGameReShadeInstallInput) => {
   const { addErrorToast, addToast } = useToast();
   const [isLaunchingInstaller, setIsLaunchingInstaller] = useState(false);
+  const [isCompletionPromptOpen, setIsCompletionPromptOpen] = useState(false);
+  const [isRefreshingDetection, setIsRefreshingDetection] = useState(false);
   const reShadeStatus = reShadeDetection.result?.Status;
   const reShadeInstallerActionLabels = (() => {
     if (game === undefined) {
@@ -68,6 +70,7 @@ export const useGameReShadeInstall = ({
         message: `ReShade ${result.Version} installer opened.`,
         tone: 'success',
       });
+      setIsCompletionPromptOpen(true);
     } catch (error) {
       addErrorToast(error);
     } finally {
@@ -89,6 +92,7 @@ export const useGameReShadeInstall = ({
         message: `ReShade ${result.Version} add-on installer opened.`,
         tone: 'success',
       });
+      setIsCompletionPromptOpen(true);
     } catch (error) {
       addErrorToast(error);
     } finally {
@@ -96,10 +100,39 @@ export const useGameReShadeInstall = ({
     }
   };
 
+  const cancelCompletionPrompt = () => {
+    if (!isRefreshingDetection) {
+      setIsCompletionPromptOpen(false);
+    }
+  };
+
+  const confirmInstallerFinished = async () => {
+    if (isRefreshingDetection) {
+      return;
+    }
+    setIsRefreshingDetection(true);
+    try {
+      await reShadeDetection.refresh();
+      setIsCompletionPromptOpen(false);
+      addToast({
+        message: 'ReShade status refreshed.',
+        tone: 'success',
+      });
+    } catch (error) {
+      addErrorToast(error);
+    } finally {
+      setIsRefreshingDetection(false);
+    }
+  };
+
   return {
+    cancelCompletionPrompt,
+    confirmInstallerFinished,
     downloadAndOpenAddonInstaller,
     downloadAndOpenInstaller,
+    isCompletionPromptOpen,
     isLaunchingInstaller,
+    isRefreshingDetection,
     reShadeAddonInstallerActionLabel: reShadeInstallerActionLabels.addon,
     reShadeInstallerActionLabel: reShadeInstallerActionLabels.standard,
   };

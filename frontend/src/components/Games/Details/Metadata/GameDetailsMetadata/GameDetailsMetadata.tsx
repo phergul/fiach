@@ -1,17 +1,16 @@
-import { CheckCircle2, CircleSlash2, Database, Package, Sparkles, Users } from 'lucide-react';
+import { Database, Gauge, Package, Sparkles, Users } from 'lucide-react';
 
 import {
   ReShadeDetectionStatus,
-  type StoredGame,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import type { UseGameReShadeDetectionResult } from '@hooks';
+import type { UseGameOptiScalerResult, UseGameReShadeDetectionResult } from '@hooks';
 
 import './GameDetailsMetadata.scss';
 
 interface GameDetailsMetadataProps {
-  game: StoredGame;
   isStorageUsageLoading: boolean;
   modCount: number;
+  optiScaler: UseGameOptiScalerResult;
   profileCount: number;
   reShadeDetection: UseGameReShadeDetectionResult;
   storageUsedBytes: number | null;
@@ -39,6 +38,29 @@ const formatStorageUsage = (bytes: number | null, isLoading: boolean) => {
   return `${formattedValue} ${units[unitIndex]}`;
 };
 
+const formatOptiScalerStatus = (optiScaler: UseGameOptiScalerResult) => {
+  const count = optiScaler.targets.length;
+  const countLabel = `${count} managed`;
+  switch (optiScaler.aggregateStatus) {
+    case 'checking':
+      return 'Checking';
+    case 'error':
+      return 'Error';
+    case 'recovery':
+      return `${countLabel} · Recovery required`;
+    case 'drift':
+      return `${countLabel} · Drift detected`;
+    case 'update':
+      return `${countLabel} · Update available`;
+    case 'managed':
+      return countLabel;
+    case 'unmanaged':
+      return 'Detected unmanaged';
+    case 'not_detected':
+      return 'Not detected';
+  }
+};
+
 const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) => {
   if (reShadeDetection.isLoading) {
     return 'Checking';
@@ -61,19 +83,19 @@ const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) =>
 };
 
 export const GameDetailsMetadata = ({
-  game,
   isStorageUsageLoading,
   modCount,
+  optiScaler,
   profileCount,
   reShadeDetection,
   storageUsedBytes,
 }: GameDetailsMetadataProps) => {
   const metadataItems = [
-    { Icon: game.Available ? CheckCircle2 : CircleSlash2, label: 'Available', value: game.Available ? 'Yes' : 'No' },
     { Icon: Package, label: 'Mods installed', value: String(modCount) },
     { Icon: Database, label: 'Storage used', value: formatStorageUsage(storageUsedBytes, isStorageUsageLoading) },
     { Icon: Users, label: 'Profiles', value: String(profileCount) },
     { Icon: Sparkles, label: 'ReShade', value: formatReShadeStatus(reShadeDetection) },
+    { Icon: Gauge, label: 'OptiScaler', value: formatOptiScalerStatus(optiScaler) },
   ];
 
   return (
