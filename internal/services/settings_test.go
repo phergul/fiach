@@ -25,8 +25,9 @@ func TestSettingsServiceGetsAndSetsGlobalModStorageRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetGlobalModStorageRoot() error = %v", err)
 	}
-	if root != "/mods/root" {
-		t.Fatalf("GetGlobalModStorageRoot() = %q, want /mods/root", root)
+	wantRoot := filepath.Clean("/mods/root")
+	if root != wantRoot {
+		t.Fatalf("GetGlobalModStorageRoot() = %q, want %q", root, wantRoot)
 	}
 }
 
@@ -81,8 +82,9 @@ func TestSettingsServiceResolvesGameModStoragePathWithOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
-	if path != "/override/root" {
-		t.Fatalf("ResolveGameModStoragePath() = %q, want override", path)
+	wantPath := filepath.Clean("/override/root")
+	if path != wantPath {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, wantPath)
 	}
 }
 

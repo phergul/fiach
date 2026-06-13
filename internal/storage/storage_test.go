@@ -548,8 +548,9 @@ func TestGlobalModStorageRootCanBeSetUpdatedAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetGlobalModStorageRoot() error = %v", err)
 	}
-	if root != "/mods/two" {
-		t.Fatalf("GetGlobalModStorageRoot() = %q, want updated root", root)
+	wantRoot := filepath.Clean("/mods/two")
+	if root != wantRoot {
+		t.Fatalf("GetGlobalModStorageRoot() = %q, want %q", root, wantRoot)
 	}
 }
 
@@ -572,8 +573,9 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
-	if path != "/custom/skyrim" {
-		t.Fatalf("ResolveGameModStoragePath() = %q, want override path", path)
+	wantOverride := filepath.Clean("/custom/skyrim")
+	if path != wantOverride {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, wantOverride)
 	}
 
 	game, err := store.SetGameModStoragePathOverride(context.Background(), gameID, " ")

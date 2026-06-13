@@ -75,7 +75,8 @@ func TestRecentLogsSkipsMalformedLinesAndCleansDetails(t *testing.T) {
 	if len(entries) != 2 {
 		t.Fatalf("RecentLogs() length = %d, want 2", len(entries))
 	}
-	if entries[0].Details["Error"] != `copy source "Games/Mod.zip": remove Games/Mod.zip: permission denied` {
+	wantError := `copy source "` + filepath.Join("Games", "Mod.zip") + `": remove ` + filepath.Join("Games", "Mod.zip") + `: permission denied`
+	if entries[0].Details["Error"] != wantError {
 		t.Fatalf("RecentLogs() newest details = %+v, want sanitized error paths", entries[0].Details)
 	}
 	if _, ok := entries[1].Details["Source path"]; ok {
@@ -148,7 +149,8 @@ func TestManagerBroadcastsSanitizedWrittenLogs(t *testing.T) {
 		if entry.Level != "error" || entry.Operation != OperationImportMod {
 			t.Fatalf("broadcast entry = %+v, want error import entry", entry)
 		}
-		if entry.Details["Error"] != `copy source "Games/Mod.zip": permission denied` {
+		wantError := `copy source "` + filepath.Join("Games", "Mod.zip") + `": permission denied`
+		if entry.Details["Error"] != wantError {
 			t.Fatalf("broadcast details = %+v, want sanitized error path", entry.Details)
 		}
 	case <-time.After(time.Second):
