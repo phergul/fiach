@@ -20,7 +20,7 @@ concurrency:
 jobs:
   checks:
     name: Frontend and Backend Checks
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
