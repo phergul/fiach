@@ -53,6 +53,9 @@ type Manager struct {
 	rollbackSnapshots      func([]journalSnapshot) error
 	mu                     sync.Mutex
 	packageMu              sync.Mutex
+	preparedRelease        Release
+	preparedPackage        Package
+	hasPreparedPackage     bool
 }
 
 func NewManager(store Store, options ManagerOptions) *Manager {
@@ -398,8 +401,17 @@ func (m *Manager) preparePackage(ctx context.Context) (Release, Package, error) 
 	m.packageMu.Lock()
 	defer m.packageMu.Unlock()
 
+	if m.hasPreparedPackage {
+		return m.preparedRelease, m.preparedPackage, nil
+	}
+
 	if m.preparePackageOverride != nil {
-		return m.preparePackageOverride(ctx)
+		release, pkg, err := m.preparePackageOverride(ctx)
+		if err != nil {
+			return Release{}, Package{}, err
+		}
+		m.cachePreparedPackage(release, pkg)
+		return release, pkg, nil
 	}
 	release, err := DiscoverStableRelease(ctx, m.releaseOptions())
 	if err != nil {
@@ -414,7 +426,14 @@ func (m *Manager) preparePackage(ctx context.Context) (Release, Package, error) 
 	if err != nil {
 		return Release{}, Package{}, err
 	}
+	m.cachePreparedPackage(release, pkg)
 	return release, pkg, nil
+}
+
+func (m *Manager) cachePreparedPackage(release Release, pkg Package) {
+	m.preparedRelease = release
+	m.preparedPackage = pkg
+	m.hasPreparedPackage = true
 }
 
 func (m *Manager) releaseOptions() ReleaseOptions {
