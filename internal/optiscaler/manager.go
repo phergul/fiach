@@ -29,12 +29,15 @@ type Store interface {
 }
 
 type ManagerOptions struct {
-	DataDir        string
-	CacheDir       string
-	ReleasesURL    string
-	HTTPClient     *http.Client
-	Now            func() time.Time
-	PreparePackage func(context.Context) (Release, Package, error)
+	DataDir           string
+	CacheDir          string
+	ReleasesURL       string
+	HTTPClient        *http.Client
+	Now               func() time.Time
+	PreparePackage    func(context.Context) (Release, Package, error)
+	InspectOwnership  func(string) (Ownership, error)
+	ExecuteOperation  func(Operation) error
+	RollbackSnapshots func([]journalSnapshot) error
 }
 
 type Manager struct {
@@ -45,6 +48,9 @@ type Manager struct {
 	httpClient             *http.Client
 	now                    func() time.Time
 	preparePackageOverride func(context.Context) (Release, Package, error)
+	inspectOwnership       func(string) (Ownership, error)
+	executeOperation       func(Operation) error
+	rollbackSnapshots      func([]journalSnapshot) error
 	mu                     sync.Mutex
 	packageMu              sync.Mutex
 }
@@ -64,10 +70,22 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 	if options.Now == nil {
 		options.Now = time.Now
 	}
+	if options.InspectOwnership == nil {
+		options.InspectOwnership = InspectOwnership
+	}
+	if options.ExecuteOperation == nil {
+		options.ExecuteOperation = executeOperation
+	}
+	if options.RollbackSnapshots == nil {
+		options.RollbackSnapshots = rollbackSnapshots
+	}
 	return &Manager{
 		store: store, dataDir: dataDir, cacheDir: cacheDir,
 		releasesURL: options.ReleasesURL, httpClient: options.HTTPClient, now: options.Now,
 		preparePackageOverride: options.PreparePackage,
+		inspectOwnership:       options.InspectOwnership,
+		executeOperation:       options.ExecuteOperation,
+		rollbackSnapshots:      options.RollbackSnapshots,
 	}
 }
 
@@ -163,7 +181,7 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			return Preview{}, err
 		}
 		preview.Release = release
-		operations, conflicts, err := adoptionInventory(targetPath, request, pkg)
+		operations, conflicts, err := adoptionInventory(targetPath, request, pkg, m.inspectOwnership)
 		if err != nil {
 			return Preview{}, err
 		}
@@ -321,14 +339,14 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 	var conflicts []string
 	proxyPath := filepath.Join(targetPath, request.ProxyFilename)
 	if _, err := os.Stat(proxyPath); err == nil {
-		owner, inspectErr := InspectOwnership(proxyPath)
+		owner, inspectErr := m.inspectOwnership(proxyPath)
 		switch {
 		case inspectErr != nil || owner == OwnershipUnknown:
 			conflicts = append(conflicts, fmt.Sprintf("Proxy ownership is unknown: %s", proxyPath))
 		case owner == OwnershipReShade && request.EnableReShadeCoexistence:
 			chainedPath := filepath.Join(targetPath, "ReShade64.dll")
 			if _, err := os.Stat(chainedPath); err == nil {
-				chainedOwner, chainedErr := InspectOwnership(chainedPath)
+				chainedOwner, chainedErr := m.inspectOwnership(chainedPath)
 				if chainedErr != nil || chainedOwner != OwnershipReShade {
 					conflicts = append(conflicts, fmt.Sprintf("Chained ReShade ownership is unknown: %s", chainedPath))
 				}
@@ -407,9 +425,9 @@ func flattenPackageRoot(files []PackageFile, relative string) string {
 	return relative
 }
 
-func adoptionInventory(targetPath string, request Request, pkg Package) ([]Operation, []string, error) {
+func adoptionInventory(targetPath string, request Request, pkg Package, inspectOwnership func(string) (Ownership, error)) ([]Operation, []string, error) {
 	proxyPath := filepath.Join(targetPath, request.ProxyFilename)
-	owner, err := InspectOwnership(proxyPath)
+	owner, err := inspectOwnership(proxyPath)
 	if err != nil || owner != OwnershipOptiScaler {
 		return nil, []string{"The selected proxy is not positively identified as OptiScaler."}, nil
 	}
@@ -474,6 +492,15 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 	operations := make([]Operation, 0, len(manifest.Files))
 	for _, file := range manifest.Files {
 		target := filepath.Join(targetPath, file.RelativePath)
+		if manifest.OriginalReShadeProxy != nil &&
+			strings.EqualFold(filepath.Base(file.RelativePath), "ReShade64.dll") {
+			operations = append(operations, Operation{
+				Type:       "move",
+				SourcePath: target,
+				TargetPath: filepath.Join(targetPath, *manifest.OriginalReShadeProxy),
+			})
+			continue
+		}
 		if file.BackupPath != "" {
 			operations = append(operations, Operation{Type: "restore", SourcePath: file.BackupPath, TargetPath: target, SHA256: file.BackupSHA256, SizeBytes: file.BackupSize})
 		} else {

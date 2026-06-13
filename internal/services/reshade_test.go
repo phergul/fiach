@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
 )
 
@@ -64,6 +65,12 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 
 	service := NewReshadeService(store, testLogger())
 	service.operatingSystem = "windows"
+	service.scan = func(string) (reshade.Result, error) {
+		return reshade.Result{Targets: []reshade.Target{{
+			Path:        target,
+			Executables: []string{filepath.Join(target, "Game.exe")},
+		}}}, nil
+	}
 
 	result, err := service.DetectGameReShade(context.Background(), gameID)
 	if err != nil {

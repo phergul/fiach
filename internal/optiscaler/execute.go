@@ -36,7 +36,7 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 	rollbackOnFailure := func(operationErr error) (ApplyResult, error) {
 		journal.Error = operationErr.Error()
 		_ = writeJournal(journalPath, journal)
-		if rollbackErr := rollbackSnapshots(journal.Snapshots); rollbackErr != nil {
+		if rollbackErr := m.rollbackSnapshots(journal.Snapshots); rollbackErr != nil {
 			journal.Error = fmt.Sprintf("%v; rollback failed: %v", operationErr, rollbackErr)
 			_ = writeJournal(journalPath, journal)
 			_ = m.markRecoveryRequired(ctx, preview.Request)
@@ -58,7 +58,7 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 		}
 	}
 	for index, operation := range preview.Operations {
-		if err := executeOperation(operation); err != nil {
+		if err := m.executeOperation(operation); err != nil {
 			return rollbackOnFailure(err)
 		}
 		journal.CompletedSteps = index + 1
@@ -74,7 +74,6 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 	}
 	journal.DatabaseCommitted = true
 	if err := writeJournal(journalPath, journal); err != nil {
-		// The operation is committed. Best-effort removal avoids presenting it as recoverable.
 		if removeErr := os.Remove(journalPath); removeErr != nil {
 			return ApplyResult{Success: true, Message: "OptiScaler action completed, but journal cleanup requires attention."}, nil
 		}
@@ -179,8 +178,9 @@ func verifyOperations(operations []Operation) error {
 				return fmt.Errorf("verify deleted file %q", operation.TargetPath)
 			}
 		case "move":
-			if _, err := os.Stat(operation.SourcePath); !errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("verify moved source %q", operation.SourcePath)
+			info, err := os.Stat(operation.TargetPath)
+			if err != nil || !info.Mode().IsRegular() {
+				return fmt.Errorf("verify moved target %q", operation.TargetPath)
 			}
 		}
 	}

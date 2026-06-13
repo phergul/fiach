@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/phergul/fiach/internal/winversion"
 )
 
 func TestScanDetectsReShadeWithIniSupport(t *testing.T) {
@@ -16,7 +18,7 @@ func TestScanDetectsReShadeWithIniSupport(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "dxgi.dll"))
 	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -38,7 +40,7 @@ func TestScanDetectsReShadeWithShadersSupport(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "d3d11.dll"))
 	mkdirReShadeTestDir(t, filepath.Join(target, "reshade-shaders"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -59,7 +61,7 @@ func TestScanRequiresSupportEvidence(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
 	writeReShadeTestFile(t, filepath.Join(target, "dxgi.dll"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -75,7 +77,7 @@ func TestScanRequiresKnownDLL(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
 	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -92,7 +94,7 @@ func TestScanIgnoresPresetIniAsSupportEvidence(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "dxgi.dll"))
 	writeReShadeTestFile(t, filepath.Join(target, "Preset.ini"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -109,7 +111,7 @@ func TestScanMatchesMarkersCaseInsensitively(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "DXGI.DLL"))
 	writeReShadeTestFile(t, filepath.Join(target, "reshade.ini"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -132,7 +134,7 @@ func TestScanReturnsCandidateFolderAndExecutables(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "opengl32.dll"))
 	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
 
-	result, err := Scan(root)
+	result, err := scanReShadeTest(root)
 	if err != nil {
 		t.Fatalf("Scan() error = %v", err)
 	}
@@ -145,6 +147,64 @@ func TestScanReturnsCandidateFolderAndExecutables(t *testing.T) {
 				filepath.Join(target, "B.exe"),
 			},
 		},
+	})
+}
+
+func TestScanIgnoresOptiScalerProxyBesideReShadeINI(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	target := filepath.Join(root, "game")
+	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
+	proxy := filepath.Join(target, "dxgi.dll")
+	writeReShadeTestFile(t, proxy)
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
+
+	result, err := scan(root, func(path string) (winversion.Metadata, error) {
+		return winversion.Metadata{
+			ProductName:      "OptiScaler",
+			OriginalFilename: "OptiScaler.dll",
+		}, nil
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+
+	assertReShadeTargets(t, result, nil)
+}
+
+func TestScanIgnoresUnreadableAndAmbiguousProxies(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	target := filepath.Join(root, "game")
+	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
+	writeReShadeTestFile(t, filepath.Join(target, "dxgi.dll"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
+
+	result, err := scan(root, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{ProductName: "ReShade"}, os.ErrPermission
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+	assertReShadeTargets(t, result, nil)
+
+	result, err = scan(root, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{ProductName: "ReShade", OriginalFilename: "dxgi.dll"}, nil
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+	assertReShadeTargets(t, result, nil)
+}
+
+func scanReShadeTest(root string) (Result, error) {
+	return scan(root, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{
+			ProductName:      "ReShade",
+			OriginalFilename: "ReShade64.dll",
+		}, nil
 	})
 }
 

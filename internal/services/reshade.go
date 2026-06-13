@@ -20,6 +20,7 @@ type ReshadeService struct {
 	store           *storage.Store
 	logger          *slog.Logger
 	operatingSystem string
+	scan            func(string) (reshade.Result, error)
 }
 
 func NewReshadeService(store *storage.Store, logger *slog.Logger) *ReshadeService {
@@ -31,6 +32,7 @@ func NewReshadeService(store *storage.Store, logger *slog.Logger) *ReshadeServic
 		store:           store,
 		logger:          logger,
 		operatingSystem: runtime.GOOS,
+		scan:            reshade.Scan,
 	}
 }
 
@@ -76,7 +78,7 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 		return dto.ReShadeDetectionResult{}, fmt.Errorf("game install path %q is not a directory", installPath)
 	}
 
-	scanResult, err := reshade.Scan(installPath)
+	scanResult, err := s.scan(installPath)
 	if err != nil {
 		return dto.ReShadeDetectionResult{}, err
 	}

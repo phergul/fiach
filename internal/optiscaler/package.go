@@ -137,9 +137,7 @@ func packageInventory(root string) ([]PackageFile, error) {
 		if err != nil {
 			return err
 		}
-		name := strings.ToLower(filepath.Base(relative))
-		if strings.HasSuffix(name, ".bat") || strings.Contains(name, "extract") && strings.HasSuffix(name, ".txt") ||
-			strings.Contains(name, "setup") && strings.HasSuffix(name, ".txt") {
+		if !includePackageFile(relative) {
 			return nil
 		}
 		hash, size, err := fileops.FileIntegrity(path)
@@ -162,4 +160,19 @@ func packageInventory(root string) ([]PackageFile, error) {
 		return strings.ToLower(files[i].RelativePath) < strings.ToLower(files[j].RelativePath)
 	})
 	return files, nil
+}
+
+func includePackageFile(relative string) bool {
+	name := strings.ToLower(filepath.Base(filepath.Clean(relative)))
+	if strings.HasSuffix(name, ".bat") || strings.HasSuffix(name, ".cmd") {
+		return false
+	}
+	if strings.HasSuffix(name, ".txt") &&
+		(strings.Contains(name, "setup") || strings.Contains(name, "install")) {
+		return false
+	}
+	return name != "readme.txt" &&
+		name != "readme.md" &&
+		name != "extraction readme.txt" &&
+		name != "extraction_readme.txt"
 }

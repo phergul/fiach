@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/phergul/fiach/internal/winversion"
 )
 
 type Target struct {
@@ -19,7 +21,7 @@ type Result struct {
 
 type candidateFolder struct {
 	executables []string
-	hasDLL      bool
+	proxies     []string
 	hasSupport  bool
 }
 
@@ -33,6 +35,12 @@ var reshadeDLLNames = map[string]struct{}{
 }
 
 func Scan(root string) (result Result, err error) {
+	return scan(root, winversion.Read)
+}
+
+type metadataReader func(string) (winversion.Metadata, error)
+
+func scan(root string, readMetadata metadataReader) (result Result, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("scan ReShade runtime markers: %w", err)
@@ -73,7 +81,7 @@ func Scan(root string) (result Result, err error) {
 		default:
 			_, knownDLL := reshadeDLLNames[name]
 			if knownDLL {
-				folder.hasDLL = true
+				folder.proxies = append(folder.proxies, path)
 			}
 		}
 
@@ -85,7 +93,7 @@ func Scan(root string) (result Result, err error) {
 
 	targets := make([]Target, 0, len(folders))
 	for path, folder := range folders {
-		if len(folder.executables) == 0 || !folder.hasDLL || !folder.hasSupport {
+		if len(folder.executables) == 0 || !folder.hasSupport || !hasReShadeProxy(folder.proxies, readMetadata) {
 			continue
 		}
 		sort.Strings(folder.executables)
@@ -99,4 +107,18 @@ func Scan(root string) (result Result, err error) {
 	})
 
 	return Result{Targets: targets}, nil
+}
+
+func hasReShadeProxy(paths []string, readMetadata metadataReader) bool {
+	for _, path := range paths {
+		metadata, err := readMetadata(path)
+		if err != nil {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(metadata.ProductName), "ReShade") &&
+			strings.EqualFold(strings.TrimSpace(metadata.OriginalFilename), "ReShade64.dll") {
+			return true
+		}
+	}
+	return false
 }
