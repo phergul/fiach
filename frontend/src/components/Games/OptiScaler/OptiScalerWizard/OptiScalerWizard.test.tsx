@@ -125,4 +125,66 @@ describe('OptiScalerWizard', () => {
     expect(vi.mocked(ApplyOptiScalerAction).mock.calls[0][1]).toBe('replacement-hash');
     expect(onRefresh).toHaveBeenCalledOnce();
   });
+
+  it('uses adaptive steps for managed operations', () => {
+    render(
+      <OptiScalerWizard
+        gameID={1}
+        onClose={vi.fn()}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={{
+          action: Action.ActionRepair,
+          candidate: null,
+          target: {
+            DXGISpoofing: false,
+            EnableReShadeCoexistence: false,
+            ExecutableRelativePath: 'Bin/Game.exe',
+            GraphicsAPI: 'directx',
+            ProcessFilter: 'Game.exe',
+            ProxyFilename: 'dxgi.dll',
+            TargetRelativePath: 'Bin',
+          } as never,
+        }}
+      />,
+    );
+
+    expect(screen.queryByText('1. Target')).not.toBeInTheDocument();
+    expect(screen.getByText('1. Configuration')).toBeInTheDocument();
+    expect(screen.getByText('2. Preview')).toBeInTheDocument();
+    expect(screen.getByText('3. Result')).toBeInTheDocument();
+    expect(screen.queryByText('Safety')).not.toBeInTheDocument();
+  });
+
+  it('confirms before discarding changed values', () => {
+    const onClose = vi.fn();
+    const candidate = {
+      architecture: 'x64',
+      evidence: [],
+      executableName: 'Game.exe',
+      executableRelativePath: 'Bin/Game.exe',
+      hasOptiScaler: false,
+      hasReShade: false,
+      managed: false,
+      targetRelativePath: 'Bin',
+    } as OptiScalerCandidate;
+
+    render(
+      <OptiScalerWizard
+        gameID={1}
+        onClose={onClose}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={{ action: Action.ActionInstall, candidate, target: null }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), { target: { value: 'directx' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Close OptiScaler wizard' }));
+    expect(screen.getByText('Discard OptiScaler changes?')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 });

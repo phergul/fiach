@@ -1,0 +1,132 @@
+@use '@styles' as *;
+
+$optiscaler-table-icon-size: 1rem;
+$optiscaler-table-architecture-width: 10rem;
+$optiscaler-table-status-width: 20rem;
+
+.optiscaler-executable-table {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: $color-background;
+}
+
+.optiscaler-executable-columns,
+.optiscaler-executable-row {
+  display: grid;
+  grid-template-columns:
+    minmax(18rem, 1fr)
+    $optiscaler-table-architecture-width
+    $optiscaler-table-status-width
+    $table-action-width;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: 0 $spacing-xl;
+}
+
+.optiscaler-executable-columns {
+  min-height: $input-height;
+  color: $color-text-muted;
+  border-bottom: $app-border;
+  font-size: $font-size-xs;
+  text-transform: uppercase;
+}
+
+.optiscaler-executable-columns span:last-child {
+  text-align: right;
+}
+
+.optiscaler-executable-table section > h3 {
+  padding: $spacing-md $spacing-xl $spacing-sm;
+  color: $color-warning;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+}
+
+.optiscaler-executable-row {
+  min-height: 5rem;
+  border-bottom: $app-border;
+}
+
+.optiscaler-executable-identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.optiscaler-executable-identity strong {
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-executable-identity span {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-executable-architecture {
+  width: fit-content;
+  padding: $spacing-xs $spacing-sm;
+  color: $color-text-subtle;
+  background: $color-surface;
+  font-family: $font-family-monospace;
+  font-size: $font-size-xs;
+}
+
+.optiscaler-executable-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-xs $spacing-sm;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-executable-status-success {
+  color: $color-success;
+}
+
+.optiscaler-executable-status-warning {
+  color: $color-warning;
+}
+
+.optiscaler-executable-status-info {
+  color: $color-info;
+}
+
+.optiscaler-executable-status-muted {
+  color: $color-text-muted;
+}
+
+.optiscaler-executable-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-xs;
+}
+
+.optiscaler-executable-actions button {
+  min-height: $table-control-height;
+}
+
+.optiscaler-executable-actions svg {
+  width: $optiscaler-table-icon-size;
+  height: $optiscaler-table-icon-size;
+}
+
+.optiscaler-executable-menu-anchor {
+  position: relative;
+}
+
+.optiscaler-executable-menu-anchor > button {
+  width: $table-control-height;
+  padding: 0;
+}
+
+.optiscaler-executable-empty {
+  padding: $spacing-md $spacing-xl $spacing-lg;
+  color: $color-text-muted;
+  border-bottom: $app-border;
+}

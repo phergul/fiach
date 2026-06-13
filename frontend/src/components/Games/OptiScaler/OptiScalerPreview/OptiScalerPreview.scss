@@ -2,44 +2,61 @@
 
 .optiscaler-preview {
   display: grid;
-  border-top: $app-border;
-  border-right: $app-border;
-  border-left: $app-border;
+  gap: $spacing-md;
 }
 
 .optiscaler-preview-group {
-  padding: $spacing-md;
-  background: $color-background;
-  border-bottom: $app-border;
-}
-
-.optiscaler-preview-group-blocked {
-  border-color: color-mix(in srgb, $color-danger 65%, $color-border);
-}
-
-.optiscaler-preview-group-warning {
-  border-color: color-mix(in srgb, $color-warning 65%, $color-border);
+  background: $color-surface;
 }
 
 .optiscaler-preview-group h3 {
-  font-size: $font-size-base;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+}
+
+.optiscaler-preview-group-success h3 {
+  color: $color-success;
+  background: color-mix(in srgb, $color-success 12%, $color-surface-elevated);
+}
+
+.optiscaler-preview-group-warning h3 {
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 10%, $color-surface-elevated);
+}
+
+.optiscaler-preview-group-danger h3 {
+  color: $color-danger;
+  background: color-mix(in srgb, $color-danger 10%, $color-surface-elevated);
 }
 
 .optiscaler-preview-group ul,
 .optiscaler-preview-group p {
   display: grid;
   gap: $spacing-sm;
-  margin-top: $spacing-sm;
+  padding: $spacing-md;
   color: $color-text-subtle;
 }
 
 .optiscaler-preview-group li {
+  display: flex;
+  gap: $spacing-md;
   overflow-wrap: anywhere;
+  padding-bottom: $spacing-sm;
+  border-bottom: $app-border;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
 }
 
-.optiscaler-preview-group li span {
-  display: block;
-  margin-top: $spacing-xs;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
+.optiscaler-preview-group li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.optiscaler-preview-symbol {
+  flex: 0 0 auto;
+  color: inherit;
 }

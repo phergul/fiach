@@ -1,24 +1,36 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { X } from 'lucide-react';
+
+import { Action, GraphicsAPI } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
 import type {
   OptiScalerApplyResult,
+  OptiScalerCandidate,
   OptiScalerPreview as OptiScalerPreviewModel,
   OptiScalerRequest,
+  OptiScalerTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { Action, GraphicsAPI } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
 import {
   ApplyOptiScalerAction,
   GetOptiScalerRecoveryState,
   PreviewOptiScalerAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/optiscalerservice';
+import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { OptiScalerPreview } from '@components/Games/OptiScaler/OptiScalerPreview/OptiScalerPreview';
-import type { OptiScalerSelection } from '@components/Games/OptiScaler/OptiScalerTargetList/OptiScalerTargetList';
+import { OptiScalerWizardConfigurationStep } from './OptiScalerWizardConfigurationStep/OptiScalerWizardConfigurationStep';
+import { OptiScalerWizardSafetyStep } from './OptiScalerWizardSafetyStep/OptiScalerWizardSafetyStep';
+import { OptiScalerWizardTargetStep } from './OptiScalerWizardTargetStep/OptiScalerWizardTargetStep';
 import { getErrorMessage } from '@utils';
 
 import './OptiScalerWizard.scss';
 
 type WizardStep = 'target' | 'configuration' | 'safety' | 'preview' | 'result';
 type OperationPhase = 'idle' | 'previewing' | 'applying' | 'refreshing';
+
+interface OperationDefinition {
+  label: string;
+  steps: WizardStep[];
+}
 
 interface OptiScalerWizardProps {
   gameID: number;
@@ -28,11 +40,12 @@ interface OptiScalerWizardProps {
   selection: OptiScalerOperationSelection;
 }
 
-export interface OptiScalerOperationSelection extends OptiScalerSelection {
+export interface OptiScalerOperationSelection {
   action: Action;
+  candidate: OptiScalerCandidate | null;
+  target: OptiScalerTarget | null;
 }
 
-const steps: WizardStep[] = ['target', 'configuration', 'safety', 'preview', 'result'];
 const stepLabels: Record<WizardStep, string> = {
   target: 'Target',
   configuration: 'Configuration',
@@ -40,6 +53,31 @@ const stepLabels: Record<WizardStep, string> = {
   preview: 'Preview',
   result: 'Result',
 };
+
+const operationDefinitions: Record<Action, OperationDefinition> = {
+  [Action.$zero]: { label: 'Manage', steps: ['target', 'preview', 'result'] },
+  [Action.ActionInstall]: {
+    label: 'Install',
+    steps: ['target', 'configuration', 'safety', 'preview', 'result'],
+  },
+  [Action.ActionAdopt]: {
+    label: 'Adopt',
+    steps: ['target', 'configuration', 'safety', 'preview', 'result'],
+  },
+  [Action.ActionUpdate]: {
+    label: 'Update',
+    steps: ['configuration', 'preview', 'result'],
+  },
+  [Action.ActionRepair]: {
+    label: 'Repair',
+    steps: ['configuration', 'preview', 'result'],
+  },
+  [Action.ActionUninstall]: {
+    label: 'Uninstall',
+    steps: ['target', 'preview', 'result'],
+  },
+};
+
 const supportedProxyFilenames = [
   'dxgi.dll',
   'winmm.dll',
@@ -51,21 +89,37 @@ const supportedProxyFilenames = [
   'OptiScaler.asi',
 ];
 
-const actionLabel = (action: Action) => {
-  switch (action) {
-    case Action.ActionInstall:
-      return 'Install';
-    case Action.ActionAdopt:
-      return 'Adopt';
-    case Action.ActionUpdate:
-      return 'Update';
-    case Action.ActionRepair:
-      return 'Repair';
-    case Action.ActionUninstall:
-      return 'Uninstall';
-    default:
-      return 'Manage';
-  }
+interface WizardValues {
+  dxgiSpoofing: boolean | null;
+  enableReShadeCoexistence: boolean;
+  graphicsAPI: GraphicsAPI | '';
+  processFilter: string;
+  proxyFilename: string;
+  targetConfirmed: boolean;
+  warningAcknowledged: boolean;
+}
+
+const initialValues = (selection: OptiScalerOperationSelection): WizardValues => {
+  const executableRelativePath =
+    selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
+  const executableName = selection.candidate?.executableName
+    ?? executableRelativePath.split(/[\\/]/).pop()
+    ?? '';
+  const storedGraphicsAPI = selection.target?.GraphicsAPI;
+
+  return {
+    dxgiSpoofing: selection.target === null ? null : selection.target.DXGISpoofing,
+    enableReShadeCoexistence: selection.target?.EnableReShadeCoexistence ?? false,
+    graphicsAPI: storedGraphicsAPI === GraphicsAPI.GraphicsAPIVulkan
+      ? GraphicsAPI.GraphicsAPIVulkan
+      : storedGraphicsAPI === GraphicsAPI.GraphicsAPIDirectX
+        ? GraphicsAPI.GraphicsAPIDirectX
+        : '',
+    processFilter: selection.target === null ? executableName : selection.target.ProcessFilter ?? '',
+    proxyFilename: selection.target?.ProxyFilename ?? '',
+    targetConfirmed: false,
+    warningAcknowledged: false,
+  };
 };
 
 export const OptiScalerWizard = ({
@@ -75,94 +129,81 @@ export const OptiScalerWizard = ({
   onRefresh,
   selection,
 }: OptiScalerWizardProps) => {
-  const isNewTarget = selection.action === Action.ActionInstall || selection.action === Action.ActionAdopt;
-  const isUninstall = selection.action === Action.ActionUninstall;
+  const definition = operationDefinitions[selection.action];
+  const initial = useMemo(() => initialValues(selection), [selection]);
   const executableRelativePath =
     selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
   const targetRelativePath =
     selection.candidate?.targetRelativePath ?? selection.target?.TargetRelativePath ?? '';
   const executableName =
     selection.candidate?.executableName ?? executableRelativePath.split(/[\\/]/).pop() ?? '';
-  const [step, setStep] = useState<WizardStep>('target');
-  const [graphicsAPI, setGraphicsAPI] = useState<GraphicsAPI | ''>('');
-  const [proxyFilename, setProxyFilename] = useState('');
-  const [dxgiSpoofing, setDXGISpoofing] = useState<boolean | null>(null);
-  const [processFilter, setProcessFilter] = useState('');
-  const [enableReShadeCoexistence, setEnableReShadeCoexistence] = useState(false);
-  const [targetConfirmed, setTargetConfirmed] = useState(false);
-  const [warningAcknowledged, setWarningAcknowledged] = useState(false);
+  const [step, setStep] = useState<WizardStep>(definition.steps[0]);
+  const [values, setValues] = useState<WizardValues>(initial);
   const [backupAndContinue, setBackupAndContinue] = useState(false);
   const [preview, setPreview] = useState<OptiScalerPreviewModel | null>(null);
   const [result, setResult] = useState<OptiScalerApplyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<OperationPhase>('idle');
-  const hasDetectedReShade = selection.candidate?.hasReShade ?? false;
+  const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const currentStepIndex = definition.steps.indexOf(step);
+  const isNewTarget = selection.action === Action.ActionInstall || selection.action === Action.ActionAdopt;
+  const isDirty = JSON.stringify(values) !== JSON.stringify(initial) || backupAndContinue;
 
   useEffect(() => {
-    const storedGraphicsAPI = selection.target?.GraphicsAPI;
-    const initialGraphicsAPI = storedGraphicsAPI === GraphicsAPI.GraphicsAPIVulkan
-      ? GraphicsAPI.GraphicsAPIVulkan
-      : storedGraphicsAPI === GraphicsAPI.GraphicsAPIDirectX
-        ? GraphicsAPI.GraphicsAPIDirectX
-        : '';
-    setStep('target');
-    setGraphicsAPI(initialGraphicsAPI);
-    setProxyFilename(selection.target?.ProxyFilename ?? '');
-    setDXGISpoofing(selection.target === null ? null : selection.target.DXGISpoofing);
-    setProcessFilter(selection.target === null ? executableName : selection.target.ProcessFilter ?? '');
-    setEnableReShadeCoexistence(selection.target?.EnableReShadeCoexistence ?? false);
-    setTargetConfirmed(false);
-    setWarningAcknowledged(false);
+    setStep(definition.steps[0]);
+    setValues(initial);
     setBackupAndContinue(false);
     setPreview(null);
     setResult(null);
     setError(null);
     setPhase('idle');
-  }, [executableName, selection]);
+    setIsDiscardOpen(false);
+  }, [definition.steps, initial, selection]);
+
+  const updateValues = (nextValues: Partial<WizardValues>) => {
+    setValues((current) => ({ ...current, ...nextValues }));
+    setPreview(null);
+  };
 
   const request = useMemo<OptiScalerRequest | null>(() => {
-    if (graphicsAPI === '' || dxgiSpoofing === null || proxyFilename === '') {
+    if (values.graphicsAPI === '' || values.dxgiSpoofing === null || values.proxyFilename === '') {
       return null;
     }
     return {
-      acknowledgeWarning: isNewTarget && warningAcknowledged,
+      acknowledgeWarning: isNewTarget && values.warningAcknowledged,
       action: selection.action,
       backupAndContinue,
-      dxgiSpoofing,
-      enableReShadeCoexistence,
+      dxgiSpoofing: values.dxgiSpoofing,
+      enableReShadeCoexistence: values.enableReShadeCoexistence,
       executableRelativePath,
       gameId: gameID,
-      graphicsApi: graphicsAPI,
-      processFilter: processFilter.trim() === '' ? null : processFilter.trim(),
-      proxyFilename,
+      graphicsApi: values.graphicsAPI,
+      processFilter: values.processFilter.trim() === '' ? null : values.processFilter.trim(),
+      proxyFilename: values.proxyFilename,
       targetRelativePath,
     };
   }, [
     backupAndContinue,
-    dxgiSpoofing,
-    enableReShadeCoexistence,
     executableRelativePath,
     gameID,
-    graphicsAPI,
     isNewTarget,
-    processFilter,
-    proxyFilename,
     selection.action,
     targetRelativePath,
-    warningAcknowledged,
+    values,
   ]);
 
   const chooseGraphicsAPI = (nextAPI: GraphicsAPI | '') => {
-    setGraphicsAPI(nextAPI);
-    if (nextAPI === GraphicsAPI.GraphicsAPIDirectX) {
-      setProxyFilename('dxgi.dll');
-    } else if (nextAPI === GraphicsAPI.GraphicsAPIVulkan) {
-      setProxyFilename('winmm.dll');
-      setEnableReShadeCoexistence(false);
-    } else {
-      setProxyFilename('');
-    }
-    setPreview(null);
+    updateValues({
+      enableReShadeCoexistence: nextAPI === GraphicsAPI.GraphicsAPIVulkan
+        ? false
+        : values.enableReShadeCoexistence,
+      graphicsAPI: nextAPI,
+      proxyFilename: nextAPI === GraphicsAPI.GraphicsAPIDirectX
+        ? 'dxgi.dll'
+        : nextAPI === GraphicsAPI.GraphicsAPIVulkan
+          ? 'winmm.dll'
+          : '',
+    });
   };
 
   const loadPreview = async (nextRequest: OptiScalerRequest | null = request) => {
@@ -218,258 +259,202 @@ export const OptiScalerWizard = ({
     await loadPreview({ ...request, backupAndContinue: true });
   };
 
-  const canContinueConfiguration = request !== null;
-  const canContinueSafety = !isNewTarget || (targetConfirmed && warningAcknowledged);
-  const canApply = preview?.canApply === true && phase === 'idle';
+  const canContinue = step === 'configuration'
+    ? request !== null
+    : step === 'safety'
+      ? values.targetConfirmed && values.warningAcknowledged
+      : step === 'preview'
+        ? preview?.canApply === true
+        : true;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (step === 'target') {
-      setStep('configuration');
-    } else if (step === 'configuration' && canContinueConfiguration) {
-      setStep('safety');
-    } else if (step === 'safety' && canContinueSafety) {
-      await loadPreview();
-    } else if (step === 'preview' && canApply) {
+    if (!canContinue || phase !== 'idle') {
+      return;
+    }
+    if (step === 'preview') {
       await apply();
+      return;
+    }
+    const nextStep = definition.steps[currentStepIndex + 1];
+    if (nextStep === 'preview') {
+      await loadPreview();
+    } else if (nextStep !== undefined) {
+      setStep(nextStep);
     }
   };
 
   const goBack = () => {
-    if (phase !== 'idle') {
-      return;
-    }
-    const currentIndex = steps.indexOf(step);
-    if (currentIndex > 0 && step !== 'result') {
-      setStep(steps[currentIndex - 1]);
+    if (phase === 'idle' && currentStepIndex > 0 && step !== 'result') {
+      setStep(definition.steps[currentStepIndex - 1]);
     }
   };
 
+  const requestClose = () => {
+    if (phase !== 'idle') {
+      return;
+    }
+    if (isDirty && step !== 'result') {
+      setIsDiscardOpen(true);
+      return;
+    }
+    onClose();
+  };
+
+  const primaryLabel = phase === 'previewing'
+    ? 'Building preview...'
+    : phase === 'applying'
+      ? 'Applying...'
+      : step === 'preview'
+        ? definition.label
+        : definition.steps[currentStepIndex + 1] === 'preview'
+          ? 'Preview'
+          : 'Next';
+
   return (
-    <section className="optiscaler-wizard" aria-label={`${actionLabel(selection.action)} OptiScaler`}>
-      <div className="optiscaler-wizard-header">
-        <div>
-          <h2>{actionLabel(selection.action)} OptiScaler</h2>
-          <p>{targetRelativePath}</p>
-        </div>
-        <button disabled={phase !== 'idle'} onClick={onClose} type="button">Close</button>
-      </div>
-
-      <ol className="optiscaler-wizard-steps" aria-label="OptiScaler management steps">
-        {steps.map((wizardStep, index) => (
-          <li className={wizardStep === step ? 'optiscaler-wizard-step-active' : ''} key={wizardStep}>
-            <span>{index + 1}</span>
-            {stepLabels[wizardStep]}
-          </li>
-        ))}
-      </ol>
-
-      <form className="optiscaler-wizard-form" onSubmit={submit}>
-        {step === 'target' && (
-          <div className="optiscaler-wizard-content">
-            <h3>Selected target</h3>
-            <dl className="optiscaler-wizard-summary">
-              <div><dt>Directory</dt><dd>{targetRelativePath}</dd></div>
-              <div><dt>Executable</dt><dd>{executableRelativePath}</dd></div>
-              <div><dt>Architecture</dt><dd>{selection.candidate?.architecture ?? 'x64'}</dd></div>
-              <div><dt>Action</dt><dd>{actionLabel(selection.action)}</dd></div>
-            </dl>
-            {selection.candidate !== null && (
-              <p className="optiscaler-wizard-note">
-                Candidate ranking is evidence for target selection, not a guarantee that OptiScaler is compatible with this game.
-              </p>
-            )}
+    <>
+      <section className="optiscaler-wizard" aria-label={`${definition.label} OptiScaler`}>
+        <header className="optiscaler-wizard-header">
+          <div>
+            <h2>{definition.label} OptiScaler</h2>
+            <p>{executableName}</p>
           </div>
-        )}
+          <button
+            aria-label="Close OptiScaler wizard"
+            disabled={phase !== 'idle'}
+            onClick={requestClose}
+            type="button"
+          >
+            <X aria-hidden="true" />
+          </button>
+        </header>
 
-        {step === 'configuration' && (
-          <div className="optiscaler-wizard-content">
-            <h3>Configuration</h3>
-            {isUninstall ? (
-              <dl className="optiscaler-wizard-summary">
-                <div><dt>Graphics API</dt><dd>{selection.target?.GraphicsAPI}</dd></div>
-                <div><dt>Proxy</dt><dd>{selection.target?.ProxyFilename}</dd></div>
-                <div><dt>Process filter</dt><dd>{selection.target?.ProcessFilter ?? 'Cleared'}</dd></div>
-              </dl>
-            ) : (
-              <div className="optiscaler-wizard-fields">
-                <label>
-                  Graphics API
-                  <select
-                    onChange={(event) => chooseGraphicsAPI(event.target.value as GraphicsAPI | '')}
-                    value={graphicsAPI}
-                  >
-                    <option value="">Choose an API</option>
-                    <option value={GraphicsAPI.GraphicsAPIDirectX}>DirectX</option>
-                    <option value={GraphicsAPI.GraphicsAPIVulkan}>Vulkan</option>
-                  </select>
-                </label>
-                <label>
-                  Proxy filename
-                  <select
-                    disabled={graphicsAPI === ''}
-                    onChange={(event) => setProxyFilename(event.target.value)}
-                    value={proxyFilename}
-                  >
-                    {supportedProxyFilenames.map((filename) => (
-                      <option key={filename} value={filename}>{filename}</option>
-                    ))}
-                  </select>
-                  {graphicsAPI !== '' && (
-                    <span>
-                      Recommended: {graphicsAPI === GraphicsAPI.GraphicsAPIDirectX ? 'dxgi.dll' : 'winmm.dll'}
-                    </span>
-                  )}
-                </label>
-                <label>
-                  DXGI spoofing
-                  <select
-                    onChange={(event) => setDXGISpoofing(
-                      event.target.value === '' ? null : event.target.value === 'true',
-                    )}
-                    value={dxgiSpoofing === null ? '' : String(dxgiSpoofing)}
-                  >
-                    <option value="">Choose a setting</option>
-                    <option value="false">Disabled</option>
-                    <option value="true">Enabled</option>
-                  </select>
-                </label>
-                <label>
-                  Process filter
-                  <input
-                    onChange={(event) => setProcessFilter(event.target.value)}
-                    placeholder="Leave empty for a shared executable directory"
-                    type="text"
-                    value={processFilter}
-                  />
-                  <span>Defaults to the selected executable and may be cleared.</span>
-                </label>
-                {hasDetectedReShade && (
-                  <label className="optiscaler-wizard-checkbox">
-                    <input
-                      checked={enableReShadeCoexistence}
-                      disabled={graphicsAPI === GraphicsAPI.GraphicsAPIVulkan}
-                      onChange={(event) => setEnableReShadeCoexistence(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Chain the detected ReShade runtime through OptiScaler
-                  </label>
-                )}
-                {graphicsAPI === GraphicsAPI.GraphicsAPIVulkan && hasDetectedReShade && (
-                  <p className="optiscaler-wizard-error">
-                    Automated Vulkan and ReShade coexistence is not supported.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 'safety' && (
-          <div className="optiscaler-wizard-content">
-            <h3>Confirm before preview</h3>
-            {isNewTarget ? (
-              <>
-                <label className="optiscaler-wizard-checkbox">
-                  <input
-                    checked={targetConfirmed}
-                    onChange={(event) => setTargetConfirmed(event.target.checked)}
-                    type="checkbox"
-                  />
-                  I confirm that {executableRelativePath} and {proxyFilename} are correct.
-                </label>
-                <div className="optiscaler-wizard-warning">
-                  <p>
-                    OptiScaler can be incompatible with online games and anti-cheat systems. Candidate ranking and
-                    upstream compatibility reports do not guarantee that this game is safe or supported.
-                  </p>
-                  <a
-                    href="https://github.com/optiscaler/OptiScaler/wiki/Compatibility-List"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Review upstream compatibility guidance
-                  </a>
-                </div>
-                <label className="optiscaler-wizard-checkbox">
-                  <input
-                    checked={warningAcknowledged}
-                    onChange={(event) => setWarningAcknowledged(event.target.checked)}
-                    type="checkbox"
-                  />
-                  I understand the online-game and anti-cheat risk.
-                </label>
-              </>
-            ) : (
-              <p className="optiscaler-wizard-note">
-                Fiach will recalculate the backend preview immediately before apply and reject stale changes.
-              </p>
-            )}
-          </div>
-        )}
-
-        {step === 'preview' && preview !== null && (
-          <div className="optiscaler-wizard-content">
-            <h3>Review planned changes</h3>
-            <OptiScalerPreview preview={preview} />
-            {preview.drift.length > 0 && !backupAndContinue && (
-              <div className="optiscaler-wizard-drift-actions">
-                <p>Drifted files can only be cancelled or archived before continuing.</p>
-                <button
-                  disabled={phase !== 'idle'}
-                  onClick={() => void rebuildPreviewWithBackup()}
-                  type="button"
-                >
-                  Back up drift and rebuild preview
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 'result' && result !== null && (
-          <div className="optiscaler-wizard-content">
-            <h3>{result.success ? 'Operation complete' : result.rolledBack ? 'Operation rolled back' : 'Recovery required'}</h3>
-            <p className="optiscaler-wizard-note">{result.message}</p>
-            {phase === 'refreshing' && <p className="optiscaler-wizard-note">Refreshing target state...</p>}
-          </div>
-        )}
-
-        {error !== null && <p className="optiscaler-wizard-error">{error}</p>}
-
-        <div className="optiscaler-wizard-footer">
-          {step !== 'target' && step !== 'result' && (
-            <button disabled={phase !== 'idle'} onClick={goBack} type="button">Back</button>
-          )}
-          {step !== 'result' && (
-            <button
-              className="button-main"
-              disabled={
-                phase !== 'idle' ||
-                (step === 'configuration' && !canContinueConfiguration) ||
-                (step === 'safety' && !canContinueSafety) ||
-                (step === 'preview' && !canApply)
-              }
-              type="submit"
+        <ol
+          className="optiscaler-wizard-steps"
+          aria-label="OptiScaler management steps"
+          style={{ gridTemplateColumns: `repeat(${definition.steps.length}, minmax(0, 1fr))` }}
+        >
+          {definition.steps.map((wizardStep, index) => (
+            <li
+              className={index < currentStepIndex
+                ? 'optiscaler-wizard-step-complete'
+                : wizardStep === step
+                  ? 'optiscaler-wizard-step-active'
+                  : ''}
+              key={wizardStep}
             >
-              {phase === 'previewing'
-                ? 'Building preview...'
-                : phase === 'applying'
-                  ? 'Applying...'
-                  : step === 'safety'
-                    ? 'Preview'
-                    : step === 'preview'
-                      ? actionLabel(selection.action)
-                      : 'Next'}
-            </button>
-          )}
-          {step === 'result' && (
-            <button className="button-main" disabled={phase !== 'idle'} onClick={onClose} type="button">
-              Done
-            </button>
-          )}
-        </div>
-      </form>
-    </section>
+              {index + 1}. {stepLabels[wizardStep]}
+            </li>
+          ))}
+        </ol>
+
+        <form className="optiscaler-wizard-form" onSubmit={submit}>
+          <div className="optiscaler-wizard-scroll">
+            {step === 'target' && (
+              <OptiScalerWizardTargetStep actionLabel={definition.label} selection={selection} />
+            )}
+            {step === 'configuration' && (
+              <OptiScalerWizardConfigurationStep
+                dxgiSpoofing={values.dxgiSpoofing}
+                enableReShadeCoexistence={values.enableReShadeCoexistence}
+                graphicsAPI={values.graphicsAPI}
+                hasDetectedReShade={selection.candidate?.hasReShade ?? false}
+                onChooseGraphicsAPI={chooseGraphicsAPI}
+                onDXGISpoofingChange={(value) => updateValues({ dxgiSpoofing: value })}
+                onProcessFilterChange={(value) => updateValues({ processFilter: value })}
+                onProxyFilenameChange={(value) => updateValues({ proxyFilename: value })}
+                onReShadeCoexistenceChange={(value) => updateValues({ enableReShadeCoexistence: value })}
+                processFilter={values.processFilter}
+                proxyFilename={values.proxyFilename}
+                supportedProxyFilenames={supportedProxyFilenames}
+              />
+            )}
+            {step === 'safety' && (
+              <OptiScalerWizardSafetyStep
+                executableRelativePath={executableRelativePath}
+                onTargetConfirmedChange={(value) => updateValues({ targetConfirmed: value })}
+                onWarningAcknowledgedChange={(value) => updateValues({ warningAcknowledged: value })}
+                proxyFilename={values.proxyFilename}
+                targetConfirmed={values.targetConfirmed}
+                warningAcknowledged={values.warningAcknowledged}
+              />
+            )}
+            {step === 'preview' && preview !== null && (
+              <div className="optiscaler-wizard-content">
+                <dl className="optiscaler-wizard-summary optiscaler-wizard-preview-summary">
+                  <div><dt>Executable</dt><dd>{executableName}</dd></div>
+                  <div>
+                    <dt>Version</dt>
+                    <dd>
+                      {preview.release?.version
+                        || preview.release?.tag
+                        || selection.target?.ReleaseVersion
+                        || selection.target?.ReleaseTag
+                        || 'Latest stable'}
+                    </dd>
+                  </div>
+                </dl>
+                <OptiScalerPreview preview={preview} />
+                {preview.drift.length > 0 && !backupAndContinue && (
+                  <div className="optiscaler-wizard-drift-actions">
+                    <p>Drifted files can only be cancelled or archived before continuing.</p>
+                    <button
+                      disabled={phase !== 'idle'}
+                      onClick={() => void rebuildPreviewWithBackup()}
+                      type="button"
+                    >
+                      Back up drift and rebuild preview
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {step === 'result' && result !== null && (
+              <div className="optiscaler-wizard-content">
+                <div className={result.success
+                  ? 'optiscaler-wizard-result optiscaler-wizard-result-success'
+                  : 'optiscaler-wizard-result optiscaler-wizard-result-error'}
+                >
+                  <h3>
+                    {result.success
+                      ? 'Operation complete'
+                      : result.rolledBack
+                        ? 'Operation rolled back'
+                        : 'Recovery required'}
+                  </h3>
+                  <p>{result.message}</p>
+                  {phase === 'refreshing' && <p>Refreshing target state...</p>}
+                </div>
+              </div>
+            )}
+            {error !== null && <p className="optiscaler-wizard-error">{error}</p>}
+          </div>
+
+          <footer className="optiscaler-wizard-footer">
+            {currentStepIndex > 0 && step !== 'result' && (
+              <button disabled={phase !== 'idle'} onClick={goBack} type="button">Back</button>
+            )}
+            {step !== 'result' ? (
+              <button className="button-main" disabled={!canContinue || phase !== 'idle'} type="submit">
+                {primaryLabel}
+              </button>
+            ) : (
+              <button className="button-main" disabled={phase !== 'idle'} onClick={onClose} type="button">
+                Done
+              </button>
+            )}
+          </footer>
+        </form>
+      </section>
+
+      <ConfirmDialog
+        confirmLabel="Discard changes"
+        isOpen={isDiscardOpen}
+        message="Your changes to this OptiScaler operation will be discarded."
+        onCancel={() => setIsDiscardOpen(false)}
+        onConfirm={onClose}
+        title="Discard OptiScaler changes?"
+      />
+    </>
   );
 };

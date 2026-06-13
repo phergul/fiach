@@ -3,7 +3,6 @@
 $optiscaler-toolbar-height: 3.5rem;
 $optiscaler-toolbar-button-height: 2.25rem;
 $optiscaler-toolbar-icon-size: 1.125rem;
-$optiscaler-sidebar-width: 30rem;
 
 .optiscaler-dashboard {
   position: relative;
@@ -28,8 +27,7 @@ $optiscaler-sidebar-width: 30rem;
   border-bottom: $app-border;
 }
 
-.optiscaler-dashboard-back-link,
-.optiscaler-dashboard-toolbar button {
+.optiscaler-dashboard-back-link {
   display: inline-flex;
   min-height: $optiscaler-toolbar-button-height;
   align-items: center;
@@ -48,8 +46,7 @@ $optiscaler-sidebar-width: 30rem;
   color: $color-text-primary;
 }
 
-.optiscaler-dashboard-back-link svg,
-.optiscaler-dashboard-toolbar svg {
+.optiscaler-dashboard-back-link svg {
   width: $optiscaler-toolbar-icon-size;
   height: $optiscaler-toolbar-icon-size;
 }
@@ -83,43 +80,6 @@ $optiscaler-sidebar-width: 30rem;
   opacity: 0.8;
 }
 
-.optiscaler-dashboard-heading {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  min-height: 4.5rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-lg;
-  padding: $spacing-sm $spacing-xl;
-  background: rgb(#{$color-background-rgb} / 42%);
-  border-top: $app-border;
-  border-bottom: $app-border;
-  backdrop-filter: blur(12px);
-}
-
-.optiscaler-dashboard-heading h2 {
-  font-size: $font-size-lg;
-}
-
-.optiscaler-dashboard-heading p {
-  margin-top: $spacing-xs;
-  color: $color-text-subtle;
-}
-
-.optiscaler-dashboard-release {
-  display: flex;
-  align-items: baseline;
-  gap: $spacing-sm;
-  text-align: right;
-}
-
-.optiscaler-dashboard-release span {
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-}
-
 .optiscaler-dashboard-error {
   position: relative;
   z-index: 1;
@@ -129,27 +89,13 @@ $optiscaler-sidebar-width: 30rem;
   border-bottom: $app-border;
 }
 
-.optiscaler-dashboard-workspace {
+.optiscaler-dashboard-content {
   position: relative;
   z-index: 1;
-  display: grid;
+  display: flex;
   min-height: 0;
   flex: 1 1 auto;
-  grid-template-columns: $optiscaler-sidebar-width minmax(0, 1fr);
-  background: $color-background;
-}
-
-.optiscaler-dashboard-sidebar,
-.optiscaler-dashboard-detail {
-  min-width: 0;
-  min-height: 0;
-}
-
-.optiscaler-dashboard-sidebar {
-  overflow-y: auto;
-  border-right: $app-border;
-}
-
-.optiscaler-dashboard-detail {
+  flex-direction: column;
   overflow: hidden;
+  background: $color-background;
 }

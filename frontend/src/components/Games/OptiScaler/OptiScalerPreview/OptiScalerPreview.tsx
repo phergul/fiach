@@ -1,3 +1,4 @@
+import type { Operation as OptiScalerOperation } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
 import type { OptiScalerPreview as OptiScalerPreviewModel } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './OptiScalerPreview.scss';
@@ -6,60 +7,88 @@ interface OptiScalerPreviewProps {
   preview: OptiScalerPreviewModel;
 }
 
+interface PreviewGroupProps {
+  items: React.ReactNode[];
+  title: string;
+  tone?: 'danger' | 'success' | 'warning';
+}
+
+const filename = (path: string) => path.split(/[\\/]/).pop() ?? path;
+
+const operationDescription = (operation: OptiScalerOperation) => {
+  if (operation.type === 'move') {
+    return `${filename(operation.sourcePath ?? '')} → ${filename(operation.targetPath)}`;
+  }
+  if (operation.type === 'restore') {
+    return `${filename(operation.sourcePath ?? '')} → ${filename(operation.targetPath)}`;
+  }
+  return filename(operation.targetPath);
+};
+
+const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <section className={tone === undefined
+      ? 'optiscaler-preview-group'
+      : `optiscaler-preview-group optiscaler-preview-group-${tone}`}
+    >
+      <h3>{title}</h3>
+      <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul>
+    </section>
+  );
+};
+
 export const OptiScalerPreview = ({ preview }: OptiScalerPreviewProps) => {
+  const filesToAdd = preview.operations.filter((operation) =>
+    operation.type === 'copy' || operation.type === 'adopt');
+  const filesToBackup = preview.operations.filter((operation) => operation.backupPath);
+  const filesToRemove = preview.operations.filter((operation) =>
+    operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore');
+
   return (
     <div className="optiscaler-preview">
-      {preview.conflicts.length > 0 && (
-        <section className="optiscaler-preview-group optiscaler-preview-group-blocked">
-          <h3>Blocking conflicts</h3>
-          <ul>{preview.conflicts.map((conflict) => <li key={conflict}>{conflict}</li>)}</ul>
-        </section>
-      )}
-      {preview.drift.length > 0 && (
-        <section className="optiscaler-preview-group optiscaler-preview-group-warning">
-          <h3>Drifted files</h3>
-          <ul>
-            {preview.drift.map((drift) => (
-              <li key={drift.relativePath}>
-                {drift.relativePath}{drift.missing ? ' is missing' : ' has changed'}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {preview.warnings.length > 0 && (
-        <section className="optiscaler-preview-group optiscaler-preview-group-warning">
-          <h3>Warnings</h3>
-          <ul>{preview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
-        </section>
-      )}
-      <section className="optiscaler-preview-group">
-        <h3>File operations</h3>
-        {preview.operations.length === 0 ? (
+      <PreviewGroup items={preview.conflicts} title="Blocking conflicts" tone="danger" />
+      <PreviewGroup
+        items={preview.drift.map((drift) => (
+          <>{drift.relativePath}{drift.missing ? ' is missing' : ' has changed'}</>
+        ))}
+        title="Drifted files"
+        tone="warning"
+      />
+      <PreviewGroup items={preview.warnings} title="Warnings" tone="warning" />
+      <PreviewGroup
+        items={filesToAdd.map((operation) => (
+          <><span className="optiscaler-preview-symbol">+</span>{operationDescription(operation)}</>
+        ))}
+        title="Files to add"
+        tone="success"
+      />
+      <PreviewGroup
+        items={filesToBackup.map((operation) => (
+          <>
+            <span className="optiscaler-preview-symbol">~</span>
+            {filename(operation.targetPath)} → {filename(operation.backupPath ?? '')}
+          </>
+        ))}
+        title="Files to backup"
+        tone="warning"
+      />
+      <PreviewGroup
+        items={filesToRemove.map((operation) => (
+          <><span className="optiscaler-preview-symbol">−</span>{operationDescription(operation)}</>
+        ))}
+        title="Files to remove"
+        tone="danger"
+      />
+      <PreviewGroup items={preview.configurationChanges} title="Configuration changes" />
+      {preview.operations.length === 0 && preview.configurationChanges.length === 0 && (
+        <section className="optiscaler-preview-group">
+          <h3>File operations</h3>
           <p>No file operations are planned.</p>
-        ) : (
-          <ul>
-            {preview.operations.map((operation, index) => (
-              <li key={`${operation.type}-${operation.targetPath}-${index}`}>
-                <strong>{operation.type}</strong> {operation.targetPath}
-                {operation.backupPath !== undefined && operation.backupPath !== '' && (
-                  <span>Backup: {operation.backupPath}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <section className="optiscaler-preview-group">
-        <h3>Configuration changes</h3>
-        {preview.configurationChanges.length === 0 ? (
-          <p>No configuration changes are planned.</p>
-        ) : (
-          <ul>
-            {preview.configurationChanges.map((change) => <li key={change}>{change}</li>)}
-          </ul>
-        )}
-      </section>
+        </section>
+      )}
       {preview.request.action === 'uninstall' && (
         <section className="optiscaler-preview-group">
           <h3>Retained after uninstall</h3>

@@ -25,7 +25,8 @@ describe('OptiScalerPreview', () => {
 
     expect(screen.getByText('Unknown proxy ownership')).toBeInTheDocument();
     expect(screen.getByText('dxgi.dll has changed')).toBeInTheDocument();
-    expect(screen.getByText('Backup: C:/Fiach/backups/dxgi.bak')).toBeInTheDocument();
+    expect(screen.getByText('Files to backup')).toBeInTheDocument();
+    expect(screen.getByText(/dxgi\.dll → dxgi\.bak/)).toBeInTheDocument();
     expect(screen.getByText('Retained after uninstall')).toBeInTheDocument();
   });
 });
