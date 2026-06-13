@@ -93,8 +93,12 @@ func DiscoverStableRelease(ctx context.Context, options ReleaseOptions) (release
 			version = candidate.TagName
 		}
 		return Release{
-			Tag: candidate.TagName, Version: version, AssetName: matches[0].Name,
-			URL: matches[0].BrowserDownloadURL, Digest: digest, Size: matches[0].Size,
+			Tag:       candidate.TagName,
+			Version:   version,
+			AssetName: matches[0].Name,
+			URL:       matches[0].BrowserDownloadURL,
+			Digest:    digest,
+			Size:      matches[0].Size,
 		}, nil
 	}
 	return Release{}, errors.New("no stable release was found")

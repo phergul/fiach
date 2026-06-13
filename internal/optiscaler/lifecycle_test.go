@@ -278,9 +278,12 @@ func newLifecycleGame(t *testing.T) (string, Request) {
 	copyCurrentExecutable(t, filepath.Join(root, "Game.exe"))
 	process := "Game.exe"
 	return root, Request{
-		GameID: 1, TargetRelativePath: ".", ExecutableRelativePath: "Game.exe",
-		GraphicsAPI: GraphicsAPIDirectX, ProxyFilename: "dxgi.dll",
-		ProcessFilter: &process,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		GraphicsAPI:            GraphicsAPIDirectX,
+		ProxyFilename:          "dxgi.dll",
+		ProcessFilter:          &process,
 	}
 }
 
@@ -295,8 +298,11 @@ func lifecycleManagerWithOptions(t *testing.T, store *memoryStore, pkg Package, 
 	options.CacheDir = t.TempDir()
 	options.PreparePackage = func(context.Context) (Release, Package, error) {
 		return Release{
-			Tag: "v1", Version: "OptiScaler v1", AssetName: "OptiScaler.7z",
-			Digest: strings.Repeat("a", 64), Size: 1,
+			Tag:       "v1",
+			Version:   "OptiScaler v1",
+			AssetName: "OptiScaler.7z",
+			Digest:    strings.Repeat("a", 64),
+			Size:      1,
 		}, pkg, nil
 	}
 	return NewManager(store, options)

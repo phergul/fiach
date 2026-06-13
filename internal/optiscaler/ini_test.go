@@ -11,7 +11,9 @@ func TestUpdateManagedINIPreservesUnrelatedContentAndNewlines(t *testing.T) {
 	process := "Game.exe"
 	input := []byte("; comment\r\n[Plugins]\r\nOther=true\r\nLoadReshade=false\r\n\r\n[Custom]\r\nValue=42\r\n")
 	output, err := UpdateManagedINI(input, ManagedConfig{
-		LoadReShade: true, DXGISpoofing: true, TargetProcessName: &process,
+		LoadReShade:       true,
+		DXGISpoofing:      true,
+		TargetProcessName: &process,
 	})
 	if err != nil {
 		t.Fatalf("UpdateManagedINI() error = %v", err)

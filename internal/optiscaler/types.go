@@ -137,6 +137,12 @@ type RecoveryState struct {
 }
 
 var SupportedProxyFilenames = []string{
-	"dxgi.dll", "winmm.dll", "d3d12.dll", "dbghelp.dll",
-	"version.dll", "wininet.dll", "winhttp.dll", "OptiScaler.asi",
+	"dxgi.dll",
+	"winmm.dll",
+	"d3d12.dll",
+	"dbghelp.dll",
+	"version.dll",
+	"wininet.dll",
+	"winhttp.dll",
+	"OptiScaler.asi",
 }

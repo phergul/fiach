@@ -32,14 +32,16 @@ func TestDiscoverStableReleaseSelectsOneDigestBearingFinalArchive(t *testing.T) 
 	defer server.Close()
 
 	release, err := DiscoverStableRelease(context.Background(), ReleaseOptions{
-		ReleasesURL: server.URL + "/releases", HTTPClient: server.Client(),
+		ReleasesURL: server.URL + "/releases",
+		HTTPClient:  server.Client(),
 	})
 	if err != nil {
 		t.Fatalf("DiscoverStableRelease() error = %v", err)
 	}
 	release.URL = server.URL + "/archive"
 	path, err := EnsureReleaseArchive(context.Background(), release, ReleaseOptions{
-		CacheDir: t.TempDir(), HTTPClient: server.Client(),
+		CacheDir:   t.TempDir(),
+		HTTPClient: server.Client(),
 	})
 	if err != nil {
 		t.Fatalf("EnsureReleaseArchive() error = %v", err)
@@ -59,7 +61,10 @@ func TestDiscoverStableReleaseFailsClosedOnAmbiguousAssets(t *testing.T) {
 			{"name":"Optiscaler_b-final.7z","digest":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}]}]`)
 	}))
 	defer server.Close()
-	_, err := DiscoverStableRelease(context.Background(), ReleaseOptions{ReleasesURL: server.URL, HTTPClient: server.Client()})
+	_, err := DiscoverStableRelease(context.Background(), ReleaseOptions{
+		ReleasesURL: server.URL,
+		HTTPClient:  server.Client(),
+	})
 	if err == nil || !strings.Contains(err.Error(), "2 matching") {
 		t.Fatalf("DiscoverStableRelease() error = %v, want ambiguous asset error", err)
 	}
@@ -81,10 +86,17 @@ func TestEnsureReleaseArchiveRejectsDigestMismatch(t *testing.T) {
 	}))
 	defer server.Close()
 	release := Release{
-		Tag: "v1", Version: "v1", AssetName: "Optiscaler_v1-final.7z",
-		URL: server.URL, Digest: strings.Repeat("a", 64), Size: 5,
+		Tag:       "v1",
+		Version:   "v1",
+		AssetName: "Optiscaler_v1-final.7z",
+		URL:       server.URL,
+		Digest:    strings.Repeat("a", 64),
+		Size:      5,
 	}
-	_, err := EnsureReleaseArchive(context.Background(), release, ReleaseOptions{CacheDir: filepath.Join(t.TempDir(), "cache"), HTTPClient: server.Client()})
+	_, err := EnsureReleaseArchive(context.Background(), release, ReleaseOptions{
+		CacheDir:   filepath.Join(t.TempDir(), "cache"),
+		HTTPClient: server.Client(),
+	})
 	if err == nil {
 		t.Fatal("EnsureReleaseArchive() error = nil, want digest mismatch")
 	}

@@ -388,4 +388,3 @@ func importSource(sourceType dto.ModSourceType, sourcePath string) (modimport.So
 		return nil, fmt.Errorf("unsupported import source type %q", sourceType)
 	}
 }
-

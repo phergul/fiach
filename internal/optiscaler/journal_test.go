@@ -30,9 +30,21 @@ func TestRecoveryStateAndRollbackRestoreSnapshot(t *testing.T) {
 	manager := NewManager(newMemoryStore(), ManagerOptions{DataDir: dataDir})
 	journalPath := filepath.Join(dataDir, "journals", "journal-1.json")
 	if err := writeJournal(journalPath, journalDocument{
-		Version: JournalVersion, ID: "journal-1", GameID: 1, TargetPath: filepath.Dir(target),
-		Action: ActionInstall, StartedAt: time.Now(),
-		Snapshots: []journalSnapshot{{TargetPath: target, Existed: true, BackupPath: backup, SHA256: hash, SizeBytes: size}},
+		Version:    JournalVersion,
+		ID:         "journal-1",
+		GameID:     1,
+		TargetPath: filepath.Dir(target),
+		Action:     ActionInstall,
+		StartedAt:  time.Now(),
+		Snapshots: []journalSnapshot{
+			{
+				TargetPath: target,
+				Existed:    true,
+				BackupPath: backup,
+				SHA256:     hash,
+				SizeBytes:  size,
+			},
+		},
 	}); err != nil {
 		t.Fatalf("writeJournal() error = %v", err)
 	}

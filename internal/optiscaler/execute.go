@@ -21,9 +21,13 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 	journalID := fmt.Sprintf("%d-%s", m.now().UnixNano(), hashBytes([]byte(targetPath))[:12])
 	journalPath := filepath.Join(m.dataDir, "journals", journalID+".json")
 	journal := journalDocument{
-		Version: JournalVersion, ID: journalID, GameID: preview.Request.GameID,
-		TargetPath: targetPath, TargetRelativePath: preview.Request.TargetRelativePath,
-		Action: preview.Request.Action, StartedAt: m.now(),
+		Version:            JournalVersion,
+		ID:                 journalID,
+		GameID:             preview.Request.GameID,
+		TargetPath:         targetPath,
+		TargetRelativePath: preview.Request.TargetRelativePath,
+		Action:             preview.Request.Action,
+		StartedAt:          m.now(),
 	}
 	journal.Snapshots, err = m.snapshotOperationTargets(journalID, preview.Operations)
 	if err != nil {
@@ -40,11 +44,18 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 			journal.Error = fmt.Sprintf("%v; rollback failed: %v", operationErr, rollbackErr)
 			_ = writeJournal(journalPath, journal)
 			_ = m.markRecoveryRequired(ctx, preview.Request)
-			return ApplyResult{Success: false, Message: journal.Error}, operationErr
+			return ApplyResult{
+				Success: false,
+				Message: journal.Error,
+			}, operationErr
 		}
 		_ = os.Remove(journalPath)
 		_ = os.RemoveAll(filepath.Join(m.dataDir, "journals", journal.ID))
-		return ApplyResult{Success: false, RolledBack: true, Message: operationErr.Error()}, operationErr
+		return ApplyResult{
+			Success:    false,
+			RolledBack: true,
+			Message:    operationErr.Error(),
+		}, operationErr
 	}
 
 	if preview.Request.BackupAndContinue && len(preview.Drift) > 0 {
@@ -75,16 +86,25 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 	journal.DatabaseCommitted = true
 	if err := writeJournal(journalPath, journal); err != nil {
 		if removeErr := os.Remove(journalPath); removeErr != nil {
-			return ApplyResult{Success: true, Message: "OptiScaler action completed, but journal cleanup requires attention."}, nil
+			return ApplyResult{
+				Success: true,
+				Message: "OptiScaler action completed, but journal cleanup requires attention.",
+			}, nil
 		}
 		_ = os.RemoveAll(filepath.Join(m.dataDir, "journals", journalID))
-		return ApplyResult{Success: true, Message: "OptiScaler action completed."}, nil
+		return ApplyResult{
+			Success: true,
+			Message: "OptiScaler action completed.",
+		}, nil
 	}
 	if err := os.Remove(journalPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return ApplyResult{}, err
 	}
 	_ = os.RemoveAll(filepath.Join(m.dataDir, "journals", journalID))
-	return ApplyResult{Success: true, Message: "OptiScaler action completed."}, nil
+	return ApplyResult{
+		Success: true,
+		Message: "OptiScaler action completed.",
+	}, nil
 }
 
 func (m *Manager) snapshotOperationTargets(journalID string, operations []Operation) ([]journalSnapshot, error) {
@@ -116,8 +136,11 @@ func (m *Manager) snapshotOperationTargets(journalID string, operations []Operat
 			snapshot.Existed = true
 			snapshot.BackupPath = filepath.Join(root, fmt.Sprintf("%03d.bak", len(snapshots)))
 			if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-				SourcePath: target, TargetPath: snapshot.BackupPath, Mode: 0o644,
-				Replace: false, OpenLabel: "mutation target",
+				SourcePath: target,
+				TargetPath: snapshot.BackupPath,
+				Mode:       0o644,
+				Replace:    false,
+				OpenLabel:  "mutation target",
 			}); err != nil {
 				return nil, err
 			}
@@ -145,8 +168,11 @@ func executeOperation(operation Operation) error {
 			return err
 		}
 		return fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-			SourcePath: operation.SourcePath, TargetPath: operation.TargetPath,
-			Mode: 0o644, Replace: true, OpenLabel: "staged OptiScaler file",
+			SourcePath: operation.SourcePath,
+			TargetPath: operation.TargetPath,
+			Mode:       0o644,
+			Replace:    true,
+			OpenLabel:  "staged OptiScaler file",
 		})
 	case "delete":
 		if err := os.Remove(operation.TargetPath); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -233,7 +259,11 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 		if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 			continue
 		}
-		entry := ManagedFile{RelativePath: relative, SHA256: hash, SizeBytes: size}
+		entry := ManagedFile{
+			RelativePath: relative,
+			SHA256:       hash,
+			SizeBytes:    size,
+		}
 		previous, previouslyManaged := previousFiles[strings.ToLower(filepath.Clean(relative))]
 		if previouslyManaged {
 			entry.BackupPath = previous.BackupPath
@@ -253,8 +283,11 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 			entry.BackupPath = operation.BackupPath
 			if matches, matchErr := fileops.FileMatchesIntegrity(entry.BackupPath, snapshot.SHA256, snapshot.SizeBytes); matchErr != nil || !matches {
 				if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-					SourcePath: snapshot.BackupPath, TargetPath: entry.BackupPath,
-					Mode: 0o644, Replace: true, OpenLabel: "journal backup",
+					SourcePath: snapshot.BackupPath,
+					TargetPath: entry.BackupPath,
+					Mode:       0o644,
+					Replace:    true,
+					OpenLabel:  "journal backup",
 				}); err != nil {
 					return err
 				}
@@ -281,7 +314,7 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 	if preview.Request.Action == ActionAdopt {
 		origin = "adopted"
 	}
-	acknowledgedAt := (*string)(nil)
+	var acknowledgedAt *string
 	if preview.Request.AcknowledgeWarning {
 		value := m.now().UTC().Format(timeFormat)
 		acknowledgedAt = &value
@@ -291,14 +324,23 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 	}
 	verifiedAt := m.now().UTC().Format(timeFormat)
 	_, err = m.store.SaveOptiScalerTarget(ctx, dbtypes.SaveOptiScalerTargetInput{
-		GameID: preview.Request.GameID, TargetRelativePath: preview.Request.TargetRelativePath,
+		GameID:                 preview.Request.GameID,
+		TargetRelativePath:     preview.Request.TargetRelativePath,
 		ExecutableRelativePath: preview.Request.ExecutableRelativePath,
-		GraphicsAPI:            string(preview.Request.GraphicsAPI), ProxyFilename: preview.Request.ProxyFilename,
-		DXGISpoofing: preview.Request.DXGISpoofing, ProcessFilter: preview.Request.ProcessFilter,
-		ReleaseTag: preview.Release.Tag, ReleaseVersion: preview.Release.Version,
-		ReleaseAssetName: preview.Release.AssetName, ReleaseDigest: preview.Release.Digest,
-		ManagementOrigin: origin, Status: "managed", ManifestJSON: string(encoded),
-		WarningVersion: WarningVersion, WarningAcknowledgedAt: acknowledgedAt, LastVerifiedAt: &verifiedAt,
+		GraphicsAPI:            string(preview.Request.GraphicsAPI),
+		ProxyFilename:          preview.Request.ProxyFilename,
+		DXGISpoofing:           preview.Request.DXGISpoofing,
+		ProcessFilter:          preview.Request.ProcessFilter,
+		ReleaseTag:             preview.Release.Tag,
+		ReleaseVersion:         preview.Release.Version,
+		ReleaseAssetName:       preview.Release.AssetName,
+		ReleaseDigest:          preview.Release.Digest,
+		ManagementOrigin:       origin,
+		Status:                 "managed",
+		ManifestJSON:           string(encoded),
+		WarningVersion:         WarningVersion,
+		WarningAcknowledgedAt:  acknowledgedAt,
+		LastVerifiedAt:         &verifiedAt,
 	})
 	return err
 }
@@ -312,14 +354,23 @@ func (m *Manager) markRecoveryRequired(ctx context.Context, request Request) err
 	}
 	target.Status = "recovery_required"
 	_, err = m.store.SaveOptiScalerTarget(ctx, dbtypes.SaveOptiScalerTargetInput{
-		GameID: target.GameID, TargetRelativePath: target.TargetRelativePath,
-		ExecutableRelativePath: target.ExecutableRelativePath, GraphicsAPI: target.GraphicsAPI,
-		ProxyFilename: target.ProxyFilename, DXGISpoofing: target.DXGISpoofing,
-		ProcessFilter: target.ProcessFilter, ReleaseTag: target.ReleaseTag,
-		ReleaseVersion: target.ReleaseVersion, ReleaseAssetName: target.ReleaseAssetName,
-		ReleaseDigest: target.ReleaseDigest, ManagementOrigin: target.ManagementOrigin,
-		Status: target.Status, ManifestJSON: target.ManifestJSON, WarningVersion: target.WarningVersion,
-		WarningAcknowledgedAt: target.WarningAcknowledgedAt, LastVerifiedAt: target.LastVerifiedAt,
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		GraphicsAPI:            target.GraphicsAPI,
+		ProxyFilename:          target.ProxyFilename,
+		DXGISpoofing:           target.DXGISpoofing,
+		ProcessFilter:          target.ProcessFilter,
+		ReleaseTag:             target.ReleaseTag,
+		ReleaseVersion:         target.ReleaseVersion,
+		ReleaseAssetName:       target.ReleaseAssetName,
+		ReleaseDigest:          target.ReleaseDigest,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 target.Status,
+		ManifestJSON:           target.ManifestJSON,
+		WarningVersion:         target.WarningVersion,
+		WarningAcknowledgedAt:  target.WarningAcknowledgedAt,
+		LastVerifiedAt:         target.LastVerifiedAt,
 	})
 	return err
 }
@@ -335,7 +386,12 @@ func (m *Manager) archiveDrift(targetPath string, preview Preview) error {
 		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 			return err
 		}
-		if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{SourcePath: source, TargetPath: target, Mode: 0o644, OpenLabel: "drifted file"}); err != nil {
+		if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
+			SourcePath: source,
+			TargetPath: target,
+			Mode:       0o644,
+			OpenLabel:  "drifted file",
+		}); err != nil {
 			return err
 		}
 	}
@@ -368,7 +424,10 @@ func (m *Manager) archiveUninstall(targetPath string, preview Preview) error {
 				return err
 			}
 			if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-				SourcePath: file.BackupPath, TargetPath: backupTarget, Mode: 0o644, OpenLabel: "OptiScaler rollback backup",
+				SourcePath: file.BackupPath,
+				TargetPath: backupTarget,
+				Mode:       0o644,
+				OpenLabel:  "OptiScaler rollback backup",
 			}); err != nil {
 				return err
 			}
@@ -379,7 +438,12 @@ func (m *Manager) archiveUninstall(targetPath string, preview Preview) error {
 		if _, err := os.Stat(source); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
-		if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{SourcePath: source, TargetPath: filepath.Join(root, name), Mode: 0o644, OpenLabel: "OptiScaler settings"}); err != nil {
+		if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
+			SourcePath: source,
+			TargetPath: filepath.Join(root, name),
+			Mode:       0o644,
+			OpenLabel:  "OptiScaler settings",
+		}); err != nil {
 			return err
 		}
 	}

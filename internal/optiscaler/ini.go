@@ -33,10 +33,26 @@ func UpdateManagedINI(contents []byte, config ManagedConfig) (updated []byte, er
 	hadFinalNewline := strings.HasSuffix(text, "\n")
 	lines := strings.Split(strings.TrimSuffix(text, "\n"), "\n")
 	keys := []iniKey{
-		{Section: "Plugins", Key: "LoadReshade", Value: boolINI(config.LoadReShade)},
-		{Section: "Spoofing", Key: "Dxgi", Value: boolINI(config.DXGISpoofing)},
-		{Section: "ProcessFilter", Key: "TargetProcessName", Value: optionalINI(config.TargetProcessName)},
-		{Section: "Hotfix", Key: "CheckForUpdate", Value: "false"},
+		{
+			Section: "Plugins",
+			Key:     "LoadReshade",
+			Value:   boolINI(config.LoadReShade),
+		},
+		{
+			Section: "Spoofing",
+			Key:     "Dxgi",
+			Value:   boolINI(config.DXGISpoofing),
+		},
+		{
+			Section: "ProcessFilter",
+			Key:     "TargetProcessName",
+			Value:   optionalINI(config.TargetProcessName),
+		},
+		{
+			Section: "Hotfix",
+			Key:     "CheckForUpdate",
+			Value:   "false",
+		},
 	}
 	for _, key := range keys {
 		lines = setINIKey(lines, key)

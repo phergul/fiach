@@ -62,9 +62,13 @@ func (m *Manager) RecoveryState() (state RecoveryState, err error) {
 		return m.RecoveryState()
 	}
 	return RecoveryState{
-		Required: true, JournalID: journal.ID, GameID: journal.GameID,
-		TargetPath: journal.TargetPath, Action: journal.Action,
-		StartedAt: journal.StartedAt, Error: journal.Error,
+		Required:   true,
+		JournalID:  journal.ID,
+		GameID:     journal.GameID,
+		TargetPath: journal.TargetPath,
+		Action:     journal.Action,
+		StartedAt:  journal.StartedAt,
+		Error:      journal.Error,
 	}, nil
 }
 
@@ -88,7 +92,10 @@ func (m *Manager) RollbackRecovery(journalID string) (result ApplyResult, err er
 	if err := rollbackSnapshots(journal.Snapshots); err != nil {
 		journal.Error = err.Error()
 		_ = writeJournal(path, journal)
-		return ApplyResult{Success: false, Message: err.Error()}, err
+		return ApplyResult{
+			Success: false,
+			Message: err.Error(),
+		}, err
 	}
 	if err := os.Remove(path); err != nil {
 		return ApplyResult{}, err
@@ -101,7 +108,11 @@ func (m *Manager) RollbackRecovery(journalID string) (result ApplyResult, err er
 			return ApplyResult{}, targetErr
 		}
 	}
-	return ApplyResult{Success: true, RolledBack: true, Message: "Recovery rollback completed."}, nil
+	return ApplyResult{
+		Success:    true,
+		RolledBack: true,
+		Message:    "Recovery rollback completed.",
+	}, nil
 }
 
 func (m *Manager) pendingJournals() ([]string, error) {
@@ -177,8 +188,11 @@ func rollbackSnapshots(snapshots []journalSnapshot) error {
 				return err
 			}
 			if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-				SourcePath: snapshot.BackupPath, TargetPath: snapshot.TargetPath,
-				Mode: 0o644, Replace: true, OpenLabel: "journal backup",
+				SourcePath: snapshot.BackupPath,
+				TargetPath: snapshot.TargetPath,
+				Mode:       0o644,
+				Replace:    true,
+				OpenLabel:  "journal backup",
 			}); err != nil {
 				return err
 			}

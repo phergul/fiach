@@ -80,8 +80,12 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 		options.RollbackSnapshots = rollbackSnapshots
 	}
 	return &Manager{
-		store: store, dataDir: dataDir, cacheDir: cacheDir,
-		releasesURL: options.ReleasesURL, httpClient: options.HTTPClient, now: options.Now,
+		store:                  store,
+		dataDir:                dataDir,
+		cacheDir:               cacheDir,
+		releasesURL:            options.ReleasesURL,
+		httpClient:             options.HTTPClient,
+		now:                    options.Now,
 		preparePackageOverride: options.PreparePackage,
 		inspectOwnership:       options.InspectOwnership,
 		executeOperation:       options.ExecuteOperation,
@@ -145,7 +149,14 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		return Preview{}, errors.New("target is not managed")
 	}
 
-	preview = Preview{Request: request, Operations: []Operation{}, ConfigurationChanges: []string{}, Warnings: []string{}, Conflicts: []string{}, Drift: []Drift{}}
+	preview = Preview{
+		Request:              request,
+		Operations:           []Operation{},
+		ConfigurationChanges: []string{},
+		Warnings:             []string{},
+		Conflicts:            []string{},
+		Drift:                []Drift{},
+	}
 	if (!found || target.WarningAcknowledgedAt == nil || target.WarningVersion != WarningVersion) && !request.AcknowledgeWarning {
 		preview.Conflicts = append(preview.Conflicts, "Online-game and anti-cheat warning acknowledgement is required.")
 	}
@@ -190,7 +201,7 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		}
 		preview.Operations = operations
 		preview.Conflicts = append(preview.Conflicts, conflicts...)
-		preview.Warnings = append(preview.Warnings, "Adopted files will be removed by uninstall; pre-adoption originals cannot be restored.")
+		preview.Warnings = append(preview.Warnings, "Adopted files will be removed by uninstall.")
 	case ActionUninstall:
 		preview.Release = releaseFromStoredTarget(target)
 		manifest, err := decodeManifest(target.ManifestJSON)
@@ -230,7 +241,7 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	if found && request.Action != ActionAdopt {
 		preview.Warnings = append(
 			preview.Warnings,
-			"Fiach creates a transaction snapshot before changing managed files.",
+			"A transaction snapshot will be created before applying changes.",
 		)
 	}
 	preview.CanApply = len(preview.Conflicts) == 0
@@ -407,7 +418,11 @@ func (m *Manager) preparePackage(ctx context.Context) (Release, Package, error) 
 }
 
 func (m *Manager) releaseOptions() ReleaseOptions {
-	return ReleaseOptions{ReleasesURL: m.releasesURL, CacheDir: m.cacheDir, HTTPClient: m.httpClient}
+	return ReleaseOptions{
+		ReleasesURL: m.releasesURL,
+		CacheDir:    m.cacheDir,
+		HTTPClient:  m.httpClient,
+	}
 }
 
 func (m *Manager) packageOperations(targetPath string, request Request, pkg Package) ([]Operation, []string, []string, error) {
@@ -427,7 +442,11 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 					conflicts = append(conflicts, fmt.Sprintf("Chained ReShade ownership is unknown: %s", chainedPath))
 				}
 			}
-			operations = append(operations, Operation{Type: "move", SourcePath: proxyPath, TargetPath: chainedPath})
+			operations = append(operations, Operation{
+				Type:       "move",
+				SourcePath: proxyPath,
+				TargetPath: chainedPath,
+			})
 		case owner == OwnershipReShade:
 			conflicts = append(conflicts, "A ReShade proxy already occupies the selected proxy filename; coexistence must be enabled.")
 		case owner != OwnershipOptiScaler:
@@ -441,7 +460,13 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 		}
 		targetName = flattenPackageRoot(pkg.Files, targetName)
 		target := filepath.Join(targetPath, targetName)
-		operations = append(operations, Operation{Type: "copy", SourcePath: file.SourcePath, TargetPath: target, SHA256: file.SHA256, SizeBytes: file.SizeBytes})
+		operations = append(operations, Operation{
+			Type:       "copy",
+			SourcePath: file.SourcePath,
+			TargetPath: target,
+			SHA256:     file.SHA256,
+			SizeBytes:  file.SizeBytes,
+		})
 	}
 	configPath := filepath.Join(targetPath, "OptiScaler.ini")
 	contents, err := os.ReadFile(configPath)
@@ -451,8 +476,10 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 		return nil, nil, nil, err
 	}
 	config := ManagedConfig{
-		LoadReShade: request.EnableReShadeCoexistence, DXGISpoofing: request.DXGISpoofing,
-		TargetProcessName: request.ProcessFilter, CheckForUpdate: false,
+		LoadReShade:       request.EnableReShadeCoexistence,
+		DXGISpoofing:      request.DXGISpoofing,
+		TargetProcessName: request.ProcessFilter,
+		CheckForUpdate:    false,
 	}
 	updated, err := UpdateManagedINI(contents, config)
 	if err != nil {
@@ -469,7 +496,13 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	operations = upsertOperation(operations, Operation{Type: "copy", SourcePath: stagedConfig, TargetPath: configPath, SHA256: configHash, SizeBytes: configSize})
+	operations = upsertOperation(operations, Operation{
+		Type:       "copy",
+		SourcePath: stagedConfig,
+		TargetPath: configPath,
+		SHA256:     configHash,
+		SizeBytes:  configSize,
+	})
 	changes := []string{
 		"Plugins.LoadReshade=" + boolINI(config.LoadReShade),
 		"Spoofing.Dxgi=" + boolINI(config.DXGISpoofing),
@@ -524,14 +557,24 @@ func adoptionInventory(targetPath string, request Request, pkg Package, inspectO
 		if !strings.EqualFold(hash, packageFile.SHA256) || size != packageFile.SizeBytes {
 			return nil, []string{fmt.Sprintf("Existing installation file does not match the verified release: %s", relative)}, nil
 		}
-		operations = append(operations, Operation{Type: "adopt", TargetPath: path, SHA256: hash, SizeBytes: size})
+		operations = append(operations, Operation{
+			Type:       "adopt",
+			TargetPath: path,
+			SHA256:     hash,
+			SizeBytes:  size,
+		})
 	}
 	configPath := filepath.Join(targetPath, "OptiScaler.ini")
 	hash, size, err := fileops.FileIntegrity(configPath)
 	if err != nil {
 		return nil, []string{"Existing installation has no readable OptiScaler.ini."}, nil
 	}
-	operations = upsertOperation(operations, Operation{Type: "adopt", TargetPath: configPath, SHA256: hash, SizeBytes: size})
+	operations = upsertOperation(operations, Operation{
+		Type:       "adopt",
+		TargetPath: configPath,
+		SHA256:     hash,
+		SizeBytes:  size,
+	})
 	return operations, nil, nil
 }
 
@@ -551,14 +594,22 @@ func detectDrift(targetPath string, manifest Manifest) ([]Drift, error) {
 		path := filepath.Join(targetPath, file.RelativePath)
 		hash, size, err := fileops.FileIntegrity(path)
 		if errors.Is(err, os.ErrNotExist) {
-			drift = append(drift, Drift{RelativePath: file.RelativePath, ExpectedHash: file.SHA256, Missing: true})
+			drift = append(drift, Drift{
+				RelativePath: file.RelativePath,
+				ExpectedHash: file.SHA256,
+				Missing:      true,
+			})
 			continue
 		}
 		if err != nil {
 			return nil, err
 		}
 		if !strings.EqualFold(hash, file.SHA256) || size != file.SizeBytes {
-			drift = append(drift, Drift{RelativePath: file.RelativePath, ExpectedHash: file.SHA256, ActualHash: hash})
+			drift = append(drift, Drift{
+				RelativePath: file.RelativePath,
+				ExpectedHash: file.SHA256,
+				ActualHash:   hash,
+			})
 		}
 	}
 	return drift, nil
@@ -578,16 +629,30 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 			continue
 		}
 		if file.BackupPath != "" {
-			operations = append(operations, Operation{Type: "restore", SourcePath: file.BackupPath, TargetPath: target, SHA256: file.BackupSHA256, SizeBytes: file.BackupSize})
+			operations = append(operations, Operation{
+				Type:       "restore",
+				SourcePath: file.BackupPath,
+				TargetPath: target,
+				SHA256:     file.BackupSHA256,
+				SizeBytes:  file.BackupSize,
+			})
 		} else {
-			operations = append(operations, Operation{Type: "delete", TargetPath: target})
+			operations = append(operations, Operation{
+				Type:       "delete",
+				TargetPath: target,
+			})
 		}
 	}
 	return operations
 }
 
 func releaseFromStoredTarget(target dbtypes.OptiScalerTarget) Release {
-	return Release{Tag: target.ReleaseTag, Version: target.ReleaseVersion, AssetName: target.ReleaseAssetName, Digest: target.ReleaseDigest}
+	return Release{
+		Tag:       target.ReleaseTag,
+		Version:   target.ReleaseVersion,
+		AssetName: target.ReleaseAssetName,
+		Digest:    target.ReleaseDigest,
+	}
 }
 
 func decodeManifest(value string) (Manifest, error) {
@@ -618,14 +683,23 @@ func hashBytes(value []byte) string {
 
 func (m *Manager) saveTargetStatus(ctx context.Context, target dbtypes.OptiScalerTarget, status string) error {
 	_, err := m.store.SaveOptiScalerTarget(ctx, dbtypes.SaveOptiScalerTargetInput{
-		GameID: target.GameID, TargetRelativePath: target.TargetRelativePath,
-		ExecutableRelativePath: target.ExecutableRelativePath, GraphicsAPI: target.GraphicsAPI,
-		ProxyFilename: target.ProxyFilename, DXGISpoofing: target.DXGISpoofing,
-		ProcessFilter: target.ProcessFilter, ReleaseTag: target.ReleaseTag,
-		ReleaseVersion: target.ReleaseVersion, ReleaseAssetName: target.ReleaseAssetName,
-		ReleaseDigest: target.ReleaseDigest, ManagementOrigin: target.ManagementOrigin,
-		Status: status, ManifestJSON: target.ManifestJSON, WarningVersion: target.WarningVersion,
-		WarningAcknowledgedAt: target.WarningAcknowledgedAt, LastVerifiedAt: target.LastVerifiedAt,
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		GraphicsAPI:            target.GraphicsAPI,
+		ProxyFilename:          target.ProxyFilename,
+		DXGISpoofing:           target.DXGISpoofing,
+		ProcessFilter:          target.ProcessFilter,
+		ReleaseTag:             target.ReleaseTag,
+		ReleaseVersion:         target.ReleaseVersion,
+		ReleaseAssetName:       target.ReleaseAssetName,
+		ReleaseDigest:          target.ReleaseDigest,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 status,
+		ManifestJSON:           target.ManifestJSON,
+		WarningVersion:         target.WarningVersion,
+		WarningAcknowledgedAt:  target.WarningAcknowledgedAt,
+		LastVerifiedAt:         target.LastVerifiedAt,
 	})
 	return err
 }

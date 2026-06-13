@@ -108,7 +108,10 @@ func ExtractReleasePackage(ctx context.Context, archivePath string, destination 
 	if err != nil {
 		return Package{}, err
 	}
-	return Package{Root: destination, Files: files}, nil
+	return Package{
+		Root:  destination,
+		Files: files,
+	}, nil
 }
 
 func cleanPackageEntry(name string) (string, error) {
@@ -146,7 +149,10 @@ func packageInventory(root string) ([]PackageFile, error) {
 		}
 		hasRuntime = hasRuntime || strings.EqualFold(filepath.Base(relative), "OptiScaler.dll")
 		files = append(files, PackageFile{
-			RelativePath: filepath.Clean(relative), SourcePath: path, SHA256: hash, SizeBytes: size,
+			RelativePath: filepath.Clean(relative),
+			SourcePath:   path,
+			SHA256:       hash,
+			SizeBytes:    size,
 		})
 		return nil
 	})

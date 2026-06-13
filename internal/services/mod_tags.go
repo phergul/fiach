@@ -66,4 +66,3 @@ func (s *ModService) UpdateModDetails(ctx context.Context, input dto.UpdateModDe
 	result.Tags = mappers.ToDTOTags(storedTags)
 	return result, nil
 }
-

@@ -94,19 +94,28 @@ func TestManagerInstallApplyPersistsManifestAndDriftBlocksUninstall(t *testing.T
 
 	store := newMemoryStore()
 	manager := NewManager(store, ManagerOptions{
-		DataDir: t.TempDir(), CacheDir: t.TempDir(),
+		DataDir:  t.TempDir(),
+		CacheDir: t.TempDir(),
 		PreparePackage: func(context.Context) (Release, Package, error) {
 			return Release{
-				Tag: "v1", Version: "OptiScaler v1a", AssetName: "Optiscaler_v1-final.7z",
-				Digest: strings.Repeat("a", 64), Size: 1,
+				Tag:       "v1",
+				Version:   "OptiScaler v1a",
+				AssetName: "Optiscaler_v1-final.7z",
+				Digest:    strings.Repeat("a", 64),
+				Size:      1,
 			}, pkg, nil
 		},
 	})
 	process := "Game.exe"
 	request := Request{
-		Action: ActionInstall, GameID: 1, TargetRelativePath: ".",
-		ExecutableRelativePath: "Game.exe", GraphicsAPI: GraphicsAPIDirectX,
-		ProxyFilename: "dxgi.dll", ProcessFilter: &process, AcknowledgeWarning: true,
+		Action:                 ActionInstall,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		GraphicsAPI:            GraphicsAPIDirectX,
+		ProxyFilename:          "dxgi.dll",
+		ProcessFilter:          &process,
+		AcknowledgeWarning:     true,
 	}
 	preview, err := manager.Preview(context.Background(), gameRoot, request)
 	if err != nil {
@@ -186,9 +195,17 @@ func testPreparedPackage(t *testing.T) Package {
 		if err != nil {
 			t.Fatalf("hash package file: %v", err)
 		}
-		files = append(files, PackageFile{RelativePath: name, SourcePath: path, SHA256: hash, SizeBytes: size})
+		files = append(files, PackageFile{
+			RelativePath: name,
+			SourcePath:   path,
+			SHA256:       hash,
+			SizeBytes:    size,
+		})
 	}
-	return Package{Root: root, Files: files}
+	return Package{
+		Root:  root,
+		Files: files,
+	}
 }
 
 func copyCurrentExecutable(t *testing.T, destination string) {

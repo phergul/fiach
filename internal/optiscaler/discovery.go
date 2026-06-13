@@ -76,10 +76,14 @@ func DiscoverCandidates(gameRoot string, managedTargetPaths []string) (candidate
 			evidence = append(evidence, "ReShade-owned runtime detected")
 		}
 		candidates = append(candidates, Candidate{
-			TargetRelativePath: targetRelative, ExecutableRelativePath: executableRelative,
-			ExecutableName: entry.Name(), Architecture: "x64", Evidence: evidence,
-			Managed:       managed[strings.ToLower(targetRelative)],
-			HasOptiScaler: hasOptiScaler, HasReShade: hasReShade,
+			TargetRelativePath:     targetRelative,
+			ExecutableRelativePath: executableRelative,
+			ExecutableName:         entry.Name(),
+			Architecture:           "x64",
+			Evidence:               evidence,
+			Managed:                managed[strings.ToLower(targetRelative)],
+			HasOptiScaler:          hasOptiScaler,
+			HasReShade:             hasReShade,
 		})
 		return nil
 	})

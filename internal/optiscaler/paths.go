@@ -72,7 +72,7 @@ func requireNoSymlinkComponents(root string, path string) error {
 	if relative == "." {
 		return nil
 	}
-	for _, part := range strings.Split(relative, string(filepath.Separator)) {
+	for part := range strings.SplitSeq(relative, string(filepath.Separator)) {
 		current = filepath.Join(current, part)
 		info, err := os.Lstat(current)
 		if err != nil {
