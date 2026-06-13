@@ -20,6 +20,7 @@ interface GameProfilesListProps {
   onRenameProfile: (profileID: number) => void;
   onSelectProfile: (profileID: number) => void;
   onStartRename: (profile: ModProfile) => void;
+  onDuplicateProfile: (profile: ModProfile) => void;
 }
 
 export const GameProfilesList = ({
@@ -37,6 +38,7 @@ export const GameProfilesList = ({
   onRenameProfile,
   onSelectProfile,
   onStartRename,
+  onDuplicateProfile,
 }: GameProfilesListProps) => {
   return (
     <div className="game-profiles-list-shell">
@@ -67,6 +69,7 @@ export const GameProfilesList = ({
               onRenameProfile={onRenameProfile}
               onSelectProfile={onSelectProfile}
               onStartRename={onStartRename}
+              onDuplicateProfile={onDuplicateProfile}
             />
           ))}
         </ul>

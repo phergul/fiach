@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
@@ -40,6 +41,69 @@ func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (p
 	}
 
 	return getProfileByID(ctx, s.db, id)
+}
+
+func (s *Store) DuplicateProfile(ctx context.Context, profileID int64) (profile dbtypes.ModProfile, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("duplicate profile row: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return dbtypes.ModProfile{}, errors.New("store is not open")
+	}
+
+	err = withTransaction(ctx, s.db, func(tx *sqlx.Tx) error {
+		originalProfile, err := getProfileByID(ctx, tx, profileID)
+		if err != nil {
+			return err
+		}
+
+		originalProfileMods, err := listProfileMods(ctx, tx, profileID)
+		if err != nil {
+			return err
+		}
+
+		name, err := normalizeProfileName(fmt.Sprintf("%s (copy)", originalProfile.Name))
+		if err != nil {
+			return err
+		}
+
+		result, err := tx.ExecContext(ctx, `
+			INSERT INTO profiles (game_id, name)
+			VALUES (?, ?)
+		`, originalProfile.GameID, name)
+		if err != nil {
+			return err
+		}
+
+		newProfileID, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("get duplicated profile id: %w", err)
+		}
+
+		profile, err = getProfileByID(ctx, tx, newProfileID)
+		if err != nil {
+			return err
+		}
+
+		for _, mod := range originalProfileMods {
+			if _, err := tx.ExecContext(ctx, `
+				INSERT INTO profile_mods (profile_id, mod_id, enabled, load_order)
+				VALUES (?, ?, ?, ?)
+			`, profile.ID, mod.ModID, mod.Enabled, mod.LoadOrder); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return dbtypes.ModProfile{}, err
+	}
+
+	return profile, nil
 }
 
 func (s *Store) ListProfiles(ctx context.Context, gameID int64) (profiles []dbtypes.ModProfile, err error) {

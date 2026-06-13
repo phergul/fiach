@@ -38,6 +38,7 @@ const (
 	OperationGetModDeleteSummary       = "get_mod_delete_summary"
 	OperationDeleteMod                 = "delete_mod"
 	OperationCreateProfile             = "create_profile"
+	OperationDuplicateProfile          = "duplicate_profile"
 	OperationRenameProfile             = "rename_profile"
 	OperationDeleteProfile             = "delete_profile"
 	OperationAddProfileMod             = "add_profile_mod"
@@ -144,6 +145,7 @@ func Operations() []OperationDescriptor {
 		{Value: OperationGetModDeleteSummary, Label: "Get mod delete summary"},
 		{Value: OperationDeleteMod, Label: "Delete mod"},
 		{Value: OperationCreateProfile, Label: "Create profile"},
+		{Value: OperationDuplicateProfile, Label: "Duplicate profile"},
 		{Value: OperationRenameProfile, Label: "Rename profile"},
 		{Value: OperationDeleteProfile, Label: "Delete profile"},
 		{Value: OperationAddProfileMod, Label: "Add profile mod"},

@@ -1,4 +1,4 @@
-import { Check, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Copy, Pencil, Trash2, X } from 'lucide-react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
@@ -19,6 +19,7 @@ interface GameProfilesListItemProps {
   onRenameProfile: (profileID: number) => void;
   onSelectProfile: (profileID: number) => void;
   onStartRename: (profile: ModProfile) => void;
+  onDuplicateProfile: (profile: ModProfile) => void;
 }
 
 const formatProfileEditedAt = (updatedAt: string) => {
@@ -55,6 +56,7 @@ export const GameProfilesListItem = ({
   onRenameProfile,
   onSelectProfile,
   onStartRename,
+  onDuplicateProfile,
 }: GameProfilesListItemProps) => {
   const assignedSummary = `${modCount} ${modCount === 1 ? 'mod' : 'mods'} assigned`;
   const enabledSummary = `${enabledModCount} ${enabledModCount === 1 ? 'mod' : 'mods'} enabled`;
@@ -128,6 +130,18 @@ export const GameProfilesListItem = ({
           </>
         ) : (
           <>
+            <button
+              className="game-profiles-list-item-icon-button"
+              disabled={isBusy}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDuplicateProfile(profile);
+              }}
+              title="Duplicate profile"
+              type="button"
+            >
+              <Copy className="game-profiles-list-item-icon" aria-hidden="true" />
+            </button>
             <button
               className="game-profiles-list-item-icon-button"
               disabled={isBusy}

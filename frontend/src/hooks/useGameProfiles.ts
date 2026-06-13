@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   AddModToProfile,
   CreateProfile,
+  DuplicateProfile,
   DeleteProfile,
   ListProfileMods,
   ListProfiles,
@@ -19,6 +20,7 @@ type ProfileAction =
   | 'add-mod'
   | 'add-mods'
   | 'create'
+  | 'duplicate'
   | 'delete'
   | 'remove-mod'
   | 'reorder-mods'
@@ -119,6 +121,17 @@ export const useGameProfiles = (gameID: number | null) => {
       }
 
       return runProfileAction('create', () => CreateProfile(gameID, name), 'Profile created.');
+    },
+    [gameID, runProfileAction],
+  );
+
+  const duplicateProfile = useCallback(
+    (profileID: number) => {
+      if (gameID === null) {
+        return Promise.reject(new Error('game is not selected'));
+      }
+
+      return runProfileAction('duplicate', () => DuplicateProfile(profileID), 'Profile duplicated.');
     },
     [gameID, runProfileAction],
   );
@@ -241,6 +254,7 @@ export const useGameProfiles = (gameID: number | null) => {
     addModToProfile,
     addModsToProfile,
     createProfile,
+    duplicateProfile,
     deleteProfile,
     isLoading,
     loadError,

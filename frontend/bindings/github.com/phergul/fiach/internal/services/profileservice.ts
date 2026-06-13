@@ -37,6 +37,12 @@ export function DeleteProfile(profileID: number): $CancellablePromise<void> {
     return $Call.ByID(1258387998, profileID);
 }
 
+export function DuplicateProfile(profileID: number): $CancellablePromise<dto$0.ModProfile> {
+    return $Call.ByID(1945213396, profileID).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
 export function GetAppliedProfileSummary(gameID: number): $CancellablePromise<dto$0.AppliedProfileSummary | null> {
     return $Call.ByID(3862387448, gameID).then(($result: any) => {
         return $$createType5($result);

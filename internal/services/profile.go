@@ -50,6 +50,31 @@ func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name s
 	return profile, nil
 }
 
+func (s *ProfileService) DuplicateProfile(ctx context.Context, profileID int64) (profile dto.ModProfile, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationDuplicateProfile, "Profile duplicate started",
+		slog.Int64("profile_id", profileID),
+	)
+	defer func() {
+		if err != nil {
+			diag.fail("Profile duplicate failed", err)
+			err = fmt.Errorf("duplicate profile: %w", err)
+		}
+	}()
+
+	storedProfile, err := s.store.DuplicateProfile(ctx, profileID)
+	if err != nil {
+		return dto.ModProfile{}, err
+	}
+
+	profile = mappers.ToDTOModProfile(storedProfile)
+	diag.complete("Profile duplicate completed",
+		slog.Int64("profile_id", storedProfile.ID),
+		slog.String("profile_name", storedProfile.Name),
+	)
+
+	return profile, nil
+}
+
 func (s *ProfileService) ListProfiles(ctx context.Context, gameID int64) (profiles []dto.ModProfile, err error) {
 	defer func() {
 		if err != nil {

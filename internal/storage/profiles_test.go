@@ -150,6 +150,59 @@ func TestDeleteProfileDeletesRow(t *testing.T) {
 	}
 }
 
+func TestDuplicateProfileCopiesModsAndState(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	original := mustCreateProfile(t, store, gameID, "Default")
+	firstModID := insertProfileTestMod(t, store, gameID, "SkyUI", "/mods/skyui")
+	secondModID := insertProfileTestMod(t, store, gameID, "USSEP", "/mods/ussep")
+
+	if _, err := store.AddModToProfile(context.Background(), original.ID, firstModID); err != nil {
+		t.Fatalf("AddModToProfile() first error = %v", err)
+	}
+	if _, err := store.AddModToProfile(context.Background(), original.ID, secondModID); err != nil {
+		t.Fatalf("AddModToProfile() second error = %v", err)
+	}
+	if _, err := store.SetProfileModEnabled(context.Background(), original.ID, secondModID, false); err != nil {
+		t.Fatalf("SetProfileModEnabled() error = %v", err)
+	}
+
+	duplicated, err := store.DuplicateProfile(context.Background(), original.ID)
+	if err != nil {
+		t.Fatalf("DuplicateProfile() error = %v", err)
+	}
+
+	if duplicated.ID == original.ID || duplicated.GameID != gameID || duplicated.Name != "Default (copy)" {
+		t.Fatalf("DuplicateProfile() = %+v, want copied profile", duplicated)
+	}
+
+	profileMods, err := store.ListProfileMods(context.Background(), duplicated.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods() error = %v", err)
+	}
+	if len(profileMods) != 2 {
+		t.Fatalf("ListProfileMods() length = %d, want 2: %+v", len(profileMods), profileMods)
+	}
+	if profileMods[0].ModID != firstModID || !profileMods[0].Enabled || profileMods[0].LoadOrder != 0 {
+		t.Fatalf("first duplicated mod = %+v, want enabled mod at load order 0", profileMods[0])
+	}
+	if profileMods[1].ModID != secondModID || profileMods[1].Enabled || profileMods[1].LoadOrder != 1 {
+		t.Fatalf("second duplicated mod = %+v, want disabled mod at load order 1", profileMods[1])
+	}
+
+	originalMods, err := store.ListProfileMods(context.Background(), original.ID)
+	if err != nil {
+		t.Fatalf("ListProfileMods(original) error = %v", err)
+	}
+	if !originalMods[0].Enabled || originalMods[1].Enabled {
+		t.Fatalf("original profile mods changed unexpectedly: %+v", originalMods)
+	}
+}
+
 func insertProfileTestGame(t *testing.T, store *Store, name string, installPath string) int64 {
 	t.Helper()
 

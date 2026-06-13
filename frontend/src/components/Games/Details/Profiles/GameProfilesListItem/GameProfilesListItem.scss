@@ -92,7 +92,7 @@ $game-profiles-list-item-min-height: 4.5rem;
 
 .game-profiles-list-item-actions {
   display: grid;
-  grid-template-columns: repeat(2, $game-profiles-list-item-control-height);
+  grid-template-columns: repeat(3, $game-profiles-list-item-control-height);
   align-items: center;
   justify-content: flex-end;
   gap: $spacing-xs;

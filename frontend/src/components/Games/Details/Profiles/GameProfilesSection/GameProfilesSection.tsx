@@ -32,6 +32,7 @@ export const GameProfilesSection = ({
   const {
     addModsToProfile,
     createProfile,
+    duplicateProfile,
     deleteProfile,
     isLoading,
     loadError,
@@ -83,6 +84,15 @@ export const GameProfilesSection = ({
       setNewProfileName('');
       setIsCreateOpen(false);
     } catch {
+      // error toast is handled by useGameProfiles
+    }
+  };
+
+  const handleDuplicateProfile = async (profile: ModProfile) => {
+    try {
+      const duplicatedProfile = await duplicateProfile(profile.ID);
+      setSelectedProfileID(duplicatedProfile.ID);
+    } catch (error) {
       // error toast is handled by useGameProfiles
     }
   };
@@ -225,6 +235,7 @@ export const GameProfilesSection = ({
               onRenameProfile={handleRenameProfile}
               onSelectProfile={setSelectedProfileID}
               onStartRename={startRename}
+              onDuplicateProfile={handleDuplicateProfile}
             />
           </aside>
 
