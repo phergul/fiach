@@ -77,12 +77,12 @@ button:focus-visible:not(:disabled) {
 }
 
 button:focus-visible {
-  outline: 0.125rem solid $color-info;
-  outline-offset: -0.125rem;
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
 }
 
 button[aria-pressed='true'] {
-  border: $app-border-width solid currentColor;
+  border: $selected-outline;
 }
 
 button:disabled {
@@ -136,8 +136,8 @@ input:not([type='checkbox']):not([type='radio']):focus,
 textarea:focus,
 select:focus {
   background: $color-surface-elevated;
-  outline: 0.125rem solid $color-info;
-  outline-offset: -0.125rem;
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
 }
 
 input:not([type='checkbox']):not([type='radio']):disabled,
@@ -150,4 +150,53 @@ select:disabled {
 input[type='checkbox'],
 input[type='radio'] {
   margin: 0;
+}
+
+a:focus-visible {
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
+}
+
+.button-info,
+.button-success,
+.button-warning,
+.button-danger {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.button-info {
+  background: color-mix(in srgb, $color-info 28%, $color-surface);
+}
+
+.button-success {
+  background: color-mix(in srgb, $color-success 28%, $color-surface);
+}
+
+.button-warning {
+  background: color-mix(in srgb, $color-warning 24%, $color-surface);
+}
+
+.button-danger {
+  background: color-mix(in srgb, $color-danger 24%, $color-surface);
+}
+
+.button-info:hover:not(:disabled),
+.button-info:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-info 40%, $color-surface-elevated);
+}
+
+.button-success:hover:not(:disabled),
+.button-success:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-success 40%, $color-surface-elevated);
+}
+
+.button-warning:hover:not(:disabled),
+.button-warning:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-warning 36%, $color-surface-elevated);
+}
+
+.button-danger:hover:not(:disabled),
+.button-danger:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 36%, $color-surface-elevated);
 }

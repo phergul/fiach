@@ -29,7 +29,6 @@ const themeTokenVariableEntries = (
   ['--color-tag-blue', tokens.tagBlue],
   ['--color-tag-purple', tokens.tagPurple],
   ['--color-tag-pink', tokens.tagPink],
-  ['--shadow-subtle', tokens.shadowSubtle],
 ];
 
 export const applyThemeCSSVariables = (

@@ -1,7 +1,6 @@
 @use '@styles' as *;
 
 $settings-page-min-height: $app-min-height;
-$settings-page-title-size: 2rem;
 $settings-page-header-padding: $spacing-xl;
 
 .settings-page {
@@ -10,6 +9,7 @@ $settings-page-header-padding: $spacing-xl;
   flex-direction: column;
   margin: -$spacing-xl;
   overflow: hidden;
+  gap: $spacing-separator;
   background: $color-background;
   color: $color-text-primary;
 }
@@ -18,12 +18,11 @@ $settings-page-header-padding: $spacing-xl;
   flex: 0 0 auto;
   padding: $settings-page-header-padding;
   background: $color-background;
-  border-bottom: $app-border;
 }
 
 .settings-page-title {
   color: $color-text-primary;
-  font-size: $settings-page-title-size;
+  font-size: $font-size-2xl;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
 }

@@ -52,7 +52,7 @@ $dropdown-menu-icon-size: 1rem;
 
 .dropdown-menu-submenu {
   top: -$spacing-xs;
-  right: calc(100% + $spacing-sm);
+  right: calc(100% + $spacing-separator);
 }
 
 .dropdown-menu-submenu-icon {

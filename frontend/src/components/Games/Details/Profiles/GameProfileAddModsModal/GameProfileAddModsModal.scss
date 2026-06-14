@@ -18,13 +18,23 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
   overflow: hidden;
 }
 
+.game-profile-add-mods-modal-panel .modal-header,
+.game-profile-add-mods-modal-panel .modal-footer {
+  background: $color-surface;
+}
+
+.game-profile-add-mods-modal-footer {
+  display: flex;
+  gap: $spacing-sm;
+}
+
 .game-profile-add-mods-modal-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: $spacing-sm;
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  background: $color-background;
 }
 
 .game-profile-add-mods-modal-search {
@@ -57,11 +67,17 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 
 .game-profile-add-mods-modal-state {
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
 }
 
 .game-profile-add-mods-modal-list-item {
-  border-bottom: $app-border;
+  background: $color-background;
+  margin-top: $spacing-separator;
+}
+
+.game-profile-add-mods-modal-list-item + .game-profile-add-mods-modal-list-item {
+  margin-top: $spacing-separator;
 }
 
 .game-profile-add-mods-modal-option {
@@ -93,7 +109,7 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
   margin-top: $game-profile-add-mods-modal-option-offset;
   background: $color-surface;
   border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
+  border-radius: 0;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     border-color $transition-duration-fast $transition-easing-standard;

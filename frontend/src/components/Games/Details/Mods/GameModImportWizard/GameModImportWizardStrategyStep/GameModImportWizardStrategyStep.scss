@@ -52,12 +52,13 @@ $game-mod-import-wizard-strategy-step-icon-size: 1rem;
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md;
+  border: $app-border-width solid transparent;
   text-align: left;
 }
 
 .game-mod-import-wizard-strategy-step-option-selected {
-  background: $color-surface;
-  border-color: $color-text-subtle;
+  background: color-mix(in srgb, $color-info 18%, $color-surface);
+  border-color: $color-info;
 }
 
 .game-mod-import-wizard-strategy-step-copy {

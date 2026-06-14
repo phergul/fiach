@@ -3,7 +3,7 @@
 .game-details-state {
   padding: $spacing-lg $spacing-xl;
   background: $color-background;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
 }
 
 .game-details-state-actions {
@@ -28,5 +28,4 @@
 .game-details-state-link:hover,
 .game-details-state-link:focus-visible {
   color: $color-text-primary;
-  outline: none;
 }

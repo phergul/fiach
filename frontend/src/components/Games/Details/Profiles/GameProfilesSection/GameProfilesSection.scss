@@ -27,7 +27,7 @@ $game-profiles-section-sidebar-width: 30rem;
 .game-profiles-section-sidebar {
   display: flex;
   flex-direction: column;
-  border-right: $app-border;
+  // margin-right: $spacing-separator;
 }
 
 .game-profiles-section-detail {
@@ -42,5 +42,6 @@ $game-profiles-section-sidebar-width: 30rem;
 
 .game-profiles-section-state {
   padding: $spacing-lg $spacing-xl;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
 }

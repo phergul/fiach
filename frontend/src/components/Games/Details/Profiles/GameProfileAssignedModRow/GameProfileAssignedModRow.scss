@@ -15,12 +15,18 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
   gap: $spacing-md;
   min-height: 4.75rem;
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  background: $color-background;
+  margin: $spacing-separator;
 }
 
 .game-profile-assigned-mod-row-dragging {
   background: color-mix(in srgb, $color-surface 82%, transparent);
-  box-shadow: $shadow-subtle;
+  outline: $selected-outline;
+  outline-offset: -$app-border-width;
+}
+
+.game-profile-assigned-mod-row + .game-profile-assigned-mod-row {
+  margin-top: $spacing-separator;
 }
 
 .game-profile-assigned-mod-row-order {
@@ -121,7 +127,7 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
   flex: 0 0 $game-profile-assigned-mod-row-toggle-width;
   background: $color-surface-elevated;
   border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
+  border-radius: 0;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     border-color $transition-duration-fast $transition-easing-standard;
@@ -134,7 +140,7 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
   width: $game-profile-assigned-mod-row-toggle-knob-size;
   height: $game-profile-assigned-mod-row-toggle-knob-size;
   background: $color-text-subtle;
-  border-radius: $radius-sm;
+  border-radius: 0;
   content: '';
   transform: translateY(-50%);
   transition:

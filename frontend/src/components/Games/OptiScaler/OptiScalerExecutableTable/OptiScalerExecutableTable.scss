@@ -145,6 +145,10 @@ $optiscaler-table-status-width: 20rem;
   min-height: $table-control-height;
 }
 
+.optiscaler-executable-actions .button-main {
+  line-height: 1;
+}
+
 .optiscaler-executable-actions svg {
   width: $optiscaler-table-icon-size;
   height: $optiscaler-table-icon-size;

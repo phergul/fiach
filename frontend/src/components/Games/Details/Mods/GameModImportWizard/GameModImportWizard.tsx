@@ -92,6 +92,7 @@ export const GameModImportWizard = ({
   const isStrategyStep = step === 'strategy';
   const isTargetStep = step === 'target';
   const isPreviewStep = step === 'preview';
+  const currentStepIndex = stepOrder.indexOf(step);
   const canContinueFromDetails = trimmedName !== '';
   const canContinueFromStrategy = selectedStrategyType !== null && strategyLoadError === null;
   const canPreviewTarget = selectedStrategyType !== null && targetRelativePath.trim() !== '';
@@ -307,7 +308,6 @@ export const GameModImportWizard = ({
     <>
       {!isDetailsStep && (
         <button
-          className="game-mod-import-wizard-secondary-button"
           disabled={isBusy}
           onClick={goBack}
           type="button"
@@ -316,19 +316,18 @@ export const GameModImportWizard = ({
         </button>
       )}
       <button
-        className="game-mod-import-wizard-primary-button"
-        disabled={isNextDisabled}
-        type="submit"
-      >
-        {isPreviewStep ? (isBusy ? 'Importing...' : 'Import Mod') : isTargetStep ? (isPreviewing ? 'Previewing...' : 'Preview') : 'Next'}
-      </button>
-      <button
-        className="game-mod-import-wizard-secondary-button"
         disabled={isBusy}
         onClick={onClose}
         type="button"
       >
         Cancel
+      </button>
+      <button
+        className="button-main"
+        disabled={isNextDisabled}
+        type="submit"
+      >
+        {isPreviewStep ? (isBusy ? 'Importing...' : 'Import Mod') : isTargetStep ? (isPreviewing ? 'Previewing...' : 'Preview') : 'Next'}
       </button>
     </>
   );
@@ -343,6 +342,7 @@ export const GameModImportWizard = ({
       labelledByID="game-mod-import-wizard-title"
       onClose={onClose}
       onSubmit={handleSubmit}
+      panelClassName="game-mod-import-wizard-panel"
       size="lg"
       title="Import Mod"
       footer={footer}
@@ -350,68 +350,73 @@ export const GameModImportWizard = ({
       <ol className="game-mod-import-wizard-steps" aria-label="Import steps">
         {stepOrder.map((stepName, index) => (
           <li
-            className={stepName === step
-              ? 'game-mod-import-wizard-step game-mod-import-wizard-step-active'
-              : 'game-mod-import-wizard-step'}
+            className={index < currentStepIndex
+              ? 'game-mod-import-wizard-step game-mod-import-wizard-step-complete'
+              : stepName === step
+                ? 'game-mod-import-wizard-step game-mod-import-wizard-step-active'
+                : 'game-mod-import-wizard-step'}
             key={stepName}
           >
-            <span className="game-mod-import-wizard-step-number">{index + 1}</span>
-            <span className="game-mod-import-wizard-step-label">{stepLabels[stepName]}</span>
+            {index + 1}. {stepLabels[stepName]}
           </li>
         ))}
       </ol>
 
-      {isDetailsStep && (
-        <GameModImportWizardDetailsStep
-          isBusy={isBusy}
-          availableTags={availableTags}
-          name={name}
-          onNameChange={setName}
-          onTagsChange={setTags}
-          sourceLabel={sourceLabel}
-          sourcePath={sourcePath}
-          tags={tags}
-          targetPath={targetPath}
-        />
-      )}
+      <div className="game-mod-import-wizard-scroll">
+        <div className="game-mod-import-wizard-content">
+          {isDetailsStep && (
+            <GameModImportWizardDetailsStep
+              isBusy={isBusy}
+              availableTags={availableTags}
+              name={name}
+              onNameChange={setName}
+              onTagsChange={setTags}
+              sourceLabel={sourceLabel}
+              sourcePath={sourcePath}
+              tags={tags}
+              targetPath={targetPath}
+            />
+          )}
 
-      {isStrategyStep && (
-        <GameModImportWizardStrategyStep
-          isBusy={isBusy}
-          isLoadingStrategies={isLoadingStrategies}
-          onStrategySelect={handleStrategySelect}
-          selectedStrategyType={selectedStrategyType}
-          strategies={strategies}
-          strategyLoadError={strategyLoadError}
-          suggestedStrategyType={suggestedStrategyType}
-        />
-      )}
+          {isStrategyStep && (
+            <GameModImportWizardStrategyStep
+              isBusy={isBusy}
+              isLoadingStrategies={isLoadingStrategies}
+              onStrategySelect={handleStrategySelect}
+              selectedStrategyType={selectedStrategyType}
+              strategies={strategies}
+              strategyLoadError={strategyLoadError}
+              suggestedStrategyType={suggestedStrategyType}
+            />
+          )}
 
-      {isTargetStep && (
-        <GameModImportWizardTargetStep
-          candidates={targetCandidates}
-          detectionError={targetDetectionError}
-          detectionWarnings={targetDetectionWarnings}
-          isBusy={isBusy || isPreviewing || isDetectingTargets}
-          isDetecting={isDetectingTargets}
-          onTargetRelativePathChange={handleTargetRelativePathChange}
-          targetRelativePath={targetRelativePath}
-        />
-      )}
+          {isTargetStep && (
+            <GameModImportWizardTargetStep
+              candidates={targetCandidates}
+              detectionError={targetDetectionError}
+              detectionWarnings={targetDetectionWarnings}
+              isBusy={isBusy || isPreviewing || isDetectingTargets}
+              isDetecting={isDetectingTargets}
+              onTargetRelativePathChange={handleTargetRelativePathChange}
+              targetRelativePath={targetRelativePath}
+            />
+          )}
 
-      {isPreviewStep && preview !== null && (
-        <GameModImportWizardPreviewStep
-          name={trimmedName}
-          preview={preview}
-          selectedStrategy={selectedStrategy}
-          sourceLabel={sourceLabel}
-          sourcePath={sourcePath}
-          tags={tags}
-        />
-      )}
+          {isPreviewStep && preview !== null && (
+            <GameModImportWizardPreviewStep
+              name={trimmedName}
+              preview={preview}
+              selectedStrategy={selectedStrategy}
+              sourceLabel={sourceLabel}
+              sourcePath={sourcePath}
+              tags={tags}
+            />
+          )}
 
-      {previewError !== null && <p className="game-mod-import-wizard-error">{previewError}</p>}
-      {error !== null && <p className="game-mod-import-wizard-error">{error}</p>}
+          {previewError !== null && <p className="game-mod-import-wizard-error">{previewError}</p>}
+          {error !== null && <p className="game-mod-import-wizard-error">{error}</p>}
+        </div>
+      </div>
     </Modal>
   );
 };

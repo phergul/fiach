@@ -34,15 +34,12 @@ $spacing-lg: 1.5rem;
 $spacing-xl: 2rem;
 $spacing-separator: 0.125rem;
 
-$radius-sm: 0.25rem;
-$radius-md: 0.5rem;
-$radius-lg: 0.75rem;
-
 $font-size-xs: 0.75rem;
 $font-size-sm: 0.875rem;
 $font-size-base: 1rem;
 $font-size-lg: 1.125rem;
 $font-size-xl: 1.5rem;
+$font-size-2xl: 2rem;
 
 $font-weight-semibold: 600;
 $font-family-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
@@ -55,10 +52,15 @@ $app-sidebar-width: 10rem;
 $app-sidebar-collapsed-width: 3.25rem;
 $app-sidebar-control-size: 2.25rem;
 $app-sidebar-icon-size: 1.125rem;
-$app-sidebar-control-icon-offset: 0.5625rem;
+$app-sidebar-control-icon-offset: 0.5rem;
 $app-content-max-width: 76rem;
 $app-border-width: 0.0625rem;
-$app-border: $app-border-width solid $color-border-subtle;
+// remove this later
+$app-border: 0;
+$focus-outline-width: 0.125rem;
+$focus-outline: $focus-outline-width solid $color-info;
+$selected-outline: $app-border-width solid currentColor;
+$tag-outline-width: $app-border-width;
 
 $game-mod-list-source-width: 6.5rem;
 $game-mod-list-contents-width: 8rem;
@@ -74,7 +76,7 @@ $toast-max-height: 12rem;
 $toast-close-size: 1.75rem;
 $toast-close-icon-size: 1rem;
 
-$shadow-subtle: var(--shadow-subtle, 0 0.125rem 0.5rem rgb(0 0 0 / 18%));
+$shadow-subtle: none;
 
 $z-index-sidebar: 10;
 $z-index-toast: 20;

@@ -106,7 +106,8 @@ $mod-tag-editor-chip-height: calc(
 
 .mod-tag-editor-color[aria-pressed='true'] {
   background: var(--mod-tag-editor-color);
-  box-shadow: inset 0 0 0 $app-border-width $color-background;
+  outline: $app-border-width solid $color-background;
+  outline-offset: -($app-border-width * 2);
 }
 
 .mod-tag-editor-color-red { --mod-tag-editor-color: #{$color-tag-red}; }

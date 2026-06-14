@@ -23,7 +23,7 @@ $logs-operation-column-width: 9rem;
   padding: $spacing-sm $spacing-lg;
   color: $color-text-muted;
   font-size: $font-size-xs;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
   background: $color-background;
 }
 
@@ -31,6 +31,7 @@ $logs-operation-column-width: 9rem;
   min-height: 0;
   flex: 1;
   overflow: auto;
+  background: $color-background;
 }
 
 .logs-table-raw {

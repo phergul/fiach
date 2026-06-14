@@ -20,7 +20,7 @@ $game-mods-section-side-panel-width: 32rem;
   align-items: center;
   gap: $spacing-sm;
   padding: $spacing-md;
-  border-bottom: $app-border;
+  background: $color-background;
 }
 
 .game-mods-section-search {
@@ -66,7 +66,9 @@ $game-mods-section-side-panel-width: 32rem;
 .game-mods-section-empty,
 .game-mods-section-state {
   padding: $spacing-lg $spacing-xl;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
+  height: 100%;
 }
 
 .game-mods-section-button {
@@ -93,6 +95,7 @@ $game-mods-section-side-panel-width: 32rem;
   overflow: hidden;
   container-name: game-mod-list;
   container-type: inline-size;
+  background: $color-surface;
 }
 
 .game-mods-section-list {

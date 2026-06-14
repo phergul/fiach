@@ -8,7 +8,8 @@ $game-profiles-applied-summary-modified-icon-size: 1rem;
   flex-direction: column;
   gap: $spacing-md;
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: color-mix(in srgb, $color-success 10%, $color-surface);
   background: rgb(#{$color-surface-rgb} / 42%);
 }
 

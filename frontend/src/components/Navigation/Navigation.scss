@@ -17,8 +17,8 @@
   padding: 0 $app-sidebar-control-icon-offset;
   overflow: hidden;
   color: $color-text-subtle;
-  border: 0;
-  border-radius: $radius-sm;
+  border: $app-border-width solid transparent;
+  border-radius: 0;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -35,7 +35,6 @@
 .navigation-link:focus-visible {
   background: $color-surface-elevated;
   color: $color-text-primary;
-  outline: none;
 }
 
 .navigation-link-active {
@@ -53,14 +52,14 @@
 .navigation-separator {
   position: relative;
   width: 100%;
-  height: $app-border-width;
+  height: $spacing-separator;
   margin: $spacing-xs 0;
 }
 
 .navigation-separator::before {
   position: absolute;
   inset: 0;
-  background: $color-border-subtle;
+  background: $color-background;
   content: '';
   transform: scaleX(calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2))));
   transform-origin: left center;

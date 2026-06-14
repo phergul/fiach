@@ -7,7 +7,7 @@ $mod-metadata-summary-bg-alpha: 34%;
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
-  gap: $spacing-xs;
+  gap: $spacing-sm;
 }
 
 .mod-metadata-summary-item {
@@ -15,7 +15,6 @@ $mod-metadata-summary-bg-alpha: 34%;
   min-width: 0;
   align-items: baseline;
   overflow: hidden;
-  border: $app-border-width solid color-mix(in srgb, $color-border $mod-metadata-summary-border-alpha, transparent);
   background: rgb(#{$color-surface-rgb} / #{$mod-metadata-summary-bg-alpha});
   color: $color-text-subtle;
   font-size: $font-size-sm;
@@ -26,8 +25,7 @@ $mod-metadata-summary-bg-alpha: 34%;
   align-self: stretch;
   padding: $spacing-xs $spacing-sm;
   color: $color-text-muted;
-  background: rgb(#{$color-background-rgb} / 24%);
-  border-right: $app-border-width solid color-mix(in srgb, $color-border-subtle 76%, transparent);
+  background: $color-surface-elevated;
 }
 
 .mod-metadata-summary-value {
@@ -36,10 +34,11 @@ $mod-metadata-summary-bg-alpha: 34%;
   overflow-wrap: anywhere;
   color: $color-text-subtle;
   font-weight: $font-weight-semibold;
+  background: $color-surface;
 }
 
 .mod-metadata-summary-item-version {
-  border-color: color-mix(in srgb, $color-accent-warm 58%, $color-border);
+  background: color-mix(in srgb, $color-accent-warm 12%, $color-surface);
 }
 
 .mod-metadata-summary-item-version .mod-metadata-summary-value {

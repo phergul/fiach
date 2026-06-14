@@ -29,7 +29,6 @@
   padding: $spacing-sm;
   overflow: hidden;
   background: $color-surface;
-  border-right: $app-border;
   transition: width $transition-duration-fast $transition-easing-standard;
 }
 
@@ -48,14 +47,14 @@
 .sidebar-separator {
   position: relative;
   width: 100%;
-  height: $app-border-width;
+  height: $spacing-separator;
   margin: 0 0 $spacing-xs;
 }
 
 .sidebar-separator::before {
   position: absolute;
   inset: 0;
-  background: $color-border-subtle;
+  background: $color-background;
   content: '';
   transform: scaleX(calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2))));
   transform-origin: left center;
@@ -73,8 +72,6 @@
   text-align: left;
   white-space: nowrap;
   background: transparent;
-  border: 0;
-  border-radius: $radius-sm;
 }
 
 .sidebar-pin-button:hover {

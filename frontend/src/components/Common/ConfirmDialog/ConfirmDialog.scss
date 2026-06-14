@@ -6,16 +6,15 @@
 
 .confirm-dialog .modal-header,
 .confirm-dialog .modal-footer {
-  background: $color-background;
+  background: $color-surface;
 }
 
 .confirm-dialog-body {
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  margin: 0 $spacing-md;
   padding: $spacing-md calc(#{$spacing-xl} - #{$spacing-separator});
-  background: $color-surface-elevated;
+  background: $color-background;
 }
 
 .confirm-dialog-message {

@@ -6,6 +6,13 @@ $game-source-icon-size: 1.5rem;
 
 .game-card {
   min-width: 0;
+  padding: $spacing-sm;
+  background: $color-surface;
+}
+
+.game-card:hover {
+  transition: background-color $transition-duration-fast $transition-easing-standard;
+  background: $color-surface-elevated;
 }
 
 .game-card-link {
@@ -15,15 +22,9 @@ $game-source-icon-size: 1.5rem;
 }
 
 .game-card-link:focus-visible {
-  border-radius: $radius-md;
-  outline: $app-border-width solid $color-border-strong;
-  outline-offset: $spacing-xs;
-}
-
-.game-card-link:hover .game-card-artwork,
-.game-card-link:focus-visible .game-card-artwork {
-  background: $color-surface;
-  border-color: $color-border;
+  border-radius: 0;
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
 }
 
 .game-card-artwork {
@@ -34,8 +35,8 @@ $game-source-icon-size: 1.5rem;
   padding: $spacing-md;
   overflow: hidden;
   background: $color-surface-elevated;
-  border: $app-border-width solid $color-border-subtle;
-  border-radius: $radius-md;
+  border: 0;
+  border-radius: 0;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
     border-color $transition-duration-fast $transition-easing-standard;
@@ -51,11 +52,17 @@ $game-source-icon-size: 1.5rem;
   place-items: center;
   color: $color-text-primary;
   background: $color-background;
-  border: $app-border-width solid $color-border;
-  border-radius: 999rem;
+  border: 0;
+  border-radius: 2rem;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   line-height: 1;
+}
+
+.game-card-source-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .game-card-image {
