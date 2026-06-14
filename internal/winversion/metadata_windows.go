@@ -55,6 +55,9 @@ func Read(path string) (metadata Metadata, err error) {
 		if metadata.FileDescription == "" {
 			metadata.FileDescription = queryVersionString(buffer, language, "FileDescription")
 		}
+		if metadata.FileVersion == "" {
+			metadata.FileVersion = queryVersionString(buffer, language, "FileVersion")
+		}
 		if metadata.InternalName == "" {
 			metadata.InternalName = queryVersionString(buffer, language, "InternalName")
 		}
@@ -63,6 +66,9 @@ func Read(path string) (metadata Metadata, err error) {
 		}
 		if metadata.ProductName == "" {
 			metadata.ProductName = queryVersionString(buffer, language, "ProductName")
+		}
+		if metadata.ProductVersion == "" {
+			metadata.ProductVersion = queryVersionString(buffer, language, "ProductVersion")
 		}
 	}
 	return metadata, nil
