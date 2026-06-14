@@ -12,6 +12,35 @@ import * as filetxn$0 from "../filetxn/models.js";
 // @ts-ignore: Unused imports
 import * as time$0 from "../../../../../time/models.js";
 
+export class APIProxyOptions {
+    "renderingApi": RenderingAPI;
+    "proxies": string[];
+
+    /** Creates a new APIProxyOptions instance. */
+    constructor($$source: Partial<APIProxyOptions> = {}) {
+        if (!("renderingApi" in $$source)) {
+            this["renderingApi"] = RenderingAPI.$zero;
+        }
+        if (!("proxies" in $$source)) {
+            this["proxies"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new APIProxyOptions instance from a string or object.
+     */
+    static createFrom($$source: any = {}): APIProxyOptions {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("proxies" in $$parsedSource) {
+            $$parsedSource["proxies"] = $$createField1_0($$parsedSource["proxies"]);
+        }
+        return new APIProxyOptions($$parsedSource as Partial<APIProxyOptions>);
+    }
+}
+
 export enum Action {
     /**
      * The Go zero value for the underlying type of the enum.
@@ -73,6 +102,117 @@ export enum BuildVariant {
     BuildVariantStandard = "standard",
     BuildVariantAddon = "addon",
 };
+
+export class Candidate {
+    "targetRelativePath": string;
+    "executableRelativePath": string;
+    "architecture": Architecture;
+    "apiOptions": APIProxyOptions[];
+    "proxyEvidence": ProxyEvidence[];
+    "conflicts": string[];
+
+    /** Creates a new Candidate instance. */
+    constructor($$source: Partial<Candidate> = {}) {
+        if (!("targetRelativePath" in $$source)) {
+            this["targetRelativePath"] = "";
+        }
+        if (!("executableRelativePath" in $$source)) {
+            this["executableRelativePath"] = "";
+        }
+        if (!("architecture" in $$source)) {
+            this["architecture"] = Architecture.$zero;
+        }
+        if (!("apiOptions" in $$source)) {
+            this["apiOptions"] = [];
+        }
+        if (!("proxyEvidence" in $$source)) {
+            this["proxyEvidence"] = [];
+        }
+        if (!("conflicts" in $$source)) {
+            this["conflicts"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Candidate instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Candidate {
+        const $$createField3_0 = $$createType2;
+        const $$createField4_0 = $$createType4;
+        const $$createField5_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("apiOptions" in $$parsedSource) {
+            $$parsedSource["apiOptions"] = $$createField3_0($$parsedSource["apiOptions"]);
+        }
+        if ("proxyEvidence" in $$parsedSource) {
+            $$parsedSource["proxyEvidence"] = $$createField4_0($$parsedSource["proxyEvidence"]);
+        }
+        if ("conflicts" in $$parsedSource) {
+            $$parsedSource["conflicts"] = $$createField5_0($$parsedSource["conflicts"]);
+        }
+        return new Candidate($$parsedSource as Partial<Candidate>);
+    }
+}
+
+export class DiscoveryResult {
+    "candidates": Candidate[];
+    "warnings": DiscoveryWarning[];
+
+    /** Creates a new DiscoveryResult instance. */
+    constructor($$source: Partial<DiscoveryResult> = {}) {
+        if (!("candidates" in $$source)) {
+            this["candidates"] = [];
+        }
+        if (!("warnings" in $$source)) {
+            this["warnings"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DiscoveryResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DiscoveryResult {
+        const $$createField0_0 = $$createType6;
+        const $$createField1_0 = $$createType8;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("candidates" in $$parsedSource) {
+            $$parsedSource["candidates"] = $$createField0_0($$parsedSource["candidates"]);
+        }
+        if ("warnings" in $$parsedSource) {
+            $$parsedSource["warnings"] = $$createField1_0($$parsedSource["warnings"]);
+        }
+        return new DiscoveryResult($$parsedSource as Partial<DiscoveryResult>);
+    }
+}
+
+export class DiscoveryWarning {
+    "path": string;
+    "message": string;
+
+    /** Creates a new DiscoveryWarning instance. */
+    constructor($$source: Partial<DiscoveryWarning> = {}) {
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+        if (!("message" in $$source)) {
+            this["message"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DiscoveryWarning instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DiscoveryWarning {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DiscoveryWarning($$parsedSource as Partial<DiscoveryWarning>);
+    }
+}
 
 export class Drift {
     "relativePath": string;
@@ -171,6 +311,7 @@ export class ManagedTarget {
     "ProxyFilename": string;
     "Architecture": Architecture;
     "BuildVariant": BuildVariant;
+    "VariantProvenance": VariantProvenance;
     "RuntimeVersion": string;
     "Provenance": InstallerProvenance;
     "ManagementOrigin": string;
@@ -205,6 +346,9 @@ export class ManagedTarget {
         if (!("BuildVariant" in $$source)) {
             this["BuildVariant"] = BuildVariant.$zero;
         }
+        if (!("VariantProvenance" in $$source)) {
+            this["VariantProvenance"] = VariantProvenance.$zero;
+        }
         if (!("RuntimeVersion" in $$source)) {
             this["RuntimeVersion"] = "";
         }
@@ -234,10 +378,10 @@ export class ManagedTarget {
      * Creates a new ManagedTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedTarget {
-        const $$createField9_0 = $$createType0;
+        const $$createField10_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Provenance" in $$parsedSource) {
-            $$parsedSource["Provenance"] = $$createField9_0($$parsedSource["Provenance"]);
+            $$parsedSource["Provenance"] = $$createField10_0($$parsedSource["Provenance"]);
         }
         return new ManagedTarget($$parsedSource as Partial<ManagedTarget>);
     }
@@ -260,6 +404,8 @@ export class Manifest {
     "version": number;
     "files": ManagedFile[];
     "hasPreAdoptionRollbackData": boolean;
+    "variantProvenance"?: VariantProvenance;
+    "userContent"?: UserContent[];
 
     /** Creates a new Manifest instance. */
     constructor($$source: Partial<Manifest> = {}) {
@@ -280,10 +426,14 @@ export class Manifest {
      * Creates a new Manifest instance from a string or object.
      */
     static createFrom($$source: any = {}): Manifest {
-        const $$createField1_0 = $$createType2;
+        const $$createField1_0 = $$createType11;
+        const $$createField4_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("files" in $$parsedSource) {
             $$parsedSource["files"] = $$createField1_0($$parsedSource["files"]);
+        }
+        if ("userContent" in $$parsedSource) {
+            $$parsedSource["userContent"] = $$createField4_0($$parsedSource["userContent"]);
         }
         return new Manifest($$parsedSource as Partial<Manifest>);
     }
@@ -304,12 +454,76 @@ export enum Ownership {
     OwnershipForeign = "foreign",
 };
 
+export class PathImpact {
+    "path": string;
+    "role": PathRole;
+    "action": string;
+    "ownership": Ownership;
+    "exists": boolean;
+    "blocking": boolean;
+    "preservationOnly": boolean;
+
+    /** Creates a new PathImpact instance. */
+    constructor($$source: Partial<PathImpact> = {}) {
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+        if (!("role" in $$source)) {
+            this["role"] = PathRole.$zero;
+        }
+        if (!("action" in $$source)) {
+            this["action"] = "";
+        }
+        if (!("ownership" in $$source)) {
+            this["ownership"] = Ownership.$zero;
+        }
+        if (!("exists" in $$source)) {
+            this["exists"] = false;
+        }
+        if (!("blocking" in $$source)) {
+            this["blocking"] = false;
+        }
+        if (!("preservationOnly" in $$source)) {
+            this["preservationOnly"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new PathImpact instance from a string or object.
+     */
+    static createFrom($$source: any = {}): PathImpact {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new PathImpact($$parsedSource as Partial<PathImpact>);
+    }
+}
+
+export enum PathRole {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    PathRoleRuntime = "runtime",
+    PathRoleConfiguration = "configuration",
+    PathRolePreset = "preset",
+    PathRoleLog = "log",
+    PathRoleBackup = "backup",
+    PathRoleEffects = "effects",
+    PathRoleTextures = "textures",
+    PathRoleAddons = "addons",
+    PathRoleScreenshots = "screenshots",
+};
+
 export class Preview {
     "request": Request;
     "operations": Operation[];
+    "pathImpacts": PathImpact[];
     "warnings": string[];
     "conflicts": string[];
     "drift": Drift[];
+    "userContentDrift": UserContentDrift[];
     "desiredTarget"?: TargetState | null;
     "previewHash": string;
     "canApply": boolean;
@@ -322,6 +536,9 @@ export class Preview {
         if (!("operations" in $$source)) {
             this["operations"] = [];
         }
+        if (!("pathImpacts" in $$source)) {
+            this["pathImpacts"] = [];
+        }
         if (!("warnings" in $$source)) {
             this["warnings"] = [];
         }
@@ -330,6 +547,9 @@ export class Preview {
         }
         if (!("drift" in $$source)) {
             this["drift"] = [];
+        }
+        if (!("userContentDrift" in $$source)) {
+            this["userContentDrift"] = [];
         }
         if (!("previewHash" in $$source)) {
             this["previewHash"] = "";
@@ -345,12 +565,14 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField0_0 = $$createType3;
-        const $$createField1_0 = $$createType5;
-        const $$createField2_0 = $$createType6;
-        const $$createField3_0 = $$createType6;
-        const $$createField4_0 = $$createType8;
-        const $$createField5_0 = $$createType10;
+        const $$createField0_0 = $$createType14;
+        const $$createField1_0 = $$createType16;
+        const $$createField2_0 = $$createType18;
+        const $$createField3_0 = $$createType0;
+        const $$createField4_0 = $$createType0;
+        const $$createField5_0 = $$createType20;
+        const $$createField6_0 = $$createType22;
+        const $$createField7_0 = $$createType24;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("request" in $$parsedSource) {
             $$parsedSource["request"] = $$createField0_0($$parsedSource["request"]);
@@ -358,19 +580,57 @@ export class Preview {
         if ("operations" in $$parsedSource) {
             $$parsedSource["operations"] = $$createField1_0($$parsedSource["operations"]);
         }
+        if ("pathImpacts" in $$parsedSource) {
+            $$parsedSource["pathImpacts"] = $$createField2_0($$parsedSource["pathImpacts"]);
+        }
         if ("warnings" in $$parsedSource) {
-            $$parsedSource["warnings"] = $$createField2_0($$parsedSource["warnings"]);
+            $$parsedSource["warnings"] = $$createField3_0($$parsedSource["warnings"]);
         }
         if ("conflicts" in $$parsedSource) {
-            $$parsedSource["conflicts"] = $$createField3_0($$parsedSource["conflicts"]);
+            $$parsedSource["conflicts"] = $$createField4_0($$parsedSource["conflicts"]);
         }
         if ("drift" in $$parsedSource) {
-            $$parsedSource["drift"] = $$createField4_0($$parsedSource["drift"]);
+            $$parsedSource["drift"] = $$createField5_0($$parsedSource["drift"]);
+        }
+        if ("userContentDrift" in $$parsedSource) {
+            $$parsedSource["userContentDrift"] = $$createField6_0($$parsedSource["userContentDrift"]);
         }
         if ("desiredTarget" in $$parsedSource) {
-            $$parsedSource["desiredTarget"] = $$createField5_0($$parsedSource["desiredTarget"]);
+            $$parsedSource["desiredTarget"] = $$createField7_0($$parsedSource["desiredTarget"]);
         }
         return new Preview($$parsedSource as Partial<Preview>);
+    }
+}
+
+export class ProxyEvidence {
+    "filename": string;
+    "exists": boolean;
+    "isReShade": boolean;
+    "architecture"?: Architecture;
+    "runtimeVersion"?: string;
+    "conflict"?: string;
+
+    /** Creates a new ProxyEvidence instance. */
+    constructor($$source: Partial<ProxyEvidence> = {}) {
+        if (!("filename" in $$source)) {
+            this["filename"] = "";
+        }
+        if (!("exists" in $$source)) {
+            this["exists"] = false;
+        }
+        if (!("isReShade" in $$source)) {
+            this["isReShade"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ProxyEvidence instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ProxyEvidence {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ProxyEvidence($$parsedSource as Partial<ProxyEvidence>);
     }
 }
 
@@ -423,6 +683,8 @@ export class Request {
     "architecture": Architecture;
     "buildVariant": BuildVariant;
     "backupAndContinue": boolean;
+    "singlePlayerAcknowledged": boolean;
+    "antiCheatRiskAcknowledged": boolean;
 
     /** Creates a new Request instance. */
     constructor($$source: Partial<Request> = {}) {
@@ -452,6 +714,12 @@ export class Request {
         }
         if (!("backupAndContinue" in $$source)) {
             this["backupAndContinue"] = false;
+        }
+        if (!("singlePlayerAcknowledged" in $$source)) {
+            this["singlePlayerAcknowledged"] = false;
+        }
+        if (!("antiCheatRiskAcknowledged" in $$source)) {
+            this["antiCheatRiskAcknowledged"] = false;
         }
 
         Object.assign(this, $$source);
@@ -494,8 +762,8 @@ export class TargetState {
      * Creates a new TargetState instance from a string or object.
      */
     static createFrom($$source: any = {}): TargetState {
-        const $$createField1_0 = $$createType0;
-        const $$createField3_0 = $$createType11;
+        const $$createField1_0 = $$createType9;
+        const $$createField3_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("provenance" in $$parsedSource) {
             $$parsedSource["provenance"] = $$createField1_0($$parsedSource["provenance"]);
@@ -507,16 +775,118 @@ export class TargetState {
     }
 }
 
+export class UserContent {
+    "path": string;
+    "role": PathRole;
+    "sha256"?: string;
+    "sizeBytes"?: number;
+    "exists": boolean;
+    "external": boolean;
+    "directory": boolean;
+    "inventoryOnly": boolean;
+
+    /** Creates a new UserContent instance. */
+    constructor($$source: Partial<UserContent> = {}) {
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+        if (!("role" in $$source)) {
+            this["role"] = PathRole.$zero;
+        }
+        if (!("exists" in $$source)) {
+            this["exists"] = false;
+        }
+        if (!("external" in $$source)) {
+            this["external"] = false;
+        }
+        if (!("directory" in $$source)) {
+            this["directory"] = false;
+        }
+        if (!("inventoryOnly" in $$source)) {
+            this["inventoryOnly"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UserContent instance from a string or object.
+     */
+    static createFrom($$source: any = {}): UserContent {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new UserContent($$parsedSource as Partial<UserContent>);
+    }
+}
+
+export class UserContentDrift {
+    "path": string;
+    "role": PathRole;
+    "expectedHash"?: string;
+    "actualHash"?: string;
+    "missing": boolean;
+    "external": boolean;
+
+    /** Creates a new UserContentDrift instance. */
+    constructor($$source: Partial<UserContentDrift> = {}) {
+        if (!("path" in $$source)) {
+            this["path"] = "";
+        }
+        if (!("role" in $$source)) {
+            this["role"] = PathRole.$zero;
+        }
+        if (!("missing" in $$source)) {
+            this["missing"] = false;
+        }
+        if (!("external" in $$source)) {
+            this["external"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UserContentDrift instance from a string or object.
+     */
+    static createFrom($$source: any = {}): UserContentDrift {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new UserContentDrift($$parsedSource as Partial<UserContentDrift>);
+    }
+}
+
+export enum VariantProvenance {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    VariantProvenanceVerified = "verified",
+    VariantProvenanceUserDeclared = "user_declared",
+};
+
 // Private type creation functions
-const $$createType0 = InstallerProvenance.createFrom;
-const $$createType1 = ManagedFile.createFrom;
+const $$createType0 = $Create.Array($Create.Any);
+const $$createType1 = APIProxyOptions.createFrom;
 const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = Request.createFrom;
-const $$createType4 = filetxn$0.Operation.createFrom;
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = $Create.Array($Create.Any);
-const $$createType7 = Drift.createFrom;
+const $$createType3 = ProxyEvidence.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = Candidate.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = DiscoveryWarning.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = TargetState.createFrom;
-const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = Manifest.createFrom;
+const $$createType9 = InstallerProvenance.createFrom;
+const $$createType10 = ManagedFile.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = UserContent.createFrom;
+const $$createType13 = $Create.Array($$createType12);
+const $$createType14 = Request.createFrom;
+const $$createType15 = filetxn$0.Operation.createFrom;
+const $$createType16 = $Create.Array($$createType15);
+const $$createType17 = PathImpact.createFrom;
+const $$createType18 = $Create.Array($$createType17);
+const $$createType19 = Drift.createFrom;
+const $$createType20 = $Create.Array($$createType19);
+const $$createType21 = UserContentDrift.createFrom;
+const $$createType22 = $Create.Array($$createType21);
+const $$createType23 = TargetState.createFrom;
+const $$createType24 = $Create.Nullable($$createType23);
+const $$createType25 = Manifest.createFrom;

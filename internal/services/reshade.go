@@ -190,6 +190,27 @@ func (s *ReshadeService) ListManagedReShadeTargets(ctx context.Context, gameID i
 	return s.manager.ListTargets(ctx, game.InstallPath, gameID)
 }
 
+func (s *ReshadeService) DiscoverManagedReShadeCandidates(
+	ctx context.Context,
+	gameID int64,
+) (result dto.ManagedReShadeDiscoveryResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("discover game managed ReShade candidates: %w", err)
+		}
+	}()
+	if s.operatingSystem != "windows" {
+		return dto.ManagedReShadeDiscoveryResult{}, errors.New(
+			"managed ReShade discovery is only supported on Windows",
+		)
+	}
+	game, err := s.store.GetStoredGame(ctx, gameID)
+	if err != nil {
+		return dto.ManagedReShadeDiscoveryResult{}, err
+	}
+	return reshade.DiscoverCandidates(game.InstallPath, reshade.DiscoveryOptions{})
+}
+
 func (s *ReshadeService) PreviewManagedReShadeAction(ctx context.Context, request dto.ManagedReShadeRequest) (result dto.ManagedReShadePreview, err error) {
 	defer func() {
 		if err != nil {

@@ -552,6 +552,9 @@ export class ListDiagnosticLogsInput {
 export const ManagedReShadeApplyResult = reshade$0.ApplyResult;
 export type ManagedReShadeApplyResult = reshade$0.ApplyResult;
 
+export const ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
+export type ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
+
 export const ManagedReShadePreview = reshade$0.Preview;
 export type ManagedReShadePreview = reshade$0.Preview;
 

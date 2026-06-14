@@ -27,39 +27,45 @@ export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReS
     });
 }
 
+export function DiscoverManagedReShadeCandidates(gameID: number): $CancellablePromise<dto$0.ManagedReShadeDiscoveryResult> {
+    return $Call.ByID(910385421, gameID).then(($result: any) => {
+        return $$createType2($result);
+    });
+}
+
 export function DownloadAndOpenReShadeAddonInstaller(): $CancellablePromise<dto$0.ReShadeInstallerLaunchResult> {
     return $Call.ByID(742606874).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
 export function DownloadAndOpenReShadeInstaller(): $CancellablePromise<dto$0.ReShadeInstallerLaunchResult> {
     return $Call.ByID(2558615308).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
 export function GetManagedReShadeRecoveryState(): $CancellablePromise<dto$0.ManagedReShadeRecoveryState> {
     return $Call.ByID(4192553982).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
     });
 }
 
 export function ListManagedReShadeTargets(gameID: number): $CancellablePromise<dto$0.ManagedReShadeTarget[]> {
     return $Call.ByID(1467684570, gameID).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
 }
 
 export function PreflightReShadeInstaller(gameID: number, variant: optiscaler$0.ReShadeInstallerVariant): $CancellablePromise<dto$0.ReShadeInstallerPreflight> {
     return $Call.ByID(1403113674, gameID, variant).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType7($result);
     });
 }
 
 export function PreviewManagedReShadeAction(request: dto$0.ManagedReShadeRequest): $CancellablePromise<dto$0.ManagedReShadePreview> {
     return $Call.ByID(2098758272, request).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType8($result);
     });
 }
 
@@ -72,9 +78,10 @@ export function RollbackManagedReShadeRecovery(journalID: string): $CancellableP
 // Private type creation functions
 const $$createType0 = reshade$0.ApplyResult.createFrom;
 const $$createType1 = dto$0.ReShadeDetectionResult.createFrom;
-const $$createType2 = dto$0.ReShadeInstallerLaunchResult.createFrom;
-const $$createType3 = reshade$0.RecoveryState.createFrom;
-const $$createType4 = reshade$0.ManagedTarget.createFrom;
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = dto$0.ReShadeInstallerPreflight.createFrom;
-const $$createType7 = reshade$0.Preview.createFrom;
+const $$createType2 = reshade$0.DiscoveryResult.createFrom;
+const $$createType3 = dto$0.ReShadeInstallerLaunchResult.createFrom;
+const $$createType4 = reshade$0.RecoveryState.createFrom;
+const $$createType5 = reshade$0.ManagedTarget.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = dto$0.ReShadeInstallerPreflight.createFrom;
+const $$createType8 = reshade$0.Preview.createFrom;

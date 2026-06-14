@@ -53,3 +53,4 @@ type ManagedReShadePreview = reshade.Preview
 type ManagedReShadeApplyResult = reshade.ApplyResult
 type ManagedReShadeRecoveryState = reshade.RecoveryState
 type ManagedReShadeTarget = reshade.ManagedTarget
+type ManagedReShadeDiscoveryResult = reshade.DiscoveryResult

@@ -135,6 +135,27 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 	}
 }
 
+func TestReshadeServiceDiscoverManagedReShadeCandidatesReturnsPerFileWarnings(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "Broken.exe"))
+	gameID := insertServiceTestGame(t, store, "Portal", root)
+
+	service := NewReshadeService(store, testLogger())
+	service.operatingSystem = "windows"
+	result, err := service.DiscoverManagedReShadeCandidates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("DiscoverManagedReShadeCandidates() error = %v", err)
+	}
+	if len(result.Candidates) != 0 || len(result.Warnings) != 1 {
+		t.Fatalf("result = %+v", result)
+	}
+}
+
 func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
 	t.Parallel()
 

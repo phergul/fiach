@@ -12,6 +12,7 @@ import (
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/filetxn"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
+	"github.com/phergul/fiach/internal/winversion"
 )
 
 func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview) (ApplyResult, error) {
@@ -76,6 +77,9 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 		}
 	}
 	if err := filetxn.VerifyOperations(preview.Operations); err != nil {
+		return rollback(err)
+	}
+	if err := m.verifyApplied(targetPath, preview); err != nil {
 		return rollback(err)
 	}
 	if err := m.commitState(ctx, targetPath, preview); err != nil {
@@ -252,3 +256,75 @@ func (m *Manager) archiveUninstall(ctx context.Context, targetPath string, previ
 }
 
 const timeFormat = "2006-01-02T15:04:05.999999999Z07:00"
+
+func verifyAppliedReShadeState(targetPath string, preview Preview) error {
+	if preview.Request.Action == ActionUninstall {
+		return nil
+	}
+	if preview.DesiredTarget == nil {
+		return errors.New("desired ReShade target state is required for verification")
+	}
+	switch preview.DesiredTarget.Manifest.VariantProvenance {
+	case VariantProvenanceVerified:
+		if preview.DesiredTarget.Provenance.Digest == nil ||
+			strings.TrimSpace(*preview.DesiredTarget.Provenance.Digest) == "" {
+			return errors.New("verified ReShade variant is missing installer provenance")
+		}
+	case VariantProvenanceUserDeclared:
+		if preview.Request.Action != ActionAdopt &&
+			preview.DesiredTarget.ManagementOrigin != "adopted" {
+			return errors.New("user-declared ReShade variant is only valid for adopted targets")
+		}
+	default:
+		return errors.New("ReShade variant provenance is missing")
+	}
+	runtimePath := filepath.Join(targetPath, preview.Request.ProxyFilename)
+	metadata, err := winversion.Read(runtimePath)
+	if err != nil {
+		return fmt.Errorf("read installed ReShade runtime metadata: %w", err)
+	}
+	if !isReShadeMetadata(metadata) {
+		return errors.New("installed runtime is not positively identified as ReShade")
+	}
+	architecture, err := inspectPEArchitecture(runtimePath)
+	if err != nil {
+		return err
+	}
+	if architecture != preview.Request.Architecture {
+		return fmt.Errorf(
+			"installed runtime architecture %q does not match %q",
+			architecture,
+			preview.Request.Architecture,
+		)
+	}
+	version := runtimeVersionFromMetadata(metadata)
+	if version == "" || version != preview.DesiredTarget.RuntimeVersion {
+		return fmt.Errorf(
+			"installed runtime version %q does not match %q",
+			version,
+			preview.DesiredTarget.RuntimeVersion,
+		)
+	}
+	reShadeProxies := 0
+	for _, filename := range supportedDirectXProxies {
+		path := filepath.Join(targetPath, filename)
+		info, statErr := os.Stat(path)
+		if errors.Is(statErr, os.ErrNotExist) {
+			continue
+		}
+		if statErr != nil || !info.Mode().IsRegular() {
+			return fmt.Errorf("inspect final DirectX proxy %q", filename)
+		}
+		proxyMetadata, metadataErr := winversion.Read(path)
+		if metadataErr == nil && isReShadeMetadata(proxyMetadata) {
+			reShadeProxies++
+			if !strings.EqualFold(filename, preview.Request.ProxyFilename) {
+				return fmt.Errorf("unexpected ReShade proxy %q remains installed", filename)
+			}
+		}
+	}
+	if reShadeProxies != 1 {
+		return fmt.Errorf("final ReShade proxy count is %d, want 1", reShadeProxies)
+	}
+	return nil
+}

@@ -62,19 +62,12 @@ func (s *memoryReShadeStore) DeleteReShadeTarget(_ context.Context, gameID int64
 	return nil
 }
 
-func TestManagerProductionPlannerReturnsBlockingPreview(t *testing.T) {
+func TestManagerProductionPlannerRejectsInvalidExecutable(t *testing.T) {
 	t.Parallel()
 	root, request := newReShadeRequest(t)
 	manager := NewManager(newMemoryReShadeStore(), ManagerOptions{DataDir: t.TempDir()})
-	preview, err := manager.Preview(context.Background(), root, request)
-	if err != nil {
-		t.Fatalf("Preview() error = %v", err)
-	}
-	if preview.CanApply || len(preview.Conflicts) != 1 || preview.PreviewHash == "" {
-		t.Fatalf("Preview() = %+v", preview)
-	}
-	if _, err := manager.Apply(context.Background(), root, request, preview.PreviewHash); err == nil {
-		t.Fatal("Apply() error = nil")
+	if _, err := manager.Preview(context.Background(), root, request); err == nil {
+		t.Fatal("Preview() error = nil")
 	}
 }
 
@@ -240,7 +233,7 @@ func TestManagerListsUnsupportedManifestAsIncompatible(t *testing.T) {
 		ID: 1, GameID: 1, TargetRelativePath: ".", ExecutableRelativePath: "Game.exe",
 		RenderingAPI: "d3d11", ProxyFilename: "dxgi.dll", Architecture: "x64",
 		BuildVariant: "standard", RuntimeVersion: "6", ManagementOrigin: "installed",
-		Status: "managed", ManifestJSON: `{"version":2,"files":[]}`,
+		Status: "managed", ManifestJSON: `{"version":3,"files":[]}`,
 	}
 	manager := NewManager(store, ManagerOptions{DataDir: t.TempDir()})
 	targets, err := manager.ListTargets(context.Background(), root, 1)
@@ -262,6 +255,31 @@ func TestDecodeManifestRejectsUnknownVersionAndOwnership(t *testing.T) {
 		if _, err := DecodeManifest(string(contents)); err == nil {
 			t.Fatalf("DecodeManifest(%s) error = nil", contents)
 		}
+	}
+}
+
+func TestNormalizeRequestValidatesProxyMapAndAddonAcknowledgements(t *testing.T) {
+	t.Parallel()
+	root, request := newReShadeRequest(t)
+	request.ProxyFilename = "d3d9.dll"
+	if _, _, err := normalizeRequest(root, request); err == nil {
+		t.Fatal("normalizeRequest() accepted D3D9 proxy for D3D11")
+	}
+	request.ProxyFilename = "dxgi.dll"
+	request.BuildVariant = BuildVariantAddon
+	if _, _, err := normalizeRequest(root, request); err == nil {
+		t.Fatal("normalizeRequest() accepted add-on request without acknowledgements")
+	}
+	request.SinglePlayerAcknowledged = true
+	request.AntiCheatRiskAcknowledged = true
+	if _, _, err := normalizeRequest(root, request); err != nil {
+		t.Fatalf("normalizeRequest() error = %v", err)
+	}
+	request.Action = ActionUninstall
+	request.SinglePlayerAcknowledged = false
+	request.AntiCheatRiskAcknowledged = false
+	if _, _, err := normalizeRequest(root, request); err != nil {
+		t.Fatalf("normalizeRequest(uninstall) error = %v", err)
 	}
 }
 

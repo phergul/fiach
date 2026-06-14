@@ -42,6 +42,7 @@ type ManagerOptions struct {
 	DataDir           string
 	Now               func() time.Time
 	Planner           Planner
+	VerifyApplied     func(string, Preview) error
 	ExecuteOperation  func(Operation) error
 	RollbackSnapshots func([]filetxn.Snapshot) error
 }
@@ -51,6 +52,7 @@ type Manager struct {
 	dataDir           string
 	now               func() time.Time
 	planner           Planner
+	verifyApplied     func(string, Preview) error
 	executeOperation  func(Operation) error
 	rollbackSnapshots func([]filetxn.Snapshot) error
 	mu                sync.Mutex
@@ -63,8 +65,17 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 	if options.Now == nil {
 		options.Now = time.Now
 	}
-	if options.Planner == nil {
-		options.Planner = unavailablePlanner{}
+	productionPlanner := options.Planner == nil
+	if productionPlanner {
+		options.Planner = NewDirectXPlanner(DirectXPlannerOptions{})
+	}
+	if options.VerifyApplied == nil {
+		options.VerifyApplied = func(string, Preview) error {
+			return nil
+		}
+		if productionPlanner {
+			options.VerifyApplied = verifyAppliedReShadeState
+		}
 	}
 	if options.ExecuteOperation == nil {
 		options.ExecuteOperation = func(operation Operation) error {
@@ -79,23 +90,10 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 		dataDir:           options.DataDir,
 		now:               options.Now,
 		planner:           options.Planner,
+		verifyApplied:     options.VerifyApplied,
 		executeOperation:  options.ExecuteOperation,
 		rollbackSnapshots: options.RollbackSnapshots,
 	}
-}
-
-type unavailablePlanner struct{}
-
-func (unavailablePlanner) Plan(_ context.Context, _ string, request Request, _ *dbtypes.ReShadeTarget) (Preview, error) {
-	return Preview{
-		Request:    request,
-		Operations: []Operation{},
-		Warnings:   []string{},
-		Conflicts: []string{
-			"Managed ReShade DirectX planning is not available until MOD-095 is implemented.",
-		},
-		Drift: []Drift{},
-	}, nil
 }
 
 func (m *Manager) ListTargets(ctx context.Context, gameRoot string, gameID int64) (targets []ManagedTarget, err error) {
@@ -134,7 +132,7 @@ func (m *Manager) ListTargets(ctx context.Context, gameRoot string, gameID int64
 				}
 			}
 		}
-		targets = append(targets, managedTargetFromRow(row, status))
+		targets = append(targets, managedTargetFromRow(row, status, manifest))
 	}
 	return targets, nil
 }
@@ -178,6 +176,9 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	if preview.Operations == nil {
 		preview.Operations = []Operation{}
 	}
+	if preview.PathImpacts == nil {
+		preview.PathImpacts = []PathImpact{}
+	}
 	if preview.Warnings == nil {
 		preview.Warnings = []string{}
 	}
@@ -186,6 +187,9 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	}
 	if preview.Drift == nil {
 		preview.Drift = []Drift{}
+	}
+	if preview.UserContentDrift == nil {
+		preview.UserContentDrift = []UserContentDrift{}
 	}
 	if found && request.Action != ActionAdopt {
 		preview.Drift, err = detectManifestDrift(targetPath, manifest)
@@ -196,9 +200,26 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			preview.Conflicts = append(preview.Conflicts,
 				"Managed ReShade files have drifted; backup-and-continue must be explicitly selected.")
 		}
+		preview.UserContentDrift, err = detectUserContentDrift(gameRoot, manifest)
+		if err != nil {
+			return Preview{}, err
+		}
 	}
 	if err := m.annotateOperationBackups(targetPath, request, manifest, found, preview.Operations); err != nil {
 		return Preview{}, err
+	}
+	for _, operation := range preview.Operations {
+		if strings.TrimSpace(operation.BackupPath) == "" {
+			continue
+		}
+		preview.PathImpacts = append(preview.PathImpacts, PathImpact{
+			Path:             operation.BackupPath,
+			Role:             PathRoleBackup,
+			Action:           "create",
+			Ownership:        OwnershipManaged,
+			Exists:           pathExists(operation.BackupPath),
+			PreservationOnly: true,
+		})
 	}
 	if err := validatePlannedMutation(targetPath, preview, manifest, found); err != nil {
 		return Preview{}, err
@@ -316,8 +337,21 @@ func normalizeRequest(gameRoot string, request Request) (Request, string, error)
 	if !slices.Contains([]BuildVariant{BuildVariantStandard, BuildVariantAddon}, request.BuildVariant) {
 		return Request{}, "", errors.New("build variant is invalid")
 	}
+	if request.BuildVariant == BuildVariantAddon &&
+		request.Action != ActionUninstall &&
+		(!request.SinglePlayerAcknowledged || !request.AntiCheatRiskAcknowledged) {
+		return Request{}, "", errors.New(
+			"full add-on build requires separate single-player and anti-cheat risk acknowledgements")
+	}
 	if strings.TrimSpace(request.ProxyFilename) == "" {
 		return Request{}, "", errors.New("proxy filename is required")
+	}
+	if !proxyAllowedForAPI(request.RenderingAPI, request.ProxyFilename) {
+		return Request{}, "", fmt.Errorf(
+			"proxy filename %q is not supported for rendering API %q",
+			request.ProxyFilename,
+			request.RenderingAPI,
+		)
 	}
 	targetPath, err := ResolveWithinRoot(gameRoot, request.TargetRelativePath)
 	if err != nil {
@@ -338,6 +372,10 @@ func validatePlannedMutation(targetPath string, preview Preview, existing Manife
 		return err
 	}
 	manifest := existing
+	ownership := map[string]Ownership{}
+	for _, file := range existing.Files {
+		ownership[strings.ToLower(filepath.Clean(file.RelativePath))] = file.Ownership
+	}
 	if preview.DesiredTarget != nil {
 		manifest = preview.DesiredTarget.Manifest
 		encoded, err := json.Marshal(manifest)
@@ -350,7 +388,6 @@ func validatePlannedMutation(targetPath string, preview Preview, existing Manife
 	} else if !found && len(preview.Operations) > 0 {
 		return errors.New("planned mutation has no desired target manifest")
 	}
-	ownership := map[string]Ownership{}
 	for _, file := range manifest.Files {
 		ownership[strings.ToLower(filepath.Clean(file.RelativePath))] = file.Ownership
 	}
@@ -360,11 +397,28 @@ func validatePlannedMutation(targetPath string, preview Preview, existing Manife
 			return err
 		}
 		owner := ownership[strings.ToLower(filepath.Clean(relative))]
-		if owner != OwnershipManaged && owner != OwnershipAdopted {
+		if owner != OwnershipManaged && owner != OwnershipAdopted &&
+			!(operation.Type == "copy" && owner == OwnershipUser) {
 			return fmt.Errorf("operation target %q is not manifest-owned", relative)
 		}
 	}
 	return nil
+}
+
+func proxyAllowedForAPI(renderingAPI RenderingAPI, proxyFilename string) bool {
+	proxyFilename = strings.ToLower(strings.TrimSpace(proxyFilename))
+	switch renderingAPI {
+	case RenderingAPID3D9:
+		return proxyFilename == "d3d9.dll"
+	case RenderingAPID3D10:
+		return slices.Contains([]string{"d3d10.dll", "d3d10core.dll", "dxgi.dll"}, proxyFilename)
+	case RenderingAPID3D11:
+		return slices.Contains([]string{"d3d11.dll", "dxgi.dll"}, proxyFilename)
+	case RenderingAPID3D12:
+		return slices.Contains([]string{"d3d12.dll", "dxgi.dll"}, proxyFilename)
+	default:
+		return false
+	}
 }
 
 func hashPreview(preview Preview) (string, error) {
@@ -382,7 +436,11 @@ func hashBytes(value []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func managedTargetFromRow(row dbtypes.ReShadeTarget, status ManagementStatus) ManagedTarget {
+func managedTargetFromRow(
+	row dbtypes.ReShadeTarget,
+	status ManagementStatus,
+	manifest Manifest,
+) ManagedTarget {
 	return ManagedTarget{
 		ID:                     row.ID,
 		GameID:                 row.GameID,
@@ -392,6 +450,7 @@ func managedTargetFromRow(row dbtypes.ReShadeTarget, status ManagementStatus) Ma
 		ProxyFilename:          row.ProxyFilename,
 		Architecture:           Architecture(row.Architecture),
 		BuildVariant:           BuildVariant(row.BuildVariant),
+		VariantProvenance:      manifest.VariantProvenance,
 		RuntimeVersion:         row.RuntimeVersion,
 		Provenance: InstallerProvenance{
 			Tag:       row.InstallerTag,

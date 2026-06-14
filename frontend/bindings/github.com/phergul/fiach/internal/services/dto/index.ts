@@ -18,6 +18,7 @@ export {
     ImportTargetDetectionResult,
     ListDiagnosticLogsInput,
     ManagedReShadeApplyResult,
+    ManagedReShadeDiscoveryResult,
     ManagedReShadePreview,
     ManagedReShadeRecoveryState,
     ManagedReShadeRequest,
