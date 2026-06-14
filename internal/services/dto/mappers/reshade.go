@@ -9,8 +9,9 @@ func ToDTOReShadeTargets(targets []reshade.Target) []dto.ReShadeTarget {
 	result := make([]dto.ReShadeTarget, 0, len(targets))
 	for _, target := range targets {
 		result = append(result, dto.ReShadeTarget{
-			Path:        target.Path,
-			Executables: append([]string(nil), target.Executables...),
+			Path:             target.Path,
+			Executables:      append([]string(nil), target.Executables...),
+			ManagementStatus: reshade.ManagementStatusUnmanaged,
 		})
 	}
 

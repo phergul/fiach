@@ -8,6 +8,9 @@ import { Create as $Create } from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as optiscaler$0 from "../../optiscaler/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as reshade$0 from "../../reshade/models.js";
 
 export class AppliedDirectoryManifestEntry {
     "OperationIndex": number;
@@ -545,6 +548,21 @@ export class ListDiagnosticLogsInput {
         return new ListDiagnosticLogsInput($$parsedSource as Partial<ListDiagnosticLogsInput>);
     }
 }
+
+export const ManagedReShadeApplyResult = reshade$0.ApplyResult;
+export type ManagedReShadeApplyResult = reshade$0.ApplyResult;
+
+export const ManagedReShadePreview = reshade$0.Preview;
+export type ManagedReShadePreview = reshade$0.Preview;
+
+export const ManagedReShadeRecoveryState = reshade$0.RecoveryState;
+export type ManagedReShadeRecoveryState = reshade$0.RecoveryState;
+
+export const ManagedReShadeRequest = reshade$0.Request;
+export type ManagedReShadeRequest = reshade$0.Request;
+
+export const ManagedReShadeTarget = reshade$0.ManagedTarget;
+export type ManagedReShadeTarget = reshade$0.ManagedTarget;
 
 export class Mod {
     "ID": number;
@@ -1666,6 +1684,7 @@ export class ReShadeManagedTarget {
 export class ReShadeTarget {
     "Path": string;
     "Executables": string[];
+    "ManagementStatus": reshade$0.ManagementStatus;
 
     /** Creates a new ReShadeTarget instance. */
     constructor($$source: Partial<ReShadeTarget> = {}) {
@@ -1674,6 +1693,9 @@ export class ReShadeTarget {
         }
         if (!("Executables" in $$source)) {
             this["Executables"] = [];
+        }
+        if (!("ManagementStatus" in $$source)) {
+            this["ManagementStatus"] = reshade$0.ManagementStatus.$zero;
         }
 
         Object.assign(this, $$source);

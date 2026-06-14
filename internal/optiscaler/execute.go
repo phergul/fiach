@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/filetxn"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
@@ -108,109 +109,19 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 }
 
 func (m *Manager) snapshotOperationTargets(journalID string, operations []Operation) ([]journalSnapshot, error) {
-	root := filepath.Join(m.dataDir, "journals", journalID)
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		return nil, err
-	}
-	seen := map[string]bool{}
-	var snapshots []journalSnapshot
-	for _, operation := range operations {
-		for _, target := range operationTouchedPaths(operation) {
-			key := strings.ToLower(filepath.Clean(target))
-			if seen[key] {
-				continue
-			}
-			seen[key] = true
-			snapshot := journalSnapshot{TargetPath: target}
-			info, err := os.Stat(target)
-			if errors.Is(err, os.ErrNotExist) {
-				snapshots = append(snapshots, snapshot)
-				continue
-			}
-			if err != nil {
-				return nil, err
-			}
-			if !info.Mode().IsRegular() {
-				return nil, fmt.Errorf("mutation target %q is not a regular file", target)
-			}
-			snapshot.Existed = true
-			snapshot.BackupPath = filepath.Join(root, fmt.Sprintf("%03d.bak", len(snapshots)))
-			if err := fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-				SourcePath: target,
-				TargetPath: snapshot.BackupPath,
-				Mode:       0o644,
-				Replace:    false,
-				OpenLabel:  "mutation target",
-			}); err != nil {
-				return nil, err
-			}
-			snapshot.SHA256, snapshot.SizeBytes, err = fileops.FileIntegrity(snapshot.BackupPath)
-			if err != nil {
-				return nil, err
-			}
-			snapshots = append(snapshots, snapshot)
-		}
-	}
-	return snapshots, nil
+	return filetxn.SnapshotOperations(filepath.Join(m.dataDir, "journals", journalID), operations)
 }
 
 func operationTouchedPaths(operation Operation) []string {
-	if operation.Type == "move" {
-		return []string{operation.SourcePath, operation.TargetPath}
-	}
-	return []string{operation.TargetPath}
+	return filetxn.TouchedPaths(operation)
 }
 
 func executeOperation(operation Operation) error {
-	switch operation.Type {
-	case "copy", "restore":
-		if err := os.MkdirAll(filepath.Dir(operation.TargetPath), 0o755); err != nil {
-			return err
-		}
-		return fileops.CopyFileAtomic(fileops.AtomicCopyOptions{
-			SourcePath: operation.SourcePath,
-			TargetPath: operation.TargetPath,
-			Mode:       0o644,
-			Replace:    true,
-			OpenLabel:  "staged OptiScaler file",
-		})
-	case "delete":
-		if err := os.Remove(operation.TargetPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-		return nil
-	case "move":
-		if err := os.Remove(operation.TargetPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-		return os.Rename(operation.SourcePath, operation.TargetPath)
-	case "adopt":
-		return nil
-	default:
-		return fmt.Errorf("unsupported operation type %q", operation.Type)
-	}
+	return filetxn.ExecuteOperation(operation, "staged OptiScaler file")
 }
 
 func verifyOperations(operations []Operation) error {
-	for _, operation := range operations {
-		switch operation.Type {
-		case "copy", "restore", "adopt":
-			matches, err := fileops.FileMatchesIntegrity(operation.TargetPath, operation.SHA256, operation.SizeBytes)
-			if err != nil || !matches {
-				return fmt.Errorf("verify managed file %q", operation.TargetPath)
-			}
-		case "delete":
-			if _, err := os.Stat(operation.TargetPath); !errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("verify deleted file %q", operation.TargetPath)
-			}
-		case "move":
-			info, err := os.Stat(operation.TargetPath)
-			if err != nil || !info.Mode().IsRegular() {
-				return fmt.Errorf("verify moved target %q", operation.TargetPath)
-			}
-		}
-	}
-	return nil
+	return filetxn.VerifyOperations(operations)
 }
 
 func (m *Manager) commitState(ctx context.Context, targetPath string, preview Preview, snapshots []journalSnapshot) error {

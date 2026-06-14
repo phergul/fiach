@@ -18,6 +18,18 @@ defer func() {
     - `internal/services/mod.go`: `ModService`
     - `internal/services/profile.go`: `ProfileService`
     - `internal/services/profile_mods.go`: `ProfileService` methods that manage profile-mod membership and state.
+- Always expand go objects (for formatting) and don't have multiple attributes on the same line (one attribute objects can be inlined):
+```
+//good
+return ApplyResult{
+	Success:    true,
+	RolledBack: true,
+	Message:    "Recovery rollback completed.",
+}
+
+//bad
+return ApplyResult{Success: true, RolledBack: true, Message: "ReShade recovery rollback completed."}
+```
 
 # Frontend
 

@@ -49,6 +49,8 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
+        env:
+          NODE_ENV: development
         run: bun install --frozen-lockfile
 
       - name: Type-check frontend

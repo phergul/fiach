@@ -7,6 +7,9 @@ import { Create as $Create } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as filetxn$0 from "../filetxn/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as time$0 from "../../../../../time/models.js";
 
 export enum Action {
@@ -145,34 +148,8 @@ export enum GraphicsAPI {
     GraphicsAPIVulkan = "vulkan",
 };
 
-export class Operation {
-    "type": string;
-    "sourcePath"?: string;
-    "targetPath": string;
-    "backupPath"?: string;
-    "sha256"?: string;
-    "sizeBytes"?: number;
-
-    /** Creates a new Operation instance. */
-    constructor($$source: Partial<Operation> = {}) {
-        if (!("type" in $$source)) {
-            this["type"] = "";
-        }
-        if (!("targetPath" in $$source)) {
-            this["targetPath"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new Operation instance from a string or object.
-     */
-    static createFrom($$source: any = {}): Operation {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new Operation($$parsedSource as Partial<Operation>);
-    }
-}
+export const Operation = filetxn$0.Operation;
+export type Operation = filetxn$0.Operation;
 
 export class Preview {
     "request": Request;
@@ -539,7 +516,7 @@ export class Request {
 const $$createType0 = $Create.Array($Create.Any);
 const $$createType1 = Request.createFrom;
 const $$createType2 = Release.createFrom;
-const $$createType3 = Operation.createFrom;
+const $$createType3 = filetxn$0.Operation.createFrom;
 const $$createType4 = $Create.Array($$createType3);
 const $$createType5 = Drift.createFrom;
 const $$createType6 = $Create.Array($$createType5);

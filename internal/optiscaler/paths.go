@@ -1,11 +1,12 @@
 package optiscaler
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/phergul/fiach/internal/filetxn"
 )
 
 func ResolveWithinRoot(root string, relativePath string) (resolved string, err error) {
@@ -15,24 +16,7 @@ func ResolveWithinRoot(root string, relativePath string) (resolved string, err e
 		}
 	}()
 
-	root, err = filepath.Abs(strings.TrimSpace(root))
-	if err != nil {
-		return "", err
-	}
-	relativePath = filepath.Clean(strings.TrimSpace(relativePath))
-	if relativePath == "" || filepath.IsAbs(relativePath) ||
-		relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) {
-		return "", errors.New("relative path must stay inside the game root")
-	}
-	resolved = filepath.Join(root, relativePath)
-	rel, err := filepath.Rel(root, resolved)
-	if err != nil {
-		return "", err
-	}
-	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", errors.New("resolved path escapes the game root")
-	}
-	return filepath.Clean(resolved), nil
+	return filetxn.ResolveWithinRoot(root, relativePath)
 }
 
 func RelativeToRoot(root string, path string) (relative string, err error) {
@@ -42,25 +26,7 @@ func RelativeToRoot(root string, path string) (relative string, err error) {
 		}
 	}()
 
-	root, err = filepath.Abs(root)
-	if err != nil {
-		return "", err
-	}
-	path, err = filepath.Abs(path)
-	if err != nil {
-		return "", err
-	}
-	relative, err = filepath.Rel(root, path)
-	if err != nil {
-		return "", err
-	}
-	if relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
-		return "", errors.New("path is outside the game root")
-	}
-	if relative == "" {
-		return ".", nil
-	}
-	return filepath.Clean(relative), nil
+	return filetxn.RelativeToRoot(root, path)
 }
 
 func requireNoSymlinkComponents(root string, path string) error {

@@ -1,6 +1,10 @@
 package optiscaler
 
-import "time"
+import (
+	"time"
+
+	"github.com/phergul/fiach/internal/filetxn"
+)
 
 const (
 	ManifestVersion = 1
@@ -117,14 +121,7 @@ type Request struct {
 	EnableReShadeCoexistence bool        `json:"enableReShadeCoexistence"`
 }
 
-type Operation struct {
-	Type       string `json:"type"`
-	SourcePath string `json:"sourcePath,omitempty"`
-	TargetPath string `json:"targetPath"`
-	BackupPath string `json:"backupPath,omitempty"`
-	SHA256     string `json:"sha256,omitempty"`
-	SizeBytes  int64  `json:"sizeBytes,omitempty"`
-}
+type Operation = filetxn.Operation
 
 type Drift struct {
 	RelativePath string `json:"relativePath"`

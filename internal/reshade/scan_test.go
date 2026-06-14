@@ -227,6 +227,25 @@ func TestScanDetectsManagedChainedReShadeRuntime(t *testing.T) {
 	}})
 }
 
+func TestScanDetectsManagedX86ChainedReShadeRuntime(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	target := filepath.Join(root, "bin")
+	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade32.dll"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
+
+	result, err := scan(root, []string{target}, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{ProductName: "ReShade", OriginalFilename: "ReShade32.dll"}, nil
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+	assertReShadeTargets(t, result, []Target{{
+		Path: target, Executables: []string{filepath.Join(target, "Game.exe")},
+	}})
+}
+
 func TestScanRejectsUnmanagedChainedFilename(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "bin")

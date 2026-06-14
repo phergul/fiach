@@ -88,7 +88,7 @@ func scan(root string, managedChainedTargets []string, readMetadata metadataRead
 			folder.hasSupport = true
 		default:
 			_, knownDLL := reshadeDLLNames[name]
-			isManagedChainedRuntime := name == "reshade64.dll" &&
+			isManagedChainedRuntime := (name == "reshade64.dll" || name == "reshade32.dll") &&
 				managedTargets[strings.ToLower(filepath.Clean(parent))]
 			if knownDLL || isManagedChainedRuntime {
 				folder.proxies = append(folder.proxies, path)
@@ -125,8 +125,10 @@ func hasReShadeProxy(paths []string, readMetadata metadataReader) bool {
 		if err != nil {
 			continue
 		}
+		originalFilename := strings.TrimSpace(metadata.OriginalFilename)
 		if strings.EqualFold(strings.TrimSpace(metadata.ProductName), "ReShade") &&
-			strings.EqualFold(strings.TrimSpace(metadata.OriginalFilename), "ReShade64.dll") {
+			(strings.EqualFold(originalFilename, "ReShade64.dll") ||
+				strings.EqualFold(originalFilename, "ReShade32.dll")) {
 			return true
 		}
 	}

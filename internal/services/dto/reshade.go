@@ -1,6 +1,7 @@
 package dto
 
 import "github.com/phergul/fiach/internal/optiscaler"
+import "github.com/phergul/fiach/internal/reshade"
 
 type ReShadeDetectionStatus string
 
@@ -11,8 +12,9 @@ const (
 )
 
 type ReShadeTarget struct {
-	Path        string
-	Executables []string
+	Path             string
+	Executables      []string
+	ManagementStatus reshade.ManagementStatus
 }
 
 type ReShadeDetectionResult struct {
@@ -45,3 +47,9 @@ type ReShadeInstallerPreflight struct {
 	Targets     []ReShadeManagedTarget
 	Message     string
 }
+
+type ManagedReShadeRequest = reshade.Request
+type ManagedReShadePreview = reshade.Preview
+type ManagedReShadeApplyResult = reshade.ApplyResult
+type ManagedReShadeRecoveryState = reshade.RecoveryState
+type ManagedReShadeTarget = reshade.ManagedTarget
