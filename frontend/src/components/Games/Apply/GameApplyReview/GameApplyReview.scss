@@ -16,7 +16,7 @@ $game-apply-review-icon-size: 1rem;
   background: $color-background;
 }
 
-.game-apply-review-group + .game-apply-review-group {
+.game-apply-review-group+.game-apply-review-group {
   margin-top: $spacing-separator;
 }
 
@@ -67,22 +67,25 @@ $game-apply-review-icon-size: 1rem;
 .game-apply-review-rows {
   display: grid;
   gap: $spacing-separator;
-  padding: $spacing-separator $spacing-xl 0;
-  background: $color-background;
+  padding: $spacing-sm;
+  background: $color-surface;
 }
 
 .game-apply-review-empty {
-  padding: $spacing-md 0;
+  padding: $spacing-md;
   color: $color-text-muted;
 }
 
 .game-apply-review-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) $game-apply-review-chip-width;
-  align-items: start;
-  gap: $spacing-lg;
-  padding: $spacing-md 0;
-  background: $color-surface;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-background;
+}
+
+.game-apply-review-row+.game-apply-review-row {
+  margin-top: $spacing-xs;
 }
 
 .game-apply-review-row:first-child {
@@ -131,13 +134,10 @@ $game-apply-review-icon-size: 1rem;
   min-height: 1.75rem;
   align-items: center;
   justify-content: center;
-  padding: 0 $spacing-sm;
   color: $color-text-subtle;
   border: $app-border-width solid $color-border;
-  border-radius: 0;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
-  line-height: $line-height-heading;
   text-align: center;
 }
 

@@ -18,10 +18,7 @@ $optiscaler-table-status-width: 20rem;
 .optiscaler-executable-row {
   display: grid;
   grid-template-columns:
-    minmax(18rem, 1fr)
-    $optiscaler-table-architecture-width
-    $optiscaler-table-status-width
-    $table-action-width;
+    minmax(18rem, 1fr) $optiscaler-table-architecture-width $optiscaler-table-status-width $table-action-width;
   align-items: center;
   gap: $spacing-lg;
   padding: 0 $spacing-xl;
@@ -29,7 +26,7 @@ $optiscaler-table-status-width: 20rem;
 
 .optiscaler-executable-columns {
   min-height: $input-height;
-  background: $color-surface-elevated;
+  background: $color-background;
   color: $color-text-muted;
   font-size: $font-size-xs;
   text-transform: uppercase;
@@ -45,17 +42,17 @@ $optiscaler-table-status-width: 20rem;
   background: $color-background;
 }
 
-.optiscaler-executable-row + .optiscaler-executable-row {
+.optiscaler-executable-row+.optiscaler-executable-row {
   margin-top: $spacing-separator;
 }
 
-.optiscaler-executable-table section > h3 {
+.optiscaler-executable-table section>h3 {
   display: flex;
   min-height: $input-height;
   align-items: center;
   padding: 0 $spacing-xl;
   color: $color-warning;
-  background: color-mix(in srgb, $color-warning 6%, $color-background);
+  background: $color-surface-elevated;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
@@ -154,7 +151,7 @@ $optiscaler-table-status-width: 20rem;
   position: relative;
 }
 
-.optiscaler-executable-menu-anchor > button {
+.optiscaler-executable-menu-anchor>button {
   width: $table-control-height;
   padding: 0;
   background: $color-surface-elevated;
