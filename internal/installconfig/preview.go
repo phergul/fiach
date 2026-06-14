@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/phergul/fiach/internal/fileignore"
+	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installpath"
 	"github.com/phergul/fiach/internal/unrealpak"
 )
@@ -107,12 +108,9 @@ func buildGenericCopyPreview(sourcePath string, targetRelativePath string, previ
 			return nil
 		}
 
-		info, err := entry.Info()
+		info, err := fileops.ValidateDirEntryIsRegularFile("source path", entry)
 		if err != nil {
 			return err
-		}
-		if !info.Mode().IsRegular() {
-			return fmt.Errorf("source path %q is not a regular file or folder", sourceFilePath)
 		}
 
 		sourceRelativePath, err := filepath.Rel(sourcePath, sourceFilePath)

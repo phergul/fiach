@@ -25,7 +25,7 @@ $game-apply-toolbar-icon-size: 1.25rem;
   justify-content: space-between;
   padding: 0 $spacing-md;
   background: $color-background;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
 }
 
 .game-apply-back-link {
@@ -44,7 +44,6 @@ $game-apply-toolbar-icon-size: 1.25rem;
 .game-apply-back-link:hover,
 .game-apply-back-link:focus-visible {
   color: $color-text-primary;
-  outline: none;
 }
 
 .game-apply-toolbar-button {
@@ -102,7 +101,7 @@ $game-apply-toolbar-icon-size: 1.25rem;
   padding: $spacing-xl;
   background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: $spacing-separator;
 }
 
 .game-apply-title {

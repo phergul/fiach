@@ -1,0 +1,56 @@
+@use '@styles' as *;
+
+$optiscaler-page-header-icon-size: 1rem;
+
+.optiscaler-page-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  background: rgb(#{$color-background-rgb} / 40%);
+  backdrop-filter: blur(12px);
+  border-bottom: $app-border-width solid $color-surface-elevated;
+}
+
+.optiscaler-page-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-md;
+}
+
+.optiscaler-page-header-title h2 {
+  font-size: $font-size-xl;
+}
+
+.optiscaler-page-header-title span {
+  padding: $spacing-xs $spacing-sm;
+  color: $color-background;
+  background: $color-success;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.optiscaler-page-header p {
+  margin-top: $spacing-xs;
+  color: $color-text-subtle;
+}
+
+.optiscaler-page-header button {
+  min-height: $table-control-height;
+  flex: 0 0 auto;
+}
+
+.optiscaler-page-header button:hover:not(:disabled),
+.optiscaler-page-header button:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
+}
+
+.optiscaler-page-header svg {
+  width: $optiscaler-page-header-icon-size;
+  height: $optiscaler-page-header-icon-size;
+}

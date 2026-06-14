@@ -6,7 +6,11 @@ $log-row-operation-width: 9rem;
 $log-row-toggle-size: 1rem;
 
 .log-entry-row {
-  border-bottom: $app-border;
+  background: $color-surface;
+}
+
+.log-entry-row + .log-entry-row {
+  margin-top: $spacing-separator;
 }
 
 .log-entry-row-summary {
@@ -101,6 +105,7 @@ $log-row-toggle-size: 1rem;
   color: $color-text-subtle;
   font-family: $font-family-monospace;
   font-size: $font-size-xs;
+  background: $color-surface-elevated;
 }
 
 .log-entry-row-detail {

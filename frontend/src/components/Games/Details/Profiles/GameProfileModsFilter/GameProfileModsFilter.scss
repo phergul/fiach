@@ -8,6 +8,7 @@ $game-profile-mods-filter-icon-size: 1rem;
   padding: 0 $spacing-md;
   color: $color-text-subtle;
   background: $color-surface-elevated;
+  border: $app-border-width solid transparent;
   white-space: nowrap;
 }
 

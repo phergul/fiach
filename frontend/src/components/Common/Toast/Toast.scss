@@ -22,9 +22,9 @@
   overflow: auto;
   color: $color-text-primary;
   background: $color-surface-elevated;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-subtle;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   font-size: $font-size-sm;
   line-height: $line-height-base;
 }
@@ -46,7 +46,7 @@
   color: $color-text-primary;
   background: transparent;
   border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
+  border-radius: 0;
   font: inherit;
   line-height: $line-height-heading;
   cursor: pointer;
@@ -66,7 +66,7 @@
   color: $color-text-subtle;
   background: transparent;
   border: 0;
-  border-radius: $radius-sm;
+  border-radius: 0;
   cursor: pointer;
 }
 
@@ -81,13 +81,13 @@
 }
 
 .toast-message-success {
-  border-color: $color-success;
+  background: color-mix(in srgb, $color-success 18%, $color-surface-elevated);
 }
 
 .toast-message-error {
-  border-color: $color-danger;
+  background: color-mix(in srgb, $color-danger 18%, $color-surface-elevated);
 }
 
 .toast-message-info {
-  border-color: $color-border;
+  background: color-mix(in srgb, $color-info 12%, $color-surface-elevated);
 }

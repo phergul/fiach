@@ -21,7 +21,7 @@ $mod-tag-filter-popover-max-height: 16rem;
 
 .mod-tag-filter-button-active {
   color: $color-success;
-  border-color: $color-success;
+  border: $app-border-width solid $color-success;
 }
 
 .mod-tag-filter-profile-footer .mod-tag-filter-button {
@@ -35,7 +35,7 @@ $mod-tag-filter-popover-max-height: 16rem;
 
 .mod-tag-filter-profile-footer .mod-tag-filter-button-active {
   color: $color-success;
-  border-color: $color-success;
+  border: $app-border-width solid $color-success;
 }
 
 .mod-tag-filter-count {
@@ -54,11 +54,11 @@ $mod-tag-filter-popover-max-height: 16rem;
   right: 0;
   z-index: $z-index-toast;
   width: $mod-tag-filter-popover-width;
-  padding: $spacing-xs;
-  background: $color-surface;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: $shadow-subtle;
+  padding: $spacing-separator;
+  background: $color-background;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .mod-tag-filter-above .mod-tag-filter-popover {
@@ -69,11 +69,11 @@ $mod-tag-filter-popover-max-height: 16rem;
 .mod-tag-filter-search {
   position: relative;
   display: block;
-  margin-bottom: $spacing-xs;
+  margin-bottom: $spacing-separator;
 }
 
 .mod-tag-filter-profile-footer .mod-tag-filter-search {
-  margin-top: $spacing-xs;
+  margin-top: $spacing-separator;
   margin-bottom: 0;
 }
 
@@ -92,7 +92,6 @@ $mod-tag-filter-popover-max-height: 16rem;
   width: 100%;
   height: $input-height;
   padding: 0 $spacing-sm 0 calc($spacing-lg + $spacing-xs);
-  border-radius: $radius-sm;
 }
 
 .mod-tag-filter-options {
@@ -106,8 +105,9 @@ $mod-tag-filter-popover-max-height: 16rem;
   align-items: center;
   gap: $spacing-sm;
   padding: 0 $spacing-sm;
+  background: $color-surface;
   border: $app-border-width solid transparent;
-  border-radius: $radius-sm;
+  border-radius: 0;
   cursor: pointer;
 }
 

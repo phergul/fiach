@@ -1,0 +1,20 @@
+package services
+
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"github.com/phergul/fiach/internal/optiscaler"
+)
+
+func TestOptiScalerServiceRejectsUnsupportedPlatformWithServiceContext(t *testing.T) {
+	t.Parallel()
+	service := NewOptiScalerService(nil, testLogger())
+	service.operatingSystem = "linux"
+	_, err := service.PreviewOptiScalerAction(context.Background(), optiscaler.Request{GameID: 1})
+	if err == nil || !strings.Contains(err.Error(), "preview game OptiScaler action") ||
+		!strings.Contains(err.Error(), "only supported on Windows") {
+		t.Fatalf("PreviewOptiScalerAction() error = %v", err)
+	}
+}

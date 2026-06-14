@@ -26,7 +26,6 @@ $game-details-toolbar-icon-size: 1.25rem;
   justify-content: space-between;
   padding: 0 $spacing-md;
   background: $color-background;
-  border-bottom: $app-border;
 }
 
 .game-details-back-link {
@@ -45,7 +44,6 @@ $game-details-toolbar-icon-size: 1.25rem;
 .game-details-back-link:hover,
 .game-details-back-link:focus-visible {
   color: $color-text-primary;
-  outline: none;
 }
 
 .game-details-toolbar-actions {

@@ -22,7 +22,7 @@
 
 .game-library-title {
   color: $color-text-primary;
-  font-size: $font-size-xl;
+  font-size: $font-size-2xl;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
 }
@@ -42,20 +42,19 @@
 .game-library-state-action {
   height: $input-height;
   background: $color-surface-elevated;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-md;
+  border: 0;
+  border-radius: 0;
 }
 
 .game-library-rescan:disabled,
 .game-library-state-action:disabled {
   color: $color-text-muted;
   background: $color-surface;
-  border-color: $color-border-subtle;
 }
 
 .game-library-state {
   padding: $spacing-lg;
   background: $color-surface;
-  border: $app-border-width solid $color-border-subtle;
-  border-radius: $radius-md;
+  border: 0;
+  border-radius: 0;
 }

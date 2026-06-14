@@ -9,13 +9,15 @@ $game-details-metadata-icon-size: 1.25rem;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: $spacing-separator;
+  padding-bottom: $spacing-separator;
 }
 
 .game-details-metadata-item {
   min-width: 0;
   padding: $spacing-md $spacing-lg;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgb(#{$color-background-rgb} / 40%);
+  border-right: 0;
 }
 
 .game-details-metadata-item:last-child {

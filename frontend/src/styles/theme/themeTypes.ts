@@ -25,7 +25,6 @@ export interface ThemeTokens {
   tagBlue: string;
   tagPurple: string;
   tagPink: string;
-  shadowSubtle: string;
 }
 
 export interface ThemeDefinition {

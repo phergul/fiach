@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
@@ -21,6 +21,7 @@ import {
   useGameModImportFlow,
   useGameModUpdateFlow,
   useGameMods,
+  useGameOptiScaler,
   useGameProfiles,
   useGameReShadeDetection,
   useGameReShadeInstall,
@@ -45,6 +46,7 @@ const parseGameID = (gameID: string | undefined) => {
 
 export const GameDetails = () => {
   const { gameId } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
@@ -55,8 +57,24 @@ export const GameDetails = () => {
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
   const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
+  const optiScaler = useGameOptiScaler(game?.ID ?? null);
   const reShadeInstall = useGameReShadeInstall({
     game,
+    onCoordinate: (preflight) => {
+      if (game === undefined) {
+        return;
+      }
+      navigate(`/library/${game.ID}/optiscaler`, {
+        state: {
+          reShadeCoordination: {
+            targetRelativePath: preflight.Targets.length === 1
+              ? preflight.Targets[0].TargetRelativePath
+              : null,
+            variant: preflight.Variant,
+          },
+        },
+      });
+    },
     onMenuClose: () => setIsActionsMenuOpen(false),
     reShadeDetection,
   });
@@ -197,6 +215,10 @@ export const GameDetails = () => {
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}
+                onOpenOptiScaler={() => {
+                  setIsActionsMenuOpen(false);
+                  navigate(`/library/${game.ID}/optiscaler`);
+                }}
                 onOpenReShadeAddonInstaller={reShadeInstall.downloadAndOpenAddonInstaller}
                 onOpenReShadeInstaller={reShadeInstall.downloadAndOpenInstaller}
                 onSetStorageOverride={storageOverride.requestSetStorageOverride}
@@ -247,9 +269,9 @@ export const GameDetails = () => {
           />
 
           <GameDetailsMetadata
-            game={game}
             isStorageUsageLoading={gameModManager.isStorageUsageLoading}
             modCount={gameModManager.mods.length}
+            optiScaler={optiScaler}
             profileCount={profileManager.profiles.length}
             reShadeDetection={reShadeDetection}
             storageUsedBytes={gameModManager.storageUsedBytes}
@@ -303,6 +325,20 @@ export const GameDetails = () => {
         onClose={updateFlow.closeUpdateReview}
         onConfirm={updateFlow.confirmUpdateMod}
         result={updateFlow.updateReview?.preview ?? null}
+      />
+
+      <ConfirmDialog
+        cancelLabel="Cancel"
+        confirmLabel="Installer finished, refresh"
+        confirmTone="default"
+        isBusy={reShadeInstall.isRefreshingDetection}
+        isOpen={reShadeInstall.isCompletionPromptOpen}
+        message="Complete or close the ReShade installer, then refresh detection so Fiach can read the current game files."
+        onCancel={reShadeInstall.cancelCompletionPrompt}
+        onConfirm={() => {
+          void reShadeInstall.confirmInstallerFinished();
+        }}
+        title="Refresh ReShade status"
       />
 
       <ConfirmDialog

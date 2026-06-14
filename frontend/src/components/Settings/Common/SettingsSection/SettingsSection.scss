@@ -5,7 +5,8 @@ $settings-section-header-min-height: 4rem;
 .settings-section {
   display: flex;
   flex-direction: column;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-background;
 }
 
 .settings-section-header {
@@ -13,8 +14,7 @@ $settings-section-header-min-height: 4rem;
   min-height: $settings-section-header-min-height;
   align-items: center;
   padding: 0 $spacing-xl;
-  background: $color-surface;
-  border-bottom: $app-border;
+  background: $color-surface-elevated;
 }
 
 .settings-section-title {
@@ -27,4 +27,6 @@ $settings-section-header-min-height: 4rem;
 .settings-section-content {
   display: flex;
   flex-direction: column;
+  gap: $spacing-separator;
+  background: $color-background;
 }

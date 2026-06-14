@@ -3,15 +3,19 @@ package services
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/phergul/fiach/internal/optiscaler"
+	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestReshadeServiceDetectGameReShadeReturnsUnsupportedWithoutStorageAccess(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	result, err := service.DetectGameReShade(context.Background(), 1)
@@ -26,6 +30,48 @@ func TestReshadeServiceDetectGameReShadeReturnsUnsupportedWithoutStorageAccess(t
 	}
 }
 
+func TestReshadeServicePreflightCoordinatesDirectXAndBlocksVulkan(t *testing.T) {
+	t.Parallel()
+
+	for _, test := range []struct {
+		name        string
+		graphicsAPI string
+		want        dto.ReShadeInstallerPreflightDisposition
+	}{
+		{name: "directx", graphicsAPI: "directx", want: dto.ReShadeInstallerPreflightCoordinated},
+		{name: "vulkan", graphicsAPI: "vulkan", want: dto.ReShadeInstallerPreflightBlocked},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			store := openMigratedStore(t)
+			defer closeStore(t, store)
+			gameID := insertServiceTestGame(t, store, "Portal", t.TempDir())
+			process := "Game.exe"
+			_, err := store.SaveOptiScalerTarget(context.Background(), dbtypes.SaveOptiScalerTargetInput{
+				GameID: gameID, TargetRelativePath: ".", ExecutableRelativePath: "Game.exe",
+				GraphicsAPI: test.graphicsAPI, ProxyFilename: "dxgi.dll", ProcessFilter: &process,
+				ReleaseTag: "v1", ReleaseVersion: "v1", ReleaseAssetName: "release.7z",
+				ReleaseDigest: strings.Repeat("a", 64), ManagementOrigin: "installed", Status: "managed",
+				ManifestJSON:   `{"version":1,"files":[],"config":{"loadReShade":false,"dxgiSpoofing":false,"targetProcessName":"Game.exe","checkForUpdate":false},"hasPreAdoptionRollbackData":true}`,
+				WarningVersion: optiscaler.WarningVersion,
+			})
+			if err != nil {
+				t.Fatalf("SaveOptiScalerTarget() error = %v", err)
+			}
+			service := NewReshadeService(store, testLogger())
+			service.operatingSystem = "windows"
+			result, err := service.PreflightReShadeInstaller(
+				context.Background(), gameID, optiscaler.ReShadeInstallerVariantStandard)
+			if err != nil {
+				t.Fatalf("PreflightReShadeInstaller() error = %v", err)
+			}
+			if result.Disposition != test.want {
+				t.Fatalf("Disposition = %q, want %q", result.Disposition, test.want)
+			}
+		})
+	}
+}
+
 func TestReshadeServiceDetectGameReShadeValidatesInstallPath(t *testing.T) {
 	t.Parallel()
 
@@ -36,7 +82,7 @@ func TestReshadeServiceDetectGameReShadeValidatesInstallPath(t *testing.T) {
 	writeFile(t, filePath)
 	gameID := insertServiceTestGame(t, store, "Portal", filePath)
 
-	service := NewReshadeService(store)
+	service := NewReshadeService(store, testLogger())
 	service.operatingSystem = "windows"
 
 	_, err := service.DetectGameReShade(context.Background(), gameID)
@@ -62,8 +108,14 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 	writeFile(t, filepath.Join(target, "ReShade.ini"))
 	gameID := insertServiceTestGame(t, store, "Portal", root)
 
-	service := NewReshadeService(store)
+	service := NewReshadeService(store, testLogger())
 	service.operatingSystem = "windows"
+	service.scan = func(string, []string) (reshade.Result, error) {
+		return reshade.Result{Targets: []reshade.Target{{
+			Path:        target,
+			Executables: []string{filepath.Join(target, "Game.exe")},
+		}}}, nil
+	}
 
 	result, err := service.DetectGameReShade(context.Background(), gameID)
 	if err != nil {
@@ -86,7 +138,7 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	_, err := service.DownloadAndOpenReShadeInstaller(context.Background())
@@ -101,7 +153,7 @@ func TestReshadeServiceDownloadAndOpenInstallerReturnsUnsupportedWithoutLaunchin
 func TestReshadeServiceDownloadAndOpenAddonInstallerReturnsUnsupportedWithoutLaunching(t *testing.T) {
 	t.Parallel()
 
-	service := NewReshadeService(nil)
+	service := NewReshadeService(nil, testLogger())
 	service.operatingSystem = "darwin"
 
 	_, err := service.DownloadAndOpenReShadeAddonInstaller(context.Background())

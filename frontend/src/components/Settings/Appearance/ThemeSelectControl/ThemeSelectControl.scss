@@ -4,5 +4,10 @@
   min-width: 12rem;
   height: $input-height;
   padding: 0 $spacing-md;
-  border-radius: $radius-sm;
+  border-radius: 0;
+  background: $color-background;
+}
+
+.theme-select-control:hover {
+  background: $color-surface-elevated;
 }

@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react';
+
 import { Check, Copy, Pencil, Trash2, X } from 'lucide-react';
 
 import type { ModProfile } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
@@ -62,14 +64,30 @@ export const GameProfilesListItem = ({
   const enabledSummary = `${enabledModCount} ${enabledModCount === 1 ? 'mod' : 'mods'} enabled`;
   const editedSummary = formatProfileEditedAt(profile.UpdatedAt);
 
+  const handleSelect = () => {
+    if (!isEditing) {
+      onSelectProfile(profile.ID);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
+    if (isEditing) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onSelectProfile(profile.ID);
+    }
+  };
+
   return (
     <li
       className={isSelected ? 'game-profiles-list-item game-profiles-list-item-selected' : 'game-profiles-list-item'}
-      onClick={() => {
-        if (!isEditing) {
-          onSelectProfile(profile.ID);
-        }
-      }}
+      onClick={handleSelect}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={isEditing ? -1 : 0}
     >
       <div className="game-profiles-list-item-main">
         {isEditing ? (
@@ -82,15 +100,7 @@ export const GameProfilesListItem = ({
             aria-label={`Rename ${profile.Name}`}
           />
         ) : (
-          <button
-            className="game-profiles-list-item-selector"
-            onClick={(event) => {
-              event.stopPropagation();
-              onSelectProfile(profile.ID);
-            }}
-            type="button"
-            aria-current={isSelected ? 'true' : undefined}
-          >
+          <div className="game-profiles-list-item-content">
             <span className="game-profiles-list-item-title">
               <span className="game-profiles-list-item-name">{profile.Name}</span>
             </span>
@@ -102,7 +112,7 @@ export const GameProfilesListItem = ({
               </span>
               <span className="game-profiles-list-item-meta-part">{editedSummary}</span>
             </span>
-          </button>
+          </div>
         )}
       </div>
 

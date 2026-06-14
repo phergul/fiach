@@ -105,7 +105,15 @@ export const GameProfileAddModsModal = ({
       size="lg"
       title="Add Mods to Profile"
       footer={(
-        <>
+        <div className="game-profile-add-mods-modal-footer">
+                    <button
+            className="game-profile-add-mods-modal-cancel-button"
+            disabled={isBusy}
+            onClick={onClose}
+            type="button"
+          >
+            Cancel
+          </button>
           <button
             className="game-profile-add-mods-modal-add-button button-main"
             disabled={isBusy || selectedCount === 0}
@@ -114,15 +122,7 @@ export const GameProfileAddModsModal = ({
           >
             Add Mods
           </button>
-          <button
-            className="game-profile-add-mods-modal-cancel-button"
-            disabled={isBusy}
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </button>
-        </>
+        </div>
       )}
     >
       <>

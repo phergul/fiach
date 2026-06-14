@@ -14,15 +14,15 @@ $game-mod-list-item-icon-size: 1rem;
   gap: $spacing-lg;
   min-height: 5.5rem;
   padding: $spacing-md $spacing-xl;
-  border-bottom: $app-border;
+  background: $color-background;
+  margin-top: $spacing-separator;
   transition:
-    background-color $transition-duration-fast $transition-easing-standard,
-    box-shadow $transition-duration-fast $transition-easing-standard;
+    background-color $transition-duration-fast $transition-easing-standard;
 }
 
 .game-mod-list-item-editing {
   background: color-mix(in srgb, $color-success 10%, $color-background);
-  box-shadow: inset $spacing-xs 0 0 $color-success;
+  border-left: $spacing-xs solid $color-success;
 }
 
 .game-mod-list-item-identity {
@@ -52,8 +52,6 @@ $game-mod-list-item-icon-size: 1rem;
   overflow-wrap: anywhere;
   color: $color-text-muted;
   font-size: $font-size-sm;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .game-mod-list-item-tags {
@@ -188,6 +186,5 @@ $game-mod-list-item-icon-size: 1rem;
   .game-mod-list-item-path {
     display: block;
     overflow: visible;
-    -webkit-line-clamp: unset;
   }
 }

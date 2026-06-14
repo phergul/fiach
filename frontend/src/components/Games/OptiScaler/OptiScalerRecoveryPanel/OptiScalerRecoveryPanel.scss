@@ -1,0 +1,55 @@
+@use '@styles/variables' as *;
+
+.optiscaler-recovery-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  margin-bottom: $spacing-separator;
+  background: color-mix(in srgb, $color-danger 10%, $color-surface);
+}
+
+.optiscaler-recovery-panel-title {
+  font-size: $font-size-lg;
+}
+
+.optiscaler-recovery-panel-message {
+  margin-top: $spacing-xs;
+  color: $color-text-subtle;
+}
+
+.optiscaler-recovery-panel-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm $spacing-lg;
+  margin-top: $spacing-sm;
+}
+
+.optiscaler-recovery-panel-details div {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.optiscaler-recovery-panel-details dt {
+  color: $color-text-muted;
+}
+
+.optiscaler-recovery-panel-details dd {
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-recovery-panel-action {
+  min-height: $input-height;
+  flex: 0 0 auto;
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-danger 24%, $color-surface-elevated);
+}
+
+.optiscaler-recovery-panel-action:hover:not(:disabled),
+.optiscaler-recovery-panel-action:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 34%, $color-surface-elevated);
+}

@@ -20,8 +20,9 @@ $mod-storage-root-path-control-value-min-height: $input-height;
   overflow: hidden;
   color: $color-text-primary;
   background: $color-surface;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
+  background: $color-background;
+  border: 0;
+  border-radius: 0;
   font-size: $font-size-base;
   line-height: $line-height-base;
   text-overflow: ellipsis;
@@ -44,6 +45,12 @@ $mod-storage-root-path-control-value-min-height: $input-height;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
+  background: $color-surface-elevated;
+}
+
+.mod-storage-root-path-control-button:hover:not(:disabled),
+.mod-storage-root-path-control-button:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-surface-elevated 82%, $color-text-primary 18%);
 }
 
 .mod-storage-root-path-control-button-icon {

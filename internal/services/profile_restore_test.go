@@ -150,7 +150,9 @@ func TestProfileServiceRestoreVanillaStatePreservesStateWhenBackupCleanupFails(t
 	if err != nil {
 		t.Fatalf("RestoreVanillaState() error = %v, want result failure", err)
 	}
-	if result.Success || !serviceRestoreResultContainsError(result, "delete restored backup") {
+	hasCleanupFailure := serviceRestoreResultContainsError(result, "delete restored backup") ||
+		serviceRestoreResultContainsError(result, "remove empty backup directory")
+	if result.Success || !hasCleanupFailure {
 		t.Fatalf("RestoreVanillaState() = %+v, want cleanup failure", result)
 	}
 	assertServiceFileContents(t, targetPath, "vanilla")

@@ -208,6 +208,7 @@ func TestIsNumeric(t *testing.T) {
 func writeLibraryFoldersVDF(t *testing.T, root string, content string) {
 	t.Helper()
 
+	content = strings.ReplaceAll(content, `\`, `\\`)
 	writeFile(t, filepath.Join(root, "steamapps", "libraryfolders.vdf"), content)
 }
 

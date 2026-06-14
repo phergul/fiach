@@ -61,24 +61,28 @@ button {
   margin: 0;
   padding: 0 $spacing-md;
   color: $color-text-primary;
-  background: transparent;
-  border: $app-border-width solid $color-border;
-  border-radius: $radius-sm;
+  background: $color-surface;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
   text-align: center;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
-    border-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
 }
 
 button:hover:not(:disabled),
 button:focus-visible:not(:disabled) {
-  border-color: $color-border-strong;
+  background: $color-surface-elevated;
 }
 
 button:focus-visible {
-  outline: none;
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
+}
+
+button[aria-pressed='true'] {
+  border: $selected-outline;
 }
 
 button:disabled {
@@ -94,23 +98,20 @@ button:disabled {
   padding: 0 $spacing-md;
   background: color-mix(in srgb, $color-success 26%, transparent);
   color: $color-text-primary;
-  border: $app-border-width solid color-mix(in srgb, $color-success 72%, transparent);
-  border-radius: $radius-sm;
+  border: 0;
+  border-radius: 0;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
   text-decoration: none;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
-    border-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
 }
 
 .button-main:hover:not(:disabled):not([aria-disabled='true']),
 .button-main:focus-visible:not(:disabled):not([aria-disabled='true']) {
   background: color-mix(in srgb, $color-success 36%, transparent);
-  border-color: $color-success;
-  outline: none;
 }
 
 input:not([type='checkbox']):not([type='radio']),
@@ -118,11 +119,11 @@ textarea,
 select {
   color: $color-text-primary;
   background: $color-surface;
-  border: $app-border-width solid $color-border;
+  border: 0;
+  border-radius: 0;
   outline: none;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
-    border-color $transition-duration-fast $transition-easing-standard,
     color $transition-duration-fast $transition-easing-standard;
 }
 
@@ -134,7 +135,9 @@ textarea::placeholder {
 input:not([type='checkbox']):not([type='radio']):focus,
 textarea:focus,
 select:focus {
-  border-color: $color-border-strong;
+  background: $color-surface-elevated;
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
 }
 
 input:not([type='checkbox']):not([type='radio']):disabled,
@@ -147,4 +150,53 @@ select:disabled {
 input[type='checkbox'],
 input[type='radio'] {
   margin: 0;
+}
+
+a:focus-visible {
+  outline: $focus-outline;
+  outline-offset: -$focus-outline-width;
+}
+
+.button-info,
+.button-success,
+.button-warning,
+.button-danger {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.button-info {
+  background: color-mix(in srgb, $color-info 28%, $color-surface);
+}
+
+.button-success {
+  background: color-mix(in srgb, $color-success 28%, $color-surface);
+}
+
+.button-warning {
+  background: color-mix(in srgb, $color-warning 24%, $color-surface);
+}
+
+.button-danger {
+  background: color-mix(in srgb, $color-danger 24%, $color-surface);
+}
+
+.button-info:hover:not(:disabled),
+.button-info:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-info 40%, $color-surface-elevated);
+}
+
+.button-success:hover:not(:disabled),
+.button-success:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-success 40%, $color-surface-elevated);
+}
+
+.button-warning:hover:not(:disabled),
+.button-warning:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-warning 36%, $color-surface-elevated);
+}
+
+.button-danger:hover:not(:disabled),
+.button-danger:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 36%, $color-surface-elevated);
 }

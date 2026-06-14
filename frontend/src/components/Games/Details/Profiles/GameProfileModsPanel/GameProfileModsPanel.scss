@@ -9,7 +9,7 @@ $game-profile-mods-panel-icon-size: 1rem;
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  background: $color-background;
+  background: $color-surface;
 }
 
 .game-profile-mods-panel-icon {
@@ -27,7 +27,8 @@ $game-profile-mods-panel-icon-size: 1rem;
 
 .game-profile-mods-panel-empty {
   padding: $spacing-lg $spacing-xl;
-  border-bottom: $app-border;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
 }
 
 .game-profile-mods-panel-empty-row {
@@ -41,7 +42,8 @@ $game-profile-mods-panel-icon-size: 1rem;
   align-items: center;
   gap: $spacing-sm;
   padding: $spacing-sm;
-  border-top: $app-border;
+  margin-top: $spacing-separator;
+  background: $color-surface;
 }
 
 .game-profile-mods-panel-footer-actions {
@@ -74,6 +76,7 @@ $game-profile-mods-panel-icon-size: 1rem;
 
 .game-profile-mods-panel-restore-button {
   background: color-mix(in srgb, $color-warning 18%, transparent);
+  border: $app-border-width solid color-mix(in srgb, $color-warning 54%, transparent);
   border-color: color-mix(in srgb, $color-warning 54%, transparent);
 }
 

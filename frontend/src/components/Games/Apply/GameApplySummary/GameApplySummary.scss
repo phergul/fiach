@@ -8,7 +8,8 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: $spacing-separator;
+  padding-bottom: $spacing-separator;
 }
 
 .game-apply-summary-item {
@@ -17,7 +18,8 @@
   flex-direction: column;
   gap: $spacing-xs;
   padding: $spacing-md $spacing-xl;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgb(#{$color-background-rgb} / 40%);
+  border-right: 0;
 }
 
 .game-apply-summary-item:last-child {

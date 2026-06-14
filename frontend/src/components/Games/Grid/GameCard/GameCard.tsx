@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useGameArtwork } from '@hooks';
+import steamLogo from '../../../../../assets/steam.svg';
 
 import './GameCard.scss';
 
@@ -11,10 +12,6 @@ interface GameCardProps {
 
 const getSourceLabel = (source: string) => {
   return source === 'steam' ? 'Steam game' : 'Custom game';
-};
-
-const getSourceInitial = (source: string) => {
-  return source === 'steam' ? 'S' : 'M';
 };
 
 export const GameCard = ({ game }: GameCardProps) => {
@@ -39,7 +36,9 @@ export const GameCard = ({ game }: GameCardProps) => {
             aria-label={getSourceLabel(game.Source)}
             title={getSourceLabel(game.Source)}
           >
-            {getSourceInitial(game.Source)}
+            {game.Source === 'steam' ? (
+              <img className="game-card-source-image" src={steamLogo} alt="" />
+            ) : 'M'}
           </span>
         </div>
         <h2 className="game-card-title">{game.Name}</h2>

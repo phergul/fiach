@@ -11,7 +11,7 @@ $game-profiles-list-item-min-height: 4.5rem;
   align-items: center;
   gap: $spacing-sm;
   min-height: $game-profiles-list-item-min-height;
-  border-bottom: $app-border;
+  background: $color-background;
   cursor: pointer;
   transition:
     background-color $transition-duration-fast $transition-easing-standard,
@@ -20,22 +20,28 @@ $game-profiles-list-item-min-height: 4.5rem;
 
 .game-profiles-list-item:hover,
 .game-profiles-list-item:focus-within {
-  background: rgb(#{$color-surface-rgb} / 42%);
+  background: $color-surface;
 }
 
 .game-profiles-list-item-selected,
 .game-profiles-list-item-selected:hover,
 .game-profiles-list-item-selected:focus-within {
+  color: $color-accent;
   background: $color-surface;
+}
+
+.game-profiles-list-item + .game-profiles-list-item {
+  margin-top: $spacing-separator;
 }
 
 .game-profiles-list-item-main {
   display: flex;
   min-width: 0;
   align-items: center;
+  padding: $spacing-sm 0 $spacing-sm $spacing-xl;
 }
 
-.game-profiles-list-item-selector {
+.game-profiles-list-item-content {
   width: 100%;
   min-width: 0;
   min-height: $game-profiles-list-item-min-height;
@@ -43,17 +49,8 @@ $game-profiles-list-item-min-height: 4.5rem;
   flex-direction: column;
   justify-content: center;
   gap: $spacing-xs;
-  padding: $spacing-sm 0 $spacing-sm $spacing-xl;
   color: inherit;
-  background: transparent;
-  border: 0;
-  cursor: inherit;
   text-align: left;
-}
-
-.game-profiles-list-item-selector:hover,
-.game-profiles-list-item-selector:focus-visible {
-  background: transparent;
 }
 
 .game-profiles-list-item-title {
@@ -106,12 +103,27 @@ $game-profiles-list-item-min-height: 4.5rem;
   margin-left: $spacing-md;
   padding: 0 $spacing-md;
   border: $app-border;
+  background: $color-background;
+}
+
+input.game-profiles-list-item-input:not([type='checkbox']):not([type='radio']) {
+  background: $color-background;
+
+  &:focus {
+    background: $color-surface-elevated;
+  }
 }
 
 .game-profiles-list-item-icon-button {
   width: $game-profiles-list-item-control-height;
   height: $game-profiles-list-item-control-height;
   flex: 0 0 $game-profiles-list-item-control-height;
+  background: $color-surface-elevated;
+}
+
+.game-profiles-list-item-icon-button:hover:not(:disabled),
+.game-profiles-list-item-icon-button:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-surface-elevated 78%, $color-text-primary 22%);
 }
 
 .game-profiles-list-item-icon-button-danger {

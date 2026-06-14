@@ -5,5 +5,6 @@ $game-grid-min-column-width: 9rem;
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax($game-grid-min-column-width, 1fr));
-  gap: $spacing-lg;
+  gap: $spacing-md;
+  background: $color-background;
 }

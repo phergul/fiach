@@ -45,11 +45,12 @@ $game-mod-import-wizard-target-step-icon-size: 1rem;
   font-family: $font-family-monospace;
   font-size: $font-size-sm;
   text-align: left;
+  border: $app-border-width solid transparent;
 }
 
 .game-mod-import-wizard-target-step-candidate-selected {
-  background: $color-surface;
-  border-color: $color-text-subtle;
+  background: color-mix(in srgb, $color-info 18%, $color-surface);
+  border-color: $color-info;
 }
 
 .game-mod-import-wizard-target-step-help {

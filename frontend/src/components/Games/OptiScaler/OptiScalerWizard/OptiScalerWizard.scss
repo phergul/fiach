@@ -1,0 +1,258 @@
+@use '@styles/variables' as *;
+
+$optiscaler-wizard-close-size: 2rem;
+$optiscaler-wizard-close-icon-size: 1rem;
+$optiscaler-wizard-label-width: 10rem;
+
+.optiscaler-wizard {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  background: $color-background;
+}
+
+.optiscaler-wizard-header {
+  display: flex;
+  min-height: 4.5rem;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+}
+
+.optiscaler-wizard-header h2 {
+  font-size: $font-size-lg;
+}
+
+.optiscaler-wizard-header p {
+  margin-top: $spacing-xs;
+  color: $color-text-muted;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-wizard-header button {
+  width: $optiscaler-wizard-close-size;
+  height: $optiscaler-wizard-close-size;
+  padding: 0;
+  background: transparent;
+}
+
+.optiscaler-wizard-header svg {
+  width: $optiscaler-wizard-close-icon-size;
+  height: $optiscaler-wizard-close-icon-size;
+}
+
+.optiscaler-wizard-steps {
+  display: grid;
+  gap: $spacing-separator;
+  flex: 0 0 auto;
+  padding: 0 $spacing-xl $spacing-md;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
+}
+
+.optiscaler-wizard-steps li {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-muted;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-wizard-steps .optiscaler-wizard-step-complete {
+  color: $color-success;
+  background: color-mix(in srgb, $color-success 18%, $color-surface);
+}
+
+.optiscaler-wizard-steps .optiscaler-wizard-step-active {
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-info 72%, $color-surface);
+}
+
+.optiscaler-wizard-form {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $spacing-separator;
+}
+
+.optiscaler-wizard-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: $color-background;
+}
+
+.optiscaler-wizard-content {
+  display: grid;
+  width: min(100%, $wizard-content-max-width);
+  align-content: start;
+  gap: $spacing-md;
+  margin: 0 auto;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.optiscaler-wizard-summary {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.optiscaler-wizard-summary div {
+  display: grid;
+  min-height: $input-height;
+  grid-template-columns: $optiscaler-wizard-label-width minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface-elevated;
+}
+
+.optiscaler-wizard-summary dt {
+  color: $color-text-muted;
+}
+
+.optiscaler-wizard-summary dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.optiscaler-wizard-preview-summary dd {
+  font-family: $font-family-monospace;
+}
+
+.optiscaler-wizard-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-lg;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.optiscaler-wizard-fields > label:not(.optiscaler-wizard-checkbox) {
+  display: grid;
+  align-content: start;
+  gap: $spacing-sm;
+}
+
+.optiscaler-wizard-fields select,
+.optiscaler-wizard-fields input:not([type='checkbox']):not([type='radio']) {
+  width: 100%;
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  background: $color-background;
+}
+
+.optiscaler-wizard-fields label > span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-wizard-checkbox {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+  grid-column: 1 / -1;
+  color: $color-text-primary;
+}
+
+.optiscaler-wizard-checkbox input {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  margin: 0;
+  accent-color: $color-info;
+}
+
+.optiscaler-wizard-note {
+  color: $color-text-subtle;
+}
+
+.optiscaler-wizard-warning {
+  display: grid;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 10%, $color-surface);
+}
+
+.optiscaler-wizard-warning a {
+  width: fit-content;
+  color: $color-text-primary;
+}
+
+.optiscaler-wizard-drift-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 10%, $color-surface-elevated);
+}
+
+.optiscaler-wizard-error,
+.optiscaler-wizard-error-inline {
+  color: $color-danger;
+}
+
+.optiscaler-wizard-error {
+  width: min(calc(100% - #{$spacing-xl * 2}), $wizard-content-max-width);
+  margin: $spacing-md auto;
+}
+
+.optiscaler-wizard-error-inline {
+  grid-column: 1 / -1;
+}
+
+.optiscaler-wizard-result {
+  display: grid;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  background: $color-surface;
+}
+
+.optiscaler-wizard-result-success {
+  background: color-mix(in srgb, $color-success 12%, $color-surface);
+}
+
+.optiscaler-wizard-result-error {
+  background: color-mix(in srgb, $color-danger 12%, $color-surface);
+}
+
+.optiscaler-wizard-result p {
+  color: $color-text-subtle;
+}
+
+.optiscaler-wizard-footer {
+  display: flex;
+  min-height: 4.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+}
+
+.optiscaler-wizard-footer button {
+  min-width: 6rem;
+  min-height: $input-height;
+}
+
+.optiscaler-wizard-footer .button-main {
+  margin-left: auto;
+}
+
+.optiscaler-wizard-footer > button:not(.button-main) {
+  background: $color-surface-elevated;
+}

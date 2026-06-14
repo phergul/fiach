@@ -103,7 +103,7 @@ func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 		t.Fatalf("CreateMod() error = %v", err)
 	}
 
-	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != dbtypes.ModSourceTypeArchive || mod.SourcePath != "/managed/skyui" || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
+	if mod.ID == 0 || mod.GameID != gameID || mod.Name != "SkyUI" || mod.SourceType != dbtypes.ModSourceTypeArchive || mod.SourcePath != filepath.Clean("/managed/skyui") || mod.OriginalSourcePath != originalPath || mod.OriginalSourceName == nil || *mod.OriginalSourceName != originalName {
 		t.Fatalf("CreateMod() = %+v, want persisted mod fields", mod)
 	}
 	if mod.FileCount == nil || *mod.FileCount != fileCount || mod.DirectoryCount == nil || *mod.DirectoryCount != directoryCount || mod.TotalSizeBytes == nil || *mod.TotalSizeBytes != totalSizeBytes || mod.MetadataJSON == nil || *mod.MetadataJSON != metadataJSON {

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/optiscaler"
 	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
@@ -20,18 +21,19 @@ type ReshadeService struct {
 	store           *storage.Store
 	logger          *slog.Logger
 	operatingSystem string
+	scan            func(string, []string) (reshade.Result, error)
 }
 
-func NewReshadeService(store *storage.Store, logger ...*slog.Logger) *ReshadeService {
-	serviceLogger := slog.Default()
-	if len(logger) > 0 && logger[0] != nil {
-		serviceLogger = logger[0]
+func NewReshadeService(store *storage.Store, logger *slog.Logger) *ReshadeService {
+	if logger == nil {
+		logger = slog.Default()
 	}
 
 	return &ReshadeService{
 		store:           store,
-		logger:          serviceLogger,
+		logger:          logger,
 		operatingSystem: runtime.GOOS,
+		scan:            reshade.ScanManaged,
 	}
 }
 
@@ -77,7 +79,22 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 		return dto.ReShadeDetectionResult{}, fmt.Errorf("game install path %q is not a directory", installPath)
 	}
 
-	scanResult, err := reshade.Scan(installPath)
+	managedTargets, err := s.store.ListOptiScalerTargets(ctx, gameID)
+	if err != nil {
+		return dto.ReShadeDetectionResult{}, err
+	}
+	managedChainedTargets := make([]string, 0, len(managedTargets))
+	for _, target := range managedTargets {
+		if target.GraphicsAPI != string(optiscaler.GraphicsAPIDirectX) {
+			continue
+		}
+		path, resolveErr := optiscaler.ResolveWithinRoot(installPath, target.TargetRelativePath)
+		if resolveErr != nil {
+			return dto.ReShadeDetectionResult{}, resolveErr
+		}
+		managedChainedTargets = append(managedChainedTargets, path)
+	}
+	scanResult, err := s.scan(installPath, managedChainedTargets)
 	if err != nil {
 		return dto.ReShadeDetectionResult{}, err
 	}
@@ -96,6 +113,54 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 		slog.Int("target_count", len(result.Targets)),
 	)
 
+	return result, nil
+}
+
+func (s *ReshadeService) PreflightReShadeInstaller(
+	ctx context.Context,
+	gameID int64,
+	variant optiscaler.ReShadeInstallerVariant,
+) (result dto.ReShadeInstallerPreflight, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("preflight game ReShade installer: %w", err)
+		}
+	}()
+	if s.operatingSystem != "windows" {
+		return dto.ReShadeInstallerPreflight{}, errors.New("ReShade installer launch is only supported on Windows")
+	}
+	if variant != optiscaler.ReShadeInstallerVariantStandard &&
+		variant != optiscaler.ReShadeInstallerVariantAddon {
+		return dto.ReShadeInstallerPreflight{}, errors.New("installer variant is invalid")
+	}
+	targets, err := s.store.ListOptiScalerTargets(ctx, gameID)
+	if err != nil {
+		return dto.ReShadeInstallerPreflight{}, err
+	}
+	result = dto.ReShadeInstallerPreflight{
+		Disposition: dto.ReShadeInstallerPreflightOrdinary,
+		Variant:     variant,
+		Targets:     []dto.ReShadeManagedTarget{},
+	}
+	for _, target := range targets {
+		if target.GraphicsAPI == string(optiscaler.GraphicsAPIVulkan) {
+			result.Disposition = dto.ReShadeInstallerPreflightBlocked
+			result.Message = "Automated Vulkan and ReShade coexistence is not supported for managed OptiScaler targets."
+			result.Targets = nil
+			return result, nil
+		}
+		if target.GraphicsAPI == string(optiscaler.GraphicsAPIDirectX) {
+			result.Targets = append(result.Targets, dto.ReShadeManagedTarget{
+				TargetRelativePath:     target.TargetRelativePath,
+				ExecutableRelativePath: target.ExecutableRelativePath,
+				ProxyFilename:          target.ProxyFilename,
+			})
+		}
+	}
+	if len(result.Targets) > 0 {
+		result.Disposition = dto.ReShadeInstallerPreflightCoordinated
+		result.Message = "Select the managed DirectX target to preserve the OptiScaler chain."
+	}
 	return result, nil
 }
 

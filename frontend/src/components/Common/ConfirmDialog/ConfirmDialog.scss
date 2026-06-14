@@ -1,10 +1,20 @@
 @use '@styles' as *;
 
+.confirm-dialog {
+  gap: 0;
+}
+
+.confirm-dialog .modal-header,
+.confirm-dialog .modal-footer {
+  background: $color-surface;
+}
+
 .confirm-dialog-body {
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  padding: $spacing-md $spacing-xl;
+  padding: $spacing-md calc(#{$spacing-xl} - #{$spacing-separator});
+  background: $color-background;
 }
 
 .confirm-dialog-message {
@@ -18,5 +28,10 @@
 
 .confirm-dialog-button-danger {
   color: $color-danger;
-  border-color: rgb(#{$color-danger-rgb} / 64%);
+  background: color-mix(in srgb, $color-danger 14%, $color-surface);
+}
+
+.confirm-dialog-button-danger:hover:not(:disabled),
+.confirm-dialog-button-danger:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 24%, $color-surface-elevated);
 }

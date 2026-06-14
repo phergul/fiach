@@ -9,11 +9,10 @@
     $game-mod-list-actions-width;
   align-items: center;
   gap: $spacing-lg;
-  min-height: 2.5rem;
-  padding: 0 $spacing-xl;
+  min-height: 1rem;
+  padding: 0 $spacing-xl $spacing-md;
   color: $color-text-muted;
-  background: $color-surface;
-  border-bottom: $app-border;
+  background: $color-background;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
 }

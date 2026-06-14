@@ -7,6 +7,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as optiscaler$0 from "../optiscaler/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
 export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReShadeDetectionResult> {
@@ -27,6 +30,13 @@ export function DownloadAndOpenReShadeInstaller(): $CancellablePromise<dto$0.ReS
     });
 }
 
+export function PreflightReShadeInstaller(gameID: number, variant: optiscaler$0.ReShadeInstallerVariant): $CancellablePromise<dto$0.ReShadeInstallerPreflight> {
+    return $Call.ByID(1403113674, gameID, variant).then(($result: any) => {
+        return $$createType2($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = dto$0.ReShadeDetectionResult.createFrom;
 const $$createType1 = dto$0.ReShadeInstallerLaunchResult.createFrom;
+const $$createType2 = dto$0.ReShadeInstallerPreflight.createFrom;

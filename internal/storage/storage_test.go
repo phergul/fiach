@@ -68,8 +68,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 
 	for _, table := range []string{
@@ -83,6 +83,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
+		"optiscaler_targets",
 	} {
 		if !tableExists(t, store, table) {
 			t.Fatalf("expected table %q to exist", table)
@@ -185,6 +186,7 @@ func TestMigrateDownDropsCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
+		"optiscaler_targets",
 	} {
 		if tableExists(t, store, table) {
 			t.Fatalf("expected table %q to be dropped", table)
@@ -512,8 +514,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 2 {
-		t.Fatalf("goose version = %d, want 2", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 }
 
@@ -546,8 +548,9 @@ func TestGlobalModStorageRootCanBeSetUpdatedAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetGlobalModStorageRoot() error = %v", err)
 	}
-	if root != "/mods/two" {
-		t.Fatalf("GetGlobalModStorageRoot() = %q, want updated root", root)
+	wantRoot := filepath.Clean("/mods/two")
+	if root != wantRoot {
+		t.Fatalf("GetGlobalModStorageRoot() = %q, want %q", root, wantRoot)
 	}
 }
 
@@ -570,8 +573,9 @@ func TestResolveGameModStoragePathUsesOverrideBeforeGlobalRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ResolveGameModStoragePath() error = %v", err)
 	}
-	if path != "/custom/skyrim" {
-		t.Fatalf("ResolveGameModStoragePath() = %q, want override path", path)
+	wantOverride := filepath.Clean("/custom/skyrim")
+	if path != wantOverride {
+		t.Fatalf("ResolveGameModStoragePath() = %q, want %q", path, wantOverride)
 	}
 
 	game, err := store.SetGameModStoragePathOverride(context.Background(), gameID, " ")

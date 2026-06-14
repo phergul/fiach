@@ -27,13 +27,14 @@ export const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   return (
     <Modal
-      background="surface"
+      background="background"
       bodyClassName="confirm-dialog-body"
       describedByID="confirm-dialog-message"
       isBusy={isBusy}
       isOpen={isOpen}
       labelledByID="confirm-dialog-title"
       onClose={onCancel}
+      panelClassName="confirm-dialog"
       size="sm"
       title={title}
       footer={(
@@ -45,7 +46,7 @@ export const ConfirmDialog = ({
             className={
               confirmTone === 'danger'
                 ? 'confirm-dialog-button confirm-dialog-button-danger'
-                : 'confirm-dialog-button'
+                : 'confirm-dialog-button button-main'
             }
             disabled={isBusy}
             onClick={onConfirm}

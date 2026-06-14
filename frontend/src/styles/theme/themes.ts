@@ -52,7 +52,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#6f91caff',
       tagPurple: '#9b7fc9ff',
       tagPink: '#cf779eff',
-      shadowSubtle: '0 0.125rem 0.5rem rgb(0 0 0 / 18%)',
     }),
   },
   {
@@ -82,7 +81,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#7aa2d8ff',
       tagPurple: '#a58ac7ff',
       tagPink: '#cf829fff',
-      shadowSubtle: '0 0.125rem 0.75rem rgb(3 10 7 / 20%)',
     }),
   },
   {
@@ -112,7 +110,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#79a8f2ff',
       tagPurple: '#a68ce0ff',
       tagPink: '#df7fa8ff',
-      shadowSubtle: '0 0.125rem 0.75rem rgb(2 6 17 / 32%)',
     }),
   },
   {
@@ -142,7 +139,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#89b4faff',
       tagPurple: '#cba6f7ff',
       tagPink: '#f5c2e7ff',
-      shadowSubtle: '0 0.125rem 0.75rem rgb(17 17 27 / 34%)',
     }),
   },
   {
@@ -172,7 +168,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#8be9fdff',
       tagPurple: '#bd93f9ff',
       tagPink: '#ff79c6ff',
-      shadowSubtle: '0 0.125rem 0.75rem rgb(25 26 36 / 35%)',
     }),
   },
   {
@@ -202,7 +197,6 @@ export const themes: ThemeDefinition[] = [
       tagBlue: '#81a1c1ff',
       tagPurple: '#b48eadff',
       tagPink: '#d0879dff',
-      shadowSubtle: '0 0.125rem 0.75rem rgb(20 24 31 / 32%)',
     }),
   },
 ];
