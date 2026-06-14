@@ -45,11 +45,15 @@ func (s *OptiScalerService) ServiceStartup(ctx context.Context, _ application.Se
 		return err
 	}
 	if state.Required {
-		s.logger.WarnContext(ctx, "OptiScaler recovery required",
+		attrs := []slog.Attr{
 			slog.String("operation", diagnostics.OperationOptiScalerRecovery),
 			slog.String("journal_id", state.JournalID),
 			slog.Int64("game_id", state.GameID),
-		)
+		}
+		if game, err := s.store.GetStoredGame(ctx, state.GameID); err == nil {
+			attrs = append(attrs, slog.String("game_name", game.Name))
+		}
+		s.logger.LogAttrs(ctx, slog.LevelWarn, "OptiScaler recovery required", attrs...)
 	}
 	return nil
 }
@@ -69,6 +73,7 @@ func (s *OptiScalerService) DiscoverOptiScalerCandidates(ctx context.Context, ga
 	if err != nil {
 		return nil, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.Discover(ctx, game.InstallPath, gameID)
 	if err == nil {
 		diag.complete("OptiScaler discovery completed", slog.Int("candidate_count", len(result)))
@@ -121,6 +126,7 @@ func (s *OptiScalerService) PreviewOptiScalerAction(ctx context.Context, request
 	if err != nil {
 		return dto.OptiScalerPreview{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.Preview(ctx, game.InstallPath, request)
 	if err == nil {
 		diag.complete("OptiScaler preview completed", slog.Bool("can_apply", result.CanApply), slog.Int("conflict_count", len(result.Conflicts)))
@@ -144,6 +150,7 @@ func (s *OptiScalerService) ApplyOptiScalerAction(ctx context.Context, request d
 	if err != nil {
 		return dto.OptiScalerApplyResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.Apply(ctx, game.InstallPath, request, previewHash)
 	if err == nil {
 		diag.complete("OptiScaler apply completed", slog.Bool("success", result.Success))

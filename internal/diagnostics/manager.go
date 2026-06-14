@@ -58,6 +58,9 @@ const (
 	OperationApplyOptiScaler           = "apply_optiscaler"
 	OperationOptiScalerRecovery        = "optiscaler_recovery"
 	OperationExportLogs                = "export_logs"
+	OperationRenameTag                 = "rename_tag"
+	OperationUpdateModDetails          = "update_mod_details"
+	OperationUpdateModMetadata         = "update_mod_metadata"
 )
 
 const (
@@ -169,6 +172,9 @@ func Operations() []OperationDescriptor {
 		{Value: OperationApplyOptiScaler, Label: "Apply OptiScaler"},
 		{Value: OperationOptiScalerRecovery, Label: "OptiScaler recovery"},
 		{Value: OperationExportLogs, Label: "Export logs"},
+		{Value: OperationRenameTag, Label: "Rename tag"},
+		{Value: OperationUpdateModDetails, Label: "Update mod details"},
+		{Value: OperationUpdateModMetadata, Label: "Update mod metadata"},
 	}
 }
 
