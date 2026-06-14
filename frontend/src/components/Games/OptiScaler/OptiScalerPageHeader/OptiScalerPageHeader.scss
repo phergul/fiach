@@ -14,7 +14,7 @@ $optiscaler-page-header-icon-size: 1rem;
   padding: $spacing-md $spacing-xl;
   background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
-  margin-bottom: $spacing-separator;
+  border-bottom: $app-border-width solid $color-surface-elevated;
 }
 
 .optiscaler-page-header-title {

@@ -18,11 +18,36 @@ const (
 type Action string
 
 const (
-	ActionInstall   Action = "install"
-	ActionAdopt     Action = "adopt"
-	ActionUpdate    Action = "update"
-	ActionRepair    Action = "repair"
-	ActionUninstall Action = "uninstall"
+	ActionInstall       Action = "install"
+	ActionAdopt         Action = "adopt"
+	ActionUpdate        Action = "update"
+	ActionRepair        Action = "repair"
+	ActionUninstall     Action = "uninstall"
+	ActionReShadeRepair Action = "reshade_repair"
+)
+
+type ReShadeInstallerVariant string
+
+const (
+	ReShadeInstallerVariantStandard ReShadeInstallerVariant = "standard"
+	ReShadeInstallerVariantAddon    ReShadeInstallerVariant = "addon"
+)
+
+type ReShadeSessionPhase string
+
+const (
+	ReShadeSessionPhaseAwaitingCompletion ReShadeSessionPhase = "awaiting_completion"
+	ReShadeSessionPhaseRepairReady        ReShadeSessionPhase = "repair_ready"
+	ReShadeSessionPhaseConflict           ReShadeSessionPhase = "conflict"
+)
+
+type ReShadeSessionOutcome string
+
+const (
+	ReShadeSessionOutcomeHealthy        ReShadeSessionOutcome = "healthy"
+	ReShadeSessionOutcomeRepairRequired ReShadeSessionOutcome = "repair_required"
+	ReShadeSessionOutcomeConflict       ReShadeSessionOutcome = "conflict"
+	ReShadeSessionOutcomeCancelled      ReShadeSessionOutcome = "cancelled"
 )
 
 type Ownership string
@@ -134,6 +159,32 @@ type RecoveryState struct {
 	Action     Action    `json:"action,omitempty"`
 	StartedAt  time.Time `json:"startedAt,omitempty"`
 	Error      string    `json:"error,omitempty"`
+}
+
+type ReShadeSessionRequest struct {
+	GameID             int64                   `json:"gameId"`
+	TargetRelativePath string                  `json:"targetRelativePath"`
+	InstallerVariant   ReShadeInstallerVariant `json:"installerVariant"`
+}
+
+type ReShadeSessionState struct {
+	ID                     string                  `json:"id"`
+	GameID                 int64                   `json:"gameId"`
+	TargetRelativePath     string                  `json:"targetRelativePath"`
+	ExecutableRelativePath string                  `json:"executableRelativePath"`
+	ProxyFilename          string                  `json:"proxyFilename"`
+	ChainedFilename        string                  `json:"chainedFilename"`
+	InstallerVariant       ReShadeInstallerVariant `json:"installerVariant"`
+	Phase                  ReShadeSessionPhase     `json:"phase"`
+	StartedAt              time.Time               `json:"startedAt"`
+	ConflictingPath        string                  `json:"conflictingPath,omitempty"`
+	Preview                *Preview                `json:"preview,omitempty"`
+}
+
+type ReShadeSessionResult struct {
+	Outcome ReShadeSessionOutcome `json:"outcome"`
+	Session *ReShadeSessionState  `json:"session,omitempty"`
+	Message string                `json:"message"`
 }
 
 var SupportedProxyFilenames = []string{

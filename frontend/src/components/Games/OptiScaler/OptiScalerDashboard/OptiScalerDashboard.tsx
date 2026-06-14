@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ArrowLeft } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
@@ -9,6 +9,10 @@ import { GameDetailsState } from '@components/Games/Details/GameDetailsState/Gam
 import { OptiScalerExecutableTable } from '@components/Games/OptiScaler/OptiScalerExecutableTable/OptiScalerExecutableTable';
 import { OptiScalerPageHeader } from '@components/Games/OptiScaler/OptiScalerPageHeader/OptiScalerPageHeader';
 import { OptiScalerRecoveryPanel } from '@components/Games/OptiScaler/OptiScalerRecoveryPanel/OptiScalerRecoveryPanel';
+import {
+  OptiScalerReShadeSession,
+  type OptiScalerReShadeRequest,
+} from '@components/Games/OptiScaler/OptiScalerReShadeSession/OptiScalerReShadeSession';
 import {
   OptiScalerWizard,
   type OptiScalerOperationSelection,
@@ -24,12 +28,28 @@ const parseGameID = (gameID: string | undefined) => {
 
 export const OptiScalerDashboard = () => {
   const { gameId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { addErrorToast, addToast } = useToast();
   const { games, isLoading: isLoadingGames, isScanning, loadError: gamesError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
   const [operationSelection, setOperationSelection] = useState<OptiScalerOperationSelection | null>(null);
+  const initialReShadeRequest = (
+    location.state as { reShadeCoordination?: OptiScalerReShadeRequest } | null
+  )?.reShadeCoordination ?? null;
+  const [reShadeRequest, setReShadeRequest] = useState<OptiScalerReShadeRequest | null>(
+    initialReShadeRequest,
+  );
+  const [isReShadeSessionActive, setIsReShadeSessionActive] = useState(
+    initialReShadeRequest !== null,
+  );
+  useEffect(() => {
+    if (initialReShadeRequest !== null) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [initialReShadeRequest, location.pathname, navigate]);
   const {
     artworkSource: heroArtworkSource,
     handleArtworkError: handleHeroArtworkError,
@@ -130,7 +150,14 @@ export const OptiScalerDashboard = () => {
           )}
 
           <main className="optiscaler-dashboard-content">
-            {operationSelection !== null && !isRecoveryRequired ? (
+            <OptiScalerReShadeSession
+              gameID={game.ID}
+              onActiveChange={setIsReShadeSessionActive}
+              onRefresh={optiScaler.refresh}
+              request={reShadeRequest}
+              targets={optiScaler.targets}
+            />
+            {operationSelection !== null && !isRecoveryRequired && !isReShadeSessionActive ? (
               <OptiScalerWizard
                 gameID={game.ID}
                 onClose={() => setOperationSelection(null)}
@@ -150,8 +177,15 @@ export const OptiScalerDashboard = () => {
             ) : (
               <OptiScalerExecutableTable
                 candidates={optiScaler.candidates}
-                disabled={isRecoveryRequired}
+                disabled={isRecoveryRequired || isReShadeSessionActive}
                 onStartOperation={setOperationSelection}
+                onStartReShade={(target, variant) => {
+                  setOperationSelection(null);
+                  setReShadeRequest({
+                    targetRelativePath: target.TargetRelativePath,
+                    variant,
+                  });
+                }}
                 release={optiScaler.release}
                 targets={optiScaler.targets}
               />

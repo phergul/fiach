@@ -76,6 +76,10 @@ const operationDefinitions: Record<Action, OperationDefinition> = {
     label: 'Uninstall',
     steps: ['target', 'preview', 'result'],
   },
+  [Action.ActionReShadeRepair]: {
+    label: 'Repair ReShade Chain',
+    steps: ['preview', 'result'],
+  },
 };
 
 const supportedProxyFilenames = [

@@ -160,7 +160,7 @@ func TestScanIgnoresOptiScalerProxyBesideReShadeINI(t *testing.T) {
 	writeReShadeTestFile(t, proxy)
 	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
 
-	result, err := scan(root, func(path string) (winversion.Metadata, error) {
+	result, err := scan(root, nil, func(path string) (winversion.Metadata, error) {
 		return winversion.Metadata{
 			ProductName:      "OptiScaler",
 			OriginalFilename: "OptiScaler.dll",
@@ -182,7 +182,7 @@ func TestScanIgnoresUnreadableAndAmbiguousProxies(t *testing.T) {
 	writeReShadeTestFile(t, filepath.Join(target, "dxgi.dll"))
 	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
 
-	result, err := scan(root, func(string) (winversion.Metadata, error) {
+	result, err := scan(root, nil, func(string) (winversion.Metadata, error) {
 		return winversion.Metadata{ProductName: "ReShade"}, os.ErrPermission
 	})
 	if err != nil {
@@ -190,7 +190,7 @@ func TestScanIgnoresUnreadableAndAmbiguousProxies(t *testing.T) {
 	}
 	assertReShadeTargets(t, result, nil)
 
-	result, err = scan(root, func(string) (winversion.Metadata, error) {
+	result, err = scan(root, nil, func(string) (winversion.Metadata, error) {
 		return winversion.Metadata{ProductName: "ReShade", OriginalFilename: "dxgi.dll"}, nil
 	})
 	if err != nil {
@@ -200,12 +200,47 @@ func TestScanIgnoresUnreadableAndAmbiguousProxies(t *testing.T) {
 }
 
 func scanReShadeTest(root string) (Result, error) {
-	return scan(root, func(string) (winversion.Metadata, error) {
+	return scan(root, nil, func(string) (winversion.Metadata, error) {
 		return winversion.Metadata{
 			ProductName:      "ReShade",
 			OriginalFilename: "ReShade64.dll",
 		}, nil
 	})
+}
+
+func TestScanDetectsManagedChainedReShadeRuntime(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "bin")
+	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade64.dll"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
+
+	result, err := scan(root, []string{target}, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{ProductName: "ReShade", OriginalFilename: "ReShade64.dll"}, nil
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+	assertReShadeTargets(t, result, []Target{{
+		Path:        target,
+		Executables: []string{filepath.Join(target, "Game.exe")},
+	}})
+}
+
+func TestScanRejectsUnmanagedChainedFilename(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "bin")
+	writeReShadeTestFile(t, filepath.Join(target, "Game.exe"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade64.dll"))
+	writeReShadeTestFile(t, filepath.Join(target, "ReShade.ini"))
+
+	result, err := scan(root, nil, func(string) (winversion.Metadata, error) {
+		return winversion.Metadata{ProductName: "ReShade", OriginalFilename: "ReShade64.dll"}, nil
+	})
+	if err != nil {
+		t.Fatalf("scan() error = %v", err)
+	}
+	assertReShadeTargets(t, result, nil)
 }
 
 func assertReShadeTargets(t *testing.T, result Result, want []Target) {

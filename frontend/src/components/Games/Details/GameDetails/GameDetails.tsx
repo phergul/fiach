@@ -60,6 +60,21 @@ export const GameDetails = () => {
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
   const reShadeInstall = useGameReShadeInstall({
     game,
+    onCoordinate: (preflight) => {
+      if (game === undefined) {
+        return;
+      }
+      navigate(`/library/${game.ID}/optiscaler`, {
+        state: {
+          reShadeCoordination: {
+            targetRelativePath: preflight.Targets.length === 1
+              ? preflight.Targets[0].TargetRelativePath
+              : null,
+            variant: preflight.Variant,
+          },
+        },
+      });
+    },
     onMenuClose: () => setIsActionsMenuOpen(false),
     reShadeDetection,
   });

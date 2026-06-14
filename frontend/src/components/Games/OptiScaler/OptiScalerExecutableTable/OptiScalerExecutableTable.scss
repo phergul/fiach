@@ -61,10 +61,6 @@ $optiscaler-table-status-width: 20rem;
   text-transform: uppercase;
 }
 
-.optiscaler-executable-table section > h3 + .optiscaler-executable-row {
-  margin-top: $spacing-separator;
-}
-
 .optiscaler-executable-row {
   min-height: 5rem;
   background: $color-surface;
@@ -168,4 +164,5 @@ $optiscaler-table-status-width: 20rem;
   padding: $spacing-lg $spacing-xl $spacing-lg;
   color: $color-text-muted;
   background: $color-surface;
+  margin-bottom: $spacing-separator;
 }

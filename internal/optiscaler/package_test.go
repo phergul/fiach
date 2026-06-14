@@ -19,6 +19,8 @@ func TestPackageInventoryExcludesSetupScriptsAndExtractionReadme(t *testing.T) {
 		"Setup Instructions.txt": "instructions",
 		"Extraction README.txt":  "instructions",
 		"README.md":              "instructions",
+		"!! README_EXTRACT ALL FILES TO GAME FOLDER !!.txt": "instructions",
+		"setup_linux.sh": "script",
 	} {
 		if err := os.WriteFile(filepath.Join(root, name), []byte(contents), 0o644); err != nil {
 			t.Fatalf("WriteFile(%q) error = %v", name, err)
@@ -39,7 +41,15 @@ func TestPackageInventoryExcludesSetupScriptsAndExtractionReadme(t *testing.T) {
 			t.Fatalf("package inventory missing required asset %q: %#v", name, got)
 		}
 	}
-	for _, name := range []string{"setup.bat", "Configure.cmd", "Setup Instructions.txt", "Extraction README.txt", "README.md"} {
+	for _, name := range []string{
+		"setup.bat",
+		"Configure.cmd",
+		"Setup Instructions.txt",
+		"Extraction README.txt",
+		"README.md",
+		"!! README_EXTRACT ALL FILES TO GAME FOLDER !!.txt",
+		"setup_linux.sh",
+	} {
 		if got[name] {
 			t.Fatalf("package inventory included excluded asset %q", name)
 		}

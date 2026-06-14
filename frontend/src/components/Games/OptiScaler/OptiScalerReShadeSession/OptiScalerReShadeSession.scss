@@ -1,0 +1,81 @@
+@use '@styles' as *;
+
+.optiscaler-reshade-session {
+  display: grid;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: $app-border-width solid $color-border;
+  background: $color-surface;
+}
+
+.optiscaler-reshade-session header h2,
+.optiscaler-reshade-session header p,
+.optiscaler-reshade-session-content p,
+.optiscaler-reshade-session-message,
+.optiscaler-reshade-session-error {
+  margin: 0;
+}
+
+.optiscaler-reshade-session header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.optiscaler-reshade-session header p,
+.optiscaler-reshade-session-message {
+  color: $color-text-muted;
+}
+
+.optiscaler-reshade-session-content {
+  display: grid;
+  max-width: $wizard-content-max-width;
+  gap: $spacing-md;
+}
+
+.optiscaler-reshade-session-content label {
+  display: grid;
+  gap: $spacing-sm;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.optiscaler-reshade-session-content select {
+  min-height: $input-height;
+}
+
+.optiscaler-reshade-session-content dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-sm $spacing-xl;
+  margin: 0;
+}
+
+.optiscaler-reshade-session-content dl div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: $spacing-md;
+}
+
+.optiscaler-reshade-session-content dt {
+  color: $color-text-muted;
+}
+
+.optiscaler-reshade-session-content dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.optiscaler-reshade-session-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.optiscaler-reshade-session-drift {
+  display: grid;
+  justify-items: start;
+  gap: $spacing-sm;
+}
+
+.optiscaler-reshade-session-error {
+  color: $color-danger;
+}

@@ -170,15 +170,18 @@ func packageInventory(root string) ([]PackageFile, error) {
 
 func includePackageFile(relative string) bool {
 	name := strings.ToLower(filepath.Base(filepath.Clean(relative)))
-	if strings.HasSuffix(name, ".bat") || strings.HasSuffix(name, ".cmd") {
+	if strings.HasSuffix(name, ".bat") ||
+		strings.HasSuffix(name, ".cmd") ||
+		strings.HasSuffix(name, ".sh") {
+		return false
+	}
+	if strings.Contains(name, "readme") &&
+		(strings.HasSuffix(name, ".txt") || strings.HasSuffix(name, ".md")) {
 		return false
 	}
 	if strings.HasSuffix(name, ".txt") &&
 		(strings.Contains(name, "setup") || strings.Contains(name, "install")) {
 		return false
 	}
-	return name != "readme.txt" &&
-		name != "readme.md" &&
-		name != "extraction readme.txt" &&
-		name != "extraction_readme.txt"
+	return true
 }

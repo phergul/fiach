@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import type { OptiScalerRelease } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { GetOptiScalerReleaseStatus } from '@bindings/github.com/phergul/fiach/internal/services/optiscalerservice';
@@ -21,14 +21,14 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
   const [release, setRelease] = useState<OptiScalerRelease | null>(null);
   const [releaseError, setReleaseError] = useState<string | null>(null);
   const [isReleaseLoading, setIsReleaseLoading] = useState(false);
-  const [releasePromise, setReleasePromise] = useState<Promise<OptiScalerRelease | null> | null>(null);
+  const releasePromiseRef = useRef<Promise<OptiScalerRelease | null> | null>(null);
 
   const loadRelease = useCallback(() => {
     if (release !== null) {
       return Promise.resolve(release);
     }
-    if (releasePromise !== null) {
-      return releasePromise;
+    if (releasePromiseRef.current !== null) {
+      return releasePromiseRef.current;
     }
 
     setIsReleaseLoading(true);
@@ -45,9 +45,9 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
       .finally(() => {
         setIsReleaseLoading(false);
       });
-    setReleasePromise(request);
+    releasePromiseRef.current = request;
     return request;
-  }, [release, releasePromise]);
+  }, [release]);
 
   const value = useMemo(() => ({
     isReleaseLoading,

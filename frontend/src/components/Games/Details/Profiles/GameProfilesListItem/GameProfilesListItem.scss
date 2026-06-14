@@ -103,6 +103,15 @@ $game-profiles-list-item-min-height: 4.5rem;
   margin-left: $spacing-md;
   padding: 0 $spacing-md;
   border: $app-border;
+  background: $color-background;
+}
+
+input.game-profiles-list-item-input:not([type='checkbox']):not([type='radio']) {
+  background: $color-background;
+
+  &:focus {
+    background: $color-surface-elevated;
+  }
 }
 
 .game-profiles-list-item-icon-button {

@@ -35,12 +35,16 @@ var reshadeDLLNames = map[string]struct{}{
 }
 
 func Scan(root string) (result Result, err error) {
-	return scan(root, winversion.Read)
+	return ScanManaged(root, nil)
+}
+
+func ScanManaged(root string, managedChainedTargets []string) (result Result, err error) {
+	return scan(root, managedChainedTargets, winversion.Read)
 }
 
 type metadataReader func(string) (winversion.Metadata, error)
 
-func scan(root string, readMetadata metadataReader) (result Result, err error) {
+func scan(root string, managedChainedTargets []string, readMetadata metadataReader) (result Result, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("scan ReShade runtime markers: %w", err)
@@ -49,6 +53,10 @@ func scan(root string, readMetadata metadataReader) (result Result, err error) {
 
 	root = filepath.Clean(root)
 	folders := map[string]*candidateFolder{}
+	managedTargets := make(map[string]bool, len(managedChainedTargets))
+	for _, target := range managedChainedTargets {
+		managedTargets[strings.ToLower(filepath.Clean(target))] = true
+	}
 
 	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -80,7 +88,9 @@ func scan(root string, readMetadata metadataReader) (result Result, err error) {
 			folder.hasSupport = true
 		default:
 			_, knownDLL := reshadeDLLNames[name]
-			if knownDLL {
+			isManagedChainedRuntime := name == "reshade64.dll" &&
+				managedTargets[strings.ToLower(filepath.Clean(parent))]
+			if knownDLL || isManagedChainedRuntime {
 				folder.proxies = append(folder.proxies, path)
 			}
 		}

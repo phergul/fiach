@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { Ellipsis, RefreshCw, ShieldCheck, Trash2, Wrench } from 'lucide-react';
+import { Blocks, Ellipsis, RefreshCw, ShieldCheck, Sparkles, Trash2, Wrench } from 'lucide-react';
 
-import { Action } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
+import { Action, ReShadeInstallerVariant } from '@bindings/github.com/phergul/fiach/internal/optiscaler/models';
 import type {
   OptiScalerCandidate,
   OptiScalerRelease,
@@ -17,6 +17,7 @@ interface OptiScalerExecutableTableProps {
   candidates: OptiScalerCandidate[];
   disabled: boolean;
   onStartOperation: (selection: OptiScalerOperationSelection) => void;
+  onStartReShade: (target: OptiScalerTarget, variant: ReShadeInstallerVariant) => void;
   release: OptiScalerRelease | null;
   targets: OptiScalerTarget[];
 }
@@ -54,10 +55,12 @@ const candidateFacts = (candidate: OptiScalerCandidate) => [
 const OptiScalerManagedActions = ({
   disabled,
   onStartOperation,
+  onStartReShade,
   row,
 }: {
   disabled: boolean;
   onStartOperation: (selection: OptiScalerOperationSelection) => void;
+  onStartReShade: (target: OptiScalerTarget, variant: ReShadeInstallerVariant) => void;
   row: ManagedRow;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -100,6 +103,24 @@ const OptiScalerManagedActions = ({
           ariaLabel={`Actions for ${executableName(row.target.ExecutableRelativePath)}`}
           isOpen={isOpen && !disabled}
           items={[
+            ...(row.target.GraphicsAPI === 'directx' ? [
+              {
+                icon: Sparkles,
+                label: 'Install/Update ReShade',
+                onSelect: () => {
+                  setIsOpen(false);
+                  onStartReShade(row.target, ReShadeInstallerVariant.ReShadeInstallerVariantStandard);
+                },
+              },
+              {
+                icon: Blocks,
+                label: 'Install/Update ReShade with Add-on Support',
+                onSelect: () => {
+                  setIsOpen(false);
+                  onStartReShade(row.target, ReShadeInstallerVariant.ReShadeInstallerVariantAddon);
+                },
+              },
+            ] : []),
             {
               disabled: primaryAction === Action.ActionUpdate,
               icon: RefreshCw,
@@ -128,6 +149,7 @@ export const OptiScalerExecutableTable = ({
   candidates,
   disabled,
   onStartOperation,
+  onStartReShade,
   release,
   targets,
 }: OptiScalerExecutableTableProps) => {
@@ -167,6 +189,7 @@ export const OptiScalerExecutableTable = ({
             <OptiScalerManagedActions
               disabled={disabled}
               onStartOperation={onStartOperation}
+              onStartReShade={onStartReShade}
               row={row}
             />
           </div>
