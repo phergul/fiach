@@ -4,16 +4,13 @@ package optiscaler
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/phergul/fiach/internal/fileops"
-	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestManagerInstallApplyPersistsManifestAndDriftBlocksUninstall(t *testing.T) {
