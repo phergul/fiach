@@ -57,6 +57,10 @@ jobs:
         working-directory: frontend
         run: bunx tsc --noEmit
 
+      - name: Run frontend tests
+        working-directory: frontend
+        run: bun run test
+
       - name: Build frontend
         working-directory: frontend
         run: bun run build
@@ -75,10 +79,6 @@ jobs:
 
       - name: Run Go tests
         run: go test ./...
-
-      - name: Run frontend tests
-        working-directory: frontend
-        run: bun test
 
   # windows-build:
   #   name: Windows Build
