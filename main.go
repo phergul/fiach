@@ -46,7 +46,7 @@ func main() {
 
 	steamSource := gamesource.NewSteamSource(store)
 	gamesService := services.NewGamesService(store, logger, steamSource)
-	
+
 	injectionCoordinator := injection.NewCoordinator(store)
 
 	var app *application.App

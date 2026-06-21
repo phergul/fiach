@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/injection"
 	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -193,6 +194,51 @@ func (s *ReshadeService) ListManagedReShadeTargets(ctx context.Context, gameID i
 		return nil, err
 	}
 	return s.manager.ListTargets(ctx, game.InstallPath, gameID)
+}
+
+func (s *ReshadeService) ListManagedReShadeContentCatalogue(
+	ctx context.Context,
+	refresh bool,
+) (result dto.ManagedReShadeContentCatalogue, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("list managed ReShade content catalogue: %w", err)
+		}
+	}()
+	return s.manager.ListContentCatalogue(ctx, refresh)
+}
+
+func (s *ReshadeService) InspectManagedReShadePreset(
+	ctx context.Context,
+	gameID int64,
+	targetRelativePath string,
+	presetPath string,
+) (result dto.ManagedReShadePresetInspectionResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("inspect managed ReShade preset: %w", err)
+		}
+	}()
+	game, err := s.store.GetStoredGame(ctx, gameID)
+	if err != nil {
+		return dto.ManagedReShadePresetInspectionResult{}, err
+	}
+	targetPath, err := reshade.ResolveWithinRoot(game.InstallPath, targetRelativePath)
+	if err != nil {
+		return dto.ManagedReShadePresetInspectionResult{}, err
+	}
+	resolvedPresetPath := presetPath
+	if !filepath.IsAbs(resolvedPresetPath) {
+		resolvedPresetPath = filepath.Join(targetPath, presetPath)
+	}
+	if err := fileops.RequirePathWithinRoot("ReShade preset", resolvedPresetPath, game.InstallPath); err != nil {
+		return dto.ManagedReShadePresetInspectionResult{}, err
+	}
+	catalogue, err := s.manager.ListContentCatalogue(ctx, false)
+	if err != nil {
+		return dto.ManagedReShadePresetInspectionResult{}, err
+	}
+	return reshade.InspectPreset(resolvedPresetPath, catalogue)
 }
 
 func (s *ReshadeService) DiscoverManagedReShadeCandidates(

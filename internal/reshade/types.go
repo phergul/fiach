@@ -14,11 +14,12 @@ const (
 type Action string
 
 const (
-	ActionInstall   Action = "install"
-	ActionAdopt     Action = "adopt"
-	ActionUpdate    Action = "update"
-	ActionRepair    Action = "repair"
-	ActionUninstall Action = "uninstall"
+	ActionInstall          Action = "install"
+	ActionAdopt            Action = "adopt"
+	ActionUpdate           Action = "update"
+	ActionRepair           Action = "repair"
+	ActionUninstall        Action = "uninstall"
+	ActionConfigureContent Action = "configure_content"
 )
 
 type RenderingAPI string
@@ -79,13 +80,35 @@ type InstallerProvenance struct {
 }
 
 type ManagedFile struct {
-	RelativePath string    `json:"relativePath"`
-	SHA256       string    `json:"sha256"`
-	SizeBytes    int64     `json:"sizeBytes"`
-	Ownership    Ownership `json:"ownership"`
-	BackupPath   *string   `json:"backupPath,omitempty"`
-	BackupSHA256 *string   `json:"backupSha256,omitempty"`
-	BackupSize   *int64    `json:"backupSizeBytes,omitempty"`
+	RelativePath string          `json:"relativePath"`
+	SHA256       string          `json:"sha256"`
+	SizeBytes    int64           `json:"sizeBytes"`
+	Ownership    Ownership       `json:"ownership"`
+	Role         PathRole        `json:"role,omitempty"`
+	Source       *ContentSource  `json:"source,omitempty"`
+	Sources      []ContentSource `json:"sources,omitempty"`
+	BackupPath   *string         `json:"backupPath,omitempty"`
+	BackupSHA256 *string         `json:"backupSha256,omitempty"`
+	BackupSize   *int64          `json:"backupSizeBytes,omitempty"`
+}
+
+type ContentSourceKind string
+
+const (
+	ContentSourceRuntime       ContentSourceKind = "runtime"
+	ContentSourceEffectPackage ContentSourceKind = "effect_package"
+	ContentSourceAddon         ContentSourceKind = "addon"
+)
+
+type ContentSource struct {
+	Kind          ContentSourceKind `json:"kind"`
+	ID            string            `json:"id,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	RepositoryURL string            `json:"repositoryUrl,omitempty"`
+	DownloadURL   string            `json:"downloadUrl,omitempty"`
+	ArchiveSHA256 string            `json:"archiveSha256,omitempty"`
+	ArchiveSize   int64             `json:"archiveSizeBytes,omitempty"`
+	Shared        bool              `json:"shared,omitempty"`
 }
 
 type PathRole string
@@ -122,17 +145,32 @@ type Manifest struct {
 }
 
 type Request struct {
-	Action                    Action       `json:"action"`
-	GameID                    int64        `json:"gameId"`
-	TargetRelativePath        string       `json:"targetRelativePath"`
-	ExecutableRelativePath    string       `json:"executableRelativePath"`
-	RenderingAPI              RenderingAPI `json:"renderingApi"`
-	ProxyFilename             string       `json:"proxyFilename"`
-	Architecture              Architecture `json:"architecture"`
-	BuildVariant              BuildVariant `json:"buildVariant"`
-	BackupAndContinue         bool         `json:"backupAndContinue"`
-	SinglePlayerAcknowledged  bool         `json:"singlePlayerAcknowledged"`
-	AntiCheatRiskAcknowledged bool         `json:"antiCheatRiskAcknowledged"`
+	Action                    Action         `json:"action"`
+	GameID                    int64          `json:"gameId"`
+	TargetRelativePath        string         `json:"targetRelativePath"`
+	ExecutableRelativePath    string         `json:"executableRelativePath"`
+	RenderingAPI              RenderingAPI   `json:"renderingApi"`
+	ProxyFilename             string         `json:"proxyFilename"`
+	Architecture              Architecture   `json:"architecture"`
+	BuildVariant              BuildVariant   `json:"buildVariant"`
+	BackupAndContinue         bool           `json:"backupAndContinue"`
+	SinglePlayerAcknowledged  bool           `json:"singlePlayerAcknowledged"`
+	AntiCheatRiskAcknowledged bool           `json:"antiCheatRiskAcknowledged"`
+	Content                   ContentRequest `json:"content,omitempty"`
+}
+
+type ContentRequest struct {
+	EffectPackages []EffectPackageSelection `json:"effectPackages,omitempty"`
+	Addons         []AddonSelection         `json:"addons,omitempty"`
+}
+
+type EffectPackageSelection struct {
+	ID          string   `json:"id"`
+	EffectFiles []string `json:"effectFiles,omitempty"`
+}
+
+type AddonSelection struct {
+	ID string `json:"id"`
 }
 
 type TargetState struct {
@@ -249,4 +287,55 @@ type DiscoveryWarning struct {
 type DiscoveryResult struct {
 	Candidates []Candidate        `json:"candidates"`
 	Warnings   []DiscoveryWarning `json:"warnings"`
+}
+
+type ContentCatalogue struct {
+	Effects []EffectPackage `json:"effects"`
+	Addons  []AddonPackage  `json:"addons"`
+	Cached  bool            `json:"cached"`
+}
+
+type EffectPackage struct {
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	Description        string   `json:"description"`
+	InstallPath        string   `json:"installPath"`
+	TextureInstallPath string   `json:"textureInstallPath"`
+	DownloadURL        string   `json:"downloadUrl"`
+	RepositoryURL      string   `json:"repositoryUrl"`
+	Required           bool     `json:"required"`
+	Enabled            bool     `json:"enabled"`
+	Modifiable         bool     `json:"modifiable"`
+	EffectFiles        []string `json:"effectFiles"`
+	DenyEffectFiles    []string `json:"denyEffectFiles"`
+}
+
+type AddonPackage struct {
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	EffectInstallPath string `json:"effectInstallPath,omitempty"`
+	DownloadURL       string `json:"downloadUrl,omitempty"`
+	DownloadURL32     string `json:"downloadUrl32,omitempty"`
+	DownloadURL64     string `json:"downloadUrl64,omitempty"`
+	RepositoryURL     string `json:"repositoryUrl"`
+}
+
+type PresetInspectionRequest struct {
+	GameID             int64  `json:"gameId"`
+	TargetRelativePath string `json:"targetRelativePath"`
+	PresetPath         string `json:"presetPath"`
+}
+
+type PresetInspectionResult struct {
+	ReferencedEffects []string               `json:"referencedEffects"`
+	Recommendations   []PresetRecommendation `json:"recommendations"`
+	MissingEffects    []string               `json:"missingEffects"`
+	Warnings          []string               `json:"warnings"`
+}
+
+type PresetRecommendation struct {
+	PackageID   string   `json:"packageId"`
+	PackageName string   `json:"packageName"`
+	EffectFiles []string `json:"effectFiles"`
 }

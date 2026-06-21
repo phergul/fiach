@@ -137,6 +137,10 @@ func (m *Manager) ListTargets(ctx context.Context, gameRoot string, gameID int64
 	return targets, nil
 }
 
+func (m *Manager) ListContentCatalogue(ctx context.Context, refresh bool) (ContentCatalogue, error) {
+	return ListContentCatalogue(ctx, m.dataDir, refresh, ContentCatalogueOptions{})
+}
+
 func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request) (preview Preview, err error) {
 	defer func() {
 		if err != nil {
@@ -168,7 +172,14 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			return Preview{}, err
 		}
 	}
-	preview, err = m.planner.Plan(ctx, gameRoot, request, existing)
+	if request.Action == ActionConfigureContent {
+		if !found {
+			return Preview{}, errors.New("target is not managed")
+		}
+		preview, err = m.planContent(ctx, gameRoot, targetPath, request, row, manifest)
+	} else {
+		preview, err = m.planner.Plan(ctx, gameRoot, request, existing)
+	}
 	if err != nil {
 		return Preview{}, err
 	}
@@ -325,7 +336,14 @@ func normalizeRequest(gameRoot string, request Request) (Request, string, error)
 	if request.GameID <= 0 {
 		return Request{}, "", errors.New("game ID must be positive")
 	}
-	if !slices.Contains([]Action{ActionInstall, ActionAdopt, ActionUpdate, ActionRepair, ActionUninstall}, request.Action) {
+	if !slices.Contains([]Action{
+		ActionInstall,
+		ActionAdopt,
+		ActionUpdate,
+		ActionRepair,
+		ActionUninstall,
+		ActionConfigureContent,
+	}, request.Action) {
 		return Request{}, "", errors.New("action is invalid")
 	}
 	if !slices.Contains([]RenderingAPI{RenderingAPID3D9, RenderingAPID3D10, RenderingAPID3D11, RenderingAPID3D12}, request.RenderingAPI) {

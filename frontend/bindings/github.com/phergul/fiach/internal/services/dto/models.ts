@@ -552,8 +552,14 @@ export class ListDiagnosticLogsInput {
 export const ManagedReShadeApplyResult = reshade$0.ApplyResult;
 export type ManagedReShadeApplyResult = reshade$0.ApplyResult;
 
+export const ManagedReShadeContentCatalogue = reshade$0.ContentCatalogue;
+export type ManagedReShadeContentCatalogue = reshade$0.ContentCatalogue;
+
 export const ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
 export type ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
+
+export const ManagedReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
+export type ManagedReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
 
 export const ManagedReShadePreview = reshade$0.Preview;
 export type ManagedReShadePreview = reshade$0.Preview;

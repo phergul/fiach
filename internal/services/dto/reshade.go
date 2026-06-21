@@ -28,3 +28,5 @@ type ManagedReShadeApplyResult = reshade.ApplyResult
 type ManagedReShadeRecoveryState = reshade.RecoveryState
 type ManagedReShadeTarget = reshade.ManagedTarget
 type ManagedReShadeDiscoveryResult = reshade.DiscoveryResult
+type ManagedReShadeContentCatalogue = reshade.ContentCatalogue
+type ManagedReShadePresetInspectionResult = reshade.PresetInspectionResult

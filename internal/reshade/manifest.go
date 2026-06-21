@@ -39,6 +39,24 @@ func DecodeManifest(value string) (manifest Manifest, err error) {
 		default:
 			return Manifest{}, fmt.Errorf("manifest file ownership %q is invalid", file.Ownership)
 		}
+		if file.Role != "" {
+			switch file.Role {
+			case PathRoleRuntime, PathRoleConfiguration, PathRolePreset, PathRoleLog,
+				PathRoleBackup, PathRoleEffects, PathRoleTextures, PathRoleAddons:
+			default:
+				return Manifest{}, fmt.Errorf("manifest file role %q is invalid", file.Role)
+			}
+		}
+		for _, source := range append(file.Sources, dereferenceContentSource(file.Source)...) {
+			switch source.Kind {
+			case ContentSourceRuntime, ContentSourceEffectPackage, ContentSourceAddon:
+			default:
+				return Manifest{}, fmt.Errorf("manifest file source kind %q is invalid", source.Kind)
+			}
+			if source.ArchiveSize < 0 {
+				return Manifest{}, errors.New("manifest file source archive size cannot be negative")
+			}
+		}
 	}
 	for _, content := range manifest.UserContent {
 		if strings.TrimSpace(content.Path) == "" {
@@ -64,6 +82,13 @@ func DecodeManifest(value string) (manifest Manifest, err error) {
 		}
 	}
 	return manifest, nil
+}
+
+func dereferenceContentSource(source *ContentSource) []ContentSource {
+	if source == nil {
+		return nil
+	}
+	return []ContentSource{*source}
 }
 
 func detectManifestDrift(targetPath string, manifest Manifest) (drift []Drift, err error) {

@@ -52,7 +52,66 @@ export enum Action {
     ActionUpdate = "update",
     ActionRepair = "repair",
     ActionUninstall = "uninstall",
+    ActionConfigureContent = "configure_content",
 };
+
+export class AddonPackage {
+    "id": string;
+    "name": string;
+    "description": string;
+    "effectInstallPath"?: string;
+    "downloadUrl"?: string;
+    "downloadUrl32"?: string;
+    "downloadUrl64"?: string;
+    "repositoryUrl": string;
+
+    /** Creates a new AddonPackage instance. */
+    constructor($$source: Partial<AddonPackage> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("description" in $$source)) {
+            this["description"] = "";
+        }
+        if (!("repositoryUrl" in $$source)) {
+            this["repositoryUrl"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AddonPackage instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AddonPackage {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AddonPackage($$parsedSource as Partial<AddonPackage>);
+    }
+}
+
+export class AddonSelection {
+    "id": string;
+
+    /** Creates a new AddonSelection instance. */
+    constructor($$source: Partial<AddonSelection> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AddonSelection instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AddonSelection {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AddonSelection($$parsedSource as Partial<AddonSelection>);
+    }
+}
 
 export class ApplyResult {
     "success": boolean;
@@ -156,6 +215,109 @@ export class Candidate {
     }
 }
 
+export class ContentCatalogue {
+    "effects": EffectPackage[];
+    "addons": AddonPackage[];
+    "cached": boolean;
+
+    /** Creates a new ContentCatalogue instance. */
+    constructor($$source: Partial<ContentCatalogue> = {}) {
+        if (!("effects" in $$source)) {
+            this["effects"] = [];
+        }
+        if (!("addons" in $$source)) {
+            this["addons"] = [];
+        }
+        if (!("cached" in $$source)) {
+            this["cached"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ContentCatalogue instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ContentCatalogue {
+        const $$createField0_0 = $$createType6;
+        const $$createField1_0 = $$createType8;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("effects" in $$parsedSource) {
+            $$parsedSource["effects"] = $$createField0_0($$parsedSource["effects"]);
+        }
+        if ("addons" in $$parsedSource) {
+            $$parsedSource["addons"] = $$createField1_0($$parsedSource["addons"]);
+        }
+        return new ContentCatalogue($$parsedSource as Partial<ContentCatalogue>);
+    }
+}
+
+export class ContentRequest {
+    "effectPackages"?: EffectPackageSelection[];
+    "addons"?: AddonSelection[];
+
+    /** Creates a new ContentRequest instance. */
+    constructor($$source: Partial<ContentRequest> = {}) {
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ContentRequest instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ContentRequest {
+        const $$createField0_0 = $$createType10;
+        const $$createField1_0 = $$createType12;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("effectPackages" in $$parsedSource) {
+            $$parsedSource["effectPackages"] = $$createField0_0($$parsedSource["effectPackages"]);
+        }
+        if ("addons" in $$parsedSource) {
+            $$parsedSource["addons"] = $$createField1_0($$parsedSource["addons"]);
+        }
+        return new ContentRequest($$parsedSource as Partial<ContentRequest>);
+    }
+}
+
+export class ContentSource {
+    "kind": ContentSourceKind;
+    "id"?: string;
+    "name"?: string;
+    "repositoryUrl"?: string;
+    "downloadUrl"?: string;
+    "archiveSha256"?: string;
+    "archiveSizeBytes"?: number;
+    "shared"?: boolean;
+
+    /** Creates a new ContentSource instance. */
+    constructor($$source: Partial<ContentSource> = {}) {
+        if (!("kind" in $$source)) {
+            this["kind"] = ContentSourceKind.$zero;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ContentSource instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ContentSource {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ContentSource($$parsedSource as Partial<ContentSource>);
+    }
+}
+
+export enum ContentSourceKind {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    ContentSourceRuntime = "runtime",
+    ContentSourceEffectPackage = "effect_package",
+    ContentSourceAddon = "addon",
+};
+
 export class DiscoveryResult {
     "candidates": Candidate[];
     "warnings": DiscoveryWarning[];
@@ -176,8 +338,8 @@ export class DiscoveryResult {
      * Creates a new DiscoveryResult instance from a string or object.
      */
     static createFrom($$source: any = {}): DiscoveryResult {
-        const $$createField0_0 = $$createType6;
-        const $$createField1_0 = $$createType8;
+        const $$createField0_0 = $$createType14;
+        const $$createField1_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("candidates" in $$parsedSource) {
             $$parsedSource["candidates"] = $$createField0_0($$parsedSource["candidates"]);
@@ -244,6 +406,105 @@ export class Drift {
     }
 }
 
+export class EffectPackage {
+    "id": string;
+    "name": string;
+    "description": string;
+    "installPath": string;
+    "textureInstallPath": string;
+    "downloadUrl": string;
+    "repositoryUrl": string;
+    "required": boolean;
+    "enabled": boolean;
+    "modifiable": boolean;
+    "effectFiles": string[];
+    "denyEffectFiles": string[];
+
+    /** Creates a new EffectPackage instance. */
+    constructor($$source: Partial<EffectPackage> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("description" in $$source)) {
+            this["description"] = "";
+        }
+        if (!("installPath" in $$source)) {
+            this["installPath"] = "";
+        }
+        if (!("textureInstallPath" in $$source)) {
+            this["textureInstallPath"] = "";
+        }
+        if (!("downloadUrl" in $$source)) {
+            this["downloadUrl"] = "";
+        }
+        if (!("repositoryUrl" in $$source)) {
+            this["repositoryUrl"] = "";
+        }
+        if (!("required" in $$source)) {
+            this["required"] = false;
+        }
+        if (!("enabled" in $$source)) {
+            this["enabled"] = false;
+        }
+        if (!("modifiable" in $$source)) {
+            this["modifiable"] = false;
+        }
+        if (!("effectFiles" in $$source)) {
+            this["effectFiles"] = [];
+        }
+        if (!("denyEffectFiles" in $$source)) {
+            this["denyEffectFiles"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new EffectPackage instance from a string or object.
+     */
+    static createFrom($$source: any = {}): EffectPackage {
+        const $$createField10_0 = $$createType0;
+        const $$createField11_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("effectFiles" in $$parsedSource) {
+            $$parsedSource["effectFiles"] = $$createField10_0($$parsedSource["effectFiles"]);
+        }
+        if ("denyEffectFiles" in $$parsedSource) {
+            $$parsedSource["denyEffectFiles"] = $$createField11_0($$parsedSource["denyEffectFiles"]);
+        }
+        return new EffectPackage($$parsedSource as Partial<EffectPackage>);
+    }
+}
+
+export class EffectPackageSelection {
+    "id": string;
+    "effectFiles"?: string[];
+
+    /** Creates a new EffectPackageSelection instance. */
+    constructor($$source: Partial<EffectPackageSelection> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new EffectPackageSelection instance from a string or object.
+     */
+    static createFrom($$source: any = {}): EffectPackageSelection {
+        const $$createField1_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("effectFiles" in $$parsedSource) {
+            $$parsedSource["effectFiles"] = $$createField1_0($$parsedSource["effectFiles"]);
+        }
+        return new EffectPackageSelection($$parsedSource as Partial<EffectPackageSelection>);
+    }
+}
+
 export class InstallerProvenance {
     "tag"?: string | null;
     "assetName"?: string | null;
@@ -271,6 +532,9 @@ export class ManagedFile {
     "sha256": string;
     "sizeBytes": number;
     "ownership": Ownership;
+    "role"?: PathRole;
+    "source"?: ContentSource | null;
+    "sources"?: ContentSource[];
     "backupPath"?: string | null;
     "backupSha256"?: string | null;
     "backupSizeBytes"?: number | null;
@@ -297,7 +561,15 @@ export class ManagedFile {
      * Creates a new ManagedFile instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedFile {
+        const $$createField5_0 = $$createType18;
+        const $$createField6_0 = $$createType19;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("source" in $$parsedSource) {
+            $$parsedSource["source"] = $$createField5_0($$parsedSource["source"]);
+        }
+        if ("sources" in $$parsedSource) {
+            $$parsedSource["sources"] = $$createField6_0($$parsedSource["sources"]);
+        }
         return new ManagedFile($$parsedSource as Partial<ManagedFile>);
     }
 }
@@ -378,7 +650,7 @@ export class ManagedTarget {
      * Creates a new ManagedTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedTarget {
-        const $$createField10_0 = $$createType9;
+        const $$createField10_0 = $$createType20;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Provenance" in $$parsedSource) {
             $$parsedSource["Provenance"] = $$createField10_0($$parsedSource["Provenance"]);
@@ -426,8 +698,8 @@ export class Manifest {
      * Creates a new Manifest instance from a string or object.
      */
     static createFrom($$source: any = {}): Manifest {
-        const $$createField1_0 = $$createType11;
-        const $$createField4_0 = $$createType13;
+        const $$createField1_0 = $$createType22;
+        const $$createField4_0 = $$createType24;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("files" in $$parsedSource) {
             $$parsedSource["files"] = $$createField1_0($$parsedSource["files"]);
@@ -516,6 +788,88 @@ export enum PathRole {
     PathRoleScreenshots = "screenshots",
 };
 
+export class PresetInspectionResult {
+    "referencedEffects": string[];
+    "recommendations": PresetRecommendation[];
+    "missingEffects": string[];
+    "warnings": string[];
+
+    /** Creates a new PresetInspectionResult instance. */
+    constructor($$source: Partial<PresetInspectionResult> = {}) {
+        if (!("referencedEffects" in $$source)) {
+            this["referencedEffects"] = [];
+        }
+        if (!("recommendations" in $$source)) {
+            this["recommendations"] = [];
+        }
+        if (!("missingEffects" in $$source)) {
+            this["missingEffects"] = [];
+        }
+        if (!("warnings" in $$source)) {
+            this["warnings"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new PresetInspectionResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): PresetInspectionResult {
+        const $$createField0_0 = $$createType0;
+        const $$createField1_0 = $$createType26;
+        const $$createField2_0 = $$createType0;
+        const $$createField3_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("referencedEffects" in $$parsedSource) {
+            $$parsedSource["referencedEffects"] = $$createField0_0($$parsedSource["referencedEffects"]);
+        }
+        if ("recommendations" in $$parsedSource) {
+            $$parsedSource["recommendations"] = $$createField1_0($$parsedSource["recommendations"]);
+        }
+        if ("missingEffects" in $$parsedSource) {
+            $$parsedSource["missingEffects"] = $$createField2_0($$parsedSource["missingEffects"]);
+        }
+        if ("warnings" in $$parsedSource) {
+            $$parsedSource["warnings"] = $$createField3_0($$parsedSource["warnings"]);
+        }
+        return new PresetInspectionResult($$parsedSource as Partial<PresetInspectionResult>);
+    }
+}
+
+export class PresetRecommendation {
+    "packageId": string;
+    "packageName": string;
+    "effectFiles": string[];
+
+    /** Creates a new PresetRecommendation instance. */
+    constructor($$source: Partial<PresetRecommendation> = {}) {
+        if (!("packageId" in $$source)) {
+            this["packageId"] = "";
+        }
+        if (!("packageName" in $$source)) {
+            this["packageName"] = "";
+        }
+        if (!("effectFiles" in $$source)) {
+            this["effectFiles"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new PresetRecommendation instance from a string or object.
+     */
+    static createFrom($$source: any = {}): PresetRecommendation {
+        const $$createField2_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("effectFiles" in $$parsedSource) {
+            $$parsedSource["effectFiles"] = $$createField2_0($$parsedSource["effectFiles"]);
+        }
+        return new PresetRecommendation($$parsedSource as Partial<PresetRecommendation>);
+    }
+}
+
 export class Preview {
     "request": Request;
     "operations": Operation[];
@@ -565,14 +919,14 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField0_0 = $$createType14;
-        const $$createField1_0 = $$createType16;
-        const $$createField2_0 = $$createType18;
+        const $$createField0_0 = $$createType27;
+        const $$createField1_0 = $$createType29;
+        const $$createField2_0 = $$createType31;
         const $$createField3_0 = $$createType0;
         const $$createField4_0 = $$createType0;
-        const $$createField5_0 = $$createType20;
-        const $$createField6_0 = $$createType22;
-        const $$createField7_0 = $$createType24;
+        const $$createField5_0 = $$createType33;
+        const $$createField6_0 = $$createType35;
+        const $$createField7_0 = $$createType37;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("request" in $$parsedSource) {
             $$parsedSource["request"] = $$createField0_0($$parsedSource["request"]);
@@ -685,6 +1039,7 @@ export class Request {
     "backupAndContinue": boolean;
     "singlePlayerAcknowledged": boolean;
     "antiCheatRiskAcknowledged": boolean;
+    "content"?: ContentRequest;
 
     /** Creates a new Request instance. */
     constructor($$source: Partial<Request> = {}) {
@@ -729,7 +1084,11 @@ export class Request {
      * Creates a new Request instance from a string or object.
      */
     static createFrom($$source: any = {}): Request {
+        const $$createField11_0 = $$createType38;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("content" in $$parsedSource) {
+            $$parsedSource["content"] = $$createField11_0($$parsedSource["content"]);
+        }
         return new Request($$parsedSource as Partial<Request>);
     }
 }
@@ -762,8 +1121,8 @@ export class TargetState {
      * Creates a new TargetState instance from a string or object.
      */
     static createFrom($$source: any = {}): TargetState {
-        const $$createField1_0 = $$createType9;
-        const $$createField3_0 = $$createType25;
+        const $$createField1_0 = $$createType20;
+        const $$createField3_0 = $$createType39;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("provenance" in $$parsedSource) {
             $$parsedSource["provenance"] = $$createField1_0($$parsedSource["provenance"]);
@@ -869,24 +1228,38 @@ const $$createType1 = APIProxyOptions.createFrom;
 const $$createType2 = $Create.Array($$createType1);
 const $$createType3 = ProxyEvidence.createFrom;
 const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = Candidate.createFrom;
+const $$createType5 = EffectPackage.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = DiscoveryWarning.createFrom;
+const $$createType7 = AddonPackage.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = InstallerProvenance.createFrom;
-const $$createType10 = ManagedFile.createFrom;
-const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = UserContent.createFrom;
-const $$createType13 = $Create.Array($$createType12);
-const $$createType14 = Request.createFrom;
-const $$createType15 = filetxn$0.Operation.createFrom;
+const $$createType9 = EffectPackageSelection.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = AddonSelection.createFrom;
+const $$createType12 = $Create.Array($$createType11);
+const $$createType13 = Candidate.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = DiscoveryWarning.createFrom;
 const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = PathImpact.createFrom;
-const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = Drift.createFrom;
-const $$createType20 = $Create.Array($$createType19);
-const $$createType21 = UserContentDrift.createFrom;
+const $$createType17 = ContentSource.createFrom;
+const $$createType18 = $Create.Nullable($$createType17);
+const $$createType19 = $Create.Array($$createType17);
+const $$createType20 = InstallerProvenance.createFrom;
+const $$createType21 = ManagedFile.createFrom;
 const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = TargetState.createFrom;
-const $$createType24 = $Create.Nullable($$createType23);
-const $$createType25 = Manifest.createFrom;
+const $$createType23 = UserContent.createFrom;
+const $$createType24 = $Create.Array($$createType23);
+const $$createType25 = PresetRecommendation.createFrom;
+const $$createType26 = $Create.Array($$createType25);
+const $$createType27 = Request.createFrom;
+const $$createType28 = filetxn$0.Operation.createFrom;
+const $$createType29 = $Create.Array($$createType28);
+const $$createType30 = PathImpact.createFrom;
+const $$createType31 = $Create.Array($$createType30);
+const $$createType32 = Drift.createFrom;
+const $$createType33 = $Create.Array($$createType32);
+const $$createType34 = UserContentDrift.createFrom;
+const $$createType35 = $Create.Array($$createType34);
+const $$createType36 = TargetState.createFrom;
+const $$createType37 = $Create.Nullable($$createType36);
+const $$createType38 = ContentRequest.createFrom;
+const $$createType39 = Manifest.createFrom;
