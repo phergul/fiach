@@ -18,63 +18,33 @@ export function ApplyOptiScalerAction(request: dto$0.OptiScalerRequest, previewH
     });
 }
 
-export function ApplyOptiScalerReShadeRepair(previewHash: string): $CancellablePromise<dto$0.OptiScalerApplyResult> {
-    return $Call.ByID(223216528, previewHash).then(($result: any) => {
-        return $$createType0($result);
-    });
-}
-
-export function CancelOptiScalerReShadeSession(): $CancellablePromise<dto$0.OptiScalerReShadeSessionResult> {
-    return $Call.ByID(1365315451).then(($result: any) => {
-        return $$createType1($result);
-    });
-}
-
 export function DiscoverOptiScalerCandidates(gameID: number): $CancellablePromise<dto$0.OptiScalerCandidate[]> {
     return $Call.ByID(1051566546, gameID).then(($result: any) => {
-        return $$createType3($result);
-    });
-}
-
-export function GetOptiScalerReShadeSession(): $CancellablePromise<dto$0.OptiScalerReShadeSessionState | null> {
-    return $Call.ByID(3496975459).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType2($result);
     });
 }
 
 export function GetOptiScalerRecoveryState(): $CancellablePromise<dto$0.OptiScalerRecoveryState> {
     return $Call.ByID(3121407251).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType3($result);
     });
 }
 
 export function GetOptiScalerReleaseStatus(): $CancellablePromise<dto$0.OptiScalerRelease> {
     return $Call.ByID(1814290376).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType4($result);
     });
 }
 
 export function ListOptiScalerTargets(gameID: number): $CancellablePromise<dto$0.OptiScalerTarget[]> {
     return $Call.ByID(2329698055, gameID).then(($result: any) => {
-        return $$createType9($result);
+        return $$createType6($result);
     });
 }
 
 export function PreviewOptiScalerAction(request: dto$0.OptiScalerRequest): $CancellablePromise<dto$0.OptiScalerPreview> {
     return $Call.ByID(2072722191, request).then(($result: any) => {
-        return $$createType10($result);
-    });
-}
-
-export function PreviewOptiScalerReShadeRepair(backupAndContinue: boolean): $CancellablePromise<dto$0.OptiScalerPreview> {
-    return $Call.ByID(3942149152, backupAndContinue).then(($result: any) => {
-        return $$createType10($result);
-    });
-}
-
-export function RescanOptiScalerReShadeSession(): $CancellablePromise<dto$0.OptiScalerReShadeSessionResult> {
-    return $Call.ByID(2070664681).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType7($result);
     });
 }
 
@@ -84,21 +54,12 @@ export function RollbackOptiScalerRecovery(journalID: string): $CancellablePromi
     });
 }
 
-export function StartOptiScalerReShadeSession(request: dto$0.OptiScalerReShadeSessionRequest): $CancellablePromise<dto$0.OptiScalerReShadeSessionState> {
-    return $Call.ByID(3574130455, request).then(($result: any) => {
-        return $$createType4($result);
-    });
-}
-
 // Private type creation functions
 const $$createType0 = optiscaler$0.ApplyResult.createFrom;
-const $$createType1 = optiscaler$0.ReShadeSessionResult.createFrom;
-const $$createType2 = optiscaler$0.Candidate.createFrom;
-const $$createType3 = $Create.Array($$createType2);
-const $$createType4 = optiscaler$0.ReShadeSessionState.createFrom;
-const $$createType5 = $Create.Nullable($$createType4);
-const $$createType6 = optiscaler$0.RecoveryState.createFrom;
-const $$createType7 = optiscaler$0.Release.createFrom;
-const $$createType8 = dto$0.OptiScalerTarget.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = optiscaler$0.Preview.createFrom;
+const $$createType1 = optiscaler$0.Candidate.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = optiscaler$0.RecoveryState.createFrom;
+const $$createType4 = optiscaler$0.Release.createFrom;
+const $$createType5 = dto$0.OptiScalerTarget.createFrom;
+const $$createType6 = $Create.Array($$createType5);
+const $$createType7 = optiscaler$0.Preview.createFrom;

@@ -10,7 +10,7 @@ import (
 
 func TestOptiScalerServiceRejectsUnsupportedPlatformWithServiceContext(t *testing.T) {
 	t.Parallel()
-	service := NewOptiScalerService(nil, testLogger())
+	service := NewOptiScalerService(nil, testLogger(), nil)
 	service.operatingSystem = "linux"
 	_, err := service.PreviewOptiScalerAction(context.Background(), optiscaler.Request{GameID: 1})
 	if err == nil || !strings.Contains(err.Error(), "preview game OptiScaler action") ||

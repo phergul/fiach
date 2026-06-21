@@ -36,4 +36,7 @@ func TestOptiScalerTargetPersistenceUsesCaseInsensitiveRelativeIdentity(t *testi
 	if len(targets) != 1 || targets[0].ProxyFilename != "winmm.dll" || targets[0].ProcessFilter != nil {
 		t.Fatalf("ListOptiScalerTargets() = %+v", targets)
 	}
+	if !tableHasRows(t, store, "injection_targets", 1) || !tableHasRows(t, store, "injection_optiscaler", 1) {
+		t.Fatal("OptiScaler target was not persisted through injection tables")
+	}
 }

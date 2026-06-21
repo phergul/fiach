@@ -13,10 +13,10 @@ import (
 )
 
 const optiScalerTargetColumns = `
-	id, game_id, target_relative_path, executable_relative_path, graphics_api,
-	proxy_filename, dxgi_spoofing, process_filter, release_tag, release_version,
-	release_asset_name, release_digest, management_origin, status, manifest_json,
-	warning_version, warning_acknowledged_at, created_at, updated_at, last_verified_at
+	t.id, t.game_id, t.target_relative_path, t.executable_relative_path, t.api_family AS graphics_api,
+	o.proxy_filename, o.dxgi_spoofing, o.process_filter, o.release_tag, o.release_version,
+	o.release_asset_name, o.release_digest, o.management_origin, t.status, o.manifest_json,
+	o.warning_version, o.warning_acknowledged_at, t.created_at, t.updated_at, t.last_verified_at
 `
 
 func (s *Store) SaveOptiScalerTarget(ctx context.Context, input dbtypes.SaveOptiScalerTargetInput) (target dbtypes.OptiScalerTarget, err error) {
@@ -34,17 +34,28 @@ func (s *Store) SaveOptiScalerTarget(ctx context.Context, input dbtypes.SaveOpti
 		return dbtypes.OptiScalerTarget{}, err
 	}
 
+	targetID, err := s.saveInjectionTarget(ctx, injectionTargetInput{
+		GameID:                 input.GameID,
+		TargetRelativePath:     input.TargetRelativePath,
+		ExecutableRelativePath: input.ExecutableRelativePath,
+		APIFamily:              input.GraphicsAPI,
+		Architecture:           "x64",
+		PrimaryOwner:           "optiscaler",
+		PrimaryProxyFilename:   input.ProxyFilename,
+		Status:                 input.Status,
+		LastVerifiedAt:         input.LastVerifiedAt,
+	})
+	if err != nil {
+		return dbtypes.OptiScalerTarget{}, err
+	}
 	_, err = s.db.ExecContext(ctx, `
-		INSERT INTO optiscaler_targets (
-			game_id, target_relative_path, executable_relative_path, graphics_api,
-			proxy_filename, dxgi_spoofing, process_filter, release_tag, release_version,
-			release_asset_name, release_digest, management_origin, status, manifest_json,
-			warning_version, warning_acknowledged_at, last_verified_at
+		INSERT INTO injection_optiscaler (
+			injection_target_id, proxy_filename, dxgi_spoofing, process_filter,
+			release_tag, release_version, release_asset_name, release_digest,
+			management_origin, manifest_json, warning_version, warning_acknowledged_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(game_id, target_relative_path) DO UPDATE SET
-			executable_relative_path = excluded.executable_relative_path,
-			graphics_api = excluded.graphics_api,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(injection_target_id) DO UPDATE SET
 			proxy_filename = excluded.proxy_filename,
 			dxgi_spoofing = excluded.dxgi_spoofing,
 			process_filter = excluded.process_filter,
@@ -53,17 +64,13 @@ func (s *Store) SaveOptiScalerTarget(ctx context.Context, input dbtypes.SaveOpti
 			release_asset_name = excluded.release_asset_name,
 			release_digest = excluded.release_digest,
 			management_origin = excluded.management_origin,
-			status = excluded.status,
 			manifest_json = excluded.manifest_json,
 			warning_version = excluded.warning_version,
-			warning_acknowledged_at = excluded.warning_acknowledged_at,
-			last_verified_at = excluded.last_verified_at,
-			updated_at = CURRENT_TIMESTAMP
-	`, input.GameID, input.TargetRelativePath, input.ExecutableRelativePath, input.GraphicsAPI,
-		input.ProxyFilename, input.DXGISpoofing, nullableText(cleanOptionalString(input.ProcessFilter)),
+			warning_acknowledged_at = excluded.warning_acknowledged_at
+	`, targetID, input.ProxyFilename, input.DXGISpoofing, nullableText(cleanOptionalString(input.ProcessFilter)),
 		input.ReleaseTag, input.ReleaseVersion, input.ReleaseAssetName, input.ReleaseDigest,
-		input.ManagementOrigin, input.Status, input.ManifestJSON, input.WarningVersion,
-		nullableText(cleanOptionalString(input.WarningAcknowledgedAt)), nullableText(cleanOptionalString(input.LastVerifiedAt)))
+		input.ManagementOrigin, input.ManifestJSON, input.WarningVersion,
+		nullableText(cleanOptionalString(input.WarningAcknowledgedAt)))
 	if err != nil {
 		return dbtypes.OptiScalerTarget{}, err
 	}
@@ -95,8 +102,9 @@ func (s *Store) GetOptiScalerTarget(ctx context.Context, gameID int64, targetRel
 
 	err = s.db.GetContext(ctx, &target, `
 		SELECT `+optiScalerTargetColumns+`
-		FROM optiscaler_targets
-		WHERE game_id = ? AND target_relative_path = ? COLLATE NOCASE
+		FROM injection_targets t
+		JOIN injection_optiscaler o ON o.injection_target_id = t.id
+		WHERE t.game_id = ? AND t.target_relative_path = ? COLLATE NOCASE
 	`, gameID, targetRelativePath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return dbtypes.OptiScalerTarget{}, false, nil
@@ -119,9 +127,10 @@ func (s *Store) ListOptiScalerTargets(ctx context.Context, gameID int64) (target
 	}
 	err = s.db.SelectContext(ctx, &targets, `
 		SELECT `+optiScalerTargetColumns+`
-		FROM optiscaler_targets
-		WHERE game_id = ?
-		ORDER BY target_relative_path COLLATE NOCASE, id
+		FROM injection_targets t
+		JOIN injection_optiscaler o ON o.injection_target_id = t.id
+		WHERE t.game_id = ?
+		ORDER BY t.target_relative_path COLLATE NOCASE, t.id
 	`, gameID)
 	return targets, err
 }
@@ -140,11 +149,21 @@ func (s *Store) DeleteOptiScalerTarget(ctx context.Context, gameID int64, target
 	if err != nil {
 		return err
 	}
+	targetID, err := s.injectionTargetID(ctx, gameID, targetRelativePath)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
 	_, err = s.db.ExecContext(ctx, `
-		DELETE FROM optiscaler_targets
-		WHERE game_id = ? AND target_relative_path = ? COLLATE NOCASE
-	`, gameID, targetRelativePath)
-	return err
+		DELETE FROM injection_optiscaler
+		WHERE injection_target_id = ?
+	`, targetID)
+	if err != nil {
+		return err
+	}
+	return s.deleteInjectionTargetIfEmpty(ctx, gameID, targetRelativePath)
 }
 
 func validateSaveOptiScalerTargetInput(input dbtypes.SaveOptiScalerTargetInput) (dbtypes.SaveOptiScalerTargetInput, error) {

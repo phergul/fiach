@@ -24,7 +24,6 @@ import {
   useGameOptiScaler,
   useGameProfiles,
   useGameReShadeDetection,
-  useGameReShadeInstall,
   useGameStorageOverride,
   useStoredGames,
 } from '@hooks';
@@ -58,26 +57,6 @@ export const GameDetails = () => {
   const gameModManager = useGameMods(game?.ID ?? null);
   const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
-  const reShadeInstall = useGameReShadeInstall({
-    game,
-    onCoordinate: (preflight) => {
-      if (game === undefined) {
-        return;
-      }
-      navigate(`/library/${game.ID}/optiscaler`, {
-        state: {
-          reShadeCoordination: {
-            targetRelativePath: preflight.Targets.length === 1
-              ? preflight.Targets[0].TargetRelativePath
-              : null,
-            variant: preflight.Variant,
-          },
-        },
-      });
-    },
-    onMenuClose: () => setIsActionsMenuOpen(false),
-    reShadeDetection,
-  });
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
@@ -219,11 +198,7 @@ export const GameDetails = () => {
                   setIsActionsMenuOpen(false);
                   navigate(`/library/${game.ID}/optiscaler`);
                 }}
-                onOpenReShadeAddonInstaller={reShadeInstall.downloadAndOpenAddonInstaller}
-                onOpenReShadeInstaller={reShadeInstall.downloadAndOpenInstaller}
                 onSetStorageOverride={storageOverride.requestSetStorageOverride}
-                reShadeAddonInstallerActionLabel={reShadeInstall.reShadeAddonInstallerActionLabel}
-                reShadeInstallerActionLabel={reShadeInstall.reShadeInstallerActionLabel}
               />
             )}
           </div>
@@ -325,20 +300,6 @@ export const GameDetails = () => {
         onClose={updateFlow.closeUpdateReview}
         onConfirm={updateFlow.confirmUpdateMod}
         result={updateFlow.updateReview?.preview ?? null}
-      />
-
-      <ConfirmDialog
-        cancelLabel="Cancel"
-        confirmLabel="Installer finished, refresh"
-        confirmTone="default"
-        isBusy={reShadeInstall.isRefreshingDetection}
-        isOpen={reShadeInstall.isCompletionPromptOpen}
-        message="Complete or close the ReShade installer, then refresh detection so Fiach can read the current game files."
-        onCancel={reShadeInstall.cancelCompletionPrompt}
-        onConfirm={() => {
-          void reShadeInstall.confirmInstallerFinished();
-        }}
-        title="Refresh ReShade status"
       />
 
       <ConfirmDialog

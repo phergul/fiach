@@ -23,7 +23,6 @@ export enum Action {
     ActionUpdate = "update",
     ActionRepair = "repair",
     ActionUninstall = "uninstall",
-    ActionReShadeRepair = "reshade_repair",
 };
 
 export class ApplyResult {
@@ -232,157 +231,6 @@ export class Preview {
     }
 }
 
-export enum ReShadeInstallerVariant {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    ReShadeInstallerVariantStandard = "standard",
-    ReShadeInstallerVariantAddon = "addon",
-};
-
-export enum ReShadeSessionOutcome {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    ReShadeSessionOutcomeHealthy = "healthy",
-    ReShadeSessionOutcomeRepairRequired = "repair_required",
-    ReShadeSessionOutcomeConflict = "conflict",
-    ReShadeSessionOutcomeCancelled = "cancelled",
-};
-
-export enum ReShadeSessionPhase {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    ReShadeSessionPhaseAwaitingCompletion = "awaiting_completion",
-    ReShadeSessionPhaseRepairReady = "repair_ready",
-    ReShadeSessionPhaseConflict = "conflict",
-};
-
-export class ReShadeSessionRequest {
-    "gameId": number;
-    "targetRelativePath": string;
-    "installerVariant": ReShadeInstallerVariant;
-
-    /** Creates a new ReShadeSessionRequest instance. */
-    constructor($$source: Partial<ReShadeSessionRequest> = {}) {
-        if (!("gameId" in $$source)) {
-            this["gameId"] = 0;
-        }
-        if (!("targetRelativePath" in $$source)) {
-            this["targetRelativePath"] = "";
-        }
-        if (!("installerVariant" in $$source)) {
-            this["installerVariant"] = ReShadeInstallerVariant.$zero;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ReShadeSessionRequest instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ReShadeSessionRequest {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ReShadeSessionRequest($$parsedSource as Partial<ReShadeSessionRequest>);
-    }
-}
-
-export class ReShadeSessionResult {
-    "outcome": ReShadeSessionOutcome;
-    "session"?: ReShadeSessionState | null;
-    "message": string;
-
-    /** Creates a new ReShadeSessionResult instance. */
-    constructor($$source: Partial<ReShadeSessionResult> = {}) {
-        if (!("outcome" in $$source)) {
-            this["outcome"] = ReShadeSessionOutcome.$zero;
-        }
-        if (!("message" in $$source)) {
-            this["message"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ReShadeSessionResult instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ReShadeSessionResult {
-        const $$createField1_0 = $$createType8;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("session" in $$parsedSource) {
-            $$parsedSource["session"] = $$createField1_0($$parsedSource["session"]);
-        }
-        return new ReShadeSessionResult($$parsedSource as Partial<ReShadeSessionResult>);
-    }
-}
-
-export class ReShadeSessionState {
-    "id": string;
-    "gameId": number;
-    "targetRelativePath": string;
-    "executableRelativePath": string;
-    "proxyFilename": string;
-    "chainedFilename": string;
-    "installerVariant": ReShadeInstallerVariant;
-    "phase": ReShadeSessionPhase;
-    "startedAt": time$0.Time;
-    "conflictingPath"?: string;
-    "preview"?: Preview | null;
-
-    /** Creates a new ReShadeSessionState instance. */
-    constructor($$source: Partial<ReShadeSessionState> = {}) {
-        if (!("id" in $$source)) {
-            this["id"] = "";
-        }
-        if (!("gameId" in $$source)) {
-            this["gameId"] = 0;
-        }
-        if (!("targetRelativePath" in $$source)) {
-            this["targetRelativePath"] = "";
-        }
-        if (!("executableRelativePath" in $$source)) {
-            this["executableRelativePath"] = "";
-        }
-        if (!("proxyFilename" in $$source)) {
-            this["proxyFilename"] = "";
-        }
-        if (!("chainedFilename" in $$source)) {
-            this["chainedFilename"] = "";
-        }
-        if (!("installerVariant" in $$source)) {
-            this["installerVariant"] = ReShadeInstallerVariant.$zero;
-        }
-        if (!("phase" in $$source)) {
-            this["phase"] = ReShadeSessionPhase.$zero;
-        }
-        if (!("startedAt" in $$source)) {
-            this["startedAt"] = null;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ReShadeSessionState instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ReShadeSessionState {
-        const $$createField10_0 = $$createType10;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("preview" in $$parsedSource) {
-            $$parsedSource["preview"] = $$createField10_0($$parsedSource["preview"]);
-        }
-        return new ReShadeSessionState($$parsedSource as Partial<ReShadeSessionState>);
-    }
-}
-
 export class RecoveryState {
     "required": boolean;
     "journalId"?: string;
@@ -520,7 +368,3 @@ const $$createType3 = filetxn$0.Operation.createFrom;
 const $$createType4 = $Create.Array($$createType3);
 const $$createType5 = Drift.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = ReShadeSessionState.createFrom;
-const $$createType8 = $Create.Nullable($$createType7);
-const $$createType9 = Preview.createFrom;
-const $$createType10 = $Create.Nullable($$createType9);

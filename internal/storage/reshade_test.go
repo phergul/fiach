@@ -41,6 +41,41 @@ func TestReShadeTargetPersistencePreservesNullableProvenance(t *testing.T) {
 		target.InstallerURL != nil || target.InstallerDigest != nil || target.InstallerSize != nil {
 		t.Fatalf("nullable provenance collapsed: %+v", target)
 	}
+	if !tableHasRows(t, store, "injection_targets", 1) || !tableHasRows(t, store, "injection_reshade", 1) {
+		t.Fatal("ReShade target was not persisted through injection tables")
+	}
+}
+
+func TestInjectionTargetCanHoldOptiScalerAndReShadeDetails(t *testing.T) {
+	t.Parallel()
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+	gameID := insertProfileTestGame(t, store, "Game", t.TempDir())
+
+	_, err := store.SaveOptiScalerTarget(context.Background(), dbtypes.SaveOptiScalerTargetInput{
+		GameID: gameID, TargetRelativePath: ".", ExecutableRelativePath: "Game.exe",
+		GraphicsAPI: "directx", ProxyFilename: "dxgi.dll", ReleaseTag: "v1",
+		ReleaseVersion: "v1", ReleaseAssetName: "archive.7z", ReleaseDigest: "digest",
+		ManagementOrigin: "installed", Status: "managed", ManifestJSON: `{"version":1}`,
+		WarningVersion: "warning-v1",
+	})
+	if err != nil {
+		t.Fatalf("SaveOptiScalerTarget() error = %v", err)
+	}
+	_, err = store.SaveReShadeTarget(context.Background(), dbtypes.SaveReShadeTargetInput{
+		GameID: gameID, TargetRelativePath: ".", ExecutableRelativePath: "Game.exe",
+		RenderingAPI: "d3d11", ProxyFilename: "ReShade64.dll", Architecture: "x64",
+		BuildVariant: "standard", RuntimeVersion: "6.5.1", ManagementOrigin: "installed",
+		Status: "managed", ManifestJSON: `{"version":1}`,
+	})
+	if err != nil {
+		t.Fatalf("SaveReShadeTarget() error = %v", err)
+	}
+	if !tableHasRows(t, store, "injection_targets", 1) ||
+		!tableHasRows(t, store, "injection_optiscaler", 1) ||
+		!tableHasRows(t, store, "injection_reshade", 1) {
+		t.Fatal("combined target did not share one injection target row")
+	}
 }
 
 func TestReShadeTargetPersistenceRejectsInvalidValues(t *testing.T) {

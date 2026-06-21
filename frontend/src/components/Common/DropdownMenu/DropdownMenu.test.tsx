@@ -13,7 +13,7 @@ describe('DropdownMenu', () => {
         items={[{
           children: [
             { label: 'OptiScaler', onSelect },
-            { label: 'Install ReShade', onSelect },
+            { label: 'Manage ReShade', onSelect },
           ],
           label: 'Manage graphics tools',
         }]}

@@ -8,8 +8,8 @@ import (
 	"runtime"
 
 	"github.com/phergul/fiach/internal/diagnostics"
+	"github.com/phergul/fiach/internal/injection"
 	"github.com/phergul/fiach/internal/optiscaler"
-	"github.com/phergul/fiach/internal/reshade"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
@@ -19,18 +19,24 @@ import (
 type OptiScalerService struct {
 	store           *storage.Store
 	manager         *optiscaler.Manager
+	injection       *injection.Coordinator
 	logger          *slog.Logger
 	operatingSystem string
 }
 
-func NewOptiScalerService(store *storage.Store, logger *slog.Logger) *OptiScalerService {
+func NewOptiScalerService(store *storage.Store, logger *slog.Logger, coordinator *injection.Coordinator) *OptiScalerService {
 	if logger == nil {
 		logger = slog.Default()
 	}
+	if coordinator == nil {
+		coordinator = injection.NewCoordinator(store)
+	}
 	return &OptiScalerService{
-		store:   store,
-		manager: optiscaler.NewManager(store, optiscaler.ManagerOptions{}),
-		logger:  logger, operatingSystem: runtime.GOOS,
+		store:           store,
+		manager:         optiscaler.NewManager(store, optiscaler.ManagerOptions{}),
+		injection:       coordinator,
+		logger:          logger,
+		operatingSystem: runtime.GOOS,
 	}
 }
 
@@ -167,138 +173,6 @@ func (s *OptiScalerService) RollbackOptiScalerRecovery(_ context.Context, journa
 		}
 	}()
 	return s.manager.RollbackRecovery(journalID)
-}
-
-func (s *OptiScalerService) StartOptiScalerReShadeSession(
-	ctx context.Context,
-	request dto.OptiScalerReShadeSessionRequest,
-) (result dto.OptiScalerReShadeSessionState, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("start game coordinated ReShade session: %w", err)
-		}
-	}()
-	if err := s.requireWindows(); err != nil {
-		return dto.OptiScalerReShadeSessionState{}, err
-	}
-	game, err := s.store.GetStoredGame(ctx, request.GameID)
-	if err != nil {
-		return dto.OptiScalerReShadeSessionState{}, err
-	}
-	result, err = s.manager.StartReShadeSession(ctx, game.InstallPath, request)
-	if err != nil {
-		return dto.OptiScalerReShadeSessionState{}, err
-	}
-	variant := reshade.InstallerVariantStandard
-	if request.InstallerVariant == optiscaler.ReShadeInstallerVariantAddon {
-		variant = reshade.InstallerVariantAddon
-	}
-	if _, err := reshade.DownloadAndOpenInstaller(ctx, reshade.InstallerOptions{Variant: variant}); err != nil {
-		_ = s.manager.DiscardReShadeSession()
-		return dto.OptiScalerReShadeSessionState{}, err
-	}
-	return result, nil
-}
-
-func (s *OptiScalerService) GetOptiScalerReShadeSession(
-	_ context.Context,
-) (result *dto.OptiScalerReShadeSessionState, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("get game coordinated ReShade session: %w", err)
-		}
-	}()
-	return s.manager.GetReShadeSession()
-}
-
-func (s *OptiScalerService) RescanOptiScalerReShadeSession(
-	ctx context.Context,
-) (result dto.OptiScalerReShadeSessionResult, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("rescan game coordinated ReShade session: %w", err)
-		}
-	}()
-	session, err := s.manager.GetReShadeSession()
-	if err != nil {
-		return dto.OptiScalerReShadeSessionResult{}, err
-	}
-	if session == nil {
-		return dto.OptiScalerReShadeSessionResult{}, errors.New("no coordinated ReShade session is pending")
-	}
-	game, err := s.store.GetStoredGame(ctx, session.GameID)
-	if err != nil {
-		return dto.OptiScalerReShadeSessionResult{}, err
-	}
-	return s.manager.RescanReShadeSession(ctx, game.InstallPath)
-}
-
-func (s *OptiScalerService) CancelOptiScalerReShadeSession(
-	ctx context.Context,
-) (result dto.OptiScalerReShadeSessionResult, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("cancel game coordinated ReShade session: %w", err)
-		}
-	}()
-	session, err := s.manager.GetReShadeSession()
-	if err != nil {
-		return dto.OptiScalerReShadeSessionResult{}, err
-	}
-	if session == nil {
-		return dto.OptiScalerReShadeSessionResult{}, errors.New("no coordinated ReShade session is pending")
-	}
-	game, err := s.store.GetStoredGame(ctx, session.GameID)
-	if err != nil {
-		return dto.OptiScalerReShadeSessionResult{}, err
-	}
-	return s.manager.CancelReShadeSession(ctx, game.InstallPath)
-}
-
-func (s *OptiScalerService) ApplyOptiScalerReShadeRepair(
-	ctx context.Context,
-	previewHash string,
-) (result dto.OptiScalerApplyResult, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("apply game coordinated ReShade repair: %w", err)
-		}
-	}()
-	session, err := s.manager.GetReShadeSession()
-	if err != nil {
-		return dto.OptiScalerApplyResult{}, err
-	}
-	if session == nil {
-		return dto.OptiScalerApplyResult{}, errors.New("no coordinated ReShade session is pending")
-	}
-	game, err := s.store.GetStoredGame(ctx, session.GameID)
-	if err != nil {
-		return dto.OptiScalerApplyResult{}, err
-	}
-	return s.manager.ApplyReShadeRepair(ctx, game.InstallPath, previewHash)
-}
-
-func (s *OptiScalerService) PreviewOptiScalerReShadeRepair(
-	ctx context.Context,
-	backupAndContinue bool,
-) (result dto.OptiScalerPreview, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("preview game coordinated ReShade repair: %w", err)
-		}
-	}()
-	session, err := s.manager.GetReShadeSession()
-	if err != nil {
-		return dto.OptiScalerPreview{}, err
-	}
-	if session == nil {
-		return dto.OptiScalerPreview{}, errors.New("no coordinated ReShade session is pending")
-	}
-	game, err := s.store.GetStoredGame(ctx, session.GameID)
-	if err != nil {
-		return dto.OptiScalerPreview{}, err
-	}
-	return s.manager.PreviewReShadeRepair(ctx, game.InstallPath, backupAndContinue)
 }
 
 func (s *OptiScalerService) requireWindows() error {

@@ -68,8 +68,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 4 {
-		t.Fatalf("goose version = %d, want 4", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 
 	for _, table := range []string{
@@ -83,14 +83,15 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
-		"optiscaler_targets",
-		"reshade_targets",
+		"injection_targets",
+		"injection_optiscaler",
+		"injection_reshade",
 	} {
 		if !tableExists(t, store, table) {
 			t.Fatalf("expected table %q to exist", table)
 		}
 	}
-	for _, index := range []string{"idx_tags_game_id", "idx_mod_tags_tag_id"} {
+	for _, index := range []string{"idx_tags_game_id", "idx_mod_tags_tag_id", "idx_injection_targets_game_id"} {
 		if !indexExists(t, store, index) {
 			t.Fatalf("expected index %q to exist", index)
 		}
@@ -187,8 +188,9 @@ func TestMigrateDownDropsCoreTables(t *testing.T) {
 		"settings",
 		"tags",
 		"mod_tags",
-		"optiscaler_targets",
-		"reshade_targets",
+		"injection_targets",
+		"injection_optiscaler",
+		"injection_reshade",
 	} {
 		if tableExists(t, store, table) {
 			t.Fatalf("expected table %q to be dropped", table)
@@ -516,8 +518,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 4 {
-		t.Fatalf("goose version = %d, want 4", version)
+	if version != 3 {
+		t.Fatalf("goose version = %d, want 3", version)
 	}
 }
 
@@ -814,4 +816,14 @@ func indexExists(t *testing.T, store *Store, index string) bool {
 	}
 
 	return count == 1
+}
+
+func tableHasRows(t *testing.T, store *Store, table string, want int) bool {
+	t.Helper()
+
+	var count int
+	if err := store.DB().Get(&count, "SELECT COUNT(*) FROM "+table); err != nil {
+		t.Fatalf("count %s: %v", table, err)
+	}
+	return count == want
 }

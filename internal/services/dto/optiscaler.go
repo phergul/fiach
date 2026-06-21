@@ -10,9 +10,6 @@ type OptiScalerRequest = optiscaler.Request
 type OptiScalerPreview = optiscaler.Preview
 type OptiScalerApplyResult = optiscaler.ApplyResult
 type OptiScalerRecoveryState = optiscaler.RecoveryState
-type OptiScalerReShadeSessionRequest = optiscaler.ReShadeSessionRequest
-type OptiScalerReShadeSessionState = optiscaler.ReShadeSessionState
-type OptiScalerReShadeSessionResult = optiscaler.ReShadeSessionResult
 
 type OptiScalerTarget struct {
 	ID                       int64

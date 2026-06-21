@@ -19,7 +19,5 @@ export { getOptiScalerAggregateStatus, useGameOptiScaler } from './games/useGame
 export type { OptiScalerAggregateStatus, UseGameOptiScalerResult } from './games/useGameOptiScaler';
 export { useGameReShadeDetection } from './games/useGameReShadeDetection';
 export type { UseGameReShadeDetectionResult } from './games/useGameReShadeDetection';
-export { useGameReShadeInstall } from './games/useGameReShadeInstall';
-export type { UseGameReShadeInstallResult } from './games/useGameReShadeInstall';
 export { useGameStorageOverride } from './games/useGameStorageOverride';
 export type { UseGameStorageOverrideResult } from './games/useGameStorageOverride';

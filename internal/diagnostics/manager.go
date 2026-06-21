@@ -52,7 +52,6 @@ const (
 	OperationSetTheme                  = "set_theme"
 	OperationSetGameModStorageOverride = "set_game_mod_storage_override"
 	OperationDetectReShade             = "detect_reshade"
-	OperationLaunchReShadeInstaller    = "launch_reshade_installer"
 	OperationDiscoverOptiScaler        = "discover_optiscaler"
 	OperationPreviewOptiScaler         = "preview_optiscaler"
 	OperationApplyOptiScaler           = "apply_optiscaler"
@@ -163,7 +162,6 @@ func Operations() []OperationDescriptor {
 		{Value: OperationSetTheme, Label: "Set theme"},
 		{Value: OperationSetGameModStorageOverride, Label: "Set game mod storage override"},
 		{Value: OperationDetectReShade, Label: "Detect ReShade"},
-		{Value: OperationLaunchReShadeInstaller, Label: "Launch ReShade installer"},
 		{Value: OperationDiscoverOptiScaler, Label: "Discover OptiScaler"},
 		{Value: OperationPreviewOptiScaler, Label: "Preview OptiScaler"},
 		{Value: OperationApplyOptiScaler, Label: "Apply OptiScaler"},

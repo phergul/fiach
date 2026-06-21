@@ -350,7 +350,7 @@ func normalizeRequest(gameRoot string, request Request) (Request, string, string
 	if request.GameID <= 0 {
 		return Request{}, "", "", errors.New("game ID must be positive")
 	}
-	if !slices.Contains([]Action{ActionInstall, ActionAdopt, ActionUpdate, ActionRepair, ActionUninstall, ActionReShadeRepair}, request.Action) {
+	if !slices.Contains([]Action{ActionInstall, ActionAdopt, ActionUpdate, ActionRepair, ActionUninstall}, request.Action) {
 		return Request{}, "", "", errors.New("action is invalid")
 	}
 	if request.GraphicsAPI != GraphicsAPIDirectX && request.GraphicsAPI != GraphicsAPIVulkan {

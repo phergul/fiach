@@ -41,7 +41,6 @@ describe('OptiScalerExecutableTable', () => {
         candidates={[]}
         disabled={false}
         onStartOperation={onStartOperation}
-        onStartReShade={vi.fn()}
         release={{ digest: 'new', tag: 'v2' } as never}
         targets={[
           target({ ID: 1, ExecutableRelativePath: 'Healthy.exe', ReleaseDigest: 'new', ReleaseTag: 'v2' }),
@@ -69,7 +68,6 @@ describe('OptiScalerExecutableTable', () => {
         ]}
         disabled={false}
         onStartOperation={onStartOperation}
-        onStartReShade={vi.fn()}
         release={null}
         targets={[]}
       />,
@@ -87,7 +85,6 @@ describe('OptiScalerExecutableTable', () => {
         candidates={[candidate()]}
         disabled
         onStartOperation={onStartOperation}
-        onStartReShade={vi.fn()}
         release={null}
         targets={[]}
       />,

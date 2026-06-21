@@ -10,6 +10,7 @@ import (
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/gamesource"
+	"github.com/phergul/fiach/internal/injection"
 	"github.com/phergul/fiach/internal/services"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage"
@@ -45,6 +46,8 @@ func main() {
 
 	steamSource := gamesource.NewSteamSource(store)
 	gamesService := services.NewGamesService(store, logger, steamSource)
+	
+	injectionCoordinator := injection.NewCoordinator(store)
 
 	var app *application.App
 	app = application.New(application.Options{
@@ -54,8 +57,8 @@ func main() {
 			application.NewService(services.NewModService(store, logger)),
 			application.NewService(services.NewProfileService(store, logger)),
 			application.NewService(services.NewSettingsService(store, logger)),
-			application.NewService(services.NewReshadeService(store, logger)),
-			application.NewService(services.NewOptiScalerService(store, logger)),
+			application.NewService(services.NewReshadeService(store, logger, injectionCoordinator)),
+			application.NewService(services.NewOptiScalerService(store, logger, injectionCoordinator)),
 			application.NewService(gamesService),
 
 			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),

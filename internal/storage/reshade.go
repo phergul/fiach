@@ -6,16 +6,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 const reShadeTargetColumns = `
-	id, game_id, target_relative_path, executable_relative_path, rendering_api,
-	proxy_filename, architecture, build_variant, runtime_version, installer_tag,
-	installer_asset_name, installer_url, installer_digest, installer_size,
-	management_origin, status, manifest_json, created_at, updated_at, last_verified_at
+	t.id, t.game_id, t.target_relative_path, t.executable_relative_path, t.directx_api AS rendering_api,
+	r.preferred_proxy_filename AS proxy_filename, t.architecture, r.build_variant, r.runtime_version, r.installer_tag,
+	r.installer_asset_name, r.installer_url, r.installer_digest, r.installer_size,
+	r.management_origin, t.status, r.manifest_json, t.created_at, t.updated_at, t.last_verified_at
 `
 
 func (s *Store) SaveReShadeTarget(ctx context.Context, input dbtypes.SaveReShadeTargetInput) (target dbtypes.ReShadeTarget, err error) {
@@ -31,18 +32,40 @@ func (s *Store) SaveReShadeTarget(ctx context.Context, input dbtypes.SaveReShade
 	if err != nil {
 		return dbtypes.ReShadeTarget{}, err
 	}
+	primaryOwner := "reshade"
+	primaryProxyFilename := input.ProxyFilename
+	if existingProxy, found, proxyErr := s.optiscalerProxyForInjectionTarget(ctx, input.GameID, input.TargetRelativePath); proxyErr != nil {
+		return dbtypes.ReShadeTarget{}, proxyErr
+	} else if found {
+		primaryOwner = "optiscaler"
+		primaryProxyFilename = existingProxy
+	}
+	directXAPI := input.RenderingAPI
+	targetID, err := s.saveInjectionTarget(ctx, injectionTargetInput{
+		GameID:                 input.GameID,
+		TargetRelativePath:     input.TargetRelativePath,
+		ExecutableRelativePath: input.ExecutableRelativePath,
+		APIFamily:              "directx",
+		DirectXAPI:             &directXAPI,
+		Architecture:           input.Architecture,
+		PrimaryOwner:           primaryOwner,
+		PrimaryProxyFilename:   primaryProxyFilename,
+		Status:                 input.Status,
+		LastVerifiedAt:         input.LastVerifiedAt,
+	})
+	if err != nil {
+		return dbtypes.ReShadeTarget{}, err
+	}
 	_, err = s.db.ExecContext(ctx, `
-		INSERT INTO reshade_targets (
-			game_id, target_relative_path, executable_relative_path, rendering_api,
-			proxy_filename, architecture, build_variant, runtime_version, installer_tag,
-			installer_asset_name, installer_url, installer_digest, installer_size,
-			management_origin, status, manifest_json, last_verified_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(game_id, target_relative_path) DO UPDATE SET
-			executable_relative_path = excluded.executable_relative_path,
-			rendering_api = excluded.rendering_api,
-			proxy_filename = excluded.proxy_filename,
-			architecture = excluded.architecture,
+		INSERT INTO injection_reshade (
+			injection_target_id, preferred_proxy_filename, active_runtime_filename,
+			build_variant, runtime_version, installer_tag, installer_asset_name,
+			installer_url, installer_digest, installer_size, management_origin,
+			manifest_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(injection_target_id) DO UPDATE SET
+			preferred_proxy_filename = excluded.preferred_proxy_filename,
+			active_runtime_filename = excluded.active_runtime_filename,
 			build_variant = excluded.build_variant,
 			runtime_version = excluded.runtime_version,
 			installer_tag = excluded.installer_tag,
@@ -51,16 +74,11 @@ func (s *Store) SaveReShadeTarget(ctx context.Context, input dbtypes.SaveReShade
 			installer_digest = excluded.installer_digest,
 			installer_size = excluded.installer_size,
 			management_origin = excluded.management_origin,
-			status = excluded.status,
-			manifest_json = excluded.manifest_json,
-			last_verified_at = excluded.last_verified_at,
-			updated_at = CURRENT_TIMESTAMP
-	`, input.GameID, input.TargetRelativePath, input.ExecutableRelativePath, input.RenderingAPI,
-		input.ProxyFilename, input.Architecture, input.BuildVariant, input.RuntimeVersion,
+			manifest_json = excluded.manifest_json
+	`, targetID, input.ProxyFilename, input.ProxyFilename, input.BuildVariant, input.RuntimeVersion,
 		nullableText(cleanOptionalString(input.InstallerTag)), nullableText(cleanOptionalString(input.InstallerAssetName)),
 		nullableText(cleanOptionalString(input.InstallerURL)), nullableText(cleanOptionalString(input.InstallerDigest)),
-		input.InstallerSize, input.ManagementOrigin, input.Status, input.ManifestJSON,
-		nullableText(cleanOptionalString(input.LastVerifiedAt)))
+		input.InstallerSize, input.ManagementOrigin, input.ManifestJSON)
 	if err != nil {
 		return dbtypes.ReShadeTarget{}, err
 	}
@@ -89,8 +107,9 @@ func (s *Store) GetReShadeTarget(ctx context.Context, gameID int64, targetRelati
 	}
 	err = s.db.GetContext(ctx, &target, `
 		SELECT `+reShadeTargetColumns+`
-		FROM reshade_targets
-		WHERE game_id = ? AND target_relative_path = ? COLLATE NOCASE
+		FROM injection_targets t
+		JOIN injection_reshade r ON r.injection_target_id = t.id
+		WHERE t.game_id = ? AND t.target_relative_path = ? COLLATE NOCASE
 	`, gameID, targetRelativePath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return dbtypes.ReShadeTarget{}, false, nil
@@ -112,9 +131,10 @@ func (s *Store) ListReShadeTargets(ctx context.Context, gameID int64) (targets [
 	}
 	err = s.db.SelectContext(ctx, &targets, `
 		SELECT `+reShadeTargetColumns+`
-		FROM reshade_targets
-		WHERE game_id = ?
-		ORDER BY target_relative_path COLLATE NOCASE, id
+		FROM injection_targets t
+		JOIN injection_reshade r ON r.injection_target_id = t.id
+		WHERE t.game_id = ?
+		ORDER BY t.target_relative_path COLLATE NOCASE, t.id
 	`, gameID)
 	return targets, err
 }
@@ -132,11 +152,44 @@ func (s *Store) DeleteReShadeTarget(ctx context.Context, gameID int64, targetRel
 	if err != nil {
 		return err
 	}
+	targetID, err := s.injectionTargetID(ctx, gameID, targetRelativePath)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
 	_, err = s.db.ExecContext(ctx, `
-		DELETE FROM reshade_targets
-		WHERE game_id = ? AND target_relative_path = ? COLLATE NOCASE
-	`, gameID, targetRelativePath)
-	return err
+		DELETE FROM injection_reshade
+		WHERE injection_target_id = ?
+	`, targetID)
+	if err != nil {
+		return err
+	}
+	return s.deleteInjectionTargetIfEmpty(ctx, gameID, targetRelativePath)
+}
+
+func (s *Store) optiscalerProxyForInjectionTarget(ctx context.Context, gameID int64, targetRelativePath string) (string, bool, error) {
+	targetID, err := s.injectionTargetID(ctx, gameID, targetRelativePath)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	var proxy string
+	err = s.db.GetContext(ctx, &proxy, `
+		SELECT proxy_filename
+		FROM injection_optiscaler
+		WHERE injection_target_id = ?
+	`, targetID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("select OptiScaler injection target proxy: %w", err)
+	}
+	return proxy, true, nil
 }
 
 func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtypes.SaveReShadeTargetInput, error) {
@@ -152,16 +205,16 @@ func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtyp
 	if err != nil {
 		return input, err
 	}
-	if !oneOf(input.RenderingAPI, "d3d9", "d3d10", "d3d11", "d3d12") {
+	if !slices.Contains([]string{"d3d9", "d3d10", "d3d11", "d3d12"}, input.RenderingAPI) {
 		return input, errors.New("rendering API is invalid")
 	}
 	if strings.TrimSpace(input.ProxyFilename) == "" {
 		return input, errors.New("proxy filename is required")
 	}
-	if !oneOf(input.Architecture, "x86", "x64") {
+	if !slices.Contains([]string{"x86", "x64"}, input.Architecture) {
 		return input, errors.New("architecture is invalid")
 	}
-	if !oneOf(input.BuildVariant, "standard", "addon") {
+	if !slices.Contains([]string{"standard", "addon"}, input.BuildVariant) {
 		return input, errors.New("build variant is invalid")
 	}
 	if strings.TrimSpace(input.RuntimeVersion) == "" {
@@ -170,10 +223,10 @@ func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtyp
 	if input.InstallerSize != nil && *input.InstallerSize < 0 {
 		return input, errors.New("installer size cannot be negative")
 	}
-	if !oneOf(input.ManagementOrigin, "installed", "adopted") {
+	if !slices.Contains([]string{"installed", "adopted"}, input.ManagementOrigin) {
 		return input, errors.New("management origin is invalid")
 	}
-	if !oneOf(input.Status, "managed", "drifted", "recovery_required") {
+	if !slices.Contains([]string{"managed", "drifted", "recovery_required"}, input.Status) {
 		return input, errors.New("status is invalid")
 	}
 	input.ManifestJSON = strings.TrimSpace(input.ManifestJSON)
@@ -181,13 +234,4 @@ func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtyp
 		return input, errors.New("manifest JSON is required and must be valid")
 	}
 	return input, nil
-}
-
-func oneOf(value string, values ...string) bool {
-	for _, candidate := range values {
-		if value == candidate {
-			return true
-		}
-	}
-	return false
 }

@@ -9,12 +9,6 @@ export {
     GraphicsAPI,
     Operation,
     Preview,
-    ReShadeInstallerVariant,
-    ReShadeSessionOutcome,
-    ReShadeSessionPhase,
-    ReShadeSessionRequest,
-    ReShadeSessionResult,
-    ReShadeSessionState,
     RecoveryState,
     Release,
     Request
