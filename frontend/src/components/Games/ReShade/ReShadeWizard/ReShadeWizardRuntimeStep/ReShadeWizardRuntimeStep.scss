@@ -1,0 +1,22 @@
+@use '@styles' as *;
+
+.reshade-wizard-runtime-step {
+  display: grid;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.reshade-wizard-runtime-step label {
+  display: grid;
+  gap: $spacing-sm;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-runtime-step select {
+  width: 100%;
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  background: $color-background;
+}

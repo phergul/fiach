@@ -23,6 +23,7 @@ import {
   useGameMods,
   useGameOptiScaler,
   useGameProfiles,
+  useGameReShade,
   useGameReShadeDetection,
   useGameStorageOverride,
   useStoredGames,
@@ -56,6 +57,7 @@ export const GameDetails = () => {
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
   const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
+  const reShade = useGameReShade(game?.ID ?? null);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
   const importFlow = useGameModImportFlow({
     gameID: game?.ID ?? null,
@@ -190,13 +192,17 @@ export const GameDetails = () => {
             </button>
 
             {game !== undefined && (
-              <GameDetailsActionsMenu
+            <GameDetailsActionsMenu
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}
                 onOpenOptiScaler={() => {
                   setIsActionsMenuOpen(false);
                   navigate(`/library/${game.ID}/optiscaler`);
+                }}
+                onOpenReShade={() => {
+                  setIsActionsMenuOpen(false);
+                  navigate(`/library/${game.ID}/reshade`);
                 }}
                 onSetStorageOverride={storageOverride.requestSetStorageOverride}
               />
@@ -248,6 +254,7 @@ export const GameDetails = () => {
             modCount={gameModManager.mods.length}
             optiScaler={optiScaler}
             profileCount={profileManager.profiles.length}
+            reShade={reShade}
             reShadeDetection={reShadeDetection}
             storageUsedBytes={gameModManager.storageUsedBytes}
           />

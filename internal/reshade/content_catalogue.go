@@ -217,6 +217,9 @@ func parseAddonPackages(contents string) ([]AddonPackage, error) {
 			DownloadURL64:     section.values["DownloadUrl64"],
 			RepositoryURL:     section.values["RepositoryUrl"],
 		}
+		if !addonPackageHasDownloadURL(item) {
+			continue
+		}
 		if err := validateAddonPackage(item); err != nil {
 			return nil, err
 		}
@@ -226,6 +229,12 @@ func parseAddonPackages(contents string) ([]AddonPackage, error) {
 		return result[i].ID < result[j].ID
 	})
 	return result, nil
+}
+
+func addonPackageHasDownloadURL(item AddonPackage) bool {
+	return strings.TrimSpace(item.DownloadURL) != "" ||
+		strings.TrimSpace(item.DownloadURL32) != "" ||
+		strings.TrimSpace(item.DownloadURL64) != ""
 }
 
 type looseINISection struct {

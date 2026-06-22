@@ -527,6 +527,89 @@ export class InstallerProvenance {
     }
 }
 
+export class InstallerReleaseStatus {
+    "version": string;
+    "variant": InstallerVariant;
+    "assetName": string;
+    "url": string;
+    "digest"?: string | null;
+    "sizeBytes"?: number | null;
+    "cached": boolean;
+    "error"?: string;
+
+    /** Creates a new InstallerReleaseStatus instance. */
+    constructor($$source: Partial<InstallerReleaseStatus> = {}) {
+        if (!("version" in $$source)) {
+            this["version"] = "";
+        }
+        if (!("variant" in $$source)) {
+            this["variant"] = InstallerVariant.$zero;
+        }
+        if (!("assetName" in $$source)) {
+            this["assetName"] = "";
+        }
+        if (!("url" in $$source)) {
+            this["url"] = "";
+        }
+        if (!("cached" in $$source)) {
+            this["cached"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new InstallerReleaseStatus instance from a string or object.
+     */
+    static createFrom($$source: any = {}): InstallerReleaseStatus {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new InstallerReleaseStatus($$parsedSource as Partial<InstallerReleaseStatus>);
+    }
+}
+
+export class InstallerStatus {
+    "standard": InstallerReleaseStatus;
+    "addon": InstallerReleaseStatus;
+
+    /** Creates a new InstallerStatus instance. */
+    constructor($$source: Partial<InstallerStatus> = {}) {
+        if (!("standard" in $$source)) {
+            this["standard"] = (new InstallerReleaseStatus());
+        }
+        if (!("addon" in $$source)) {
+            this["addon"] = (new InstallerReleaseStatus());
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new InstallerStatus instance from a string or object.
+     */
+    static createFrom($$source: any = {}): InstallerStatus {
+        const $$createField0_0 = $$createType17;
+        const $$createField1_0 = $$createType17;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("standard" in $$parsedSource) {
+            $$parsedSource["standard"] = $$createField0_0($$parsedSource["standard"]);
+        }
+        if ("addon" in $$parsedSource) {
+            $$parsedSource["addon"] = $$createField1_0($$parsedSource["addon"]);
+        }
+        return new InstallerStatus($$parsedSource as Partial<InstallerStatus>);
+    }
+}
+
+export enum InstallerVariant {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    InstallerVariantStandard = "",
+    InstallerVariantAddon = "addon",
+};
+
 export class ManagedFile {
     "relativePath": string;
     "sha256": string;
@@ -561,8 +644,8 @@ export class ManagedFile {
      * Creates a new ManagedFile instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedFile {
-        const $$createField5_0 = $$createType18;
-        const $$createField6_0 = $$createType19;
+        const $$createField5_0 = $$createType19;
+        const $$createField6_0 = $$createType20;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("source" in $$parsedSource) {
             $$parsedSource["source"] = $$createField5_0($$parsedSource["source"]);
@@ -650,7 +733,7 @@ export class ManagedTarget {
      * Creates a new ManagedTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedTarget {
-        const $$createField10_0 = $$createType20;
+        const $$createField10_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Provenance" in $$parsedSource) {
             $$parsedSource["Provenance"] = $$createField10_0($$parsedSource["Provenance"]);
@@ -698,8 +781,8 @@ export class Manifest {
      * Creates a new Manifest instance from a string or object.
      */
     static createFrom($$source: any = {}): Manifest {
-        const $$createField1_0 = $$createType22;
-        const $$createField4_0 = $$createType24;
+        const $$createField1_0 = $$createType23;
+        const $$createField4_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("files" in $$parsedSource) {
             $$parsedSource["files"] = $$createField1_0($$parsedSource["files"]);
@@ -817,7 +900,7 @@ export class PresetInspectionResult {
      */
     static createFrom($$source: any = {}): PresetInspectionResult {
         const $$createField0_0 = $$createType0;
-        const $$createField1_0 = $$createType26;
+        const $$createField1_0 = $$createType27;
         const $$createField2_0 = $$createType0;
         const $$createField3_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
@@ -919,14 +1002,14 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField0_0 = $$createType27;
-        const $$createField1_0 = $$createType29;
-        const $$createField2_0 = $$createType31;
+        const $$createField0_0 = $$createType28;
+        const $$createField1_0 = $$createType30;
+        const $$createField2_0 = $$createType32;
         const $$createField3_0 = $$createType0;
         const $$createField4_0 = $$createType0;
-        const $$createField5_0 = $$createType33;
-        const $$createField6_0 = $$createType35;
-        const $$createField7_0 = $$createType37;
+        const $$createField5_0 = $$createType34;
+        const $$createField6_0 = $$createType36;
+        const $$createField7_0 = $$createType38;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("request" in $$parsedSource) {
             $$parsedSource["request"] = $$createField0_0($$parsedSource["request"]);
@@ -1084,7 +1167,7 @@ export class Request {
      * Creates a new Request instance from a string or object.
      */
     static createFrom($$source: any = {}): Request {
-        const $$createField11_0 = $$createType38;
+        const $$createField11_0 = $$createType39;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("content" in $$parsedSource) {
             $$parsedSource["content"] = $$createField11_0($$parsedSource["content"]);
@@ -1121,8 +1204,8 @@ export class TargetState {
      * Creates a new TargetState instance from a string or object.
      */
     static createFrom($$source: any = {}): TargetState {
-        const $$createField1_0 = $$createType20;
-        const $$createField3_0 = $$createType39;
+        const $$createField1_0 = $$createType21;
+        const $$createField3_0 = $$createType40;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("provenance" in $$parsedSource) {
             $$parsedSource["provenance"] = $$createField1_0($$parsedSource["provenance"]);
@@ -1240,26 +1323,27 @@ const $$createType13 = Candidate.createFrom;
 const $$createType14 = $Create.Array($$createType13);
 const $$createType15 = DiscoveryWarning.createFrom;
 const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = ContentSource.createFrom;
-const $$createType18 = $Create.Nullable($$createType17);
-const $$createType19 = $Create.Array($$createType17);
-const $$createType20 = InstallerProvenance.createFrom;
-const $$createType21 = ManagedFile.createFrom;
-const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = UserContent.createFrom;
-const $$createType24 = $Create.Array($$createType23);
-const $$createType25 = PresetRecommendation.createFrom;
-const $$createType26 = $Create.Array($$createType25);
-const $$createType27 = Request.createFrom;
-const $$createType28 = filetxn$0.Operation.createFrom;
-const $$createType29 = $Create.Array($$createType28);
-const $$createType30 = PathImpact.createFrom;
-const $$createType31 = $Create.Array($$createType30);
-const $$createType32 = Drift.createFrom;
-const $$createType33 = $Create.Array($$createType32);
-const $$createType34 = UserContentDrift.createFrom;
-const $$createType35 = $Create.Array($$createType34);
-const $$createType36 = TargetState.createFrom;
-const $$createType37 = $Create.Nullable($$createType36);
-const $$createType38 = ContentRequest.createFrom;
-const $$createType39 = Manifest.createFrom;
+const $$createType17 = InstallerReleaseStatus.createFrom;
+const $$createType18 = ContentSource.createFrom;
+const $$createType19 = $Create.Nullable($$createType18);
+const $$createType20 = $Create.Array($$createType18);
+const $$createType21 = InstallerProvenance.createFrom;
+const $$createType22 = ManagedFile.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = UserContent.createFrom;
+const $$createType25 = $Create.Array($$createType24);
+const $$createType26 = PresetRecommendation.createFrom;
+const $$createType27 = $Create.Array($$createType26);
+const $$createType28 = Request.createFrom;
+const $$createType29 = filetxn$0.Operation.createFrom;
+const $$createType30 = $Create.Array($$createType29);
+const $$createType31 = PathImpact.createFrom;
+const $$createType32 = $Create.Array($$createType31);
+const $$createType33 = Drift.createFrom;
+const $$createType34 = $Create.Array($$createType33);
+const $$createType35 = UserContentDrift.createFrom;
+const $$createType36 = $Create.Array($$createType35);
+const $$createType37 = TargetState.createFrom;
+const $$createType38 = $Create.Nullable($$createType37);
+const $$createType39 = ContentRequest.createFrom;
+const $$createType40 = Manifest.createFrom;

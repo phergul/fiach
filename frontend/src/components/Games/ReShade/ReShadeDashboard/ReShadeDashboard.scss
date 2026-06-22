@@ -1,0 +1,105 @@
+@use '@styles' as *;
+
+$reshade-toolbar-height: 3.5rem;
+$reshade-toolbar-button-height: 2.25rem;
+$reshade-toolbar-icon-size: 1.125rem;
+$reshade-game-header-height: 6rem;
+$reshade-page-header-height: 5rem;
+
+.reshade-dashboard {
+  position: relative;
+  display: flex;
+  height: $app-min-height;
+  min-height: $app-min-height;
+  flex-direction: column;
+  margin: -$spacing-xl;
+  overflow: hidden;
+  background: $color-background;
+  color: $color-text-primary;
+}
+
+.reshade-dashboard-toolbar {
+  display: flex;
+  min-height: $reshade-toolbar-height;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $spacing-md;
+  background: $color-background;
+}
+
+.reshade-dashboard-back-link {
+  display: inline-flex;
+  min-height: $reshade-toolbar-button-height;
+  align-items: center;
+  gap: $spacing-xs;
+  color: $color-text-subtle;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+}
+
+.reshade-dashboard-back-link:hover,
+.reshade-dashboard-back-link:focus-visible {
+  color: $color-text-primary;
+}
+
+.reshade-dashboard-back-link svg {
+  width: $reshade-toolbar-icon-size;
+  height: $reshade-toolbar-icon-size;
+}
+
+.reshade-dashboard-backdrop {
+  position: absolute;
+  top: $reshade-toolbar-height;
+  right: 0;
+  left: 0;
+  height: calc($reshade-game-header-height + $reshade-page-header-height);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.reshade-dashboard-backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: rgb(#{$color-background-rgb} / 72%);
+}
+
+.reshade-dashboard-backdrop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  opacity: 0.8;
+}
+
+.reshade-dashboard-error {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  padding: $spacing-sm $spacing-xl;
+  color: $color-danger;
+  background: color-mix(in srgb, $color-danger 12%, $color-surface);
+}
+
+.reshade-dashboard-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  background: $color-background;
+}
+
+.reshade-dashboard .button-main {
+  color: $color-background;
+  background: $color-info;
+}
+
+.reshade-dashboard .button-main:hover:not(:disabled),
+.reshade-dashboard .button-main:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-info 84%, $color-text-primary);
+}

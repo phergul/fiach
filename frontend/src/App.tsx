@@ -5,7 +5,7 @@ import { ToastProvider } from '@components/Common/Toast/Toast';
 import { OptiScalerSessionProvider } from '@components/Games/OptiScaler/OptiScalerSessionProvider/OptiScalerSessionProvider';
 import { Layout } from '@components/Layout/Layout';
 import { LogsWindow } from '@components/Logs/LogsWindow/LogsWindow';
-import { GameApply, GameDetails, GameOptiScaler, Library, Profiles, Settings } from '@pages';
+import { GameApply, GameDetails, GameOptiScaler, GameReShade, Library, Profiles, Settings } from '@pages';
 
 const providers = [ThemeProvider, ToastProvider, OptiScalerSessionProvider];
 
@@ -31,6 +31,7 @@ export const App = () => {
           <Route path="library/:gameId/apply/:profileId" element={<GameApply />} />
           <Route path="library/:gameId/apply" element={<GameApply />} />
           <Route path="library/:gameId/optiscaler" element={<GameOptiScaler />} />
+          <Route path="library/:gameId/reshade" element={<GameReShade />} />
           <Route path="library/:gameId" element={<GameDetails />} />
           <Route path="profiles" element={<Profiles />} />
           <Route path="settings" element={<Settings />} />

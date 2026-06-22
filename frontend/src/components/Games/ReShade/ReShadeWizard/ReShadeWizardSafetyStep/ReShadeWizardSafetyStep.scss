@@ -1,0 +1,18 @@
+@use '@styles' as *;
+
+.reshade-wizard-safety-step {
+  display: grid;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.reshade-wizard-safety-step p {
+  color: $color-text-subtle;
+}
+
+.reshade-wizard-safety-step label {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}

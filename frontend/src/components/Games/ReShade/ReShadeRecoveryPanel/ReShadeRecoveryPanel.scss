@@ -1,0 +1,35 @@
+@use '@styles/variables' as *;
+
+.reshade-recovery-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  margin-bottom: $spacing-separator;
+  background: color-mix(in srgb, $color-danger 10%, $color-surface);
+}
+
+.reshade-recovery-panel h3 {
+  margin-bottom: $spacing-xs;
+  font-size: $font-size-lg;
+}
+
+.reshade-recovery-panel p {
+  color: $color-text-subtle;
+}
+
+.reshade-recovery-panel button {
+  min-height: $input-height;
+  flex: 0 0 auto;
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-danger 24%, $color-surface-elevated);
+}
+
+.reshade-recovery-panel button:hover:not(:disabled),
+.reshade-recovery-panel button:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 34%, $color-surface-elevated);
+}

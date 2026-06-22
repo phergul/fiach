@@ -1,0 +1,56 @@
+@use '@styles' as *;
+
+.reshade-wizard-target-step {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.reshade-wizard-target-step dl {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-target-step dl div {
+  display: grid;
+  min-height: $input-height;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface-elevated;
+}
+
+.reshade-wizard-target-step dt {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-target-step dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.reshade-wizard-target-step section {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-target-step h3 {
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+}
+
+.reshade-wizard-target-step ul {
+  display: grid;
+  gap: $spacing-separator;
+  padding: $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface;
+  font-size: $font-size-sm;
+}

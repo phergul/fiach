@@ -1,4 +1,4 @@
-import { FolderCog, Gauge, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { FolderCog, Gauge, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -9,6 +9,7 @@ interface GameDetailsActionsMenuProps {
   game: StoredGame;
   isOpen: boolean;
   onOpenOptiScaler: () => void;
+  onOpenReShade: () => void;
   onClearStorageOverride: () => void;
   onSetStorageOverride: () => void;
 }
@@ -17,6 +18,7 @@ export const GameDetailsActionsMenu = ({
   game,
   isOpen,
   onOpenOptiScaler,
+  onOpenReShade,
   onClearStorageOverride,
   onSetStorageOverride,
 }: GameDetailsActionsMenuProps) => {
@@ -37,6 +39,11 @@ export const GameDetailsActionsMenu = ({
               icon: Gauge,
               label: 'OptiScaler',
               onSelect: onOpenOptiScaler,
+            },
+            {
+              icon: Sparkles,
+              label: 'ReShade',
+              onSelect: onOpenReShade,
             },
           ],
           icon: SlidersHorizontal,

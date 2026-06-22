@@ -1,0 +1,92 @@
+@use '@styles' as *;
+
+$reshade-page-header-height: 5rem;
+$reshade-page-header-icon-size: 1rem;
+
+.reshade-page-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: $reshade-page-header-height;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  background: rgb(#{$color-background-rgb} / 40%);
+  backdrop-filter: blur(12px);
+  border-bottom: $app-border-width solid $color-surface-elevated;
+}
+
+.reshade-page-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-md;
+}
+
+.reshade-page-header-title h2 {
+  font-size: $font-size-xl;
+}
+
+.reshade-page-header-title p {
+  color: $color-text-muted;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
+}
+
+.reshade-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.reshade-page-header-actions button {
+  min-height: $table-control-height;
+}
+
+.reshade-page-header-actions button:hover:not(:disabled),
+.reshade-page-header-actions button:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
+}
+
+.reshade-page-header-actions svg {
+  width: $reshade-page-header-icon-size;
+  height: $reshade-page-header-icon-size;
+}
+
+.reshade-page-header-status {
+  padding: $spacing-xs $spacing-sm;
+  color: $color-background;
+  background: $color-success;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.reshade-page-header-status-recovery,
+.reshade-page-header-status-conflict {
+  color: $color-danger;
+  background: color-mix(in srgb, $color-danger 16%, $color-surface-elevated);
+}
+
+.reshade-page-header-status-drift,
+.reshade-page-header-status-update {
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 16%, $color-surface-elevated);
+}
+
+.reshade-page-header-status-managed {
+  color: $color-background;
+  background: $color-success;
+}
+
+.reshade-page-header-status-checking,
+.reshade-page-header-status-unmanaged,
+.reshade-page-header-status-not_detected {
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+}
+
+.reshade-page-header-status-error {
+  color: $color-danger;
+  background: color-mix(in srgb, $color-danger 16%, $color-surface-elevated);
+}

@@ -208,6 +208,42 @@ func (s *ReshadeService) ListManagedReShadeContentCatalogue(
 	return s.manager.ListContentCatalogue(ctx, refresh)
 }
 
+func (s *ReshadeService) GetManagedReShadeInstallerStatus(
+	ctx context.Context,
+	refresh bool,
+) (result dto.ManagedReShadeInstallerStatus, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("get managed ReShade installer status: %w", err)
+		}
+	}()
+	if s.operatingSystem != "windows" {
+		return dto.ManagedReShadeInstallerStatus{}, errors.New("managed ReShade is only supported on Windows")
+	}
+	_ = refresh
+	return reshade.ResolveInstallerStatus(ctx), nil
+}
+
+func (s *ReshadeService) ListManagedReShadeChainTargets(
+	ctx context.Context,
+	gameID int64,
+) (result []dto.ManagedReShadeChainTarget, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("list managed ReShade injection chain targets: %w", err)
+		}
+	}()
+	targets, err := s.injection.ListTargets(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+	result = make([]dto.ManagedReShadeChainTarget, 0, len(targets))
+	for _, target := range targets {
+		result = append(result, toDTOManagedReShadeChainTarget(target))
+	}
+	return result, nil
+}
+
 func (s *ReshadeService) InspectManagedReShadePreset(
 	ctx context.Context,
 	gameID int64,
@@ -239,6 +275,32 @@ func (s *ReshadeService) InspectManagedReShadePreset(
 		return dto.ManagedReShadePresetInspectionResult{}, err
 	}
 	return reshade.InspectPreset(resolvedPresetPath, catalogue)
+}
+
+func toDTOManagedReShadeChainTarget(target injection.ChainTarget) dto.ManagedReShadeChainTarget {
+	result := dto.ManagedReShadeChainTarget{
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		APIFamily:              target.APIFamily,
+		PrimaryOwner:           target.PrimaryOwner,
+		PrimaryProxyFilename:   target.PrimaryProxyFilename,
+		Status:                 target.Status,
+	}
+	if target.OptiScaler != nil {
+		result.OptiScaler = &dto.ManagedReShadeOptiScalerChainState{
+			ProxyFilename: target.OptiScaler.ProxyFilename,
+			Status:        target.OptiScaler.Target.Status,
+		}
+	}
+	if target.ReShade != nil {
+		result.ReShade = &dto.ManagedReShadeChainState{
+			PreferredProxyFilename: target.ReShade.PreferredProxyFilename,
+			ActiveRuntimeFilename:  target.ReShade.ActiveRuntimeFilename,
+			Status:                 target.ReShade.Target.Status,
+		}
+	}
+	return result
 }
 
 func (s *ReshadeService) DiscoverManagedReShadeCandidates(

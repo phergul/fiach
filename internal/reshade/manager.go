@@ -179,6 +179,9 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		preview, err = m.planContent(ctx, gameRoot, targetPath, request, row, manifest)
 	} else {
 		preview, err = m.planner.Plan(ctx, gameRoot, request, existing)
+		if err == nil && contentRequestSelected(request.Content) {
+			preview, err = m.composeContentPreview(ctx, gameRoot, targetPath, request, preview)
+		}
 	}
 	if err != nil {
 		return Preview{}, err
@@ -241,6 +244,79 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		return Preview{}, err
 	}
 	return preview, nil
+}
+
+func (m *Manager) composeContentPreview(
+	ctx context.Context,
+	gameRoot string,
+	targetPath string,
+	request Request,
+	lifecycle Preview,
+) (Preview, error) {
+	if lifecycle.DesiredTarget == nil {
+		return Preview{}, errors.New("managed ReShade content requires desired lifecycle target state")
+	}
+	row, manifest, err := previewRowFromDesiredTarget(request, lifecycle.DesiredTarget)
+	if err != nil {
+		return Preview{}, err
+	}
+	content, err := m.planContent(ctx, gameRoot, targetPath, request, row, manifest)
+	if err != nil {
+		return Preview{}, err
+	}
+	lifecycle.Operations = mergePreviewOperations(lifecycle.Operations, content.Operations)
+	lifecycle.PathImpacts = append(lifecycle.PathImpacts, content.PathImpacts...)
+	lifecycle.Warnings = append(lifecycle.Warnings, content.Warnings...)
+	lifecycle.Conflicts = append(lifecycle.Conflicts, content.Conflicts...)
+	lifecycle.Drift = append(lifecycle.Drift, content.Drift...)
+	lifecycle.UserContentDrift = append(lifecycle.UserContentDrift, content.UserContentDrift...)
+	lifecycle.DesiredTarget = content.DesiredTarget
+	return lifecycle, nil
+}
+
+func previewRowFromDesiredTarget(request Request, target *TargetState) (dbtypes.ReShadeTarget, Manifest, error) {
+	manifest := target.Manifest
+	manifestJSON, err := json.Marshal(manifest)
+	if err != nil {
+		return dbtypes.ReShadeTarget{}, Manifest{}, err
+	}
+	return dbtypes.ReShadeTarget{
+		GameID:                 request.GameID,
+		TargetRelativePath:     request.TargetRelativePath,
+		ExecutableRelativePath: request.ExecutableRelativePath,
+		RenderingAPI:           string(request.RenderingAPI),
+		ProxyFilename:          request.ProxyFilename,
+		Architecture:           string(request.Architecture),
+		BuildVariant:           string(request.BuildVariant),
+		RuntimeVersion:         target.RuntimeVersion,
+		InstallerTag:           target.Provenance.Tag,
+		InstallerAssetName:     target.Provenance.AssetName,
+		InstallerURL:           target.Provenance.URL,
+		InstallerDigest:        target.Provenance.Digest,
+		InstallerSize:          target.Provenance.Size,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 string(ManagementStatusManaged),
+		ManifestJSON:           string(manifestJSON),
+	}, manifest, nil
+}
+
+func mergePreviewOperations(lifecycle []Operation, content []Operation) []Operation {
+	contentTargets := map[string]bool{}
+	for _, operation := range content {
+		contentTargets[strings.ToLower(filepath.Clean(operation.TargetPath))] = true
+	}
+	result := make([]Operation, 0, len(lifecycle)+len(content))
+	for _, operation := range lifecycle {
+		if contentTargets[strings.ToLower(filepath.Clean(operation.TargetPath))] {
+			continue
+		}
+		result = append(result, operation)
+	}
+	return append(result, content...)
+}
+
+func contentRequestSelected(content ContentRequest) bool {
+	return len(content.EffectPackages) > 0 || len(content.Addons) > 0
 }
 
 func (m *Manager) annotateOperationBackups(

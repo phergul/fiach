@@ -1,0 +1,158 @@
+@use '@styles' as *;
+
+$reshade-target-action-width: 11rem;
+$reshade-target-chain-width: 20rem;
+$reshade-target-runtime-width: 24rem;
+$reshade-target-icon-size: 1rem;
+
+.reshade-target-table {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: $color-background;
+}
+
+.reshade-target-columns,
+.reshade-target-row {
+  display: grid;
+  grid-template-columns:
+    minmax(18rem, 1fr)
+    $reshade-target-runtime-width
+    $reshade-target-chain-width
+    $reshade-target-action-width;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: 0 $spacing-xl;
+}
+
+.reshade-target-columns {
+  min-height: $input-height;
+  color: $color-text-muted;
+  background: $color-surface-elevated;
+  font-size: $font-size-xs;
+  text-transform: uppercase;
+}
+
+.reshade-target-columns span:last-child {
+  text-align: right;
+}
+
+.reshade-target-table section {
+  display: grid;
+  gap: 0;
+  background: $color-background;
+}
+
+.reshade-target-row + .reshade-target-row {
+  margin-top: $spacing-separator;
+}
+
+.reshade-target-table section > h3 {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  padding: 0 $spacing-xl;
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 6%, $color-background);
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+}
+
+.reshade-target-row {
+  min-height: 5rem;
+  background: $color-surface;
+  transition: background-color $transition-duration-fast $transition-easing-standard;
+}
+
+.reshade-target-row:hover {
+  background: color-mix(in srgb, $color-surface-elevated 70%, $color-surface);
+}
+
+.reshade-target-identity,
+.reshade-target-status {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: $spacing-xs $spacing-sm;
+  align-items: center;
+}
+
+.reshade-target-identity {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-xs;
+}
+
+.reshade-target-identity strong {
+  overflow-wrap: anywhere;
+}
+
+.reshade-target-identity span,
+.reshade-target-chain,
+.reshade-target-empty {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.reshade-target-status span {
+  padding: $spacing-xs $spacing-sm;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+}
+
+.reshade-target-status-success {
+  color: $color-success;
+  background: color-mix(in srgb, $color-success 12%, $color-surface-elevated);
+}
+
+.reshade-target-status-warning {
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 12%, $color-surface-elevated);
+}
+
+.reshade-target-status-info {
+  color: $color-info;
+  background: color-mix(in srgb, $color-info 12%, $color-surface-elevated);
+}
+
+.reshade-target-status-neutral {
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+}
+
+.reshade-target-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-xs;
+}
+
+.reshade-target-actions button {
+  min-height: $table-control-height;
+}
+
+.reshade-target-actions svg {
+  width: $reshade-target-icon-size;
+  height: $reshade-target-icon-size;
+}
+
+.reshade-target-menu-anchor {
+  position: relative;
+}
+
+.reshade-target-menu-anchor > button {
+  width: $table-control-height;
+  padding: 0;
+  background: $color-surface-elevated;
+}
+
+.reshade-target-empty {
+  padding: $spacing-lg $spacing-xl $spacing-lg;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
+}

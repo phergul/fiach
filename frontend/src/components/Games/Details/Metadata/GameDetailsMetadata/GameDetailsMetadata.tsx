@@ -3,7 +3,7 @@ import { Database, Gauge, Package, Sparkles, Users } from 'lucide-react';
 import {
   ReShadeDetectionStatus,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import type { UseGameOptiScalerResult, UseGameReShadeDetectionResult } from '@hooks';
+import type { UseGameOptiScalerResult, UseGameReShadeDetectionResult, UseGameReShadeResult } from '@hooks';
 
 import './GameDetailsMetadata.scss';
 
@@ -12,6 +12,7 @@ interface GameDetailsMetadataProps {
   modCount: number;
   optiScaler: UseGameOptiScalerResult;
   profileCount: number;
+  reShade: UseGameReShadeResult;
   reShadeDetection: UseGameReShadeDetectionResult;
   storageUsedBytes: number | null;
 }
@@ -82,11 +83,37 @@ const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) =>
   }
 };
 
+const formatManagedReShadeStatus = (reShade: UseGameReShadeResult, fallback: UseGameReShadeDetectionResult) => {
+  const count = reShade.targets.length;
+  const countLabel = `${count} managed`;
+  switch (reShade.aggregateStatus) {
+    case 'checking':
+      return 'Checking';
+    case 'error':
+      return formatReShadeStatus(fallback);
+    case 'recovery':
+      return `${countLabel} · Recovery required`;
+    case 'conflict':
+      return count > 0 ? `${countLabel} · Conflict` : 'Conflict detected';
+    case 'drift':
+      return `${countLabel} · Drift detected`;
+    case 'update':
+      return `${countLabel} · Update available`;
+    case 'managed':
+      return countLabel;
+    case 'unmanaged':
+      return 'Detected unmanaged';
+    case 'not_detected':
+      return formatReShadeStatus(fallback);
+  }
+};
+
 export const GameDetailsMetadata = ({
   isStorageUsageLoading,
   modCount,
   optiScaler,
   profileCount,
+  reShade,
   reShadeDetection,
   storageUsedBytes,
 }: GameDetailsMetadataProps) => {
@@ -94,7 +121,7 @@ export const GameDetailsMetadata = ({
     { Icon: Package, label: 'Mods installed', value: String(modCount) },
     { Icon: Database, label: 'Storage used', value: formatStorageUsage(storageUsedBytes, isStorageUsageLoading) },
     { Icon: Users, label: 'Profiles', value: String(profileCount) },
-    { Icon: Sparkles, label: 'ReShade', value: formatReShadeStatus(reShadeDetection) },
+    { Icon: Sparkles, label: 'ReShade', value: formatManagedReShadeStatus(reShade, reShadeDetection) },
     { Icon: Gauge, label: 'OptiScaler', value: formatOptiScalerStatus(optiScaler) },
   ];
 

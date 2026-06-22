@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/phergul/fiach/internal/reshade"
+import (
+	"github.com/phergul/fiach/internal/injection"
+	"github.com/phergul/fiach/internal/reshade"
+)
 
 type ReShadeDetectionStatus string
 
@@ -30,3 +33,27 @@ type ManagedReShadeTarget = reshade.ManagedTarget
 type ManagedReShadeDiscoveryResult = reshade.DiscoveryResult
 type ManagedReShadeContentCatalogue = reshade.ContentCatalogue
 type ManagedReShadePresetInspectionResult = reshade.PresetInspectionResult
+type ManagedReShadeInstallerStatus = reshade.InstallerStatus
+
+type ManagedReShadeChainTarget struct {
+	GameID                 int64
+	TargetRelativePath     string
+	ExecutableRelativePath string
+	APIFamily              injection.APIFamily
+	PrimaryOwner           injection.Owner
+	PrimaryProxyFilename   string
+	Status                 injection.Status
+	OptiScaler             *ManagedReShadeOptiScalerChainState
+	ReShade                *ManagedReShadeChainState
+}
+
+type ManagedReShadeOptiScalerChainState struct {
+	ProxyFilename string
+	Status        string
+}
+
+type ManagedReShadeChainState struct {
+	PreferredProxyFilename string
+	ActiveRuntimeFilename  string
+	Status                 string
+}

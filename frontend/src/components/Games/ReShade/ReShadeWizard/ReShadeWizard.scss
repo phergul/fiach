@@ -1,0 +1,193 @@
+@use '@styles/variables' as *;
+
+$reshade-wizard-close-size: 2rem;
+$reshade-wizard-close-icon-size: 1rem;
+$reshade-wizard-label-width: 10rem;
+
+.reshade-wizard {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  background: $color-background;
+}
+
+.reshade-wizard-header {
+  display: flex;
+  min-height: 4.5rem;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+}
+
+.reshade-wizard-header h2 {
+  font-size: $font-size-lg;
+}
+
+.reshade-wizard-header p {
+  margin-top: $spacing-xs;
+  color: $color-text-muted;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-header button {
+  width: $reshade-wizard-close-size;
+  height: $reshade-wizard-close-size;
+  padding: 0;
+  background: transparent;
+}
+
+.reshade-wizard-header svg {
+  width: $reshade-wizard-close-icon-size;
+  height: $reshade-wizard-close-icon-size;
+}
+
+.reshade-wizard-steps {
+  display: grid;
+  gap: $spacing-separator;
+  flex: 0 0 auto;
+  padding: 0 $spacing-xl $spacing-md;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
+}
+
+.reshade-wizard-steps li {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-muted;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-steps .reshade-wizard-step-complete {
+  color: $color-success;
+  background: color-mix(in srgb, $color-success 18%, $color-surface);
+}
+
+.reshade-wizard-steps .reshade-wizard-step-active {
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-info 72%, $color-surface);
+}
+
+.reshade-wizard-form {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $spacing-separator;
+}
+
+.reshade-wizard-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: $color-background;
+}
+
+.reshade-wizard-content {
+  display: grid;
+  width: min(100%, $wizard-content-max-width);
+  align-content: start;
+  gap: $spacing-md;
+  margin: 0 auto;
+  padding: $spacing-lg $spacing-xl;
+}
+
+.reshade-wizard-summary {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-summary div {
+  display: grid;
+  min-height: $input-height;
+  grid-template-columns: $reshade-wizard-label-width minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface-elevated;
+}
+
+.reshade-wizard-summary dt {
+  color: $color-text-muted;
+}
+
+.reshade-wizard-summary dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.reshade-wizard-drift-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 10%, $color-surface-elevated);
+}
+
+.reshade-wizard-drift-actions p {
+  color: $color-text-subtle;
+}
+
+.reshade-wizard-drift-actions button,
+.reshade-wizard-footer button {
+  min-height: $input-height;
+}
+
+.reshade-wizard-result {
+  display: grid;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  background: $color-surface;
+}
+
+.reshade-wizard-result p {
+  color: $color-text-subtle;
+}
+
+.reshade-wizard-result-success {
+  background: color-mix(in srgb, $color-success 12%, $color-surface);
+}
+
+.reshade-wizard-result-error {
+  background: color-mix(in srgb, $color-danger 12%, $color-surface);
+}
+
+.reshade-wizard-error {
+  width: min(calc(100% - #{$spacing-xl * 2}), $wizard-content-max-width);
+  margin: $spacing-md auto;
+  color: $color-danger;
+}
+
+.reshade-wizard-footer {
+  display: flex;
+  min-height: 4.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-xl;
+  background: $color-surface;
+}
+
+.reshade-wizard-footer button {
+  min-width: 6rem;
+}
+
+.reshade-wizard-footer .button-main {
+  margin-left: auto;
+}
+
+.reshade-wizard-footer > button:not(.button-main) {
+  background: $color-surface-elevated;
+}

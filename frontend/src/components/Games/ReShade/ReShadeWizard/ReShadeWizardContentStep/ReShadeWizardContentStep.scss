@@ -1,0 +1,83 @@
+@use '@styles' as *;
+
+.reshade-wizard-content-step {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.reshade-wizard-content-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reshade-wizard-content-toolbar button,
+.reshade-wizard-preset-form button,
+.reshade-wizard-preset-result button {
+  min-height: $input-height;
+}
+
+.reshade-wizard-content-section {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-content-section h3 {
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+}
+
+.reshade-wizard-content-section p {
+  padding: $spacing-md;
+  background: $color-surface;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-content-item {
+  display: grid;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.reshade-wizard-content-item label,
+.reshade-wizard-content-effects label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.reshade-wizard-content-effects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-xs $spacing-md;
+  padding: $spacing-sm 0 0 $spacing-lg;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-preset-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8rem;
+  gap: $spacing-sm;
+}
+
+.reshade-wizard-preset-form input {
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  background: $color-background;
+}
+
+.reshade-wizard-preset-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-surface;
+}

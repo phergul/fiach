@@ -586,6 +586,31 @@ func (p *directXPlanner) planUninstall(
 	impacts := []PathImpact{
 		pathImpact(runtime.RelativePath, PathRoleRuntime, action, runtime.Ownership, pathExists(target), false),
 	}
+	operations := []Operation{operation}
+	for _, file := range manifest.Files {
+		if strings.EqualFold(filepath.Clean(file.RelativePath), filepath.Clean(runtime.RelativePath)) {
+			continue
+		}
+		if file.Ownership != OwnershipManaged && file.Ownership != OwnershipAdopted {
+			continue
+		}
+		if file.Role == PathRoleRuntime {
+			continue
+		}
+		target := filepath.Join(targetPath, file.RelativePath)
+		operations = append(operations, Operation{
+			Type:       "delete",
+			TargetPath: target,
+		})
+		impacts = append(impacts, pathImpact(
+			file.RelativePath,
+			file.Role,
+			"remove",
+			file.Ownership,
+			pathExists(target),
+			false,
+		))
+	}
 	for _, content := range manifest.UserContent {
 		impacts = append(impacts, pathImpact(
 			content.Path,
@@ -597,7 +622,7 @@ func (p *directXPlanner) planUninstall(
 		))
 	}
 	return Preview{
-		Operations:       []Operation{operation},
+		Operations:       operations,
 		PathImpacts:      impacts,
 		Warnings:         []string{},
 		Conflicts:        []string{},

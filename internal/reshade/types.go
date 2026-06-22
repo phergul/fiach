@@ -339,3 +339,19 @@ type PresetRecommendation struct {
 	PackageName string   `json:"packageName"`
 	EffectFiles []string `json:"effectFiles"`
 }
+
+type InstallerReleaseStatus struct {
+	Version   string           `json:"version"`
+	Variant   InstallerVariant `json:"variant"`
+	AssetName string           `json:"assetName"`
+	URL       string           `json:"url"`
+	Digest    *string          `json:"digest,omitempty"`
+	Size      *int64           `json:"sizeBytes,omitempty"`
+	Cached    bool             `json:"cached"`
+	Error     string           `json:"error,omitempty"`
+}
+
+type InstallerStatus struct {
+	Standard InstallerReleaseStatus `json:"standard"`
+	Addon    InstallerReleaseStatus `json:"addon"`
+}
