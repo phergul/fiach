@@ -382,7 +382,7 @@ func validateCatalogueInstallPath(value string) error {
 	if strings.TrimSpace(value) == "" {
 		return nil
 	}
-	clean := filepath.Clean(strings.ReplaceAll(value, "/", string(filepath.Separator)))
+	clean := filepath.Clean(strings.ReplaceAll(strings.ReplaceAll(value, "\\", string(filepath.Separator)), "/", string(filepath.Separator)))
 	if filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
 		return errors.New("path must stay inside the target")
 	}

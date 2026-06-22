@@ -126,7 +126,7 @@ func mergeSearchPaths(existing []contentPath, role PathRole, additions []string)
 }
 
 func relativeINIPath(path string) string {
-	return strings.TrimPrefix(filepath.ToSlash(filepath.Clean(path)), "./")
+	return strings.TrimPrefix(filepath.ToSlash(filepath.Clean(strings.ReplaceAll(path, "\\", string(filepath.Separator)))), "./")
 }
 
 func fileIntegrity(path string) (string, int64, error) {

@@ -212,7 +212,7 @@ func defaultReShadeContentPaths() []contentPath {
 func splitReShadePaths(value string) []string {
 	var result []string
 	for _, path := range strings.Split(value, ",") {
-		path = strings.Trim(strings.TrimSpace(path), `"`)
+		path = strings.ReplaceAll(strings.Trim(strings.TrimSpace(path), `"`), "\\", string(filepath.Separator))
 		if path != "" {
 			result = append(result, path)
 		}

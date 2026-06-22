@@ -598,7 +598,7 @@ func contentTargetRelativePath(root string, child string) (string, error) {
 	if root == "" {
 		root = "."
 	}
-	cleanRoot := filepath.Clean(strings.ReplaceAll(root, "/", string(filepath.Separator)))
+	cleanRoot := filepath.Clean(strings.ReplaceAll(strings.ReplaceAll(root, "\\", string(filepath.Separator)), "/", string(filepath.Separator)))
 	clean := filepath.Clean(filepath.Join(cleanRoot, child))
 	if filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
 		return "", fmt.Errorf("content target path %q escapes target", clean)
@@ -618,7 +618,7 @@ func duplicateEffectConflict(targetPath string, relativePath string) string {
 		if item.Role != PathRoleEffects {
 			continue
 		}
-		resolved := item.Value
+		resolved := strings.ReplaceAll(item.Value, "\\", string(filepath.Separator))
 		wildcard := strings.HasSuffix(resolved, "**")
 		resolved = strings.TrimSuffix(strings.TrimSuffix(resolved, "**"), string(filepath.Separator))
 		if !filepath.IsAbs(resolved) {
