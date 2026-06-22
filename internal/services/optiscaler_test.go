@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -21,6 +22,10 @@ func TestOptiScalerServiceRejectsUnsupportedPlatformWithServiceContext(t *testin
 
 func TestOptiScalerReleaseStatusReturnsLookupErrorAsStatus(t *testing.T) {
 	t.Parallel()
+
+	if runtime.GOOS != "windows" {
+		t.Skip("Test only applicable on Windows")
+	}
 
 	service := NewOptiScalerService(nil, testLogger(), nil)
 	service.manager = optiscaler.NewManager(nil, optiscaler.ManagerOptions{
