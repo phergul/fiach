@@ -1,18 +1,27 @@
 package reshade
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestDownloadAndOpenInstallerDownloadsHighestStableTagAndOpens(t *testing.T) {
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (function roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) {
+	return function(request)
+}
+
+func TestDownloadAndOpenInstallerDownloadsManifestReleaseAndOpens(t *testing.T) {
 	t.Parallel()
 
 	cacheDir := t.TempDir()
@@ -20,33 +29,18 @@ func TestDownloadAndOpenInstallerDownloadsHighestStableTagAndOpens(t *testing.T)
 	addonPath := filepath.Join(cacheDir, "ReShade_Setup_6.7.3_Addon.exe")
 	writeReShadeTestFile(t, addonPath)
 
+	body := []byte("installer")
 	var downloadedPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/tags":
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`[
-				{"name":"v6.7.3"},
-				{"name":"v6.10.0"},
-				{"name":"not-a-version"},
-				{"name":"v6.10.1-beta"}
-			]`))
-		case "/downloads/ReShade_Setup_6.10.0.exe":
-			downloadedPath = r.URL.Path
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("installer"))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
+	client := testInstallerHTTPClient(func(request *http.Request) ([]byte, int) {
+		downloadedPath = request.URL.Path
+		return body, http.StatusOK
+	})
 
 	var openedPath string
 	result, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-		TagsURL:         server.URL + "/tags",
-		DownloadBaseURL: server.URL + "/downloads",
-		CacheDir:        cacheDir,
-		HTTPClient:      server.Client(),
+		CacheDir:     cacheDir,
+		HTTPClient:   client,
+		ManifestJSON: installerManifest("6.10.0", body, []byte("addon")),
 		OpenInstaller: func(_ context.Context, path string) error {
 			openedPath = path
 			return nil
@@ -59,10 +53,10 @@ func TestDownloadAndOpenInstallerDownloadsHighestStableTagAndOpens(t *testing.T)
 		t.Fatalf("Version = %q, want 6.10.0", result.Version)
 	}
 	if downloadedPath != "/downloads/ReShade_Setup_6.10.0.exe" {
-		t.Fatalf("downloaded path = %q, want latest installer path", downloadedPath)
+		t.Fatalf("downloaded path = %q, want manifest installer path", downloadedPath)
 	}
 	if filepath.Base(openedPath) != "ReShade_Setup_6.10.0.exe" {
-		t.Fatalf("opened path = %q, want latest installer", openedPath)
+		t.Fatalf("opened path = %q, want manifest installer", openedPath)
 	}
 	if _, err := os.Stat(filepath.Join(cacheDir, "ReShade_Setup_6.7.3.exe")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("old installer stat error = %v, want not exist", err)
@@ -72,32 +66,23 @@ func TestDownloadAndOpenInstallerDownloadsHighestStableTagAndOpens(t *testing.T)
 	}
 }
 
-func TestDownloadAndOpenInstallerReusesCachedLatestInstaller(t *testing.T) {
+func TestDownloadAndOpenInstallerReusesCachedManifestInstaller(t *testing.T) {
 	t.Parallel()
 
 	cacheDir := t.TempDir()
 	latestPath := filepath.Join(cacheDir, "ReShade_Setup_6.7.3.exe")
 	writeReShadeTestFile(t, latestPath)
 
-	var unexpectedPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/tags":
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-		default:
-			unexpectedPath = r.URL.Path
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
+	client := testInstallerHTTPClient(func(request *http.Request) ([]byte, int) {
+		t.Fatalf("unexpected request path %q", request.URL.Path)
+		return nil, http.StatusInternalServerError
+	})
 
 	var openedPath string
 	result, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-		TagsURL:         server.URL + "/tags",
-		DownloadBaseURL: server.URL + "/downloads",
-		CacheDir:        cacheDir,
-		HTTPClient:      server.Client(),
+		CacheDir:     cacheDir,
+		HTTPClient:   client,
+		ManifestJSON: installerManifest("6.7.3", []byte("x"), []byte("addon")),
 		OpenInstaller: func(_ context.Context, path string) error {
 			openedPath = path
 			return nil
@@ -105,9 +90,6 @@ func TestDownloadAndOpenInstallerReusesCachedLatestInstaller(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("DownloadAndOpenInstaller() error = %v", err)
-	}
-	if unexpectedPath != "" {
-		t.Fatalf("unexpected request path %q", unexpectedPath)
 	}
 	if result.Version != "6.7.3" {
 		t.Fatalf("Version = %q, want 6.7.3", result.Version)
@@ -126,28 +108,18 @@ func TestDownloadAndOpenInstallerDownloadsAddonVariant(t *testing.T) {
 	writeReShadeTestFile(t, standardPath)
 	writeReShadeTestFile(t, oldAddonPath)
 
+	body := []byte("addon installer")
 	var downloadedPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/tags":
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-		case "/downloads/ReShade_Setup_6.7.3_Addon.exe":
-			downloadedPath = r.URL.Path
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("addon installer"))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
+	client := testInstallerHTTPClient(func(request *http.Request) ([]byte, int) {
+		downloadedPath = request.URL.Path
+		return body, http.StatusOK
+	})
 
 	var openedPath string
 	result, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-		TagsURL:         server.URL + "/tags",
-		DownloadBaseURL: server.URL + "/downloads",
-		CacheDir:        cacheDir,
-		HTTPClient:      server.Client(),
+		CacheDir:     cacheDir,
+		HTTPClient:   client,
+		ManifestJSON: installerManifest("6.7.3", []byte("standard"), body),
 		OpenInstaller: func(_ context.Context, path string) error {
 			openedPath = path
 			return nil
@@ -181,25 +153,16 @@ func TestDownloadAndOpenInstallerReusesCachedAddonVariant(t *testing.T) {
 	latestPath := filepath.Join(cacheDir, "ReShade_Setup_6.7.3_Addon.exe")
 	writeReShadeTestFile(t, latestPath)
 
-	var unexpectedPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/tags":
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-		default:
-			unexpectedPath = r.URL.Path
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
+	client := testInstallerHTTPClient(func(request *http.Request) ([]byte, int) {
+		t.Fatalf("unexpected request path %q", request.URL.Path)
+		return nil, http.StatusInternalServerError
+	})
 
 	var openedPath string
 	_, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-		TagsURL:         server.URL + "/tags",
-		DownloadBaseURL: server.URL + "/downloads",
-		CacheDir:        cacheDir,
-		HTTPClient:      server.Client(),
+		CacheDir:     cacheDir,
+		HTTPClient:   client,
+		ManifestJSON: installerManifest("6.7.3", []byte("standard"), []byte("x")),
 		OpenInstaller: func(_ context.Context, path string) error {
 			openedPath = path
 			return nil
@@ -208,9 +171,6 @@ func TestDownloadAndOpenInstallerReusesCachedAddonVariant(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("DownloadAndOpenInstaller() error = %v", err)
-	}
-	if unexpectedPath != "" {
-		t.Fatalf("unexpected request path %q", unexpectedPath)
 	}
 	if openedPath != latestPath {
 		t.Fatalf("opened path = %q, want cached add-on path %q", openedPath, latestPath)
@@ -221,68 +181,44 @@ func TestDownloadAndOpenInstallerSurfacesFailures(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		handler   http.HandlerFunc
-		openError error
-		want      string
+		name         string
+		manifestJSON []byte
+		body         []byte
+		status       int
+		openError    error
+		want         string
 	}{
 		{
-			name: "tag API status",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.Error(w, "unavailable", http.StatusBadGateway)
-			},
-			want: "fetch ReShade tags",
+			name:         "invalid manifest JSON",
+			manifestJSON: []byte(`{`),
+			want:         "parse third-party release manifest",
 		},
 		{
-			name: "invalid tag JSON",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{`))
-			},
-			want: "decode ReShade tags response",
+			name:         "download status",
+			manifestJSON: installerManifest("6.7.3", []byte("installer"), []byte("addon")),
+			status:       http.StatusNotFound,
+			want:         "download ReShade installer",
 		},
 		{
-			name: "no stable tag",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`[{"name":"main"},{"name":"v6.7"}]`))
-			},
-			want: "no stable version tags found",
+			name:         "empty download",
+			manifestJSON: installerManifest("6.7.3", []byte("installer"), []byte("addon")),
+			status:       http.StatusOK,
+			want:         "empty response body",
 		},
 		{
-			name: "download status",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/tags" {
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-					return
-				}
-				http.Error(w, "missing", http.StatusNotFound)
-			},
-			want: "download ReShade installer",
+			name:         "digest mismatch",
+			manifestJSON: installerManifest("6.7.3", []byte("installer"), []byte("addon")),
+			body:         []byte("wrong"),
+			status:       http.StatusOK,
+			want:         "does not match the release size",
 		},
 		{
-			name: "empty download",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				if r.URL.Path == "/tags" {
-					_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-				}
-			},
-			want: "empty response body",
-		},
-		{
-			name: "open error",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				if r.URL.Path == "/tags" {
-					_, _ = w.Write([]byte(`[{"name":"v6.7.3"}]`))
-					return
-				}
-				_, _ = w.Write([]byte("installer"))
-			},
-			openError: errors.New("blocked"),
-			want:      "open installer",
+			name:         "open error",
+			manifestJSON: installerManifest("6.7.3", []byte("installer"), []byte("addon")),
+			body:         []byte("installer"),
+			status:       http.StatusOK,
+			openError:    errors.New("blocked"),
+			want:         "open installer",
 		},
 	}
 
@@ -291,14 +227,13 @@ func TestDownloadAndOpenInstallerSurfacesFailures(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			server := httptest.NewServer(tt.handler)
-			defer server.Close()
-
+			client := testInstallerHTTPClient(func(*http.Request) ([]byte, int) {
+				return tt.body, tt.status
+			})
 			_, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-				TagsURL:         server.URL + "/tags",
-				DownloadBaseURL: server.URL + "/downloads",
-				CacheDir:        t.TempDir(),
-				HTTPClient:      server.Client(),
+				CacheDir:     t.TempDir(),
+				HTTPClient:   client,
+				ManifestJSON: tt.manifestJSON,
 				OpenInstaller: func(_ context.Context, _ string) error {
 					return tt.openError
 				},
@@ -316,23 +251,17 @@ func TestDownloadAndOpenInstallerSurfacesFailures(t *testing.T) {
 func TestDownloadAndOpenInstallerAddonFailureUsesVariantContext(t *testing.T) {
 	t.Parallel()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		http.Error(w, "unavailable", http.StatusBadGateway)
-	}))
-	defer server.Close()
-
 	_, err := DownloadAndOpenInstaller(context.Background(), InstallerOptions{
-		TagsURL:    server.URL + "/tags",
-		CacheDir:   t.TempDir(),
-		HTTPClient: server.Client(),
-		Variant:    InstallerVariantAddon,
+		CacheDir:     t.TempDir(),
+		ManifestJSON: []byte(`{`),
+		Variant:      InstallerVariantAddon,
 	})
 	if err == nil {
 		t.Fatal("DownloadAndOpenInstaller() error = nil, want error")
 	}
 	if !strings.Contains(err.Error(), "prepare ReShade add-on installer") ||
-		!strings.Contains(err.Error(), "fetch ReShade tags") {
-		t.Fatalf("DownloadAndOpenInstaller() error = %q, want add-on helper and fetch context", err)
+		!strings.Contains(err.Error(), "parse third-party release manifest") {
+		t.Fatalf("DownloadAndOpenInstaller() error = %q, want add-on helper and manifest context", err)
 	}
 }
 
@@ -346,4 +275,44 @@ func TestInstallerDownloadURLRejectsRelativeBase(t *testing.T) {
 	if !strings.Contains(fmt.Sprint(err), "not absolute") {
 		t.Fatalf("installerDownloadURL() error = %q, want not absolute", err)
 	}
+}
+
+func installerManifest(version string, standardBody []byte, addonBody []byte) []byte {
+	standardDigest, standardSize := testDigest(standardBody)
+	addonDigest, addonSize := testDigest(addonBody)
+	return reShadeManifest(
+		version,
+		fmt.Sprintf("ReShade_Setup_%s.exe", version),
+		fmt.Sprintf("https://reshade.me/downloads/ReShade_Setup_%s.exe", version),
+		standardDigest,
+		standardSize,
+		version,
+		fmt.Sprintf("ReShade_Setup_%s_Addon.exe", version),
+		fmt.Sprintf("https://reshade.me/downloads/ReShade_Setup_%s_Addon.exe", version),
+		addonDigest,
+		addonSize,
+	)
+}
+
+func testInstallerHTTPClient(respond func(*http.Request) ([]byte, int)) *http.Client {
+	return &http.Client{
+		Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+			body, status := respond(request)
+			if status == 0 {
+				status = http.StatusOK
+			}
+			return &http.Response{
+				StatusCode: status,
+				Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
+				Header:     make(http.Header),
+				Body:       io.NopCloser(bytes.NewReader(body)),
+				Request:    request,
+			}, nil
+		}),
+	}
+}
+
+func testDigest(contents []byte) (string, int64) {
+	sum := sha256.Sum256(contents)
+	return hex.EncodeToString(sum[:]), int64(len(contents))
 }

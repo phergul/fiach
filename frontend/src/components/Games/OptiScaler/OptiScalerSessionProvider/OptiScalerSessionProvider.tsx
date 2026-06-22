@@ -6,7 +6,7 @@ import { getErrorMessage } from '@utils';
 
 interface OptiScalerSessionContextValue {
   isReleaseLoading: boolean;
-  loadRelease: () => Promise<OptiScalerRelease | null>;
+  loadRelease: (refresh?: boolean) => Promise<OptiScalerRelease | null>;
   release: OptiScalerRelease | null;
   releaseError: string | null;
 }
@@ -23,18 +23,18 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
   const [isReleaseLoading, setIsReleaseLoading] = useState(false);
   const releasePromiseRef = useRef<Promise<OptiScalerRelease | null> | null>(null);
 
-  const loadRelease = useCallback(() => {
-    if (release !== null) {
+  const loadRelease = useCallback((refresh = false) => {
+    if (!refresh && release !== null) {
       return Promise.resolve(release);
     }
-    if (releasePromiseRef.current !== null) {
+    if (!refresh && releasePromiseRef.current !== null) {
       return releasePromiseRef.current;
     }
 
     setIsReleaseLoading(true);
     setReleaseError(null);
     let shouldCacheRequest = false;
-    const request = GetOptiScalerReleaseStatus()
+    const request = GetOptiScalerReleaseStatus(refresh)
       .then((result) => {
         const releaseError = result.error ?? '';
         if (releaseError !== '') {

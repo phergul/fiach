@@ -2,7 +2,6 @@ package reshade
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,13 +12,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/mod/semver"
-
+	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/thirdparty"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 const (
-	DefaultTagsURL         = "https://api.github.com/repos/crosire/reshade/tags?per_page=100"
+	DefaultTagsURL         = thirdparty.DefaultManifestURL
 	DefaultDownloadBaseURL = "https://reshade.me/downloads"
 )
 
@@ -33,21 +32,20 @@ const (
 )
 
 type InstallerOptions struct {
-	TagsURL         string
-	DownloadBaseURL string
-	CacheDir        string
-	HTTPClient      *http.Client
-	OpenInstaller   OpenInstallerFunc
-	Variant         InstallerVariant
+	TagsURL              string
+	DownloadBaseURL      string
+	CacheDir             string
+	HTTPClient           *http.Client
+	OpenInstaller        OpenInstallerFunc
+	Variant              InstallerVariant
+	ManifestJSON         []byte
+	TrustedDownloadHosts []string
+	AllowHTTP            bool
 }
 
 type InstallerLaunchResult struct {
 	Version       string
 	InstallerPath string
-}
-
-type tagResponse struct {
-	Name string `json:"name"`
 }
 
 func DownloadAndOpenInstaller(ctx context.Context, opts InstallerOptions) (result InstallerLaunchResult, err error) {
@@ -59,12 +57,26 @@ func DownloadAndOpenInstaller(ctx context.Context, opts InstallerOptions) (resul
 		}
 	}()
 
-	latestVersion, err := latestVersion(ctx, opts.HTTPClient, opts.TagsURL)
+	release, err := ResolveLatestInstaller(ctx, opts.Variant, InstallerResolveOptions{
+		TagsURL:              opts.TagsURL,
+		DownloadBaseURL:      opts.DownloadBaseURL,
+		HTTPClient:           opts.HTTPClient,
+		TrustedDownloadHosts: opts.TrustedDownloadHosts,
+		AllowHTTP:            opts.AllowHTTP,
+		ManifestJSON:         opts.ManifestJSON,
+	})
 	if err != nil {
 		return InstallerLaunchResult{}, err
 	}
 
-	installerPath, err := ensureInstaller(ctx, opts.HTTPClient, opts.DownloadBaseURL, opts.CacheDir, latestVersion, opts.Variant)
+	installerPath, err := ensureInstaller(
+		ctx,
+		opts.HTTPClient,
+		opts.CacheDir,
+		release,
+		opts.TrustedDownloadHosts,
+		opts.AllowHTTP,
+	)
 	if err != nil {
 		return InstallerLaunchResult{}, err
 	}
@@ -78,7 +90,7 @@ func DownloadAndOpenInstaller(ctx context.Context, opts InstallerOptions) (resul
 	}
 
 	return InstallerLaunchResult{
-		Version:       latestVersion,
+		Version:       release.Version,
 		InstallerPath: installerPath,
 	}, nil
 }
@@ -112,71 +124,32 @@ func OpenInstaller(ctx context.Context, path string) error {
 	return command.Run()
 }
 
-func latestVersion(ctx context.Context, client *http.Client, tagsURL string) (string, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, tagsURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("build ReShade tags request: %w", err)
-	}
-	request.Header.Set("Accept", "application/vnd.github+json")
-
-	response, err := client.Do(request)
-	if err != nil {
-		return "", fmt.Errorf("fetch ReShade tags: %w", err)
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return "", fmt.Errorf("fetch ReShade tags: unexpected status %s", response.Status)
-	}
-
-	var tags []tagResponse
-	if err := json.NewDecoder(response.Body).Decode(&tags); err != nil {
-		return "", fmt.Errorf("decode ReShade tags response: %w", err)
-	}
-
-	latest := ""
-	for _, tag := range tags {
-		name := strings.TrimSpace(tag.Name)
-		if !semver.IsValid(name) || semver.Canonical(name) != name || semver.Prerelease(name) != "" {
-			continue
-		}
-		if latest == "" || semver.Compare(name, latest) > 0 {
-			latest = name
-		}
-	}
-	if latest == "" {
-		return "", errors.New("find latest ReShade version: no stable version tags found")
-	}
-
-	return strings.TrimPrefix(latest, "v"), nil
-}
-
 func ensureInstaller(
 	ctx context.Context,
 	client *http.Client,
-	downloadBaseURL string,
 	cacheDir string,
-	installerVersion string,
-	variant InstallerVariant,
+	release InstallerRelease,
+	trustedHosts []string,
+	allowHTTP bool,
 ) (string, error) {
+	if err := validateInstallerRelease(release, trustedHosts, allowHTTP); err != nil {
+		return "", err
+	}
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return "", fmt.Errorf("create ReShade installer cache: %w", err)
 	}
 
-	name := installerFileName(installerVersion, variant)
+	name := release.AssetName
 	path := filepath.Join(cacheDir, name)
 	if info, err := os.Stat(path); err == nil && info.Size() > 0 {
-		return path, nil
+		if err := validateCachedInstallerFile(path, release); err == nil {
+			return path, nil
+		}
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf("inspect cached ReShade installer: %w", err)
 	}
 
-	downloadURL, err := installerDownloadURL(downloadBaseURL, installerVersion, variant)
-	if err != nil {
-		return "", err
-	}
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, release.URL, nil)
 	if err != nil {
 		return "", fmt.Errorf("build ReShade installer request: %w", err)
 	}
@@ -189,6 +162,12 @@ func ensureInstaller(
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return "", fmt.Errorf("download ReShade installer: unexpected status %s", response.Status)
+	}
+	if response.Request == nil || response.Request.URL == nil {
+		return "", errors.New("download ReShade installer: final response URL is missing")
+	}
+	if err := validateInstallerSource(response.Request.URL.String(), trustedHosts, allowHTTP); err != nil {
+		return "", fmt.Errorf("validate final ReShade installer download URL: %w", err)
 	}
 
 	tempFile, err := os.CreateTemp(cacheDir, name+".*.tmp")
@@ -214,6 +193,9 @@ func ensureInstaller(
 	if written == 0 {
 		return "", errors.New("download ReShade installer: empty response body")
 	}
+	if err := validateCachedInstallerFile(tempPath, release); err != nil {
+		return "", err
+	}
 
 	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return "", fmt.Errorf("replace cached ReShade installer: %w", err)
@@ -224,6 +206,20 @@ func ensureInstaller(
 	removeTemp = false
 
 	return path, nil
+}
+
+func validateCachedInstallerFile(path string, release InstallerRelease) error {
+	hash, size, err := fileops.FileIntegrity(path)
+	if err != nil {
+		return err
+	}
+	artifact := InstallerArtifact{
+		InstallerRelease: release,
+		Path:             path,
+		SizeBytes:        size,
+		SHA256:           hash,
+	}
+	return validateInstallerArtifactIntegrity(artifact, release)
 }
 
 func installerDownloadURL(downloadBaseURL string, installerVersion string, variant InstallerVariant) (string, error) {

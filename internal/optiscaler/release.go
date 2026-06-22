@@ -4,43 +4,31 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
-	"time"
+
+	"github.com/phergul/fiach/internal/thirdparty"
 )
 
-const DefaultReleasesURL = "https://api.github.com/repos/optiscaler/OptiScaler/releases?per_page=30"
+const DefaultReleasesURL = thirdparty.DefaultManifestURL
 
 var finalAssetName = regexp.MustCompile(`(?i)^optiscaler_.*final.*\.7z$`)
 
 type ReleaseOptions struct {
-	ReleasesURL string
-	CacheDir    string
-	HTTPClient  *http.Client
-}
-
-type githubRelease struct {
-	TagName     string        `json:"tag_name"`
-	Name        string        `json:"name"`
-	Draft       bool          `json:"draft"`
-	Prerelease  bool          `json:"prerelease"`
-	PublishedAt time.Time     `json:"published_at"`
-	Assets      []githubAsset `json:"assets"`
-}
-
-type githubAsset struct {
-	Name               string `json:"name"`
-	BrowserDownloadURL string `json:"browser_download_url"`
-	Digest             string `json:"digest"`
-	Size               int64  `json:"size"`
+	ReleasesURL          string
+	CacheDir             string
+	HTTPClient           *http.Client
+	ManifestJSON         []byte
+	RefreshManifest      bool
+	TrustedDownloadHosts []string
+	AllowHTTP            bool
 }
 
 func DiscoverStableRelease(ctx context.Context, options ReleaseOptions) (release Release, err error) {
@@ -51,57 +39,29 @@ func DiscoverStableRelease(ctx context.Context, options ReleaseOptions) (release
 	}()
 
 	options = normalizeReleaseOptions(options)
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, options.ReleasesURL, nil)
-	if err != nil {
-		return Release{}, err
-	}
-	request.Header.Set("Accept", "application/vnd.github+json")
-	response, err := options.HTTPClient.Do(request)
-	if err != nil {
-		return Release{}, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return Release{}, fmt.Errorf("GitHub returned %s", response.Status)
-	}
-	var releases []githubRelease
-	if err := json.NewDecoder(response.Body).Decode(&releases); err != nil {
-		return Release{}, err
-	}
-	sort.SliceStable(releases, func(i, j int) bool {
-		return releases[i].PublishedAt.After(releases[j].PublishedAt)
+	result, err := thirdparty.Load(ctx, thirdparty.LoadOptions{
+		Refresh:     options.RefreshManifest,
+		ManifestURL: options.ReleasesURL,
+		HTTPClient:  options.HTTPClient,
+		Bundled:     options.ManifestJSON,
 	})
-	for _, candidate := range releases {
-		if candidate.Draft || candidate.Prerelease {
-			continue
-		}
-		matches := make([]githubAsset, 0, 1)
-		for _, asset := range candidate.Assets {
-			if finalAssetName.MatchString(asset.Name) && strings.HasPrefix(strings.ToLower(asset.Digest), "sha256:") {
-				matches = append(matches, asset)
-			}
-		}
-		if len(matches) != 1 {
-			return Release{}, fmt.Errorf("release %q has %d matching digest-bearing final archives", candidate.TagName, len(matches))
-		}
-		digest := strings.TrimPrefix(strings.ToLower(matches[0].Digest), "sha256:")
-		if len(digest) != sha256.Size*2 {
-			return Release{}, errors.New("release asset SHA-256 digest is malformed")
-		}
-		version := strings.TrimSpace(candidate.Name)
-		if version == "" {
-			version = candidate.TagName
-		}
-		return Release{
-			Tag:       candidate.TagName,
-			Version:   version,
-			AssetName: matches[0].Name,
-			URL:       matches[0].BrowserDownloadURL,
-			Digest:    digest,
-			Size:      matches[0].Size,
-		}, nil
+	if err != nil {
+		return Release{}, err
 	}
-	return Release{}, errors.New("no stable release was found")
+	entry := result.Manifest.Tools.OptiScaler
+	release = Release{
+		Tag:       entry.Tag,
+		Version:   entry.Version,
+		AssetName: entry.AssetName,
+		URL:       entry.URL,
+		Digest:    entry.SHA256,
+		Size:      entry.SizeBytes,
+		Error:     result.Warning,
+	}
+	if err := validateRelease(release, nil, false); err != nil {
+		return Release{}, err
+	}
+	return release, nil
 }
 
 func EnsureReleaseArchive(ctx context.Context, release Release, options ReleaseOptions) (path string, err error) {
@@ -112,7 +72,7 @@ func EnsureReleaseArchive(ctx context.Context, release Release, options ReleaseO
 	}()
 
 	options = normalizeReleaseOptions(options)
-	if err := validateRelease(release); err != nil {
+	if err := validateRelease(release, options.TrustedDownloadHosts, options.AllowHTTP); err != nil {
 		return "", err
 	}
 	cachePath := filepath.Join(options.CacheDir, safePathSegment(release.Tag), release.Digest, release.AssetName)
@@ -173,7 +133,7 @@ func normalizeReleaseOptions(options ReleaseOptions) ReleaseOptions {
 	return options
 }
 
-func validateRelease(release Release) error {
+func validateRelease(release Release, trustedHosts []string, allowHTTP bool) error {
 	if release.Tag == "" || release.AssetName == "" || release.URL == "" || release.Digest == "" || release.Size <= 0 {
 		return errors.New("release metadata is incomplete")
 	}
@@ -182,6 +142,36 @@ func validateRelease(release Release) error {
 	}
 	if filepath.Base(release.AssetName) != release.AssetName || strings.ContainsAny(release.AssetName, `/\`) {
 		return errors.New("release asset name contains path separators")
+	}
+	if len(release.Digest) != sha256.Size*2 {
+		return errors.New("release asset SHA-256 digest is malformed")
+	}
+	if _, err := hex.DecodeString(release.Digest); err != nil {
+		return errors.New("release asset SHA-256 digest is malformed")
+	}
+	parsed, err := url.Parse(release.URL)
+	if err != nil {
+		return fmt.Errorf("parse release URL: %w", err)
+	}
+	if parsed.Scheme != "https" && !(allowHTTP && parsed.Scheme == "http") {
+		return errors.New("release URL must use HTTPS")
+	}
+	if len(trustedHosts) == 0 {
+		trustedHosts = []string{"github.com"}
+	}
+	trusted := false
+	for _, host := range trustedHosts {
+		if strings.EqualFold(strings.TrimSpace(host), parsed.Hostname()) {
+			trusted = true
+			break
+		}
+	}
+	if parsed.User != nil || !trusted {
+		return fmt.Errorf("release URL host %q is not trusted", parsed.Hostname())
+	}
+	if strings.EqualFold(parsed.Hostname(), "github.com") &&
+		!strings.HasPrefix(parsed.EscapedPath(), "/optiscaler/OptiScaler/releases/download/") {
+		return fmt.Errorf("release URL path %q is not trusted", parsed.EscapedPath())
 	}
 	return nil
 }

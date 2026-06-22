@@ -38,6 +38,7 @@ describe('OptiScalerSessionProvider', () => {
     });
 
     expect(GetOptiScalerReleaseStatus).toHaveBeenCalledOnce();
+    expect(GetOptiScalerReleaseStatus).toHaveBeenCalledWith(false);
   });
 
   it('retries after the release status returns an error', async () => {
@@ -69,6 +70,8 @@ describe('OptiScalerSessionProvider', () => {
     });
 
     expect(GetOptiScalerReleaseStatus).toHaveBeenCalledTimes(2);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(1, false);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(2, false);
     expect(result.current.release?.version).toBe('OptiScaler v1');
     expect(result.current.releaseError).toBeNull();
   });
@@ -94,7 +97,42 @@ describe('OptiScalerSessionProvider', () => {
     });
 
     expect(GetOptiScalerReleaseStatus).toHaveBeenCalledTimes(2);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(1, false);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(2, false);
     expect(result.current.release?.version).toBe('OptiScaler v1');
     expect(result.current.releaseError).toBeNull();
+  });
+
+  it('refreshes the stable release when requested', async () => {
+    vi.mocked(GetOptiScalerReleaseStatus)
+      .mockResolvedValueOnce({
+        assetName: 'OptiScaler.7z',
+        digest: 'digest',
+        size: 1,
+        tag: 'v1',
+        url: 'https://example.invalid/release',
+        version: 'OptiScaler v1',
+      })
+      .mockResolvedValueOnce({
+        assetName: 'OptiScaler.7z',
+        digest: 'digest-2',
+        size: 2,
+        tag: 'v2',
+        url: 'https://example.invalid/release-2',
+        version: 'OptiScaler v2',
+      });
+    const { result } = renderHook(() => useOptiScalerSession(), { wrapper });
+
+    await act(async () => {
+      await result.current.loadRelease();
+    });
+    await act(async () => {
+      await result.current.loadRelease(true);
+    });
+
+    expect(GetOptiScalerReleaseStatus).toHaveBeenCalledTimes(2);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(1, false);
+    expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(2, true);
+    expect(result.current.release?.version).toBe('OptiScaler v2');
   });
 });

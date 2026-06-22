@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-22T14:27:36Z",
+  "tools": {
+    "optiscaler": {
+      "tag": "v0.9.3",
+      "version": "v0.9.3",
+      "assetName": "Optiscaler_0.9.3-final.20260618.7z",
+      "url": "https://github.com/optiscaler/OptiScaler/releases/download/v0.9.3/Optiscaler_0.9.3-final.20260618.7z",
+      "sha256": "e3ac655d60ec11b471ac8cc5f4d3758e4bce9151c86caa339d8f0700c00282e3",
+      "sizeBytes": 53356866
+    },
+    "reshade": {
+      "standard": {
+        "version": "6.7.3",
+        "assetName": "ReShade_Setup_6.7.3.exe",
+        "url": "https://reshade.me/downloads/ReShade_Setup_6.7.3.exe",
+        "sha256": "56791fd065358e899c581ebefe2ad871399b7c7ae83fb85e1154c08a75a44147",
+        "sizeBytes": 3982792
+      },
+      "addon": {
+        "version": "6.7.3",
+        "assetName": "ReShade_Setup_6.7.3_Addon.exe",
+        "url": "https://reshade.me/downloads/ReShade_Setup_6.7.3_Addon.exe",
+        "sha256": "c78db69bd127e98054bd496fb422655f4a1cc664e28f8d12ce9835b2647bc571",
+        "sizeBytes": 4218800
+      }
+    }
+  }
+}

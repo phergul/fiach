@@ -32,6 +32,7 @@ type ManagerOptions struct {
 	DataDir           string
 	CacheDir          string
 	ReleasesURL       string
+	ReleaseManifest   []byte
 	HTTPClient        *http.Client
 	Now               func() time.Time
 	PreparePackage    func(context.Context) (Release, Package, error)
@@ -45,6 +46,7 @@ type Manager struct {
 	dataDir                string
 	cacheDir               string
 	releasesURL            string
+	releaseManifest        []byte
 	httpClient             *http.Client
 	now                    func() time.Time
 	preparePackageOverride func(context.Context) (Release, Package, error)
@@ -87,6 +89,7 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 		dataDir:                dataDir,
 		cacheDir:               cacheDir,
 		releasesURL:            options.ReleasesURL,
+		releaseManifest:        options.ReleaseManifest,
 		httpClient:             options.HTTPClient,
 		now:                    options.Now,
 		preparePackageOverride: options.PreparePackage,
@@ -113,13 +116,13 @@ func (m *Manager) Discover(ctx context.Context, gameRoot string, gameID int64) (
 	return DiscoverCandidates(gameRoot, managed)
 }
 
-func (m *Manager) StableRelease(ctx context.Context) (release Release, err error) {
+func (m *Manager) StableRelease(ctx context.Context, refresh bool) (release Release, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get OptiScaler stable release: %w", err)
 		}
 	}()
-	return DiscoverStableRelease(ctx, m.releaseOptions())
+	return DiscoverStableRelease(ctx, m.releaseOptions(refresh))
 }
 
 func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request) (preview Preview, err error) {
@@ -413,11 +416,11 @@ func (m *Manager) preparePackage(ctx context.Context) (Release, Package, error) 
 		m.cachePreparedPackage(release, pkg)
 		return release, pkg, nil
 	}
-	release, err := DiscoverStableRelease(ctx, m.releaseOptions())
+	release, err := DiscoverStableRelease(ctx, m.releaseOptions(false))
 	if err != nil {
 		return Release{}, Package{}, err
 	}
-	archivePath, err := EnsureReleaseArchive(ctx, release, m.releaseOptions())
+	archivePath, err := EnsureReleaseArchive(ctx, release, m.releaseOptions(false))
 	if err != nil {
 		return Release{}, Package{}, err
 	}
@@ -436,11 +439,13 @@ func (m *Manager) cachePreparedPackage(release Release, pkg Package) {
 	m.hasPreparedPackage = true
 }
 
-func (m *Manager) releaseOptions() ReleaseOptions {
+func (m *Manager) releaseOptions(refresh bool) ReleaseOptions {
 	return ReleaseOptions{
-		ReleasesURL: m.releasesURL,
-		CacheDir:    m.cacheDir,
-		HTTPClient:  m.httpClient,
+		ReleasesURL:     m.releasesURL,
+		CacheDir:        m.cacheDir,
+		HTTPClient:      m.httpClient,
+		ManifestJSON:    m.releaseManifest,
+		RefreshManifest: refresh,
 	}
 }
 

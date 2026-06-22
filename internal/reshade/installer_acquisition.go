@@ -2,6 +2,7 @@ package reshade
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/thirdparty"
 )
 
 const installerCacheMetadataVersion = 1
@@ -33,6 +35,8 @@ type InstallerRelease struct {
 	Variant   InstallerVariant `json:"variant"`
 	AssetName string           `json:"assetName"`
 	URL       string           `json:"url"`
+	SHA256    string           `json:"sha256,omitempty"`
+	SizeBytes int64            `json:"sizeBytes,omitempty"`
 }
 
 type InstallerSignature struct {
@@ -65,6 +69,8 @@ type InstallerResolveOptions struct {
 	HTTPClient           *http.Client
 	TrustedDownloadHosts []string
 	AllowHTTP            bool
+	ManifestJSON         []byte
+	RefreshManifest      bool
 }
 
 type InstallerAcquireOptions struct {
@@ -94,33 +100,35 @@ func ResolveLatestInstaller(
 	if err := validateInstallerVariant(variant); err != nil {
 		return InstallerRelease{}, err
 	}
-	if options.TagsURL == "" {
-		options.TagsURL = DefaultTagsURL
-	}
-	if options.DownloadBaseURL == "" {
-		options.DownloadBaseURL = DefaultDownloadBaseURL
-	}
 	if options.HTTPClient == nil {
 		options.HTTPClient = http.DefaultClient
 	}
 
-	version, err := latestVersion(ctx, options.HTTPClient, options.TagsURL)
+	result, err := thirdparty.Load(ctx, thirdparty.LoadOptions{
+		Refresh:     options.RefreshManifest,
+		ManifestURL: options.TagsURL,
+		HTTPClient:  options.HTTPClient,
+		Bundled:     options.ManifestJSON,
+	})
 	if err != nil {
 		return InstallerRelease{}, err
 	}
-	downloadURL, err := installerDownloadURL(options.DownloadBaseURL, version, variant)
-	if err != nil {
-		return InstallerRelease{}, err
+	entry := result.Manifest.Tools.ReShade.Standard
+	if variant == InstallerVariantAddon {
+		entry = result.Manifest.Tools.ReShade.Addon
 	}
-	if err := validateInstallerSource(downloadURL, options.TrustedDownloadHosts, options.AllowHTTP); err != nil {
-		return InstallerRelease{}, err
-	}
-	return InstallerRelease{
-		Version:   version,
+	release = InstallerRelease{
+		Version:   entry.Version,
 		Variant:   variant,
-		AssetName: installerFileName(version, variant),
-		URL:       downloadURL,
-	}, nil
+		AssetName: entry.AssetName,
+		URL:       entry.URL,
+		SHA256:    entry.SHA256,
+		SizeBytes: entry.SizeBytes,
+	}
+	if err := validateInstallerRelease(release, options.TrustedDownloadHosts, options.AllowHTTP); err != nil {
+		return InstallerRelease{}, err
+	}
+	return release, nil
 }
 
 func AcquireInstaller(
@@ -208,6 +216,17 @@ func validateInstallerRelease(
 	if release.AssetName != expectedAssetName {
 		return fmt.Errorf("installer asset name %q does not match %q", release.AssetName, expectedAssetName)
 	}
+	if strings.TrimSpace(release.SHA256) != "" {
+		if len(release.SHA256) != 64 {
+			return errors.New("installer SHA-256 digest is malformed")
+		}
+		if _, err := hex.DecodeString(release.SHA256); err != nil {
+			return errors.New("installer SHA-256 digest is malformed")
+		}
+	}
+	if release.SizeBytes < 0 {
+		return errors.New("installer size cannot be negative")
+	}
 	if err := validateInstallerSource(release.URL, trustedHosts, allowHTTP); err != nil {
 		return err
 	}
@@ -248,6 +267,10 @@ func validateInstallerSource(rawURL string, trustedHosts []string, allowHTTP boo
 	if !trusted {
 		return fmt.Errorf("installer URL host %q is not trusted", parsed.Hostname())
 	}
+	if strings.EqualFold(parsed.Hostname(), "reshade.me") &&
+		!strings.HasPrefix(parsed.EscapedPath(), "/downloads/") {
+		return fmt.Errorf("installer URL path %q is not trusted", parsed.EscapedPath())
+	}
 	return nil
 }
 
@@ -281,6 +304,9 @@ func readCachedInstaller(
 		inspected.Signature != metadata.Artifact.Signature {
 		return InstallerArtifact{}, errors.New("cached ReShade installer integrity metadata does not match")
 	}
+	if err := validateInstallerArtifactIntegrity(inspected, release); err != nil {
+		return InstallerArtifact{}, err
+	}
 	return inspected, nil
 }
 
@@ -300,13 +326,27 @@ func inspectInstallerArtifact(
 	if err != nil {
 		return InstallerArtifact{}, err
 	}
-	return InstallerArtifact{
+	artifact := InstallerArtifact{
 		InstallerRelease: release,
 		Path:             path,
 		SizeBytes:        size,
 		SHA256:           hash,
 		Signature:        signature,
-	}, nil
+	}
+	if err := validateInstallerArtifactIntegrity(artifact, release); err != nil {
+		return InstallerArtifact{}, err
+	}
+	return artifact, nil
+}
+
+func validateInstallerArtifactIntegrity(artifact InstallerArtifact, release InstallerRelease) error {
+	if release.SizeBytes > 0 && artifact.SizeBytes != release.SizeBytes {
+		return errors.New("ReShade installer does not match the release size")
+	}
+	if strings.TrimSpace(release.SHA256) != "" && !strings.EqualFold(artifact.SHA256, release.SHA256) {
+		return errors.New("ReShade installer does not match the release digest")
+	}
+	return nil
 }
 
 func downloadInstaller(

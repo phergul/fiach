@@ -789,12 +789,19 @@ func releaseFromRow(row *dbtypes.ReShadeTarget) (InstallerRelease, error) {
 	if row.InstallerURL != nil && strings.TrimSpace(*row.InstallerURL) != "" {
 		url = strings.TrimSpace(*row.InstallerURL)
 	}
-	return InstallerRelease{
+	release := InstallerRelease{
 		Version:   version,
 		Variant:   variant,
 		AssetName: assetName,
 		URL:       url,
-	}, nil
+	}
+	if row.InstallerDigest != nil {
+		release.SHA256 = strings.TrimSpace(*row.InstallerDigest)
+	}
+	if row.InstallerSize != nil {
+		release.SizeBytes = *row.InstallerSize
+	}
+	return release, nil
 }
 
 func mergePreparedUserContent(

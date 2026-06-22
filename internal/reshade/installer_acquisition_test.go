@@ -24,33 +24,22 @@ func (function signatureVerifierFunc) VerifyInstallerSignature(
 func TestResolveLatestInstallerReturnsPinnedRelease(t *testing.T) {
 	t.Parallel()
 
-	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/tags" {
-			http.NotFound(writer, request)
-			return
-		}
-		_, _ = writer.Write([]byte(`[
-			{"name":"v6.7.3"},
-			{"name":"v6.10.0"},
-			{"name":"v6.11.0-beta"},
-			{"name":"main"}
-		]`))
-	}))
-	defer server.Close()
-	serverURL, err := url.Parse(server.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	release, err := ResolveLatestInstaller(
 		context.Background(),
 		InstallerVariantAddon,
 		InstallerResolveOptions{
-			TagsURL:              server.URL + "/tags",
-			DownloadBaseURL:      server.URL + "/downloads",
-			HTTPClient:           server.Client(),
-			TrustedDownloadHosts: []string{serverURL.Hostname()},
-			AllowHTTP:            true,
+			ManifestJSON: reShadeManifest(
+				"6.10.0",
+				"ReShade_Setup_6.10.0.exe",
+				"https://reshade.me/downloads/ReShade_Setup_6.10.0.exe",
+				strings.Repeat("a", 64),
+				100,
+				"6.10.0",
+				"ReShade_Setup_6.10.0_Addon.exe",
+				"https://reshade.me/downloads/ReShade_Setup_6.10.0_Addon.exe",
+				strings.Repeat("b", 64),
+				200,
+			),
 		},
 	)
 	if err != nil {
@@ -58,7 +47,9 @@ func TestResolveLatestInstallerReturnsPinnedRelease(t *testing.T) {
 	}
 	if release.Version != "6.10.0" ||
 		release.AssetName != "ReShade_Setup_6.10.0_Addon.exe" ||
-		release.URL != server.URL+"/downloads/ReShade_Setup_6.10.0_Addon.exe" {
+		release.URL != "https://reshade.me/downloads/ReShade_Setup_6.10.0_Addon.exe" ||
+		release.SHA256 != strings.Repeat("b", 64) ||
+		release.SizeBytes != 200 {
 		t.Fatalf("release = %+v", release)
 	}
 }
@@ -66,24 +57,71 @@ func TestResolveLatestInstallerReturnsPinnedRelease(t *testing.T) {
 func TestResolveLatestInstallerRejectsUntrustedDownloadHost(t *testing.T) {
 	t.Parallel()
 
-	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
-		_, _ = writer.Write([]byte(`[{"name":"v6.7.3"}]`))
-	}))
-	defer server.Close()
-
 	_, err := ResolveLatestInstaller(
 		context.Background(),
 		InstallerVariantStandard,
 		InstallerResolveOptions{
-			TagsURL:         server.URL,
-			DownloadBaseURL: server.URL,
-			HTTPClient:      server.Client(),
-			AllowHTTP:       true,
+			ManifestJSON: reShadeManifest(
+				"6.7.3",
+				"ReShade_Setup_6.7.3.exe",
+				"https://example.invalid/downloads/ReShade_Setup_6.7.3.exe",
+				strings.Repeat("a", 64),
+				100,
+				"6.7.3",
+				"ReShade_Setup_6.7.3_Addon.exe",
+				"https://reshade.me/downloads/ReShade_Setup_6.7.3_Addon.exe",
+				strings.Repeat("b", 64),
+				200,
+			),
 		},
 	)
 	if err == nil || !strings.Contains(err.Error(), "is not trusted") {
 		t.Fatalf("ResolveLatestInstaller() error = %v, want untrusted host", err)
 	}
+}
+
+func reShadeManifest(
+	standardVersion string,
+	standardAssetName string,
+	standardURL string,
+	standardDigest string,
+	standardSize int64,
+	addonVersion string,
+	addonAssetName string,
+	addonURL string,
+	addonDigest string,
+	addonSize int64,
+) []byte {
+	return []byte(fmt.Sprintf(`{
+  "version": 1,
+  "updatedAt": "2026-06-22T00:00:00Z",
+  "tools": {
+    "optiscaler": {
+      "tag": "v0.9.3",
+      "version": "OptiScaler v0.9.3",
+      "assetName": "Optiscaler_0.9.3-final.20260618.7z",
+      "url": "https://github.com/optiscaler/OptiScaler/releases/download/v0.9.3/Optiscaler_0.9.3-final.20260618.7z",
+      "sha256": %q,
+      "sizeBytes": 100
+    },
+    "reshade": {
+      "standard": {
+        "version": %q,
+        "assetName": %q,
+        "url": %q,
+        "sha256": %q,
+        "sizeBytes": %d
+      },
+      "addon": {
+        "version": %q,
+        "assetName": %q,
+        "url": %q,
+        "sha256": %q,
+        "sizeBytes": %d
+      }
+    }
+  }
+}`, strings.Repeat("c", 64), standardVersion, standardAssetName, standardURL, standardDigest, standardSize, addonVersion, addonAssetName, addonURL, addonDigest, addonSize))
 }
 
 func TestAcquireInstallerCachesExactVersionsAndRevalidates(t *testing.T) {

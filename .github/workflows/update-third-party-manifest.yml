@@ -1,0 +1,41 @@
+name: Update Third-Party Manifest
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Update manifest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Update manifest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: go run ./tools/update-thirdparty
+
+      - name: Run manifest tests
+        run: go test ./internal/optiscaler ./internal/reshade ./internal/thirdparty
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: automation/update-third-party-manifest
+          commit-message: Update third-party release manifest
+          title: Update third-party release manifest
+          body: |
+            Updates the bundled third-party release manifest for OptiScaler and ReShade.
+          labels: dependencies

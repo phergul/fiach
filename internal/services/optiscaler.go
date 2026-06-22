@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"runtime"
-	"strings"
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/injection"
@@ -100,7 +99,7 @@ func (s *OptiScalerService) ListOptiScalerTargets(ctx context.Context, gameID in
 	return result, nil
 }
 
-func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context) (result dto.OptiScalerRelease, err error) {
+func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context, refresh bool) (result dto.OptiScalerRelease, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("get OptiScaler stable release status: %w", err)
@@ -109,7 +108,7 @@ func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context) (res
 	if err := s.requireWindows(); err != nil {
 		return dto.OptiScalerRelease{}, err
 	}
-	result, err = s.manager.StableRelease(ctx)
+	result, err = s.manager.StableRelease(ctx, refresh)
 	if err != nil {
 		return dto.OptiScalerRelease{
 			Error: optiScalerReleaseStatusError(err),
@@ -119,11 +118,7 @@ func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context) (res
 }
 
 func optiScalerReleaseStatusError(err error) string {
-	message := err.Error()
-	if strings.Contains(message, "GitHub returned 403 Forbidden") {
-		return "GitHub returned 403 Forbidden while checking the latest OptiScaler release."
-	}
-	return message
+	return err.Error()
 }
 
 func (s *OptiScalerService) PreviewOptiScalerAction(ctx context.Context, request dto.OptiScalerRequest) (result dto.OptiScalerPreview, err error) {

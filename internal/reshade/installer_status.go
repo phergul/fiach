@@ -4,19 +4,54 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/phergul/fiach/internal/thirdparty"
 )
 
-func ResolveInstallerStatus(ctx context.Context) InstallerStatus {
+func ResolveInstallerStatus(ctx context.Context, refresh bool) InstallerStatus {
+	result, warning, err := loadInstallerStatusManifest(ctx, refresh)
+	if err != nil {
+		message := err.Error()
+		return InstallerStatus{
+			Standard: InstallerReleaseStatus{
+				Variant: InstallerVariantStandard,
+				Error:   message,
+			},
+			Addon: InstallerReleaseStatus{
+				Variant: InstallerVariantAddon,
+				Error:   message,
+			},
+		}
+	}
 	return InstallerStatus{
-		Standard: resolveInstallerVariantStatus(ctx, InstallerVariantStandard),
-		Addon:    resolveInstallerVariantStatus(ctx, InstallerVariantAddon),
+		Standard: resolveInstallerVariantStatus(ctx, InstallerVariantStandard, result, warning),
+		Addon:    resolveInstallerVariantStatus(ctx, InstallerVariantAddon, result, warning),
 	}
 }
 
-func resolveInstallerVariantStatus(ctx context.Context, variant InstallerVariant) InstallerReleaseStatus {
-	release, err := ResolveLatestInstaller(ctx, variant, InstallerResolveOptions{})
+func resolveInstallerVariantStatus(
+	ctx context.Context,
+	variant InstallerVariant,
+	manifest thirdparty.Manifest,
+	warning string,
+) InstallerReleaseStatus {
+	_ = ctx
+	entry := manifest.Tools.ReShade.Standard
+	if variant == InstallerVariantAddon {
+		entry = manifest.Tools.ReShade.Addon
+	}
+	release := InstallerRelease{
+		Version:   entry.Version,
+		Variant:   variant,
+		AssetName: entry.AssetName,
+		URL:       entry.URL,
+		SHA256:    entry.SHA256,
+		SizeBytes: entry.SizeBytes,
+	}
+	err := validateInstallerRelease(release, nil, false)
 	if err != nil {
 		return InstallerReleaseStatus{
 			Variant: variant,
@@ -28,6 +63,9 @@ func resolveInstallerVariantStatus(ctx context.Context, variant InstallerVariant
 		Variant:   release.Variant,
 		AssetName: release.AssetName,
 		URL:       release.URL,
+		Digest:    &release.SHA256,
+		Size:      &release.SizeBytes,
+		Error:     warning,
 	}
 	if digest, size, ok := cachedInstallerArtifactMetadata(release); ok {
 		status.Digest = &digest
@@ -35,6 +73,17 @@ func resolveInstallerVariantStatus(ctx context.Context, variant InstallerVariant
 		status.Cached = true
 	}
 	return status
+}
+
+func loadInstallerStatusManifest(ctx context.Context, refresh bool) (thirdparty.Manifest, string, error) {
+	result, err := thirdparty.Load(ctx, thirdparty.LoadOptions{
+		Refresh:    refresh,
+		HTTPClient: http.DefaultClient,
+	})
+	if err != nil {
+		return thirdparty.Manifest{}, "", err
+	}
+	return result.Manifest, result.Warning, nil
 }
 
 func cachedInstallerArtifactMetadata(release InstallerRelease) (string, int64, bool) {

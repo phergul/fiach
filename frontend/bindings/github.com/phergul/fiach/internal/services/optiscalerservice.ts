@@ -30,8 +30,8 @@ export function GetOptiScalerRecoveryState(): $CancellablePromise<dto$0.OptiScal
     });
 }
 
-export function GetOptiScalerReleaseStatus(): $CancellablePromise<dto$0.OptiScalerRelease> {
-    return $Call.ByID(1814290376).then(($result: any) => {
+export function GetOptiScalerReleaseStatus(refresh: boolean): $CancellablePromise<dto$0.OptiScalerRelease> {
+    return $Call.ByID(1814290376, refresh).then(($result: any) => {
         return $$createType4($result);
     });
 }

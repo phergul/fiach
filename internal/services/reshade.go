@@ -220,8 +220,7 @@ func (s *ReshadeService) GetManagedReShadeInstallerStatus(
 	if s.operatingSystem != "windows" {
 		return dto.ManagedReShadeInstallerStatus{}, errors.New("managed ReShade is only supported on Windows")
 	}
-	_ = refresh
-	return reshade.ResolveInstallerStatus(ctx), nil
+	return reshade.ResolveInstallerStatus(ctx, refresh), nil
 }
 
 func (s *ReshadeService) ListManagedReShadeChainTargets(
