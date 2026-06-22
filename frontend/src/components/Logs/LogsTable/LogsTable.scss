@@ -1,8 +1,14 @@
 @use '@styles' as *;
 
-$logs-time-column-width: 13rem;
-$logs-level-column-width: 5rem;
-$logs-operation-column-width: 9rem;
+$logs-time-column-min-width: 10rem;
+$logs-level-column-min-width: 4.5rem;
+$logs-operation-column-min-width: 12rem;
+$logs-message-column-min-width: 18rem;
+$logs-table-grid-columns:
+  minmax($logs-time-column-min-width, 0.9fr)
+  minmax($logs-level-column-min-width, 0.25fr)
+  minmax($logs-operation-column-min-width, 1fr)
+  minmax($logs-message-column-min-width, 2.5fr);
 
 .logs-table {
   display: flex;
@@ -14,12 +20,9 @@ $logs-operation-column-width: 9rem;
 
 .logs-table-header {
   display: grid;
-  grid-template-columns:
-    minmax($logs-time-column-width, $logs-time-column-width)
-    minmax($logs-level-column-width, $logs-level-column-width)
-    minmax($logs-operation-column-width, $logs-operation-column-width)
-    minmax(0, 1fr);
+  grid-template-columns: $logs-table-grid-columns;
   gap: $spacing-md;
+  justify-content: stretch;
   padding: $spacing-sm $spacing-lg;
   color: $color-text-muted;
   font-size: $font-size-xs;

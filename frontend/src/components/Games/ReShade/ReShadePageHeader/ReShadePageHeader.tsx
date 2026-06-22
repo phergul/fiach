@@ -37,15 +37,16 @@ const formatRuntimeVersion = (version: string | null | undefined) => {
 const latestRemoteReleaseLabel = (installerStatus: ManagedReShadeInstallerStatus | null) => {
   const standard = installerStatus?.standard;
   const addon = installerStatus?.addon;
+  console.log('Installer status:', installerStatus);
   const versions = [
-    standard !== undefined && standard.error === '' ? formatRuntimeVersion(standard.version) : '',
-    addon !== undefined && addon.error === '' ? formatRuntimeVersion(addon.version) : '',
+    standard !== undefined && standard.error === undefined ? formatRuntimeVersion(standard.version) : '',
+    addon !== undefined && addon.error === undefined ? formatRuntimeVersion(addon.version) : '',
   ].filter((version) => version !== '');
   const uniqueVersions = [...new Set(versions)];
   if (uniqueVersions.length === 0) {
     return 'Latest release unavailable';
   }
-  return `Latest ${uniqueVersions.join(', ')}`;
+  return `${uniqueVersions.join(', ')}`;
 };
 
 export const ReShadePageHeader = ({

@@ -51,8 +51,21 @@ const (
 	OperationSetGlobalModStorageRoot   = "set_global_mod_storage_root"
 	OperationSetTheme                  = "set_theme"
 	OperationSetGameModStorageOverride = "set_game_mod_storage_override"
+	OperationReShadeStartup            = "reshade_startup"
 	OperationDetectReShade             = "detect_reshade"
+	OperationListReShadeTargets        = "list_reshade_targets"
+	OperationListReShadeContent        = "list_reshade_content"
+	OperationReShadeInstallerStatus    = "reshade_installer_status"
+	OperationListReShadeChainTargets   = "list_reshade_chain_targets"
+	OperationInspectReShadePreset      = "inspect_reshade_preset"
+	OperationDiscoverReShade           = "discover_reshade"
+	OperationPreviewReShade            = "preview_reshade"
+	OperationApplyReShade              = "apply_reshade"
+	OperationReShadeRecovery           = "reshade_recovery"
+	OperationOptiScalerStartup         = "optiscaler_startup"
 	OperationDiscoverOptiScaler        = "discover_optiscaler"
+	OperationListOptiScalerTargets     = "list_optiscaler_targets"
+	OperationOptiScalerReleaseStatus   = "optiscaler_release_status"
 	OperationPreviewOptiScaler         = "preview_optiscaler"
 	OperationApplyOptiScaler           = "apply_optiscaler"
 	OperationOptiScalerRecovery        = "optiscaler_recovery"
@@ -161,8 +174,21 @@ func Operations() []OperationDescriptor {
 		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
 		{Value: OperationSetTheme, Label: "Set theme"},
 		{Value: OperationSetGameModStorageOverride, Label: "Set game mod storage override"},
+		{Value: OperationReShadeStartup, Label: "ReShade startup"},
 		{Value: OperationDetectReShade, Label: "Detect ReShade"},
+		{Value: OperationListReShadeTargets, Label: "List ReShade targets"},
+		{Value: OperationListReShadeContent, Label: "List ReShade content"},
+		{Value: OperationReShadeInstallerStatus, Label: "ReShade installer status"},
+		{Value: OperationListReShadeChainTargets, Label: "List ReShade chain targets"},
+		{Value: OperationInspectReShadePreset, Label: "Inspect ReShade preset"},
+		{Value: OperationDiscoverReShade, Label: "Discover ReShade"},
+		{Value: OperationPreviewReShade, Label: "Preview ReShade"},
+		{Value: OperationApplyReShade, Label: "Apply ReShade"},
+		{Value: OperationReShadeRecovery, Label: "ReShade recovery"},
+		{Value: OperationOptiScalerStartup, Label: "OptiScaler startup"},
 		{Value: OperationDiscoverOptiScaler, Label: "Discover OptiScaler"},
+		{Value: OperationListOptiScalerTargets, Label: "List OptiScaler targets"},
+		{Value: OperationOptiScalerReleaseStatus, Label: "OptiScaler release status"},
 		{Value: OperationPreviewOptiScaler, Label: "Preview OptiScaler"},
 		{Value: OperationApplyOptiScaler, Label: "Apply OptiScaler"},
 		{Value: OperationOptiScalerRecovery, Label: "OptiScaler recovery"},

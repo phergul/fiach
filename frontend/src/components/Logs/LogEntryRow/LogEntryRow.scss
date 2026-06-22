@@ -1,8 +1,14 @@
 @use '@styles' as *;
 
-$log-row-time-width: 13rem;
-$log-row-level-width: 5rem;
-$log-row-operation-width: 9rem;
+$log-row-time-column-min-width: 10rem;
+$log-row-level-column-min-width: 4.5rem;
+$log-row-operation-column-min-width: 12rem;
+$log-row-message-column-min-width: 18rem;
+$log-row-grid-columns:
+  minmax($log-row-time-column-min-width, 0.9fr)
+  minmax($log-row-level-column-min-width, 0.25fr)
+  minmax($log-row-operation-column-min-width, 1fr)
+  minmax($log-row-message-column-min-width, 2.5fr);
 $log-row-toggle-size: 1rem;
 
 .log-entry-row {
@@ -16,12 +22,12 @@ $log-row-toggle-size: 1rem;
 .log-entry-row-summary {
   display: grid;
   width: 100%;
-  min-height: 2.75rem;
-  grid-template-columns:
-    minmax($log-row-time-width, $log-row-time-width) minmax($log-row-level-width, $log-row-level-width) minmax($log-row-operation-width, $log-row-operation-width) minmax(0, 1fr);
+  min-height: 3.25rem;
+  grid-template-columns: $log-row-grid-columns;
   align-items: center;
   gap: $spacing-md;
-  padding: $spacing-sm $spacing-lg;
+  justify-content: stretch;
+  padding: $spacing-md $spacing-lg;
   color: $color-text-primary;
   border: 0;
   border-radius: 0;
@@ -100,8 +106,10 @@ $log-row-toggle-size: 1rem;
 
 .log-entry-row-details {
   display: grid;
+  grid-template-columns: $log-row-grid-columns;
   gap: $spacing-sm;
-  padding: $spacing-sm $spacing-lg $spacing-sm calc($spacing-lg + $log-row-time-width + $log-row-level-width + $log-row-operation-width + ($spacing-md * 3));
+  justify-content: stretch;
+  padding: $spacing-md $spacing-lg $spacing-md $spacing-lg;
   color: $color-text-subtle;
   font-family: $font-family-monospace;
   font-size: $font-size-xs;
@@ -110,6 +118,7 @@ $log-row-toggle-size: 1rem;
 
 .log-entry-row-detail {
   display: grid;
+  grid-column: 4;
   grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
   gap: $spacing-md;
 }

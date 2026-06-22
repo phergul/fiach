@@ -29,9 +29,12 @@ $reshade-page-header-icon-size: 1rem;
 }
 
 .reshade-page-header-title p {
-  color: $color-text-muted;
-  font-family: $font-family-monospace;
+  padding: $spacing-xs $spacing-sm;
+  color: $color-background;
+  background: $color-success;
   font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  align-self: center;
 }
 
 .reshade-page-header-actions {

@@ -50,7 +50,7 @@ func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 		URL:              "/?window=logs",
 		Width:            960,
 		Height:           720,
-		MinWidth:         800,
+		MinWidth:         820,
 		MinHeight:        480,
 		BackgroundColour: application.NewRGB(37, 36, 34),
 	})
