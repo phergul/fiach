@@ -49,7 +49,55 @@ CREATE TABLE injection_reshade (
     manifest_json TEXT NOT NULL
 );
 
+-- +goose StatementBegin
+CREATE TRIGGER trg_injection_reshade_backfill_directx_api_insert
+AFTER INSERT ON injection_reshade
+WHEN (
+    SELECT api_family = 'directx' AND directx_api IS NULL
+    FROM injection_targets
+    WHERE id = NEW.injection_target_id
+)
+BEGIN
+    UPDATE injection_targets
+    SET directx_api = CASE LOWER(NEW.preferred_proxy_filename)
+        WHEN 'd3d9.dll' THEN 'd3d9'
+        WHEN 'd3d10.dll' THEN 'd3d10'
+        WHEN 'd3d10core.dll' THEN 'd3d10'
+        WHEN 'd3d11.dll' THEN 'd3d11'
+        WHEN 'd3d12.dll' THEN 'd3d12'
+        WHEN 'dxgi.dll' THEN 'd3d11'
+        ELSE directx_api
+    END
+    WHERE id = NEW.injection_target_id;
+END;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE TRIGGER trg_injection_reshade_backfill_directx_api_update
+AFTER UPDATE OF preferred_proxy_filename ON injection_reshade
+WHEN (
+    SELECT api_family = 'directx' AND directx_api IS NULL
+    FROM injection_targets
+    WHERE id = NEW.injection_target_id
+)
+BEGIN
+    UPDATE injection_targets
+    SET directx_api = CASE LOWER(NEW.preferred_proxy_filename)
+        WHEN 'd3d9.dll' THEN 'd3d9'
+        WHEN 'd3d10.dll' THEN 'd3d10'
+        WHEN 'd3d10core.dll' THEN 'd3d10'
+        WHEN 'd3d11.dll' THEN 'd3d11'
+        WHEN 'd3d12.dll' THEN 'd3d12'
+        WHEN 'dxgi.dll' THEN 'd3d11'
+        ELSE directx_api
+    END
+    WHERE id = NEW.injection_target_id;
+END;
+-- +goose StatementEnd
+
 -- +goose Down
+DROP TRIGGER IF EXISTS trg_injection_reshade_backfill_directx_api_update;
+DROP TRIGGER IF EXISTS trg_injection_reshade_backfill_directx_api_insert;
 DROP TABLE IF EXISTS injection_reshade;
 DROP TABLE IF EXISTS injection_optiscaler;
 DROP INDEX IF EXISTS idx_injection_targets_game_id;

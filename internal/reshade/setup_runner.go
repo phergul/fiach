@@ -341,7 +341,7 @@ func validateSetupRequest(
 	if err != nil {
 		return SetupRequest{}, "", err
 	}
-	if signature != request.Artifact.Signature {
+	if !signature.MatchesIdentity(request.Artifact.Signature) {
 		return SetupRequest{}, "", errors.New("installer artifact signature metadata no longer matches")
 	}
 	if request.Artifact.Variant == InstallerVariantAddon &&

@@ -13,7 +13,15 @@ import (
 )
 
 const reShadeTargetColumns = `
-	t.id, t.game_id, t.target_relative_path, t.executable_relative_path, t.directx_api AS rendering_api,
+	t.id, t.game_id, t.target_relative_path, t.executable_relative_path,
+	COALESCE(t.directx_api, CASE LOWER(r.preferred_proxy_filename)
+		WHEN 'd3d9.dll' THEN 'd3d9'
+		WHEN 'd3d10.dll' THEN 'd3d10'
+		WHEN 'd3d10core.dll' THEN 'd3d10'
+		WHEN 'd3d11.dll' THEN 'd3d11'
+		WHEN 'd3d12.dll' THEN 'd3d12'
+		WHEN 'dxgi.dll' THEN 'd3d11'
+	END) AS rendering_api,
 	r.preferred_proxy_filename AS proxy_filename, t.architecture, r.build_variant, r.runtime_version, r.installer_tag,
 	r.installer_asset_name, r.installer_url, r.installer_digest, r.installer_size,
 	r.management_origin, t.status, r.manifest_json, t.created_at, t.updated_at, t.last_verified_at

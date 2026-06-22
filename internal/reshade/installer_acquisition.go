@@ -46,6 +46,12 @@ type InstallerSignature struct {
 	CertificateSHA1 string                   `json:"certificateSha1,omitempty"`
 }
 
+func (s InstallerSignature) MatchesIdentity(other InstallerSignature) bool {
+	return s.Status == other.Status &&
+		strings.EqualFold(s.Subject, other.Subject) &&
+		strings.EqualFold(s.SPKISHA256, other.SPKISHA256)
+}
+
 type InstallerArtifact struct {
 	InstallerRelease
 	Path      string             `json:"path"`
@@ -301,7 +307,7 @@ func readCachedInstaller(
 	}
 	if inspected.SizeBytes != metadata.Artifact.SizeBytes ||
 		!strings.EqualFold(inspected.SHA256, metadata.Artifact.SHA256) ||
-		inspected.Signature != metadata.Artifact.Signature {
+		!inspected.Signature.MatchesIdentity(metadata.Artifact.Signature) {
 		return InstallerArtifact{}, errors.New("cached ReShade installer integrity metadata does not match")
 	}
 	if err := validateInstallerArtifactIntegrity(inspected, release); err != nil {

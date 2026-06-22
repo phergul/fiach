@@ -46,7 +46,10 @@ func (s *Store) saveInjectionTarget(ctx context.Context, input injectionTargetIn
 		ON CONFLICT(game_id, target_relative_path) DO UPDATE SET
 			executable_relative_path = excluded.executable_relative_path,
 			api_family = excluded.api_family,
-			directx_api = excluded.directx_api,
+			directx_api = CASE
+				WHEN excluded.api_family = 'directx' THEN COALESCE(excluded.directx_api, directx_api)
+				ELSE NULL
+			END,
 			architecture = excluded.architecture,
 			primary_owner = excluded.primary_owner,
 			primary_proxy_filename = excluded.primary_proxy_filename,

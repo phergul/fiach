@@ -158,8 +158,11 @@ export const ReShadeWizard = ({
     setIsDiscardOpen(false);
     setPresetPath('');
     setInspection(null);
+  }, [initial, selection]);
+
+  useEffect(() => {
     setCurrentCatalogue(catalogue);
-  }, [catalogue, initial, selection]);
+  }, [catalogue]);
 
   const updateValues = (nextValues: Partial<WizardValues>) => {
     setValues((current) => ({ ...current, ...nextValues }));

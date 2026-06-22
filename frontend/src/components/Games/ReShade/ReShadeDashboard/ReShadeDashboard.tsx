@@ -109,7 +109,6 @@ export const ReShadeDashboard = () => {
           />
 
           <ReShadePageHeader
-            aggregateStatus={reShade.aggregateStatus}
             installerStatus={reShade.installerStatus}
             isLoading={reShade.isLoading}
             onRefresh={() => void reShade.refresh(true)}
