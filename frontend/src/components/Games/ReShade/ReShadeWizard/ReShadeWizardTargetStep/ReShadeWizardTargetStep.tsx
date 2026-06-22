@@ -14,29 +14,31 @@ export const ReShadeWizardTargetStep = ({ selection }: ReShadeWizardTargetStepPr
   const evidence = selection.candidate?.proxyEvidence ?? [];
 
   return (
-    <div className="reshade-wizard-target-step">
-      <dl>
-        <div>
-          <dt>Executable</dt>
-          <dd>{filename(executable)}</dd>
-        </div>
-        <div>
-          <dt>Target folder</dt>
-          <dd>{targetPath === '.' ? 'Game Root' : targetPath}</dd>
-        </div>
-      </dl>
-      {evidence.length > 0 && (
-        <section>
-          <h3>Proxy evidence</h3>
-          <ul>
-            {evidence.map((item) => (
-              <li key={item.filename}>
-                {item.filename}: {item.isReShade ? 'ReShade' : item.conflict ?? 'present'}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+    <div className="reshade-wizard-content">
+      <div className="reshade-wizard-target-step">
+        <dl>
+          <div>
+            <dt>Executable</dt>
+            <dd>{filename(executable)}</dd>
+          </div>
+          <div>
+            <dt>Target folder</dt>
+            <dd>{targetPath === '.' ? 'Game Root' : targetPath}</dd>
+          </div>
+        </dl>
+        {evidence.length > 0 && (
+          <section>
+            <h3>Proxy evidence</h3>
+            <ul>
+              {evidence.map((item) => (
+                <li key={item.filename}>
+                  {item.filename}: {item.isReShade ? 'ReShade' : item.conflict ?? 'present'}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
     </div>
   );
 };

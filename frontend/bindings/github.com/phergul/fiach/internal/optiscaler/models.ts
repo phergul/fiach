@@ -265,6 +265,7 @@ export class Release {
     "url": string;
     "digest": string;
     "size": number;
+    "error"?: string;
 
     /** Creates a new Release instance. */
     constructor($$source: Partial<Release> = {}) {

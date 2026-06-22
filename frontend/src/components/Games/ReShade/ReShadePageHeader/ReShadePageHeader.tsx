@@ -1,6 +1,8 @@
 import { RefreshCw } from 'lucide-react';
 
-import type { ManagedReShadeInstallerStatus } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ManagedReShadeInstallerStatus,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import type { ReShadeAggregateStatus } from '@hooks';
 
 import './ReShadePageHeader.scss';
@@ -24,16 +26,26 @@ const statusLabel: Record<ReShadeAggregateStatus, string> = {
   not_detected: 'Not detected',
 };
 
-const releaseLabel = (installerStatus: ManagedReShadeInstallerStatus | null) => {
+const formatRuntimeVersion = (version: string | null | undefined) => {
+  const trimmed = version?.trim() ?? '';
+  if (trimmed === '') {
+    return '';
+  }
+  return trimmed.toLowerCase().startsWith('v') ? trimmed : `v${trimmed}`;
+};
+
+const latestRemoteReleaseLabel = (installerStatus: ManagedReShadeInstallerStatus | null) => {
   const standard = installerStatus?.standard;
   const addon = installerStatus?.addon;
-  const standardText = standard !== undefined && standard.error === '' && standard.version !== ''
-    ? `Standard ${standard.version}`
-    : 'Standard unavailable';
-  const addonText = addon !== undefined && addon.error === '' && addon.version !== ''
-    ? `Full add-on ${addon.version}`
-    : 'Full add-on unavailable';
-  return `${standardText} · ${addonText}`;
+  const versions = [
+    standard !== undefined && standard.error === '' ? formatRuntimeVersion(standard.version) : '',
+    addon !== undefined && addon.error === '' ? formatRuntimeVersion(addon.version) : '',
+  ].filter((version) => version !== '');
+  const uniqueVersions = [...new Set(versions)];
+  if (uniqueVersions.length === 0) {
+    return 'Latest release unavailable';
+  }
+  return `Latest ${uniqueVersions.join(', ')}`;
 };
 
 export const ReShadePageHeader = ({
@@ -45,7 +57,7 @@ export const ReShadePageHeader = ({
   <header className="reshade-page-header">
     <div className="reshade-page-header-title">
       <h2>ReShade</h2>
-      <p>{releaseLabel(installerStatus)}</p>
+      <p>{latestRemoteReleaseLabel(installerStatus)}</p>
     </div>
     <div className="reshade-page-header-actions">
       <span className={`reshade-page-header-status reshade-page-header-status-${aggregateStatus}`}>

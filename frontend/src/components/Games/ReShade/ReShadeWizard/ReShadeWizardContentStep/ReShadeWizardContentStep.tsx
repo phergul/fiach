@@ -62,99 +62,101 @@ export const ReShadeWizardContentStep = ({
   presetPath,
   setPresetPath,
 }: ReShadeWizardContentStepProps) => (
-  <div className="reshade-wizard-content-step">
-    <div className="reshade-wizard-content-toolbar">
-      <button onClick={onRefreshCatalogue} type="button">Refresh catalogue</button>
-    </div>
+  <div className="reshade-wizard-content">
+    <div className="reshade-wizard-content-step">
+      <div className="reshade-wizard-content-toolbar">
+        <button onClick={onRefreshCatalogue} type="button">Refresh catalogue</button>
+      </div>
 
-    <section className="reshade-wizard-content-section" aria-labelledby="reshade-effects-heading">
-      <h3 id="reshade-effects-heading">Effect packages</h3>
-      {catalogue === null || catalogue.effects.length === 0 ? (
-        <p>No effect packages are available.</p>
-      ) : catalogue.effects.map((pkg) => {
-        const selection = selectedPackage(content, pkg.id);
-        const isSelected = selection !== null;
-        return (
-          <div className="reshade-wizard-content-item" key={pkg.id}>
+      <section className="reshade-wizard-content-section" aria-labelledby="reshade-effects-heading">
+        <h3 id="reshade-effects-heading">Effect packages</h3>
+        {catalogue === null || catalogue.effects.length === 0 ? (
+          <p>No effect packages are available.</p>
+        ) : catalogue.effects.map((pkg) => {
+          const selection = selectedPackage(content, pkg.id);
+          const isSelected = selection !== null;
+          return (
+            <div className="reshade-wizard-content-item" key={pkg.id}>
+              <label>
+                <input
+                  checked={isSelected}
+                  onChange={(event) => onContentChange(togglePackage(content, pkg.id, event.target.checked))}
+                  type="checkbox"
+                />
+                <span>{pkg.name}</span>
+              </label>
+              {pkg.description !== '' && <p>{pkg.description}</p>}
+              {isSelected && pkg.effectFiles.length > 0 && pkg.modifiable && (
+                <div className="reshade-wizard-content-effects">
+                  {pkg.effectFiles.map((effect) => (
+                    <label key={effect}>
+                      <input
+                        checked={(selection.effectFiles ?? []).includes(effect)}
+                        onChange={(event) =>
+                          onContentChange(toggleEffect(content, pkg.id, effect, event.target.checked))}
+                        type="checkbox"
+                      />
+                      <span>{effect}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      <section className="reshade-wizard-content-section" aria-labelledby="reshade-addons-heading">
+        <h3 id="reshade-addons-heading">Add-ons</h3>
+        {catalogue === null || catalogue.addons.length === 0 ? (
+          <p>No add-ons are available.</p>
+        ) : catalogue.addons.map((addon) => (
+          <div className="reshade-wizard-content-item" key={addon.id}>
             <label>
               <input
-                checked={isSelected}
-                onChange={(event) => onContentChange(togglePackage(content, pkg.id, event.target.checked))}
+                checked={selectedAddon(content, addon.id)}
+                onChange={(event) => onContentChange(toggleAddon(content, addon.id, event.target.checked))}
                 type="checkbox"
               />
-              <span>{pkg.name}</span>
+              <span>{addon.name}</span>
             </label>
-            {pkg.description !== '' && <p>{pkg.description}</p>}
-            {isSelected && pkg.effectFiles.length > 0 && pkg.modifiable && (
-              <div className="reshade-wizard-content-effects">
-                {pkg.effectFiles.map((effect) => (
-                  <label key={effect}>
-                    <input
-                      checked={(selection.effectFiles ?? []).includes(effect)}
-                      onChange={(event) =>
-                        onContentChange(toggleEffect(content, pkg.id, effect, event.target.checked))}
-                      type="checkbox"
-                    />
-                    <span>{effect}</span>
-                  </label>
-                ))}
-              </div>
-            )}
+            {addon.description !== '' && <p>{addon.description}</p>}
           </div>
-        );
-      })}
-    </section>
+        ))}
+      </section>
 
-    <section className="reshade-wizard-content-section" aria-labelledby="reshade-addons-heading">
-      <h3 id="reshade-addons-heading">Add-ons</h3>
-      {catalogue === null || catalogue.addons.length === 0 ? (
-        <p>No add-ons are available.</p>
-      ) : catalogue.addons.map((addon) => (
-        <div className="reshade-wizard-content-item" key={addon.id}>
-          <label>
-            <input
-              checked={selectedAddon(content, addon.id)}
-              onChange={(event) => onContentChange(toggleAddon(content, addon.id, event.target.checked))}
-              type="checkbox"
-            />
-            <span>{addon.name}</span>
-          </label>
-          {addon.description !== '' && <p>{addon.description}</p>}
+      <section className="reshade-wizard-content-section" aria-labelledby="reshade-preset-heading">
+        <h3 id="reshade-preset-heading">Preset inspection</h3>
+        <div className="reshade-wizard-preset-form">
+          <input
+            aria-label="Preset path"
+            onChange={(event) => setPresetPath(event.target.value)}
+            placeholder="ReShadePreset.ini"
+            value={presetPath}
+          />
+          <button
+            disabled={isInspectingPreset || presetPath.trim() === ''}
+            onClick={() => onInspectPreset(presetPath)}
+            type="button"
+          >
+            {isInspectingPreset ? 'Inspecting' : 'Inspect'}
+          </button>
         </div>
-      ))}
-    </section>
-
-    <section className="reshade-wizard-content-section" aria-labelledby="reshade-preset-heading">
-      <h3 id="reshade-preset-heading">Preset inspection</h3>
-      <div className="reshade-wizard-preset-form">
-        <input
-          aria-label="Preset path"
-          onChange={(event) => setPresetPath(event.target.value)}
-          placeholder="ReShadePreset.ini"
-          value={presetPath}
-        />
-        <button
-          disabled={isInspectingPreset || presetPath.trim() === ''}
-          onClick={() => onInspectPreset(presetPath)}
-          type="button"
-        >
-          {isInspectingPreset ? 'Inspecting' : 'Inspect'}
-        </button>
-      </div>
-      {inspection !== null && (
-        <div className="reshade-wizard-preset-result">
-          <p>{inspection.referencedEffects.length} referenced effects</p>
-          {inspection.recommendations.map((recommendation) => (
-            <button
-              key={recommendation.packageId}
-              onClick={() => onContentChange(togglePackage(content, recommendation.packageId, true))}
-              type="button"
-            >
-              Add {recommendation.packageName}
-            </button>
-          ))}
-        </div>
-      )}
-    </section>
+        {inspection !== null && (
+          <div className="reshade-wizard-preset-result">
+            <p>{inspection.referencedEffects.length} referenced effects</p>
+            {inspection.recommendations.map((recommendation) => (
+              <button
+                key={recommendation.packageId}
+                onClick={() => onContentChange(togglePackage(content, recommendation.packageId, true))}
+                type="button"
+              >
+                Add {recommendation.packageName}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   </div>
 );

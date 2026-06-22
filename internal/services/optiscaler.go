@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"runtime"
+	"strings"
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/injection"
@@ -108,7 +109,21 @@ func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context) (res
 	if err := s.requireWindows(); err != nil {
 		return dto.OptiScalerRelease{}, err
 	}
-	return s.manager.StableRelease(ctx)
+	result, err = s.manager.StableRelease(ctx)
+	if err != nil {
+		return dto.OptiScalerRelease{
+			Error: optiScalerReleaseStatusError(err),
+		}, nil
+	}
+	return result, nil
+}
+
+func optiScalerReleaseStatusError(err error) string {
+	message := err.Error()
+	if strings.Contains(message, "GitHub returned 403 Forbidden") {
+		return "GitHub returned 403 Forbidden while checking the latest OptiScaler release."
+	}
+	return message
 }
 
 func (s *OptiScalerService) PreviewOptiScalerAction(ctx context.Context, request dto.OptiScalerRequest) (result dto.OptiScalerPreview, err error) {

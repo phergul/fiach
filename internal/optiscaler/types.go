@@ -44,6 +44,7 @@ type Release struct {
 	URL       string `json:"url"`
 	Digest    string `json:"digest"`
 	Size      int64  `json:"size"`
+	Error     string `json:"error,omitempty"`
 }
 
 type Candidate struct {

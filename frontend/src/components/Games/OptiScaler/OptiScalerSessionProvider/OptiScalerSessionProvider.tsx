@@ -33,8 +33,16 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
 
     setIsReleaseLoading(true);
     setReleaseError(null);
+    let shouldCacheRequest = false;
     const request = GetOptiScalerReleaseStatus()
       .then((result) => {
+        const releaseError = result.error ?? '';
+        if (releaseError !== '') {
+          setRelease(null);
+          setReleaseError(releaseError);
+          return null;
+        }
+        shouldCacheRequest = true;
         setRelease(result);
         return result;
       })
@@ -44,6 +52,9 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
       })
       .finally(() => {
         setIsReleaseLoading(false);
+        if (!shouldCacheRequest && releasePromiseRef.current === request) {
+          releasePromiseRef.current = null;
+        }
       });
     releasePromiseRef.current = request;
     return request;

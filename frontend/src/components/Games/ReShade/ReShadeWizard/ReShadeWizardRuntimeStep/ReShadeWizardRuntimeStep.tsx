@@ -30,45 +30,47 @@ export const ReShadeWizardRuntimeStep = ({
   const proxies = selectedAPI?.proxies ?? [];
 
   return (
-    <div className="reshade-wizard-runtime-step">
-      <label>
-        <span>Rendering API</span>
-        <select
-          aria-label="Rendering API"
-          onChange={(event) => onRenderingAPIChange(event.target.value as RenderingAPI)}
-          value={renderingAPI}
-        >
-          <option value="">Select API</option>
-          {apiOptions.map((option) => (
-            <option key={option.renderingApi} value={option.renderingApi}>{option.renderingApi}</option>
-          ))}
-        </select>
-      </label>
+    <div className="reshade-wizard-content">
+      <div className="reshade-wizard-runtime-step">
+        <label>
+          <span>Rendering API</span>
+          <select
+            aria-label="Rendering API"
+            onChange={(event) => onRenderingAPIChange(event.target.value as RenderingAPI)}
+            value={renderingAPI}
+          >
+            <option value="">Select API</option>
+            {apiOptions.map((option) => (
+              <option key={option.renderingApi} value={option.renderingApi}>{option.renderingApi}</option>
+            ))}
+          </select>
+        </label>
 
-      <label>
-        <span>Proxy filename</span>
-        <select
-          aria-label="Proxy filename"
-          disabled={renderingAPI === ''}
-          onChange={(event) => onProxyFilenameChange(event.target.value)}
-          value={proxyFilename}
-        >
-          <option value="">Select proxy</option>
-          {proxies.map((proxy) => <option key={proxy} value={proxy}>{proxy}</option>)}
-        </select>
-      </label>
+        <label>
+          <span>Proxy filename</span>
+          <select
+            aria-label="Proxy filename"
+            disabled={renderingAPI === ''}
+            onChange={(event) => onProxyFilenameChange(event.target.value)}
+            value={proxyFilename}
+          >
+            <option value="">Select proxy</option>
+            {proxies.map((proxy) => <option key={proxy} value={proxy}>{proxy}</option>)}
+          </select>
+        </label>
 
-      <label>
-        <span>Build</span>
-        <select
-          aria-label="Build variant"
-          onChange={(event) => onBuildVariantChange(event.target.value as BuildVariant)}
-          value={buildVariant}
-        >
-          <option value={BuildVariant.BuildVariantStandard}>Standard</option>
-          <option value={BuildVariant.BuildVariantAddon}>Full add-on</option>
-        </select>
-      </label>
+        <label>
+          <span>Build</span>
+          <select
+            aria-label="Build variant"
+            onChange={(event) => onBuildVariantChange(event.target.value as BuildVariant)}
+            value={buildVariant}
+          >
+            <option value={BuildVariant.BuildVariantStandard}>Standard</option>
+            <option value={BuildVariant.BuildVariantAddon}>Full add-on</option>
+          </select>
+        </label>
+      </div>
     </div>
   );
 };

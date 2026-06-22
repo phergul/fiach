@@ -39,6 +39,21 @@ const hasDetectedReShade = (candidate: ManagedReShadeDiscoveryResult['candidates
 const apiSummary = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
   candidate.apiOptions.map((option) => option.renderingApi).join(', ');
 
+const formatRuntimeVersion = (version: string | null | undefined) => {
+  const trimmed = version?.trim() ?? '';
+  if (trimmed === '') {
+    return '';
+  }
+  return trimmed.toLowerCase().startsWith('v') ? trimmed : `v${trimmed}`;
+};
+
+const detectedRuntimeVersions = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) => [
+  ...new Set(candidate.proxyEvidence
+    .filter((evidence) => evidence.isReShade)
+    .map((evidence) => formatRuntimeVersion(evidence.runtimeVersion))
+    .filter((version) => version !== '')),
+];
+
 const chainSummary = (
   chainTargets: ManagedReShadeChainTarget[],
   targetRelativePath: string,
@@ -56,11 +71,17 @@ const chainSummary = (
 const managedFacts = (
   target: ManagedReShadeTarget,
   installerStatus: ManagedReShadeInstallerStatus | null,
-) => [
-  { label: target.Status === 'drifted' ? 'Drift detected' : target.Status, tone: target.Status === 'drifted' ? 'warning' : 'success' },
-  ...(isManagedReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
-  { label: target.BuildVariant === 'addon' ? 'Full add-on' : 'Standard', tone: 'neutral' },
-];
+) => {
+  const runtimeVersion = formatRuntimeVersion(target.RuntimeVersion);
+  return [
+    { label: target.Status === 'drifted' ? 'Drift detected' : target.Status, tone: target.Status === 'drifted' ? 'warning' : 'success' },
+    ...(isManagedReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
+    { label: target.BuildVariant === 'addon' ? 'Full add-on' : 'Standard', tone: 'neutral' },
+    ...(runtimeVersion !== ''
+      ? [{ label: `Runtime ${runtimeVersion}`, tone: 'neutral' }]
+      : []),
+  ];
+};
 
 const ReShadeManagedActions = ({
   disabled,
@@ -198,6 +219,7 @@ export const ReShadeTargetTable = ({
         )}
         {detected.map((candidate) => {
           const action = hasDetectedReShade(candidate) ? Action.ActionAdopt : Action.ActionInstall;
+          const runtimeVersions = detectedRuntimeVersions(candidate);
           return (
             <div
               className="reshade-target-row"
@@ -212,6 +234,9 @@ export const ReShadeTargetTable = ({
                 <span>{apiSummary(candidate)}</span>
                 {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
                 {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
+                {runtimeVersions.map((version) => (
+                  <span key={version}>Runtime {version}</span>
+                ))}
               </div>
               <span className="reshade-target-chain">{chainSummary(chainTargets, candidate.targetRelativePath)}</span>
               <div className="reshade-target-actions">
