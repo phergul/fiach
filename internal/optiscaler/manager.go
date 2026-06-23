@@ -168,9 +168,13 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		Drift:                []Drift{},
 	}
 	var chainedReShadeRuntime string
+	var managedReShadeTarget dbtypes.ReShadeTarget
+	var hasManagedReShade bool
 	if reShadeTarget, hasReShade, reShadeErr := m.managedDirectXReShadeTarget(ctx, request); reShadeErr != nil {
 		return Preview{}, reShadeErr
 	} else if hasReShade {
+		managedReShadeTarget = reShadeTarget
+		hasManagedReShade = true
 		request.EnableReShadeCoexistence = true
 		preview.Request.EnableReShadeCoexistence = true
 		chainedReShadeRuntime = chainedReShadeRuntimeFilename(reShadeTarget.Architecture)
@@ -230,6 +234,13 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			return Preview{}, err
 		}
 		preview.Operations = uninstallOperations(targetPath, manifest)
+		if hasManagedReShade {
+			preview.Operations = appendManagedReShadeRestoreOperation(
+				targetPath,
+				preview.Operations,
+				managedReShadeTarget,
+			)
+		}
 	default:
 		return Preview{}, fmt.Errorf("unsupported action %q", request.Action)
 	}
@@ -707,6 +718,33 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 		}
 	}
 	return operations
+}
+
+func appendManagedReShadeRestoreOperation(
+	targetPath string,
+	operations []Operation,
+	target dbtypes.ReShadeTarget,
+) []Operation {
+	activeRuntime := firstNonEmpty(target.ActiveRuntimeFilename, target.ProxyFilename)
+	if activeRuntime == "" || strings.EqualFold(activeRuntime, target.ProxyFilename) {
+		return operations
+	}
+	sourcePath := filepath.Join(targetPath, activeRuntime)
+	targetPath = filepath.Join(targetPath, target.ProxyFilename)
+	for _, operation := range operations {
+		if operation.Type != "move" {
+			continue
+		}
+		if strings.EqualFold(operation.SourcePath, sourcePath) ||
+			strings.EqualFold(operation.TargetPath, targetPath) {
+			return operations
+		}
+	}
+	return append(operations, Operation{
+		Type:       "move",
+		SourcePath: sourcePath,
+		TargetPath: targetPath,
+	})
 }
 
 func isChainedReShadeRuntime(relative string) bool {

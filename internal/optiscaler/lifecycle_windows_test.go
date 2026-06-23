@@ -223,6 +223,75 @@ func TestManagerInstallAfterManagedReShadeChainsPersistedRuntime(t *testing.T) {
 	}
 }
 
+func TestManagerUninstallAfterReShadeInstalledSecondRestoresPersistedRuntime(t *testing.T) {
+	t.Parallel()
+
+	gameRoot, request := newLifecycleGame(t)
+	store := newMemoryStore()
+	manager := lifecycleManager(t, store, testPreparedPackageWithRuntime(t, "optiscaler"), nil)
+	request.Action = ActionInstall
+	request.AcknowledgeWarning = true
+	previewAndApply(t, manager, gameRoot, request)
+
+	chainedRuntime := filepath.Join(gameRoot, "ReShade64.dll")
+	if err := os.WriteFile(chainedRuntime, []byte("reshade"), 0o644); err != nil {
+		t.Fatalf("WriteFile(ReShade64.dll) error = %v", err)
+	}
+	hash, size, err := fileIntegrity(chainedRuntime)
+	if err != nil {
+		t.Fatalf("fileIntegrity(ReShade64.dll) error = %v", err)
+	}
+	if _, err := store.SaveReShadeTarget(context.Background(), dbtypes.SaveReShadeTargetInput{
+		GameID:                 request.GameID,
+		TargetRelativePath:     request.TargetRelativePath,
+		ExecutableRelativePath: request.ExecutableRelativePath,
+		RenderingAPI:           "d3d11",
+		ProxyFilename:          "d3d11.dll",
+		ActiveRuntimeFilename:  "ReShade64.dll",
+		Architecture:           "x64",
+		BuildVariant:           "standard",
+		RuntimeVersion:         "6.7.3",
+		ManagementOrigin:       "installed",
+		Status:                 "managed",
+		ManifestJSON: fmt.Sprintf(
+			`{"version":1,"files":[{"relativePath":"ReShade64.dll","sha256":%q,"sizeBytes":%d,"ownership":"managed"}],"variantProvenance":"verified"}`,
+			hash,
+			size,
+		),
+	}); err != nil {
+		t.Fatalf("SaveReShadeTarget() error = %v", err)
+	}
+
+	request.Action = ActionUninstall
+	request.AcknowledgeWarning = false
+	preview := previewAndApply(t, manager, gameRoot, request)
+	hasRestoreMove := false
+	for _, operation := range preview.Operations {
+		if operation.Type == "move" &&
+			strings.EqualFold(filepath.Base(operation.SourcePath), "ReShade64.dll") &&
+			strings.EqualFold(filepath.Base(operation.TargetPath), "d3d11.dll") {
+			hasRestoreMove = true
+			break
+		}
+	}
+	if !hasRestoreMove {
+		t.Fatalf("uninstall operations = %+v, want ReShade64.dll restore move", preview.Operations)
+	}
+	if got, err := os.ReadFile(filepath.Join(gameRoot, "d3d11.dll")); err != nil || string(got) != "reshade" {
+		t.Fatalf("restored ReShade proxy = %q, %v", got, err)
+	}
+	if _, err := os.Stat(chainedRuntime); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ReShade64.dll remains after uninstall: %v", err)
+	}
+	reShadeTarget, found, err := store.GetReShadeTarget(context.Background(), request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		t.Fatalf("GetReShadeTarget() = %+v, %v, %v", reShadeTarget, found, err)
+	}
+	if reShadeTarget.ActiveRuntimeFilename != "d3d11.dll" || !strings.Contains(reShadeTarget.ManifestJSON, "d3d11.dll") {
+		t.Fatalf("ReShade target after uninstall = %+v", reShadeTarget)
+	}
+}
+
 func TestManagerRejectsUnknownProxyAndVulkanReShadeCoexistence(t *testing.T) {
 	t.Parallel()
 
