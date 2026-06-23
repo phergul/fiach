@@ -416,6 +416,7 @@ export const ReShadeWizard = ({
             )}
             {step === 'content' && (
               <ReShadeWizardContentStep
+                buildVariant={values.buildVariant}
                 catalogue={currentCatalogue}
                 content={values.content}
                 inspection={inspection}

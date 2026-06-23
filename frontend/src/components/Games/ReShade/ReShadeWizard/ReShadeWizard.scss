@@ -190,4 +190,9 @@ $reshade-wizard-label-width: 10rem;
 
 .reshade-wizard-footer > button:not(.button-main) {
   background: $color-surface-elevated;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: $color-background;
+  }
 }

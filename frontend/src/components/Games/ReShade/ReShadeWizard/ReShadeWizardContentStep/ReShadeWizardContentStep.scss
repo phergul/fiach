@@ -1,64 +1,43 @@
 @use '@styles' as *;
 
+$reshade-content-sidebar-width: 22rem;
+$reshade-content-search-icon-size: 1rem;
+$reshade-content-option-size: 1.25rem;
+$reshade-content-option-offset: 0.125rem;
+$reshade-content-check-top: 0.1875rem;
+$reshade-content-check-left: 0.375rem;
+$reshade-content-check-width: 0.375rem;
+$reshade-content-check-height: 0.625rem;
+$reshade-content-hidden-input-size: 0.0625rem;
+$reshade-content-hidden-input-offset: -0.0625rem;
+$reshade-content-row-min-height: 4rem;
+$reshade-content-fold-icon-size: 1rem;
+$reshade-content-meta-label-width: 8rem;
+
 .reshade-wizard-content-step {
   display: grid;
+  min-height: 36rem;
   gap: $spacing-md;
 }
 
 .reshade-wizard-content-toolbar {
   display: flex;
   justify-content: flex-end;
+  gap: $spacing-sm;
 }
 
 .reshade-wizard-content-toolbar button,
 .reshade-wizard-preset-form button,
-.reshade-wizard-preset-result button {
+.reshade-wizard-preset-result button,
+.reshade-wizard-content-effect-actions button {
   min-height: $input-height;
 }
 
-.reshade-wizard-content-section {
+.reshade-wizard-preset-helper {
   display: grid;
-  gap: $spacing-separator;
-  background: $color-background;
-}
-
-.reshade-wizard-content-section h3 {
-  padding: $spacing-sm $spacing-md;
-  color: $color-text-subtle;
-  background: $color-surface-elevated;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  text-transform: uppercase;
-}
-
-.reshade-wizard-content-section p {
-  padding: $spacing-md;
-  background: $color-surface;
-  color: $color-text-muted;
-  font-size: $font-size-sm;
-}
-
-.reshade-wizard-content-item {
-  display: grid;
-  gap: $spacing-xs;
-  padding: $spacing-md;
-  background: $color-surface;
-}
-
-.reshade-wizard-content-item label,
-.reshade-wizard-content-effects label {
-  display: flex;
-  align-items: center;
   gap: $spacing-sm;
-}
-
-.reshade-wizard-content-effects {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: $spacing-xs $spacing-md;
-  padding: $spacing-sm 0 0 $spacing-lg;
-  color: $color-text-subtle;
-  font-size: $font-size-sm;
+  padding: $spacing-md;
+  background: $color-surface;
 }
 
 .reshade-wizard-preset-form {
@@ -78,6 +57,334 @@
   flex-wrap: wrap;
   gap: $spacing-sm;
   align-items: center;
+}
+
+.reshade-wizard-preset-result p {
+  min-height: $input-height;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-subtle;
+  background: $color-background;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-content-browser {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: $reshade-content-sidebar-width minmax(0, 1fr);
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-content-sidebar,
+.reshade-wizard-content-details {
+  min-height: 0;
+  background: $color-surface;
+}
+
+.reshade-wizard-content-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.reshade-wizard-content-serach-container {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
   padding: $spacing-md;
   background: $color-surface;
+  border-bottom: $spacing-separator solid $color-background;
+}
+
+.reshade-wizard-content-search {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.reshade-wizard-content-refresh-button {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: $input-height;
+  height: $input-height;
+  padding: 0;
+  background: $color-surface-elevated;
+  cursor: pointer;
+
+  svg {
+    width: $reshade-content-search-icon-size;
+    height: $reshade-content-search-icon-size;
+  }
+}
+
+.reshade-wizard-content-refresh-button:hover:not(:disabled),
+.reshade-wizard-content-refresh-button:focus-visible:not(:disabled) {
+  background: $color-background;
+}
+
+.reshade-wizard-content-search-icon {
+  position: absolute;
+  top: 50%;
+  left: $spacing-sm;
+  width: $reshade-content-search-icon-size;
+  height: $reshade-content-search-icon-size;
+  color: $color-text-muted;
+  transform: translateY(-50%);
+}
+
+.reshade-wizard-content-search input:not([type=checkbox]):not([type=radio]) {
+  width: 100%;
+  min-height: $input-height;
+  padding: 0 $spacing-sm 0 $spacing-xl ;
+  background: $color-background;
+}
+
+.reshade-wizard-content-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-separator;
+  flex: 0 0 auto;
+  background: $color-background;
+}
+
+.reshade-wizard-content-tabs button {
+  min-height: $input-height;
+  background: $color-surface;
+  color: $color-text-muted;
+}
+
+.reshade-wizard-content-tabs button[aria-selected='true'] {
+  color: $color-text-primary;
+  background: $color-surface-elevated;
+}
+
+.reshade-wizard-content-list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $spacing-separator;
+  overflow-y: auto;
+  background: $color-background;
+}
+
+.reshade-wizard-content-row {
+  display: grid;
+  min-height: $reshade-content-row-min-height;
+  grid-template-columns: $reshade-content-option-size minmax(0, 1fr);
+  flex: 0 0 auto;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface;
+  text-align: left;
+}
+
+.reshade-wizard-content-row:hover,
+.reshade-wizard-content-row:focus-within,
+.reshade-wizard-content-row-active {
+  background: $color-surface-elevated;
+}
+
+.reshade-wizard-content-row-button {
+  display: grid;
+  justify-items: stretch;
+  gap: $spacing-xs;
+  min-width: 0;
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.reshade-wizard-content-row-button:hover,
+.reshade-wizard-content-row-button:focus-visible {
+  background: transparent;
+}
+
+.reshade-wizard-content-row > input,
+.reshade-wizard-content-effects input {
+  position: absolute;
+  width: $reshade-content-hidden-input-size;
+  height: $reshade-content-hidden-input-size;
+  margin: $reshade-content-hidden-input-offset;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.reshade-wizard-content-option-control {
+  position: relative;
+  width: $reshade-content-option-size;
+  height: $reshade-content-option-size;
+  margin-top: $reshade-content-option-offset;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: 0;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
+}
+
+.reshade-wizard-content-option-control::after {
+  position: absolute;
+  top: $reshade-content-check-top;
+  left: $reshade-content-check-left;
+  width: $reshade-content-check-width;
+  height: $reshade-content-check-height;
+  border-right: $app-border-width solid $color-background;
+  border-bottom: $app-border-width solid $color-background;
+  content: '';
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+.reshade-wizard-content-row > input:checked + .reshade-wizard-content-option-control,
+.reshade-wizard-content-effects input:checked + .reshade-wizard-content-option-control {
+  background: $color-success;
+  border-color: $color-success;
+}
+
+.reshade-wizard-content-row > input:checked + .reshade-wizard-content-option-control::after,
+.reshade-wizard-content-effects input:checked + .reshade-wizard-content-option-control::after {
+  opacity: 1;
+}
+
+.reshade-wizard-content-row:has(> input:focus-visible) .reshade-wizard-content-option-control,
+.reshade-wizard-content-effects label:has(input:focus-visible) .reshade-wizard-content-option-control {
+  border-color: $color-border-strong;
+}
+
+.reshade-wizard-content-effects label:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.reshade-wizard-content-row-title {
+  overflow: hidden;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reshade-wizard-content-row-description {
+  overflow: hidden;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reshade-wizard-content-details {
+  display: grid;
+  align-content: start;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  overflow-y: auto;
+}
+
+.reshade-wizard-content-details-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: $spacing-md;
+}
+
+.reshade-wizard-content-details-header h3 {
+  font-size: $font-size-lg;
+  line-height: $line-height-heading;
+}
+
+.reshade-wizard-content-details-header p {
+  margin-top: $spacing-xs;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-content-effects label {
+  display: grid;
+  grid-template-columns: $reshade-content-option-size minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.reshade-wizard-content-meta {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-content-meta div {
+  display: grid;
+  min-height: $input-height;
+  grid-template-columns: $reshade-content-meta-label-width minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface-elevated;
+}
+
+.reshade-wizard-content-meta dt {
+  color: $color-text-muted;
+}
+
+.reshade-wizard-content-meta dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.reshade-wizard-content-effect-panel {
+  display: grid;
+  gap: $spacing-separator;
+  background: $color-background;
+}
+
+.reshade-wizard-content-fold {
+  display: grid;
+  min-height: $input-height;
+  grid-template-columns: $reshade-content-fold-icon-size minmax(0, 1fr) auto;
+  justify-content: stretch;
+  gap: $spacing-sm;
+  background: $color-surface-elevated;
+  text-align: left;
+}
+
+.reshade-wizard-content-fold svg {
+  width: $reshade-content-fold-icon-size;
+  height: $reshade-content-fold-icon-size;
+}
+
+.reshade-wizard-content-effect-body {
+  display: grid;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.reshade-wizard-content-effect-actions {
+  display: flex;
+  gap: $spacing-sm;
+  justify-content: flex-end;
+}
+
+.reshade-wizard-content-effects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-xs $spacing-md;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+}
+
+.reshade-wizard-content-effects span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reshade-wizard-content-empty {
+  padding: $spacing-md;
+  color: $color-text-muted;
+  background: $color-surface;
+  font-size: $font-size-sm;
 }
