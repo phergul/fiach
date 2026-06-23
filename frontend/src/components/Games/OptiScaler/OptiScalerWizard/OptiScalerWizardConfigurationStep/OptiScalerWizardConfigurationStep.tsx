@@ -9,7 +9,6 @@ interface OptiScalerWizardConfigurationStepProps {
   onDXGISpoofingChange: (value: boolean | null) => void;
   onProcessFilterChange: (value: string) => void;
   onProxyFilenameChange: (value: string) => void;
-  onReShadeCoexistenceChange: (value: boolean) => void;
   processFilter: string;
   proxyFilename: string;
   supportedProxyFilenames: string[];
@@ -24,7 +23,6 @@ export const OptiScalerWizardConfigurationStep = ({
   onDXGISpoofingChange,
   onProcessFilterChange,
   onProxyFilenameChange,
-  onReShadeCoexistenceChange,
   processFilter,
   proxyFilename,
   supportedProxyFilenames,
@@ -81,15 +79,11 @@ export const OptiScalerWizardConfigurationStep = ({
         <span>Defaults to the selected executable and may be cleared.</span>
       </label>
       {hasDetectedReShade && (
-        <label className="optiscaler-wizard-checkbox">
-          <input
-            checked={enableReShadeCoexistence}
-            disabled={graphicsAPI === GraphicsAPI.GraphicsAPIVulkan}
-            onChange={(event) => onReShadeCoexistenceChange(event.target.checked)}
-            type="checkbox"
-          />
-          Chain the detected ReShade runtime through OptiScaler
-        </label>
+        <p>
+          {enableReShadeCoexistence
+            ? 'Detected ReShade will be chained through OptiScaler.'
+            : 'Detected ReShade cannot be chained for this configuration.'}
+        </p>
       )}
       {graphicsAPI === GraphicsAPI.GraphicsAPIVulkan && hasDetectedReShade && (
         <p className="optiscaler-wizard-error-inline">

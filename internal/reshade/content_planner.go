@@ -218,6 +218,7 @@ func (m *Manager) planContent(
 	if configFile != nil {
 		desiredFiles = replaceOrAppendManifestFile(desiredFiles, *configFile)
 	}
+	sortManagedFiles(desiredFiles)
 	manifest.Files = desiredFiles
 	return Preview{
 		Operations:       operations,
@@ -688,4 +689,13 @@ func replaceOrAppendManifestFile(files []ManagedFile, replacement ManagedFile) [
 		}
 	}
 	return append(files, replacement)
+}
+
+func sortManagedFiles(files []ManagedFile) {
+	slices.SortFunc(files, func(a ManagedFile, b ManagedFile) int {
+		return strings.Compare(
+			strings.ToLower(filepath.Clean(a.RelativePath)),
+			strings.ToLower(filepath.Clean(b.RelativePath)),
+		)
+	})
 }

@@ -47,6 +47,10 @@ func (c *Coordinator) ListTargets(ctx context.Context, gameID int64) (targets []
 	byKey := map[string]*ChainTarget{}
 	for _, target := range reShadeTargets {
 		key := targetKey(target.TargetRelativePath)
+		activeRuntime := target.ActiveRuntimeFilename
+		if strings.TrimSpace(activeRuntime) == "" {
+			activeRuntime = target.ProxyFilename
+		}
 		entry := byKey[key]
 		if entry == nil {
 			entry = &ChainTarget{
@@ -62,7 +66,7 @@ func (c *Coordinator) ListTargets(ctx context.Context, gameID int64) (targets []
 		}
 		entry.ReShade = &ReShadeState{
 			PreferredProxyFilename: target.ProxyFilename,
-			ActiveRuntimeFilename:  target.ProxyFilename,
+			ActiveRuntimeFilename:  activeRuntime,
 			Target:                 target,
 		}
 	}

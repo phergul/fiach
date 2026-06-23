@@ -28,6 +28,11 @@ type Store interface {
 	DeleteOptiScalerTarget(context.Context, int64, string) error
 }
 
+type reShadeTargetStore interface {
+	GetReShadeTarget(context.Context, int64, string) (dbtypes.ReShadeTarget, bool, error)
+	SaveReShadeTarget(context.Context, dbtypes.SaveReShadeTargetInput) (dbtypes.ReShadeTarget, error)
+}
+
 type ManagerOptions struct {
 	DataDir           string
 	CacheDir          string
@@ -154,7 +159,6 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	} else if !found {
 		return Preview{}, errors.New("target is not managed")
 	}
-
 	preview = Preview{
 		Request:              request,
 		Operations:           []Operation{},
@@ -162,6 +166,17 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		Warnings:             []string{},
 		Conflicts:            []string{},
 		Drift:                []Drift{},
+	}
+	var chainedReShadeRuntime string
+	if reShadeTarget, hasReShade, reShadeErr := m.managedDirectXReShadeTarget(ctx, request); reShadeErr != nil {
+		return Preview{}, reShadeErr
+	} else if hasReShade {
+		request.EnableReShadeCoexistence = true
+		preview.Request.EnableReShadeCoexistence = true
+		chainedReShadeRuntime = chainedReShadeRuntimeFilename(reShadeTarget.Architecture)
+		if request.GraphicsAPI != GraphicsAPIDirectX {
+			preview.Conflicts = append(preview.Conflicts, "Managed ReShade coexistence requires DirectX OptiScaler.")
+		}
 	}
 	if (!found || target.WarningAcknowledgedAt == nil || target.WarningVersion != WarningVersion) && !request.AcknowledgeWarning {
 		preview.Conflicts = append(preview.Conflicts, "Online-game and anti-cheat warning acknowledgement is required.")
@@ -188,7 +203,7 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 				preview.Warnings = append(preview.Warnings, "ReShade coexistence configuration will change during repair.")
 			}
 		}
-		operations, configChanges, conflicts, err := m.packageOperations(targetPath, preview.Request, pkg)
+		operations, configChanges, conflicts, err := m.packageOperations(targetPath, preview.Request, pkg, chainedReShadeRuntime)
 		if err != nil {
 			return Preview{}, err
 		}
@@ -349,6 +364,24 @@ func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, p
 	return m.execute(ctx, gameRoot, preview)
 }
 
+func (m *Manager) managedDirectXReShadeTarget(
+	ctx context.Context,
+	request Request,
+) (dbtypes.ReShadeTarget, bool, error) {
+	store, ok := m.store.(reShadeTargetStore)
+	if !ok {
+		return dbtypes.ReShadeTarget{}, false, nil
+	}
+	target, found, err := store.GetReShadeTarget(ctx, request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		return dbtypes.ReShadeTarget{}, false, err
+	}
+	return target, target.RenderingAPI == "d3d9" ||
+		target.RenderingAPI == "d3d10" ||
+		target.RenderingAPI == "d3d11" ||
+		target.RenderingAPI == "d3d12", nil
+}
+
 func normalizeRequest(gameRoot string, request Request) (Request, string, string, error) {
 	if request.GameID <= 0 {
 		return Request{}, "", "", errors.New("game ID must be positive")
@@ -449,7 +482,7 @@ func (m *Manager) releaseOptions(refresh bool) ReleaseOptions {
 	}
 }
 
-func (m *Manager) packageOperations(targetPath string, request Request, pkg Package) ([]Operation, []string, []string, error) {
+func (m *Manager) packageOperations(targetPath string, request Request, pkg Package, chainedReShadeRuntime string) ([]Operation, []string, []string, error) {
 	var operations []Operation
 	var conflicts []string
 	proxyPath := filepath.Join(targetPath, request.ProxyFilename)
@@ -459,7 +492,10 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 		case inspectErr != nil || owner == OwnershipUnknown:
 			conflicts = append(conflicts, fmt.Sprintf("Proxy ownership is unknown: %s", proxyPath))
 		case owner == OwnershipReShade && request.EnableReShadeCoexistence:
-			chainedPath := filepath.Join(targetPath, "ReShade64.dll")
+			if strings.TrimSpace(chainedReShadeRuntime) == "" {
+				chainedReShadeRuntime = "ReShade64.dll"
+			}
+			chainedPath := filepath.Join(targetPath, chainedReShadeRuntime)
 			if _, err := os.Stat(chainedPath); err == nil {
 				chainedOwner, chainedErr := m.inspectOwnership(chainedPath)
 				if chainedErr != nil || chainedOwner != OwnershipReShade {
@@ -615,6 +651,9 @@ func upsertOperation(operations []Operation, operation Operation) []Operation {
 func detectDrift(targetPath string, manifest Manifest) ([]Drift, error) {
 	var drift []Drift
 	for _, file := range manifest.Files {
+		if file.Ownership == string(OwnershipReShade) {
+			continue
+		}
 		path := filepath.Join(targetPath, file.RelativePath)
 		hash, size, err := fileops.FileIntegrity(path)
 		if errors.Is(err, os.ErrNotExist) {
@@ -644,7 +683,7 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 	for _, file := range manifest.Files {
 		target := filepath.Join(targetPath, file.RelativePath)
 		if manifest.OriginalReShadeProxy != nil &&
-			strings.EqualFold(filepath.Base(file.RelativePath), "ReShade64.dll") {
+			isChainedReShadeRuntime(file.RelativePath) {
 			operations = append(operations, Operation{
 				Type:       "move",
 				SourcePath: target,
@@ -668,6 +707,11 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 		}
 	}
 	return operations
+}
+
+func isChainedReShadeRuntime(relative string) bool {
+	name := filepath.Base(relative)
+	return strings.EqualFold(name, "ReShade64.dll") || strings.EqualFold(name, "ReShade32.dll")
 }
 
 func releaseFromStoredTarget(target dbtypes.OptiScalerTarget) Release {

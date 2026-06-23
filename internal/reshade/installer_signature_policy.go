@@ -19,12 +19,28 @@ func enforceInstallerSignaturePolicy(
 	certificateSHA1 string,
 ) (InstallerSignature, error) {
 	if variant == InstallerVariantAddon {
-		if authenticodeStatus != "NotSigned" || subject != "" || spkiSHA256 != "" {
+		if authenticodeStatus == "NotSigned" && subject == "" && spkiSHA256 == "" {
+			return InstallerSignature{
+				Status: InstallerSignatureStatusUnsigned,
+			}, nil
+		}
+		if authenticodeStatus != "Valid" && authenticodeStatus != "UnknownError" {
 			return InstallerSignature{}, fmt.Errorf(
 				"full add-on installer signature state changed: status %q", authenticodeStatus)
 		}
+		if !strings.EqualFold(strings.TrimSpace(subject), reShadeSignerSubject) {
+			return InstallerSignature{}, fmt.Errorf(
+				"full add-on installer signer subject %q is not trusted", subject)
+		}
+		if !strings.EqualFold(strings.TrimSpace(spkiSHA256), reShadeSignerSPKISHA256) {
+			return InstallerSignature{}, fmt.Errorf(
+				"full add-on installer signer public key %q is not trusted", spkiSHA256)
+		}
 		return InstallerSignature{
-			Status: InstallerSignatureStatusUnsigned,
+			Status:          InstallerSignatureStatusVerified,
+			Subject:         subject,
+			SPKISHA256:      strings.ToLower(spkiSHA256),
+			CertificateSHA1: strings.ToLower(certificateSHA1),
 		}, nil
 	}
 	if variant != InstallerVariantStandard {

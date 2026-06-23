@@ -11,6 +11,7 @@ import (
 
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/filetxn"
+	"github.com/phergul/fiach/internal/optiscaler"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 	"github.com/phergul/fiach/internal/winversion"
 )
@@ -99,6 +100,11 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 }
 
 func (m *Manager) commitState(ctx context.Context, targetPath string, preview Preview) error {
+	if preview.Request.OptiScalerPrimaryProxyFilename != "" {
+		if err := m.commitOptiScalerChainState(ctx, targetPath, preview); err != nil {
+			return err
+		}
+	}
 	if preview.Request.Action == ActionUninstall {
 		return m.store.DeleteReShadeTarget(ctx, preview.Request.GameID, preview.Request.TargetRelativePath)
 	}
@@ -114,20 +120,92 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 	}
 	verifiedAt := m.now().UTC().Format(timeFormat)
 	_, err = m.store.SaveReShadeTarget(ctx, dbtypes.SaveReShadeTargetInput{
-		GameID: preview.Request.GameID, TargetRelativePath: preview.Request.TargetRelativePath,
+		GameID:                 preview.Request.GameID,
+		TargetRelativePath:     preview.Request.TargetRelativePath,
 		ExecutableRelativePath: preview.Request.ExecutableRelativePath,
-		RenderingAPI:           string(preview.Request.RenderingAPI), ProxyFilename: preview.Request.ProxyFilename,
-		Architecture: string(preview.Request.Architecture), BuildVariant: string(preview.Request.BuildVariant),
-		RuntimeVersion:     preview.DesiredTarget.RuntimeVersion,
-		InstallerTag:       preview.DesiredTarget.Provenance.Tag,
-		InstallerAssetName: preview.DesiredTarget.Provenance.AssetName,
-		InstallerURL:       preview.DesiredTarget.Provenance.URL,
-		InstallerDigest:    preview.DesiredTarget.Provenance.Digest,
-		InstallerSize:      preview.DesiredTarget.Provenance.Size,
-		ManagementOrigin:   preview.DesiredTarget.ManagementOrigin, Status: "managed",
-		ManifestJSON: string(manifestJSON), LastVerifiedAt: &verifiedAt,
+		RenderingAPI:           string(preview.Request.RenderingAPI),
+		ProxyFilename:          preview.Request.ProxyFilename,
+		ActiveRuntimeFilename:  preview.Request.ActiveRuntimeFilename,
+		Architecture:           string(preview.Request.Architecture),
+		BuildVariant:           string(preview.Request.BuildVariant),
+		RuntimeVersion:         preview.DesiredTarget.RuntimeVersion,
+		InstallerTag:           preview.DesiredTarget.Provenance.Tag,
+		InstallerAssetName:     preview.DesiredTarget.Provenance.AssetName,
+		InstallerURL:           preview.DesiredTarget.Provenance.URL,
+		InstallerDigest:        preview.DesiredTarget.Provenance.Digest,
+		InstallerSize:          preview.DesiredTarget.Provenance.Size,
+		ManagementOrigin:       preview.DesiredTarget.ManagementOrigin,
+		Status:                 "managed",
+		ManifestJSON:           string(manifestJSON),
+		LastVerifiedAt:         &verifiedAt,
 	})
 	return err
+}
+
+func (m *Manager) commitOptiScalerChainState(ctx context.Context, targetPath string, preview Preview) error {
+	store, ok := m.store.(optiScalerTargetStore)
+	if !ok {
+		return nil
+	}
+	target, found, err := store.GetOptiScalerTarget(ctx, preview.Request.GameID, preview.Request.TargetRelativePath)
+	if err != nil || !found {
+		return err
+	}
+	var manifest optiscaler.Manifest
+	if err := json.Unmarshal([]byte(target.ManifestJSON), &manifest); err != nil {
+		return fmt.Errorf("decode OptiScaler manifest for ReShade chain update: %w", err)
+	}
+	manifest.Config.LoadReShade = preview.Request.Action != ActionUninstall
+	if err := refreshOptiScalerConfigManifestFile(targetPath, &manifest); err != nil {
+		return err
+	}
+	manifestJSON, err := json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+	verifiedAt := m.now().UTC().Format(timeFormat)
+	_, err = store.SaveOptiScalerTarget(ctx, dbtypes.SaveOptiScalerTargetInput{
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		GraphicsAPI:            target.GraphicsAPI,
+		ProxyFilename:          target.ProxyFilename,
+		DXGISpoofing:           target.DXGISpoofing,
+		ProcessFilter:          target.ProcessFilter,
+		ReleaseTag:             target.ReleaseTag,
+		ReleaseVersion:         target.ReleaseVersion,
+		ReleaseAssetName:       target.ReleaseAssetName,
+		ReleaseDigest:          target.ReleaseDigest,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 target.Status,
+		ManifestJSON:           string(manifestJSON),
+		WarningVersion:         target.WarningVersion,
+		WarningAcknowledgedAt:  target.WarningAcknowledgedAt,
+		LastVerifiedAt:         &verifiedAt,
+	})
+	return err
+}
+
+func refreshOptiScalerConfigManifestFile(targetPath string, manifest *optiscaler.Manifest) error {
+	configPath := filepath.Join(targetPath, "OptiScaler.ini")
+	hash, size, err := fileops.FileIntegrity(configPath)
+	if err != nil {
+		return fmt.Errorf("inspect managed OptiScaler configuration after ReShade chain update: %w", err)
+	}
+	for index := range manifest.Files {
+		if !strings.EqualFold(filepath.Clean(manifest.Files[index].RelativePath), "OptiScaler.ini") {
+			continue
+		}
+		manifest.Files[index].SHA256 = hash
+		manifest.Files[index].SizeBytes = size
+		return nil
+	}
+	manifest.Files = append(manifest.Files, optiscaler.ManagedFile{
+		RelativePath: "OptiScaler.ini",
+		SHA256:       hash,
+		SizeBytes:    size,
+	})
+	return nil
 }
 
 func persistOperationBackups(operations []Operation, snapshots []filetxn.Snapshot) error {
@@ -198,14 +276,24 @@ func (m *Manager) markRecoveryRequired(ctx context.Context, request Request) err
 	}
 	row.Status = "recovery_required"
 	_, err = m.store.SaveReShadeTarget(ctx, dbtypes.SaveReShadeTargetInput{
-		GameID: row.GameID, TargetRelativePath: row.TargetRelativePath,
-		ExecutableRelativePath: row.ExecutableRelativePath, RenderingAPI: row.RenderingAPI,
-		ProxyFilename: row.ProxyFilename, Architecture: row.Architecture,
-		BuildVariant: row.BuildVariant, RuntimeVersion: row.RuntimeVersion,
-		InstallerTag: row.InstallerTag, InstallerAssetName: row.InstallerAssetName,
-		InstallerURL: row.InstallerURL, InstallerDigest: row.InstallerDigest,
-		InstallerSize: row.InstallerSize, ManagementOrigin: row.ManagementOrigin,
-		Status: row.Status, ManifestJSON: row.ManifestJSON, LastVerifiedAt: row.LastVerifiedAt,
+		GameID:                 row.GameID,
+		TargetRelativePath:     row.TargetRelativePath,
+		ExecutableRelativePath: row.ExecutableRelativePath,
+		RenderingAPI:           row.RenderingAPI,
+		ProxyFilename:          row.ProxyFilename,
+		ActiveRuntimeFilename:  row.ActiveRuntimeFilename,
+		Architecture:           row.Architecture,
+		BuildVariant:           row.BuildVariant,
+		RuntimeVersion:         row.RuntimeVersion,
+		InstallerTag:           row.InstallerTag,
+		InstallerAssetName:     row.InstallerAssetName,
+		InstallerURL:           row.InstallerURL,
+		InstallerDigest:        row.InstallerDigest,
+		InstallerSize:          row.InstallerSize,
+		ManagementOrigin:       row.ManagementOrigin,
+		Status:                 row.Status,
+		ManifestJSON:           row.ManifestJSON,
+		LastVerifiedAt:         row.LastVerifiedAt,
 	})
 	return err
 }
@@ -278,7 +366,8 @@ func verifyAppliedReShadeState(targetPath string, preview Preview) error {
 	default:
 		return errors.New("ReShade variant provenance is missing")
 	}
-	runtimePath := filepath.Join(targetPath, preview.Request.ProxyFilename)
+	activeRuntime := activeRuntimeFilename(preview.Request)
+	runtimePath := filepath.Join(targetPath, activeRuntime)
 	metadata, err := winversion.Read(runtimePath)
 	if err != nil {
 		return fmt.Errorf("read installed ReShade runtime metadata: %w", err)
@@ -318,12 +407,12 @@ func verifyAppliedReShadeState(targetPath string, preview Preview) error {
 		proxyMetadata, metadataErr := winversion.Read(path)
 		if metadataErr == nil && isReShadeMetadata(proxyMetadata) {
 			reShadeProxies++
-			if !strings.EqualFold(filename, preview.Request.ProxyFilename) {
+			if !strings.EqualFold(filename, activeRuntime) {
 				return fmt.Errorf("unexpected ReShade proxy %q remains installed", filename)
 			}
 		}
 	}
-	if reShadeProxies != 1 {
+	if strings.EqualFold(activeRuntime, preview.Request.ProxyFilename) && reShadeProxies != 1 {
 		return fmt.Errorf("final ReShade proxy count is %d, want 1", reShadeProxies)
 	}
 	return nil

@@ -22,7 +22,7 @@ const reShadeTargetColumns = `
 		WHEN 'd3d12.dll' THEN 'd3d12'
 		WHEN 'dxgi.dll' THEN 'd3d11'
 	END) AS rendering_api,
-	r.preferred_proxy_filename AS proxy_filename, t.architecture, r.build_variant, r.runtime_version, r.installer_tag,
+	r.preferred_proxy_filename AS proxy_filename, r.active_runtime_filename, t.architecture, r.build_variant, r.runtime_version, r.installer_tag,
 	r.installer_asset_name, r.installer_url, r.installer_digest, r.installer_size,
 	r.management_origin, t.status, r.manifest_json, t.created_at, t.updated_at, t.last_verified_at
 `
@@ -83,7 +83,7 @@ func (s *Store) SaveReShadeTarget(ctx context.Context, input dbtypes.SaveReShade
 			installer_size = excluded.installer_size,
 			management_origin = excluded.management_origin,
 			manifest_json = excluded.manifest_json
-	`, targetID, input.ProxyFilename, input.ProxyFilename, input.BuildVariant, input.RuntimeVersion,
+	`, targetID, input.ProxyFilename, input.ActiveRuntimeFilename, input.BuildVariant, input.RuntimeVersion,
 		nullableText(cleanOptionalString(input.InstallerTag)), nullableText(cleanOptionalString(input.InstallerAssetName)),
 		nullableText(cleanOptionalString(input.InstallerURL)), nullableText(cleanOptionalString(input.InstallerDigest)),
 		input.InstallerSize, input.ManagementOrigin, input.ManifestJSON)
@@ -218,6 +218,10 @@ func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtyp
 	}
 	if strings.TrimSpace(input.ProxyFilename) == "" {
 		return input, errors.New("proxy filename is required")
+	}
+	input.ActiveRuntimeFilename = strings.TrimSpace(input.ActiveRuntimeFilename)
+	if input.ActiveRuntimeFilename == "" {
+		input.ActiveRuntimeFilename = input.ProxyFilename
 	}
 	if !slices.Contains([]string{"x86", "x64"}, input.Architecture) {
 		return input, errors.New("architecture is invalid")

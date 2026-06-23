@@ -94,3 +94,44 @@ func TestDiscoverCandidatesReportsForeignAndAmbiguousProxies(t *testing.T) {
 		t.Fatalf("candidate = %+v", candidate)
 	}
 }
+
+func TestDiscoverCandidatesAllowsManagedForeignProxy(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	executable := filepath.Join(root, "bin", "Game.exe")
+	proxy := filepath.Join(root, "bin", "dxgi.dll")
+	for _, path := range []string{executable, proxy} {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte("file"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	result, err := DiscoverCandidates(root, DiscoveryOptions{
+		AllowedForeignProxyPaths: []string{proxy},
+		InspectArchitecture: func(string) (Architecture, error) {
+			return ArchitectureX64, nil
+		},
+		ReadMetadata: func(string) (winversion.Metadata, error) {
+			return winversion.Metadata{
+				ProductName:      "OptiScaler",
+				OriginalFilename: "OptiScaler.dll",
+			}, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Candidates) != 1 {
+		t.Fatalf("candidates = %+v", result.Candidates)
+	}
+	candidate := result.Candidates[0]
+	if len(candidate.Conflicts) != 0 ||
+		len(candidate.ProxyEvidence) != 1 ||
+		candidate.ProxyEvidence[0].Conflict != "" {
+		t.Fatalf("candidate = %+v", candidate)
+	}
+}

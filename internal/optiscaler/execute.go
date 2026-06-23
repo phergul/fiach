@@ -126,6 +126,9 @@ func verifyOperations(operations []Operation) error {
 
 func (m *Manager) commitState(ctx context.Context, targetPath string, preview Preview, snapshots []journalSnapshot) error {
 	if preview.Request.Action == ActionUninstall {
+		if err := m.restoreManagedReShadeAfterUninstall(ctx, targetPath, preview.Request); err != nil {
+			return err
+		}
 		return m.store.DeleteOptiScalerTarget(ctx, preview.Request.GameID, preview.Request.TargetRelativePath)
 	}
 	manifest := Manifest{
@@ -212,6 +215,7 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 		if operation.Type == "move" {
 			name := filepath.Base(operation.SourcePath)
 			manifest.OriginalReShadeProxy = &name
+			manifest.Files[len(manifest.Files)-1].Ownership = string(OwnershipReShade)
 		}
 	}
 	for _, file := range previousFiles {
@@ -253,7 +257,15 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 		WarningAcknowledgedAt:  acknowledgedAt,
 		LastVerifiedAt:         &verifiedAt,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if manifest.Config.LoadReShade {
+		if err := m.chainManagedReShade(ctx, targetPath, preview.Request, verifiedAt); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 const timeFormat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -282,6 +294,98 @@ func (m *Manager) markRecoveryRequired(ctx context.Context, request Request) err
 		WarningVersion:         target.WarningVersion,
 		WarningAcknowledgedAt:  target.WarningAcknowledgedAt,
 		LastVerifiedAt:         target.LastVerifiedAt,
+	})
+	return err
+}
+
+func (m *Manager) chainManagedReShade(
+	ctx context.Context,
+	targetPath string,
+	request Request,
+	verifiedAt string,
+) error {
+	store, ok := m.store.(reShadeTargetStore)
+	if !ok {
+		return nil
+	}
+	target, found, err := store.GetReShadeTarget(ctx, request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		return err
+	}
+	activeRuntime := chainedReShadeRuntimeFilename(target.Architecture)
+	manifestJSON, err := rewriteReShadeRuntimeManifest(
+		targetPath,
+		target.ManifestJSON,
+		firstNonEmpty(target.ActiveRuntimeFilename, target.ProxyFilename),
+		activeRuntime,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = store.SaveReShadeTarget(ctx, dbtypes.SaveReShadeTargetInput{
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		RenderingAPI:           target.RenderingAPI,
+		ProxyFilename:          target.ProxyFilename,
+		ActiveRuntimeFilename:  activeRuntime,
+		Architecture:           target.Architecture,
+		BuildVariant:           target.BuildVariant,
+		RuntimeVersion:         target.RuntimeVersion,
+		InstallerTag:           target.InstallerTag,
+		InstallerAssetName:     target.InstallerAssetName,
+		InstallerURL:           target.InstallerURL,
+		InstallerDigest:        target.InstallerDigest,
+		InstallerSize:          target.InstallerSize,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 "managed",
+		ManifestJSON:           manifestJSON,
+		LastVerifiedAt:         &verifiedAt,
+	})
+	return err
+}
+
+func (m *Manager) restoreManagedReShadeAfterUninstall(
+	ctx context.Context,
+	targetPath string,
+	request Request,
+) error {
+	store, ok := m.store.(reShadeTargetStore)
+	if !ok {
+		return nil
+	}
+	target, found, err := store.GetReShadeTarget(ctx, request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		return err
+	}
+	activeRuntime := firstNonEmpty(target.ActiveRuntimeFilename, target.ProxyFilename)
+	if strings.EqualFold(activeRuntime, target.ProxyFilename) {
+		return nil
+	}
+	manifestJSON, err := rewriteReShadeRuntimeManifest(targetPath, target.ManifestJSON, activeRuntime, target.ProxyFilename)
+	if err != nil {
+		return err
+	}
+	verifiedAt := m.now().UTC().Format(timeFormat)
+	_, err = store.SaveReShadeTarget(ctx, dbtypes.SaveReShadeTargetInput{
+		GameID:                 target.GameID,
+		TargetRelativePath:     target.TargetRelativePath,
+		ExecutableRelativePath: target.ExecutableRelativePath,
+		RenderingAPI:           target.RenderingAPI,
+		ProxyFilename:          target.ProxyFilename,
+		ActiveRuntimeFilename:  target.ProxyFilename,
+		Architecture:           target.Architecture,
+		BuildVariant:           target.BuildVariant,
+		RuntimeVersion:         target.RuntimeVersion,
+		InstallerTag:           target.InstallerTag,
+		InstallerAssetName:     target.InstallerAssetName,
+		InstallerURL:           target.InstallerURL,
+		InstallerDigest:        target.InstallerDigest,
+		InstallerSize:          target.InstallerSize,
+		ManagementOrigin:       target.ManagementOrigin,
+		Status:                 "managed",
+		ManifestJSON:           manifestJSON,
+		LastVerifiedAt:         &verifiedAt,
 	})
 	return err
 }
@@ -359,4 +463,62 @@ func (m *Manager) archiveUninstall(targetPath string, preview Preview) error {
 		}
 	}
 	return nil
+}
+
+func rewriteReShadeRuntimeManifest(
+	targetPath string,
+	manifestJSON string,
+	oldRuntime string,
+	newRuntime string,
+) (string, error) {
+	var manifest map[string]any
+	if err := json.Unmarshal([]byte(manifestJSON), &manifest); err != nil {
+		return "", fmt.Errorf("decode ReShade manifest for chain update: %w", err)
+	}
+	files, _ := manifest["files"].([]any)
+	hash, size, integrityErr := fileops.FileIntegrity(filepath.Join(targetPath, newRuntime))
+	if integrityErr != nil {
+		return "", fmt.Errorf("inspect managed ReShade chained runtime %q: %w", newRuntime, integrityErr)
+	}
+	updated := false
+	for _, item := range files {
+		file, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		relativePath, _ := file["relativePath"].(string)
+		if !strings.EqualFold(filepath.Clean(relativePath), filepath.Clean(oldRuntime)) &&
+			!strings.EqualFold(filepath.Clean(relativePath), filepath.Clean(newRuntime)) {
+			continue
+		}
+		file["relativePath"] = newRuntime
+		file["sha256"] = hash
+		file["sizeBytes"] = float64(size)
+		updated = true
+		break
+	}
+	if !updated {
+		return "", fmt.Errorf("ReShade manifest runtime %q was not found", oldRuntime)
+	}
+	encoded, err := json.Marshal(manifest)
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func chainedReShadeRuntimeFilename(architecture string) string {
+	if strings.EqualFold(architecture, "x86") {
+		return "ReShade32.dll"
+	}
+	return "ReShade64.dll"
 }

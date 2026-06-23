@@ -43,16 +43,17 @@ type SetupInput struct {
 }
 
 type SetupRequest struct {
-	Artifact                    InstallerArtifact
-	TargetExecutable            string
-	RenderingAPI                RenderingAPI
-	Operation                   SetupOperation
-	Architecture                Architecture
-	ExpectedProxy               string
-	ExistingInputs              []SetupInput
-	ExpectedOutputRelativePaths []string
-	Acknowledgements            InstallerAcknowledgements
-	Timeout                     time.Duration
+	Artifact                        InstallerArtifact
+	TargetExecutable                string
+	RenderingAPI                    RenderingAPI
+	Operation                       SetupOperation
+	Architecture                    Architecture
+	ExpectedProxy                   string
+	AllowedProxyOutputRelativePaths []string
+	ExistingInputs                  []SetupInput
+	ExpectedOutputRelativePaths     []string
+	Acknowledgements                InstallerAcknowledgements
+	Timeout                         time.Duration
 }
 
 type SetupExecutionResult struct {
@@ -228,7 +229,7 @@ func PrepareSetup(
 	if err := validateWorkspaceChanges(
 		before,
 		after,
-		cleanRequest.ExpectedOutputRelativePaths,
+		setupAllowedOutputRelativePaths(cleanRequest),
 	); err != nil {
 		return result, err
 	}
@@ -399,7 +400,31 @@ func validateSetupRequest(
 	}
 	sort.Strings(expected)
 	request.ExpectedOutputRelativePaths = expected
+
+	allowedProxyOutputs := make([]string, 0, len(request.AllowedProxyOutputRelativePaths))
+	for _, relativePath := range request.AllowedProxyOutputRelativePaths {
+		cleanRelative, err := cleanSetupRelativePath(relativePath)
+		if err != nil {
+			return SetupRequest{}, "", err
+		}
+		key := strings.ToLower(cleanRelative)
+		if expectedSeen[key] {
+			continue
+		}
+		allowedProxyOutputs = append(allowedProxyOutputs, cleanRelative)
+	}
+	sort.Strings(allowedProxyOutputs)
+	sort.Strings(expected)
+	request.AllowedProxyOutputRelativePaths = allowedProxyOutputs
+	request.ExpectedOutputRelativePaths = expected
 	return request, executableSHA, nil
+}
+
+func setupAllowedOutputRelativePaths(request SetupRequest) []string {
+	allowed := append([]string(nil), request.ExpectedOutputRelativePaths...)
+	allowed = append(allowed, request.AllowedProxyOutputRelativePaths...)
+	sort.Strings(allowed)
+	return allowed
 }
 
 func cleanSetupRelativePath(path string) (string, error) {
@@ -439,6 +464,7 @@ func setupWorkspaceKey(request SetupRequest, executableSHA string) (string, erro
 		Operation      SetupOperation
 		Architecture   Architecture
 		ExpectedProxy  string
+		AllowedProxy   []string
 		Inputs         []string
 		ExpectedOutput []string
 	}
@@ -458,6 +484,7 @@ func setupWorkspaceKey(request SetupRequest, executableSHA string) (string, erro
 		Operation:      request.Operation,
 		Architecture:   request.Architecture,
 		ExpectedProxy:  strings.ToLower(request.ExpectedProxy),
+		AllowedProxy:   request.AllowedProxyOutputRelativePaths,
 		Inputs:         inputs,
 		ExpectedOutput: request.ExpectedOutputRelativePaths,
 	})
@@ -550,8 +577,8 @@ func verifyPreparedOutputs(
 	request SetupRequest,
 	options SetupRunnerOptions,
 ) ([]PreparedSetupFile, error) {
-	proxyPath := filepath.Join(workspacePath, request.ExpectedProxy)
-	if _, err := fileops.StatRegularFile("prepared ReShade proxy", proxyPath); err != nil {
+	proxyPath, err := preparedProxyPath(workspacePath, request)
+	if err != nil {
 		return nil, err
 	}
 	metadata, err := options.ReadMetadata(proxyPath)
@@ -598,6 +625,9 @@ func verifyPreparedOutputs(
 	files := make([]PreparedSetupFile, 0, len(request.ExpectedOutputRelativePaths))
 	for _, relativePath := range request.ExpectedOutputRelativePaths {
 		path := filepath.Join(workspacePath, relativePath)
+		if strings.EqualFold(filepath.Clean(relativePath), filepath.Clean(request.ExpectedProxy)) {
+			path = proxyPath
+		}
 		info, err := os.Stat(path)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
@@ -623,6 +653,20 @@ func verifyPreparedOutputs(
 		return files[i].RelativePath < files[j].RelativePath
 	})
 	return files, nil
+}
+
+func preparedProxyPath(workspacePath string, request SetupRequest) (string, error) {
+	candidates := append(
+		[]string{request.ExpectedProxy},
+		request.AllowedProxyOutputRelativePaths...,
+	)
+	for _, relativePath := range candidates {
+		proxyPath := filepath.Join(workspacePath, relativePath)
+		if _, err := fileops.StatRegularFile("prepared ReShade proxy", proxyPath); err == nil {
+			return proxyPath, nil
+		}
+	}
+	return "", fmt.Errorf("prepared ReShade proxy %q is missing", request.ExpectedProxy)
 }
 
 func inspectPEArchitecture(path string) (Architecture, error) {

@@ -56,6 +56,100 @@ func TestDirectXPlannerInstallUsesPreparedRuntimeAndPreservesExistingConfig(t *t
 	}
 }
 
+func TestDirectXPlannerAllowsInstallerDefaultProxyOutputForDXGISelection(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stagedRuntime := filepath.Join(t.TempDir(), "d3d11.dll")
+	if err := os.WriteFile(stagedRuntime, []byte("runtime"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	hash, size, err := fileops.FileIntegrity(stagedRuntime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifact := InstallerArtifact{
+		InstallerRelease: InstallerRelease{
+			Version:   "6.7.3",
+			Variant:   InstallerVariantStandard,
+			AssetName: "ReShade_Setup_6.7.3.exe",
+			URL:       "https://reshade.me/downloads/ReShade_Setup_6.7.3.exe",
+		},
+		Path:      filepath.Join(root, "installer.exe"),
+		SizeBytes: 100,
+		SHA256:    strings.Repeat("a", 64),
+	}
+	planner := NewDirectXPlanner(DirectXPlannerOptions{
+		ResolveInstaller: func(
+			context.Context,
+			InstallerVariant,
+			InstallerResolveOptions,
+		) (InstallerRelease, error) {
+			return artifact.InstallerRelease, nil
+		},
+		AcquireInstaller: func(
+			context.Context,
+			InstallerRelease,
+			InstallerAcquireOptions,
+		) (InstallerArtifact, error) {
+			return artifact, nil
+		},
+		PrepareSetup: func(
+			_ context.Context,
+			request SetupRequest,
+			_ SetupRunnerOptions,
+		) (SetupRunResult, error) {
+			if !strings.EqualFold(request.ExpectedProxy, "dxgi.dll") ||
+				len(request.AllowedProxyOutputRelativePaths) != 1 ||
+				!strings.EqualFold(request.AllowedProxyOutputRelativePaths[0], "d3d11.dll") {
+				t.Fatalf("setup request = %+v", request)
+			}
+			return SetupRunResult{
+				Prepared: &PreparedSetup{
+					Files: []PreparedSetupFile{
+						{
+							RelativePath: "dxgi.dll",
+							Path:         stagedRuntime,
+							SHA256:       hash,
+							SizeBytes:    size,
+						},
+					},
+				},
+			}, nil
+		},
+		InspectArchitecture: func(string) (Architecture, error) {
+			return ArchitectureX64, nil
+		},
+		ReadMetadata: func(string) (winversion.Metadata, error) {
+			return winversion.Metadata{}, nil
+		},
+	})
+
+	preview, err := planner.Plan(context.Background(), root, Request{
+		Action:                 ActionInstall,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           RenderingAPID3D11,
+		ProxyFilename:          "dxgi.dll",
+		Architecture:           ArchitectureX64,
+		BuildVariant:           BuildVariantStandard,
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(preview.Operations) != 1 ||
+		filepath.Base(preview.Operations[0].TargetPath) != "dxgi.dll" ||
+		preview.DesiredTarget == nil ||
+		len(preview.DesiredTarget.Manifest.Files) != 1 ||
+		preview.DesiredTarget.Manifest.Files[0].RelativePath != "dxgi.dll" {
+		t.Fatalf("preview = %+v", preview)
+	}
+}
+
 func TestDirectXPlannerAdoptRecordsUserDeclaredVariant(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()

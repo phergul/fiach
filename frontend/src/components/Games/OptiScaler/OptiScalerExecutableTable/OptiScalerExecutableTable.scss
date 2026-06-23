@@ -65,6 +65,7 @@ $optiscaler-table-status-width: 20rem;
   min-height: 5rem;
   background: $color-surface;
   transition: background-color $transition-duration-fast $transition-easing-standard;
+  margin-bottom: $spacing-separator;
 }
 
 .optiscaler-executable-row:hover {

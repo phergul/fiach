@@ -16,6 +16,7 @@ import {
   PreviewOptiScalerAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/optiscalerservice';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { WizardError } from '@components/Common/WizardError/WizardError';
 import { OptiScalerPreview } from '@components/Games/OptiScaler/OptiScalerPreview/OptiScalerPreview';
 import { OptiScalerWizardConfigurationStep } from './OptiScalerWizardConfigurationStep/OptiScalerWizardConfigurationStep';
 import { OptiScalerWizardSafetyStep } from './OptiScalerWizardSafetyStep/OptiScalerWizardSafetyStep';
@@ -26,6 +27,11 @@ import './OptiScalerWizard.scss';
 
 type WizardStep = 'target' | 'configuration' | 'safety' | 'preview' | 'result';
 type OperationPhase = 'idle' | 'previewing' | 'applying' | 'refreshing';
+
+interface WizardErrorState {
+  details: string;
+  summary: string;
+}
 
 interface OperationDefinition {
   label: string;
@@ -109,7 +115,7 @@ const initialValues = (selection: OptiScalerOperationSelection): WizardValues =>
 
   return {
     dxgiSpoofing: selection.target === null ? null : selection.target.DXGISpoofing,
-    enableReShadeCoexistence: selection.target?.EnableReShadeCoexistence ?? false,
+    enableReShadeCoexistence: selection.target?.EnableReShadeCoexistence ?? selection.candidate?.hasReShade ?? false,
     graphicsAPI: storedGraphicsAPI === GraphicsAPI.GraphicsAPIVulkan
       ? GraphicsAPI.GraphicsAPIVulkan
       : storedGraphicsAPI === GraphicsAPI.GraphicsAPIDirectX
@@ -142,7 +148,7 @@ export const OptiScalerWizard = ({
   const [backupAndContinue, setBackupAndContinue] = useState(false);
   const [preview, setPreview] = useState<OptiScalerPreviewModel | null>(null);
   const [result, setResult] = useState<OptiScalerApplyResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<WizardErrorState | null>(null);
   const [phase, setPhase] = useState<OperationPhase>('idle');
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const currentStepIndex = definition.steps.indexOf(step);
@@ -196,7 +202,7 @@ export const OptiScalerWizard = ({
     updateValues({
       enableReShadeCoexistence: nextAPI === GraphicsAPI.GraphicsAPIVulkan
         ? false
-        : values.enableReShadeCoexistence,
+        : values.enableReShadeCoexistence || (selection.candidate?.hasReShade ?? false),
       graphicsAPI: nextAPI,
       proxyFilename: nextAPI === GraphicsAPI.GraphicsAPIDirectX
         ? 'dxgi.dll'
@@ -216,7 +222,10 @@ export const OptiScalerWizard = ({
       setPreview(await PreviewOptiScalerAction(nextRequest));
       setStep('preview');
     } catch (previewError) {
-      setError(getErrorMessage(previewError));
+      setError({
+        details: getErrorMessage(previewError),
+        summary: 'Could not build the OptiScaler preview.',
+      });
     } finally {
       setPhase('idle');
     }
@@ -236,13 +245,17 @@ export const OptiScalerWizard = ({
       await onRefresh();
       setPhase('idle');
     } catch (applyError) {
-      setError(getErrorMessage(applyError));
+      const message = getErrorMessage(applyError);
+      setError({
+        details: message,
+        summary: 'Could not apply the OptiScaler operation.',
+      });
       const recovery = await GetOptiScalerRecoveryState().catch(() => null);
       if (recovery?.required) {
         await onRecoveryRequired();
       }
       setResult({
-        message: getErrorMessage(applyError),
+        message,
         rolledBack: recovery?.required !== true,
         success: false,
       });
@@ -349,6 +362,7 @@ export const OptiScalerWizard = ({
         </ol>
 
         <form className="optiscaler-wizard-form" onSubmit={submit}>
+          {error !== null && <WizardError details={error.details} summary={error.summary} />}
           <div className="optiscaler-wizard-scroll">
             {step === 'target' && (
               <OptiScalerWizardTargetStep actionLabel={definition.label} selection={selection} />
@@ -363,7 +377,6 @@ export const OptiScalerWizard = ({
                 onDXGISpoofingChange={(value) => updateValues({ dxgiSpoofing: value })}
                 onProcessFilterChange={(value) => updateValues({ processFilter: value })}
                 onProxyFilenameChange={(value) => updateValues({ proxyFilename: value })}
-                onReShadeCoexistenceChange={(value) => updateValues({ enableReShadeCoexistence: value })}
                 processFilter={values.processFilter}
                 proxyFilename={values.proxyFilename}
                 supportedProxyFilenames={supportedProxyFilenames}
@@ -427,7 +440,6 @@ export const OptiScalerWizard = ({
                 </div>
               </div>
             )}
-            {error !== null && <p className="optiscaler-wizard-error">{error}</p>}
           </div>
 
           <footer className="optiscaler-wizard-footer">

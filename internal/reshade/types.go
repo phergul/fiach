@@ -145,18 +145,20 @@ type Manifest struct {
 }
 
 type Request struct {
-	Action                    Action         `json:"action"`
-	GameID                    int64          `json:"gameId"`
-	TargetRelativePath        string         `json:"targetRelativePath"`
-	ExecutableRelativePath    string         `json:"executableRelativePath"`
-	RenderingAPI              RenderingAPI   `json:"renderingApi"`
-	ProxyFilename             string         `json:"proxyFilename"`
-	Architecture              Architecture   `json:"architecture"`
-	BuildVariant              BuildVariant   `json:"buildVariant"`
-	BackupAndContinue         bool           `json:"backupAndContinue"`
-	SinglePlayerAcknowledged  bool           `json:"singlePlayerAcknowledged"`
-	AntiCheatRiskAcknowledged bool           `json:"antiCheatRiskAcknowledged"`
-	Content                   ContentRequest `json:"content,omitempty"`
+	Action                         Action         `json:"action"`
+	GameID                         int64          `json:"gameId"`
+	TargetRelativePath             string         `json:"targetRelativePath"`
+	ExecutableRelativePath         string         `json:"executableRelativePath"`
+	RenderingAPI                   RenderingAPI   `json:"renderingApi"`
+	ProxyFilename                  string         `json:"proxyFilename"`
+	ActiveRuntimeFilename          string         `json:"activeRuntimeFilename,omitempty"`
+	OptiScalerPrimaryProxyFilename string         `json:"optiScalerPrimaryProxyFilename,omitempty"`
+	Architecture                   Architecture   `json:"architecture"`
+	BuildVariant                   BuildVariant   `json:"buildVariant"`
+	BackupAndContinue              bool           `json:"backupAndContinue"`
+	SinglePlayerAcknowledged       bool           `json:"singlePlayerAcknowledged"`
+	AntiCheatRiskAcknowledged      bool           `json:"antiCheatRiskAcknowledged"`
+	Content                        ContentRequest `json:"content,omitempty"`
 }
 
 type ContentRequest struct {
@@ -244,6 +246,7 @@ type ManagedTarget struct {
 	ExecutableRelativePath string
 	RenderingAPI           RenderingAPI
 	ProxyFilename          string
+	ActiveRuntimeFilename  string
 	Architecture           Architecture
 	BuildVariant           BuildVariant
 	VariantProvenance      VariantProvenance

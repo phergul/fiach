@@ -7,6 +7,7 @@ type ReShadeTarget struct {
 	ExecutableRelativePath string  `db:"executable_relative_path"`
 	RenderingAPI           string  `db:"rendering_api"`
 	ProxyFilename          string  `db:"proxy_filename"`
+	ActiveRuntimeFilename  string  `db:"active_runtime_filename"`
 	Architecture           string  `db:"architecture"`
 	BuildVariant           string  `db:"build_variant"`
 	RuntimeVersion         string  `db:"runtime_version"`
@@ -29,6 +30,7 @@ type SaveReShadeTargetInput struct {
 	ExecutableRelativePath string
 	RenderingAPI           string
 	ProxyFilename          string
+	ActiveRuntimeFilename  string
 	Architecture           string
 	BuildVariant           string
 	RuntimeVersion         string

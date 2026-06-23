@@ -1,6 +1,6 @@
 module github.com/phergul/fiach
 
-go 1.25.7
+go 1.26.4
 
 require (
 	github.com/andygrunwald/vdf v1.1.0

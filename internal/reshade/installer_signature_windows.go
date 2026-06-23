@@ -114,14 +114,39 @@ func (platformInstallerSignatureVerifier) VerifyInstallerSignature(
 		authenticodeStatus := trustStatusName(status)
 		if status == trustStatusNoSignature {
 			authenticodeStatus = "NotSigned"
+			return enforceInstallerSignaturePolicy(
+				variant,
+				authenticodeStatus,
+				"",
+				"",
+				"",
+				"",
+			)
 		}
+		if status != trustStatusSuccess && status != trustStatusUntrustedRoot {
+			return enforceInstallerSignaturePolicy(
+				variant,
+				authenticodeStatus,
+				"",
+				"",
+				"",
+				"",
+			)
+		}
+		certificate, err := signerCertificateFromFile(pathPointer)
+		if err != nil {
+			return InstallerSignature{}, err
+		}
+		subject := canonicalSignerSubject(certificate)
+		spkiDigest := sha256.Sum256(certificate.RawSubjectPublicKeyInfo)
+		certificateDigest := sha1.Sum(certificate.Raw)
 		return enforceInstallerSignaturePolicy(
 			variant,
-			authenticodeStatus,
-			"",
-			"",
-			"",
-			"",
+			map[bool]string{true: "Valid", false: "UnknownError"}[status == trustStatusSuccess],
+			trustStatusName(status),
+			subject,
+			hex.EncodeToString(spkiDigest[:]),
+			hex.EncodeToString(certificateDigest[:]),
 		)
 	}
 	if variant != InstallerVariantStandard {

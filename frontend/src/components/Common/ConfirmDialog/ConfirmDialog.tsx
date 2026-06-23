@@ -5,7 +5,7 @@ import './ConfirmDialog.scss';
 interface ConfirmDialogProps {
   cancelLabel?: string;
   confirmLabel?: string;
-  confirmTone?: 'danger' | 'default';
+  confirmTone?: 'danger' | 'default' | 'warning';
   isBusy?: boolean;
   isOpen: boolean;
   message: string;
@@ -43,11 +43,7 @@ export const ConfirmDialog = ({
             {cancelLabel}
           </button>
           <button
-            className={
-              confirmTone === 'danger'
-                ? 'confirm-dialog-button confirm-dialog-button-danger'
-                : 'confirm-dialog-button button-main'
-            }
+            className={`confirm-dialog-button confirm-dialog-button-${confirmTone}`}
             disabled={isBusy}
             onClick={onConfirm}
             type="button"

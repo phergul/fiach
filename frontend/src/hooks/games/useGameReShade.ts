@@ -40,6 +40,11 @@ const releaseForTarget = (
   return target.BuildVariant === 'addon' ? installerStatus.addon : installerStatus.standard;
 };
 
+const hasDetectedUnmanagedReShade = (discovery: ManagedReShadeDiscoveryResult | null) =>
+  discovery?.candidates.some((candidate) =>
+    candidate.proxyEvidence.some((evidence) => evidence.isReShade),
+  ) ?? false;
+
 export const isManagedReShadeUpdateAvailable = (
   target: ManagedReShadeTarget,
   installerStatus: ManagedReShadeInstallerStatus | null,
@@ -76,7 +81,7 @@ export const getReShadeAggregateStatus = (
   if (targets.length > 0) {
     return 'managed';
   }
-  if ((discovery?.candidates.length ?? 0) > 0) {
+  if (hasDetectedUnmanagedReShade(discovery)) {
     return 'unmanaged';
   }
   return 'not_detected';

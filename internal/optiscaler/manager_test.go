@@ -14,10 +14,15 @@ type memoryStore struct {
 	mu      sync.Mutex
 	nextID  int64
 	targets map[string]dbtypes.OptiScalerTarget
+	reShade map[string]dbtypes.ReShadeTarget
 }
 
 func newMemoryStore() *memoryStore {
-	return &memoryStore{nextID: 1, targets: map[string]dbtypes.OptiScalerTarget{}}
+	return &memoryStore{
+		nextID:  1,
+		targets: map[string]dbtypes.OptiScalerTarget{},
+		reShade: map[string]dbtypes.ReShadeTarget{},
+	}
 }
 
 func (s *memoryStore) key(gameID int64, path string) string {
@@ -78,4 +83,46 @@ func (s *memoryStore) DeleteOptiScalerTarget(_ context.Context, gameID int64, pa
 	defer s.mu.Unlock()
 	delete(s.targets, s.key(gameID, path))
 	return nil
+}
+
+func (s *memoryStore) GetReShadeTarget(_ context.Context, gameID int64, path string) (dbtypes.ReShadeTarget, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	target, found := s.reShade[s.key(gameID, path)]
+	return target, found, nil
+}
+
+func (s *memoryStore) SaveReShadeTarget(_ context.Context, input dbtypes.SaveReShadeTargetInput) (dbtypes.ReShadeTarget, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key := s.key(input.GameID, input.TargetRelativePath)
+	target := s.reShade[key]
+	if target.ID == 0 {
+		target.ID = s.nextID
+		s.nextID++
+	}
+	activeRuntime := input.ActiveRuntimeFilename
+	if strings.TrimSpace(activeRuntime) == "" {
+		activeRuntime = input.ProxyFilename
+	}
+	target.GameID = input.GameID
+	target.TargetRelativePath = input.TargetRelativePath
+	target.ExecutableRelativePath = input.ExecutableRelativePath
+	target.RenderingAPI = input.RenderingAPI
+	target.ProxyFilename = input.ProxyFilename
+	target.ActiveRuntimeFilename = activeRuntime
+	target.Architecture = input.Architecture
+	target.BuildVariant = input.BuildVariant
+	target.RuntimeVersion = input.RuntimeVersion
+	target.InstallerTag = input.InstallerTag
+	target.InstallerAssetName = input.InstallerAssetName
+	target.InstallerURL = input.InstallerURL
+	target.InstallerDigest = input.InstallerDigest
+	target.InstallerSize = input.InstallerSize
+	target.ManagementOrigin = input.ManagementOrigin
+	target.Status = input.Status
+	target.ManifestJSON = input.ManifestJSON
+	target.LastVerifiedAt = input.LastVerifiedAt
+	s.reShade[key] = target
+	return target, nil
 }

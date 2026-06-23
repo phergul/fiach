@@ -78,6 +78,43 @@ func TestPrepareSetupStagesVerifiesAndReusesCache(t *testing.T) {
 	}
 }
 
+func TestPrepareSetupAcceptsInstallerDefaultProxyAlias(t *testing.T) {
+	t.Parallel()
+
+	request, verifier := setupTestRequest(t)
+	request.AllowedProxyOutputRelativePaths = []string{"d3d11.dll"}
+	processRunner := setupProcessRunnerFunc(func(
+		_ context.Context,
+		processRequest setupProcessRequest,
+	) (setupProcessResult, error) {
+		if err := os.WriteFile(
+			filepath.Join(processRequest.WorkingDir, "d3d11.dll"),
+			[]byte("runtime"),
+			0o644,
+		); err != nil {
+			return setupProcessResult{}, err
+		}
+		now := time.Now()
+		return setupProcessResult{StartedAt: now, FinishedAt: now, ExitCode: 0}, nil
+	})
+
+	result, err := PrepareSetup(
+		context.Background(),
+		request,
+		setupTestRunnerOptions(t, verifier, processRunner),
+	)
+	if err != nil {
+		t.Fatalf("PrepareSetup() error = %v", err)
+	}
+	if result.Prepared == nil || len(result.Prepared.Files) != 1 {
+		t.Fatalf("Prepared = %+v", result.Prepared)
+	}
+	file := result.Prepared.Files[0]
+	if file.RelativePath != "dxgi.dll" || filepath.Base(file.Path) != "d3d11.dll" {
+		t.Fatalf("prepared file = %+v", file)
+	}
+}
+
 func TestPrepareSetupUpdateArgumentsPreserveHostilePath(t *testing.T) {
 	t.Parallel()
 

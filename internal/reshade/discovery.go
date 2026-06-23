@@ -22,8 +22,9 @@ var supportedDirectXProxies = []string{
 }
 
 type DiscoveryOptions struct {
-	InspectArchitecture func(string) (Architecture, error)
-	ReadMetadata        func(string) (winversion.Metadata, error)
+	InspectArchitecture      func(string) (Architecture, error)
+	ReadMetadata             func(string) (winversion.Metadata, error)
+	AllowedForeignProxyPaths []string
 }
 
 func DiscoverCandidates(gameRoot string, options DiscoveryOptions) (result DiscoveryResult, err error) {
@@ -38,6 +39,7 @@ func DiscoverCandidates(gameRoot string, options DiscoveryOptions) (result Disco
 	if options.ReadMetadata == nil {
 		options.ReadMetadata = winversion.Read
 	}
+	options.AllowedForeignProxyPaths = normalizeDiscoveryAllowedProxyPaths(options.AllowedForeignProxyPaths)
 	gameRoot, err = filepath.Abs(gameRoot)
 	if err != nil {
 		return DiscoveryResult{}, err
@@ -120,6 +122,10 @@ func inspectProxyEvidence(targetPath string, options DiscoveryOptions) ([]ProxyE
 		}
 		metadata, metadataErr := options.ReadMetadata(path)
 		if metadataErr != nil || !isReShadeMetadata(metadata) {
+			if discoveryAllowsForeignProxy(path, options) {
+				evidence = append(evidence, item)
+				continue
+			}
 			item.Conflict = "An existing foreign or unidentified DirectX proxy blocks managed ReShade."
 			conflicts = append(conflicts, filename+": "+item.Conflict)
 			evidence = append(evidence, item)
@@ -135,6 +141,32 @@ func inspectProxyEvidence(targetPath string, options DiscoveryOptions) ([]ProxyE
 		conflicts = append(conflicts, "Multiple ReShade DirectX proxies were detected in the same target.")
 	}
 	return evidence, conflicts
+}
+
+func normalizeDiscoveryAllowedProxyPaths(paths []string) []string {
+	result := make([]string, 0, len(paths))
+	for _, path := range paths {
+		absolute, err := filepath.Abs(path)
+		if err != nil {
+			continue
+		}
+		result = append(result, strings.ToLower(filepath.Clean(absolute)))
+	}
+	return result
+}
+
+func discoveryAllowsForeignProxy(path string, options DiscoveryOptions) bool {
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+	key := strings.ToLower(filepath.Clean(absolute))
+	for _, allowed := range options.AllowedForeignProxyPaths {
+		if key == allowed {
+			return true
+		}
+	}
+	return false
 }
 
 func directXAPIOptions() []APIProxyOptions {

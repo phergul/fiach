@@ -11,6 +11,7 @@ func dbInputFromRow(row dbtypes.ReShadeTarget) dbtypes.SaveReShadeTargetInput {
 		ExecutableRelativePath: row.ExecutableRelativePath,
 		RenderingAPI:           row.RenderingAPI,
 		ProxyFilename:          row.ProxyFilename,
+		ActiveRuntimeFilename:  row.ActiveRuntimeFilename,
 		Architecture:           row.Architecture,
 		BuildVariant:           row.BuildVariant,
 		RuntimeVersion:         row.RuntimeVersion,

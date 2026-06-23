@@ -52,7 +52,7 @@ export const getOptiScalerAggregateStatus = (
   if (targets.length > 0) {
     return 'managed';
   }
-  if (candidates.some((candidate) => !candidate.managed)) {
+  if (candidates.some((candidate) => !candidate.managed && candidate.hasOptiScaler)) {
     return 'unmanaged';
   }
   return 'not_detected';

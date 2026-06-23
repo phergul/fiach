@@ -6,12 +6,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 func TestManagerAdoptsVerifiedInstallationWithoutRollbackData(t *testing.T) {
@@ -143,6 +145,81 @@ func TestManagerDirectXChainingAndUninstallRestoreReShadeProxy(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(gameRoot, "ReShade64.dll")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("ReShade64.dll remains after uninstall: %v", err)
+	}
+}
+
+func TestManagerInstallAfterManagedReShadeChainsPersistedRuntime(t *testing.T) {
+	t.Parallel()
+
+	gameRoot, request := newLifecycleGame(t)
+	proxyPath := filepath.Join(gameRoot, request.ProxyFilename)
+	if err := os.WriteFile(proxyPath, []byte("reshade"), 0o644); err != nil {
+		t.Fatalf("WriteFile(ReShade proxy) error = %v", err)
+	}
+	hash, size, err := fileIntegrity(proxyPath)
+	if err != nil {
+		t.Fatalf("fileIntegrity(ReShade proxy) error = %v", err)
+	}
+	store := newMemoryStore()
+	if _, err := store.SaveReShadeTarget(context.Background(), dbtypes.SaveReShadeTargetInput{
+		GameID:                 request.GameID,
+		TargetRelativePath:     request.TargetRelativePath,
+		ExecutableRelativePath: request.ExecutableRelativePath,
+		RenderingAPI:           "d3d11",
+		ProxyFilename:          request.ProxyFilename,
+		ActiveRuntimeFilename:  request.ProxyFilename,
+		Architecture:           "x64",
+		BuildVariant:           "standard",
+		RuntimeVersion:         "6.7.3",
+		ManagementOrigin:       "installed",
+		Status:                 "managed",
+		ManifestJSON: fmt.Sprintf(
+			`{"version":1,"files":[{"relativePath":%q,"sha256":%q,"sizeBytes":%d,"ownership":"managed"}],"variantProvenance":"verified"}`,
+			request.ProxyFilename,
+			hash,
+			size,
+		),
+	}); err != nil {
+		t.Fatalf("SaveReShadeTarget() error = %v", err)
+	}
+
+	manager := lifecycleManager(t, store, testPreparedPackageWithRuntime(t, "optiscaler"), func(path string) (Ownership, error) {
+		if strings.EqualFold(filepath.Base(path), request.ProxyFilename) {
+			return OwnershipReShade, nil
+		}
+		return OwnershipUnknown, errors.New("unknown test file")
+	})
+	request.Action = ActionInstall
+	request.AcknowledgeWarning = true
+
+	previewAndApply(t, manager, gameRoot, request)
+	reShadeTarget, found, err := store.GetReShadeTarget(context.Background(), request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		t.Fatalf("GetReShadeTarget() = %+v, %v, %v", reShadeTarget, found, err)
+	}
+	if reShadeTarget.ProxyFilename != request.ProxyFilename || reShadeTarget.ActiveRuntimeFilename != "ReShade64.dll" {
+		t.Fatalf("ReShade filenames = preferred %q active %q", reShadeTarget.ProxyFilename, reShadeTarget.ActiveRuntimeFilename)
+	}
+	if !strings.Contains(reShadeTarget.ManifestJSON, "ReShade64.dll") {
+		t.Fatalf("ReShade manifest was not chained: %s", reShadeTarget.ManifestJSON)
+	}
+	optiTarget, found, err := store.GetOptiScalerTarget(context.Background(), request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		t.Fatalf("GetOptiScalerTarget() = %+v, %v, %v", optiTarget, found, err)
+	}
+	optiManifest := mustManifest(t, optiTarget.ManifestJSON)
+	var chainedFile ManagedFile
+	for _, file := range optiManifest.Files {
+		if strings.EqualFold(filepath.Base(file.RelativePath), "ReShade64.dll") {
+			chainedFile = file
+			break
+		}
+	}
+	if chainedFile.Ownership != string(OwnershipReShade) {
+		t.Fatalf("chained runtime ownership = %q, want %q", chainedFile.Ownership, OwnershipReShade)
+	}
+	if drift, err := detectDrift(gameRoot, optiManifest); err != nil || len(drift) != 0 {
+		t.Fatalf("OptiScaler drift = %+v, %v", drift, err)
 	}
 }
 

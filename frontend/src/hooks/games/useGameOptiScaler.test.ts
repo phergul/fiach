@@ -29,7 +29,8 @@ describe('getOptiScalerAggregateStatus', () => {
     expect(getOptiScalerAggregateStatus([candidate], [{ ...target, Status: 'drifted' }], null, 'v2', null)).toBe('drift');
     expect(getOptiScalerAggregateStatus([candidate], [target], null, 'v2', null)).toBe('update');
     expect(getOptiScalerAggregateStatus([candidate], [target], null, 'v1', null)).toBe('managed');
-    expect(getOptiScalerAggregateStatus([candidate], [], null, 'v1', null)).toBe('unmanaged');
+    expect(getOptiScalerAggregateStatus([{ ...candidate, hasOptiScaler: true }], [], null, 'v1', null)).toBe('unmanaged');
+    expect(getOptiScalerAggregateStatus([candidate], [], null, 'v1', null)).toBe('not_detected');
     expect(getOptiScalerAggregateStatus([], [], null, 'v1', null)).toBe('not_detected');
   });
 

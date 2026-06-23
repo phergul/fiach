@@ -24,6 +24,7 @@ import {
   PreviewManagedReShadeAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { WizardError } from '@components/Common/WizardError/WizardError';
 import { ReShadePreview } from '@components/Games/ReShade/ReShadePreview/ReShadePreview';
 import type { ReShadeOperationSelection } from '@components/Games/ReShade/ReShadeTargetTable/ReShadeTargetTable';
 import { ReShadeWizardContentStep } from './ReShadeWizardContentStep/ReShadeWizardContentStep';
@@ -36,6 +37,11 @@ import './ReShadeWizard.scss';
 
 type WizardStep = 'target' | 'runtime' | 'content' | 'safety' | 'preview' | 'result';
 type OperationPhase = 'idle' | 'previewing' | 'applying' | 'refreshing' | 'inspecting';
+
+interface WizardErrorState {
+  details: string;
+  summary: string;
+}
 
 interface ReShadeWizardProps {
   catalogue: ManagedReShadeContentCatalogue | null;
@@ -134,7 +140,7 @@ export const ReShadeWizard = ({
   const [backupAndContinue, setBackupAndContinue] = useState(false);
   const [preview, setPreview] = useState<ReShadePreviewModel | null>(null);
   const [result, setResult] = useState<ReShadeApplyResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<WizardErrorState | null>(null);
   const [phase, setPhase] = useState<OperationPhase>('idle');
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [presetPath, setPresetPath] = useState('');
@@ -215,7 +221,10 @@ export const ReShadeWizard = ({
       setPreview(await PreviewManagedReShadeAction(request));
       setStep('preview');
     } catch (previewError) {
-      setError(getErrorMessage(previewError));
+      setError({
+        details: getErrorMessage(previewError),
+        summary: 'Could not build the ReShade preview.',
+      });
     } finally {
       setPhase('idle');
     }
@@ -235,13 +244,17 @@ export const ReShadeWizard = ({
       await onRefresh();
       setPhase('idle');
     } catch (applyError) {
-      setError(getErrorMessage(applyError));
+      const message = getErrorMessage(applyError);
+      setError({
+        details: message,
+        summary: 'Could not apply the ReShade operation.',
+      });
       const recovery = await GetManagedReShadeRecoveryState().catch(() => null);
       if (recovery?.required) {
         await onRecoveryRequired();
       }
       setResult({
-        message: getErrorMessage(applyError),
+        message,
         rolledBack: recovery?.required !== true,
         success: false,
       });
@@ -255,7 +268,10 @@ export const ReShadeWizard = ({
     try {
       setCurrentCatalogue(await ListManagedReShadeContentCatalogue(true));
     } catch (catalogueError) {
-      setError(getErrorMessage(catalogueError));
+      setError({
+        details: getErrorMessage(catalogueError),
+        summary: 'Could not refresh the ReShade catalogue.',
+      });
     } finally {
       setPhase('idle');
     }
@@ -267,7 +283,10 @@ export const ReShadeWizard = ({
     try {
       setInspection(await InspectManagedReShadePreset(gameID, targetRelativePath, path));
     } catch (inspectError) {
-      setError(getErrorMessage(inspectError));
+      setError({
+        details: getErrorMessage(inspectError),
+        summary: 'Could not inspect the ReShade preset.',
+      });
     } finally {
       setPhase('idle');
     }
@@ -281,7 +300,10 @@ export const ReShadeWizard = ({
       try {
         setPreview(await PreviewManagedReShadeAction({ ...request, backupAndContinue: true }));
       } catch (previewError) {
-        setError(getErrorMessage(previewError));
+        setError({
+          details: getErrorMessage(previewError),
+          summary: 'Could not rebuild the ReShade preview.',
+        });
       } finally {
         setPhase('idle');
       }
@@ -378,6 +400,7 @@ export const ReShadeWizard = ({
         </ol>
 
         <form className="reshade-wizard-form" onSubmit={submit}>
+          {error !== null && <WizardError details={error.details} summary={error.summary} />}
           <div className="reshade-wizard-scroll">
             {step === 'target' && <ReShadeWizardTargetStep selection={selection} />}
             {step === 'runtime' && (
@@ -448,7 +471,6 @@ export const ReShadeWizard = ({
                 </div>
               </div>
             )}
-            {error !== null && <p className="reshade-wizard-error">{error}</p>}
           </div>
 
           <footer className="reshade-wizard-footer">

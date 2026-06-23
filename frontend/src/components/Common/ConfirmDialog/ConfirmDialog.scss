@@ -26,6 +26,26 @@
   min-height: $input-height;
 }
 
+.confirm-dialog-button-default {
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-success 26%, transparent);
+}
+
+.confirm-dialog-button-default:hover:not(:disabled),
+.confirm-dialog-button-default:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
+}
+
+.confirm-dialog-button-warning {
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 14%, $color-surface);
+}
+
+.confirm-dialog-button-warning:hover:not(:disabled),
+.confirm-dialog-button-warning:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-warning 24%, $color-surface-elevated);
+}
+
 .confirm-dialog-button-danger {
   color: $color-danger;
   background: color-mix(in srgb, $color-danger 14%, $color-surface);

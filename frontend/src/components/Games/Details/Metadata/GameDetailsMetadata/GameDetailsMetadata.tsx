@@ -75,7 +75,7 @@ const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) =>
     case ReShadeDetectionStatus.ReShadeDetectionStatusInstalled:
       return 'Installed';
     case ReShadeDetectionStatus.ReShadeDetectionStatusNotInstalled:
-      return 'Not installed';
+      return 'Not detected';
     case ReShadeDetectionStatus.ReShadeDetectionStatusUnsupported:
       return 'Unsupported';
     default:

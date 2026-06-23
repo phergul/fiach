@@ -18,6 +18,7 @@ import (
 
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/filetxn"
+	"github.com/phergul/fiach/internal/optiscaler"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
@@ -26,6 +27,11 @@ type Store interface {
 	ListReShadeTargets(context.Context, int64) ([]dbtypes.ReShadeTarget, error)
 	SaveReShadeTarget(context.Context, dbtypes.SaveReShadeTargetInput) (dbtypes.ReShadeTarget, error)
 	DeleteReShadeTarget(context.Context, int64, string) error
+}
+
+type optiScalerTargetStore interface {
+	GetOptiScalerTarget(context.Context, int64, string) (dbtypes.OptiScalerTarget, bool, error)
+	SaveOptiScalerTarget(context.Context, dbtypes.SaveOptiScalerTargetInput) (dbtypes.OptiScalerTarget, error)
 }
 
 type Planner interface {
@@ -151,6 +157,16 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	if err != nil {
 		return Preview{}, err
 	}
+	optiTarget, hasDirectXOptiScaler, err := m.directXOptiScalerTarget(ctx, request)
+	if err != nil {
+		return Preview{}, err
+	}
+	if hasDirectXOptiScaler {
+		request.ActiveRuntimeFilename = chainedReShadeRuntimeFilename(request.Architecture)
+		request.OptiScalerPrimaryProxyFilename = optiTarget.ProxyFilename
+	} else if strings.TrimSpace(request.ActiveRuntimeFilename) == "" {
+		request.ActiveRuntimeFilename = request.ProxyFilename
+	}
 	row, found, err := m.store.GetReShadeTarget(ctx, request.GameID, request.TargetRelativePath)
 	if err != nil {
 		return Preview{}, err
@@ -185,6 +201,12 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	}
 	if err != nil {
 		return Preview{}, err
+	}
+	if hasDirectXOptiScaler {
+		preview, err = m.composeOptiScalerChainPreview(targetPath, optiTarget, preview)
+		if err != nil {
+			return Preview{}, err
+		}
 	}
 	preview.Request = request
 	if preview.Operations == nil {
@@ -243,6 +265,64 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	if err != nil {
 		return Preview{}, err
 	}
+	m.writePreviewDebugLog("preview_built", previewDebugPayload{
+		PreviewHash: preview.PreviewHash,
+		Preview:     preview,
+	})
+	return preview, nil
+}
+
+func (m *Manager) composeOptiScalerChainPreview(
+	targetPath string,
+	target dbtypes.OptiScalerTarget,
+	preview Preview,
+) (Preview, error) {
+	loadReShade := preview.Request.Action != ActionUninstall
+	configPath := filepath.Join(targetPath, "OptiScaler.ini")
+	contents, err := os.ReadFile(configPath)
+	if errors.Is(err, os.ErrNotExist) {
+		contents = nil
+	} else if err != nil {
+		return Preview{}, err
+	}
+	updated, err := optiscaler.UpdateManagedINI(contents, optiscaler.ManagedConfig{
+		LoadReShade:       loadReShade,
+		DXGISpoofing:      target.DXGISpoofing,
+		TargetProcessName: target.ProcessFilter,
+		CheckForUpdate:    false,
+	})
+	if err != nil {
+		return Preview{}, err
+	}
+	stagedConfig := filepath.Join(m.dataDir, "staging", "generated", hashBytes(updated)+".ini")
+	if err := os.MkdirAll(filepath.Dir(stagedConfig), 0o755); err != nil {
+		return Preview{}, err
+	}
+	if err := os.WriteFile(stagedConfig, updated, 0o644); err != nil {
+		return Preview{}, err
+	}
+	configHash, configSize, err := fileops.FileIntegrity(stagedConfig)
+	if err != nil {
+		return Preview{}, err
+	}
+	preview.Operations = mergePreviewOperations(preview.Operations, []Operation{{
+		Type:       "copy",
+		SourcePath: stagedConfig,
+		TargetPath: configPath,
+		SHA256:     configHash,
+		SizeBytes:  configSize,
+	}})
+	action := "set Plugins.LoadReshade=false"
+	if loadReShade {
+		action = "set Plugins.LoadReshade=true"
+	}
+	preview.PathImpacts = append(preview.PathImpacts, PathImpact{
+		Path:      "OptiScaler.ini",
+		Role:      PathRoleConfiguration,
+		Action:    action,
+		Ownership: OwnershipManaged,
+		Exists:    pathExists(configPath),
+	})
 	return preview, nil
 }
 
@@ -286,6 +366,7 @@ func previewRowFromDesiredTarget(request Request, target *TargetState) (dbtypes.
 		ExecutableRelativePath: request.ExecutableRelativePath,
 		RenderingAPI:           string(request.RenderingAPI),
 		ProxyFilename:          request.ProxyFilename,
+		ActiveRuntimeFilename:  request.ActiveRuntimeFilename,
 		Architecture:           string(request.Architecture),
 		BuildVariant:           string(request.BuildVariant),
 		RuntimeVersion:         target.RuntimeVersion,
@@ -388,6 +469,10 @@ func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, p
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	m.writePreviewDebugLog("apply_started", previewDebugPayload{
+		ProvidedHash: previewHash,
+		Request:      request,
+	})
 	recovery, err := m.RecoveryState()
 	if err != nil {
 		return ApplyResult{}, err
@@ -400,11 +485,27 @@ func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, p
 		return ApplyResult{}, err
 	}
 	if !preview.CanApply {
+		m.writePreviewDebugLog("apply_rebuilt_preview_blocked", previewDebugPayload{
+			ProvidedHash: previewHash,
+			PreviewHash:  preview.PreviewHash,
+			Preview:      preview,
+		})
 		return ApplyResult{}, errors.New("preview has blocking conflicts")
 	}
 	if previewHash == "" || !strings.EqualFold(preview.PreviewHash, previewHash) {
+		m.writePreviewDebugLog("apply_hash_mismatch", previewDebugPayload{
+			ProvidedHash: previewHash,
+			PreviewHash:  preview.PreviewHash,
+			Request:      request,
+			Preview:      preview,
+		})
 		return ApplyResult{}, errors.New("preview hash is stale or does not match")
 	}
+	m.writePreviewDebugLog("apply_hash_match", previewDebugPayload{
+		ProvidedHash: previewHash,
+		PreviewHash:  preview.PreviewHash,
+		Preview:      preview,
+	})
 	return m.execute(ctx, gameRoot, preview)
 }
 
@@ -458,7 +559,26 @@ func normalizeRequest(gameRoot string, request Request) (Request, string, error)
 	if filepath.Dir(executablePath) != targetPath {
 		return Request{}, "", errors.New("selected executable must be directly inside the target directory")
 	}
+	request.ActiveRuntimeFilename = strings.TrimSpace(request.ActiveRuntimeFilename)
+	if request.ActiveRuntimeFilename == "" {
+		request.ActiveRuntimeFilename = request.ProxyFilename
+	}
 	return request, targetPath, nil
+}
+
+func (m *Manager) directXOptiScalerTarget(
+	ctx context.Context,
+	request Request,
+) (dbtypes.OptiScalerTarget, bool, error) {
+	store, ok := m.store.(optiScalerTargetStore)
+	if !ok {
+		return dbtypes.OptiScalerTarget{}, false, nil
+	}
+	target, found, err := store.GetOptiScalerTarget(ctx, request.GameID, request.TargetRelativePath)
+	if err != nil || !found {
+		return dbtypes.OptiScalerTarget{}, false, err
+	}
+	return target, target.GraphicsAPI == "directx", nil
 }
 
 func validatePlannedMutation(targetPath string, preview Preview, existing Manifest, found bool) error {
@@ -492,7 +612,9 @@ func validatePlannedMutation(targetPath string, preview Preview, existing Manife
 		}
 		owner := ownership[strings.ToLower(filepath.Clean(relative))]
 		if owner != OwnershipManaged && owner != OwnershipAdopted &&
-			!(operation.Type == "copy" && owner == OwnershipUser) {
+			!(operation.Type == "copy" && owner == OwnershipUser) &&
+			!(preview.Request.OptiScalerPrimaryProxyFilename != "" &&
+				strings.EqualFold(filepath.Clean(relative), "OptiScaler.ini")) {
 			return fmt.Errorf("operation target %q is not manifest-owned", relative)
 		}
 	}
@@ -516,7 +638,7 @@ func proxyAllowedForAPI(renderingAPI RenderingAPI, proxyFilename string) bool {
 }
 
 func hashPreview(preview Preview) (string, error) {
-	preview.PreviewHash = ""
+	preview = canonicalPreviewForHash(preview)
 	contents, err := json.Marshal(preview)
 	if err != nil {
 		return "", err
@@ -525,9 +647,226 @@ func hashPreview(preview Preview) (string, error) {
 	return hex.EncodeToString(sum[:]), nil
 }
 
+func canonicalPreviewForHash(preview Preview) Preview {
+	preview.PreviewHash = ""
+	if len(preview.Operations) > 0 {
+		preview.Operations = append([]Operation(nil), preview.Operations...)
+		for index := range preview.Operations {
+			if preview.Operations[index].Type == "copy" {
+				preview.Operations[index].SourcePath = ""
+			}
+		}
+	}
+	if preview.DesiredTarget != nil {
+		desired := *preview.DesiredTarget
+		desired.Manifest.Files = append([]ManagedFile(nil), desired.Manifest.Files...)
+		sortManagedFiles(desired.Manifest.Files)
+		preview.DesiredTarget = &desired
+	}
+	return preview
+}
+
 func hashBytes(value []byte) string {
 	sum := sha256.Sum256(value)
 	return hex.EncodeToString(sum[:])
+}
+
+type previewDebugPayload struct {
+	ProvidedHash string
+	PreviewHash  string
+	Request      Request
+	Preview      Preview
+}
+
+type previewDebugEntry struct {
+	Timestamp string               `json:"timestamp"`
+	Event     string               `json:"event"`
+	DataDir   string               `json:"dataDir"`
+	Payload   previewDebugPayload  `json:"payload"`
+	Hashes    previewDebugHashes   `json:"hashes"`
+	Summary   previewDebugSummary  `json:"summary"`
+	Preview   previewDebugSnapshot `json:"preview"`
+}
+
+type previewDebugHashes struct {
+	CanonicalPreview string `json:"canonicalPreview"`
+	RawPreview       string `json:"rawPreview"`
+	Request          string `json:"request"`
+	Operations       string `json:"operations"`
+	PathImpacts      string `json:"pathImpacts"`
+	Warnings         string `json:"warnings"`
+	Conflicts        string `json:"conflicts"`
+	Drift            string `json:"drift"`
+	UserContentDrift string `json:"userContentDrift"`
+	DesiredTarget    string `json:"desiredTarget"`
+}
+
+type previewDebugSummary struct {
+	ProvidedHash             string `json:"providedHash,omitempty"`
+	PreviewHash              string `json:"previewHash,omitempty"`
+	Action                   Action `json:"action,omitempty"`
+	GameID                   int64  `json:"gameId,omitempty"`
+	TargetRelativePath       string `json:"targetRelativePath,omitempty"`
+	ExecutableRelativePath   string `json:"executableRelativePath,omitempty"`
+	RenderingAPI             string `json:"renderingApi,omitempty"`
+	ProxyFilename            string `json:"proxyFilename,omitempty"`
+	ActiveRuntimeFilename    string `json:"activeRuntimeFilename,omitempty"`
+	OptiScalerProxyFilename  string `json:"optiScalerProxyFilename,omitempty"`
+	Architecture             string `json:"architecture,omitempty"`
+	BuildVariant             string `json:"buildVariant,omitempty"`
+	BackupAndContinue        bool   `json:"backupAndContinue,omitempty"`
+	CanApply                 bool   `json:"canApply"`
+	OperationCount           int    `json:"operationCount"`
+	PathImpactCount          int    `json:"pathImpactCount"`
+	WarningCount             int    `json:"warningCount"`
+	ConflictCount            int    `json:"conflictCount"`
+	DriftCount               int    `json:"driftCount"`
+	UserContentDriftCount    int    `json:"userContentDriftCount"`
+	DesiredTargetPresent     bool   `json:"desiredTargetPresent"`
+	DesiredRuntimeVersion    string `json:"desiredRuntimeVersion,omitempty"`
+	DesiredManagementOrigin  string `json:"desiredManagementOrigin,omitempty"`
+	DesiredManifestFileCount int    `json:"desiredManifestFileCount,omitempty"`
+}
+
+type previewDebugSnapshot struct {
+	Request          Request            `json:"request"`
+	Operations       []Operation        `json:"operations"`
+	PathImpacts      []PathImpact       `json:"pathImpacts"`
+	Warnings         []string           `json:"warnings"`
+	Conflicts        []string           `json:"conflicts"`
+	Drift            []Drift            `json:"drift"`
+	UserContentDrift []UserContentDrift `json:"userContentDrift"`
+	DesiredTarget    *TargetState       `json:"desiredTarget,omitempty"`
+	PreviewHash      string             `json:"previewHash"`
+	CanApply         bool               `json:"canApply"`
+}
+
+func (m *Manager) writePreviewDebugLog(event string, payload previewDebugPayload) {
+	path := filepath.Join(m.dataDir, "logs", "preview-hash-debug.jsonl")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	preview := payload.Preview
+	if payload.PreviewHash == "" {
+		payload.PreviewHash = preview.PreviewHash
+	}
+	if previewDebugRequestEmpty(payload.Request) {
+		payload.Request = preview.Request
+	}
+	entry := previewDebugEntry{
+		Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
+		Event:     event,
+		DataDir:   m.dataDir,
+		Payload:   payload,
+		Hashes:    previewDebugSectionHashes(preview),
+		Summary:   previewDebugSummaryFor(payload),
+		Preview: previewDebugSnapshot{
+			Request:          preview.Request,
+			Operations:       preview.Operations,
+			PathImpacts:      preview.PathImpacts,
+			Warnings:         preview.Warnings,
+			Conflicts:        preview.Conflicts,
+			Drift:            preview.Drift,
+			UserContentDrift: preview.UserContentDrift,
+			DesiredTarget:    preview.DesiredTarget,
+			PreviewHash:      preview.PreviewHash,
+			CanApply:         preview.CanApply,
+		},
+	}
+	contents, err := json.Marshal(entry)
+	if err != nil {
+		return
+	}
+	_, _ = file.Write(append(contents, '\n'))
+}
+
+func previewDebugSectionHashes(preview Preview) previewDebugHashes {
+	canonical, _ := json.Marshal(canonicalPreviewForHash(preview))
+	raw, _ := json.Marshal(preview)
+	request, _ := json.Marshal(preview.Request)
+	operations, _ := json.Marshal(preview.Operations)
+	pathImpacts, _ := json.Marshal(preview.PathImpacts)
+	warnings, _ := json.Marshal(preview.Warnings)
+	conflicts, _ := json.Marshal(preview.Conflicts)
+	drift, _ := json.Marshal(preview.Drift)
+	userContentDrift, _ := json.Marshal(preview.UserContentDrift)
+	desiredTarget, _ := json.Marshal(preview.DesiredTarget)
+	return previewDebugHashes{
+		CanonicalPreview: hashBytes(canonical),
+		RawPreview:       hashBytes(raw),
+		Request:          hashBytes(request),
+		Operations:       hashBytes(operations),
+		PathImpacts:      hashBytes(pathImpacts),
+		Warnings:         hashBytes(warnings),
+		Conflicts:        hashBytes(conflicts),
+		Drift:            hashBytes(drift),
+		UserContentDrift: hashBytes(userContentDrift),
+		DesiredTarget:    hashBytes(desiredTarget),
+	}
+}
+
+func previewDebugSummaryFor(payload previewDebugPayload) previewDebugSummary {
+	preview := payload.Preview
+	request := payload.Request
+	if previewDebugRequestEmpty(request) {
+		request = preview.Request
+	}
+	summary := previewDebugSummary{
+		ProvidedHash:            payload.ProvidedHash,
+		PreviewHash:             payload.PreviewHash,
+		Action:                  request.Action,
+		GameID:                  request.GameID,
+		TargetRelativePath:      request.TargetRelativePath,
+		ExecutableRelativePath:  request.ExecutableRelativePath,
+		RenderingAPI:            string(request.RenderingAPI),
+		ProxyFilename:           request.ProxyFilename,
+		ActiveRuntimeFilename:   request.ActiveRuntimeFilename,
+		OptiScalerProxyFilename: request.OptiScalerPrimaryProxyFilename,
+		Architecture:            string(request.Architecture),
+		BuildVariant:            string(request.BuildVariant),
+		BackupAndContinue:       request.BackupAndContinue,
+		CanApply:                preview.CanApply,
+		OperationCount:          len(preview.Operations),
+		PathImpactCount:         len(preview.PathImpacts),
+		WarningCount:            len(preview.Warnings),
+		ConflictCount:           len(preview.Conflicts),
+		DriftCount:              len(preview.Drift),
+		UserContentDriftCount:   len(preview.UserContentDrift),
+		DesiredTargetPresent:    preview.DesiredTarget != nil,
+	}
+	if summary.PreviewHash == "" {
+		summary.PreviewHash = preview.PreviewHash
+	}
+	if preview.DesiredTarget != nil {
+		summary.DesiredRuntimeVersion = preview.DesiredTarget.RuntimeVersion
+		summary.DesiredManagementOrigin = preview.DesiredTarget.ManagementOrigin
+		summary.DesiredManifestFileCount = len(preview.DesiredTarget.Manifest.Files)
+	}
+	return summary
+}
+
+func previewDebugRequestEmpty(request Request) bool {
+	return request.Action == "" &&
+		request.GameID == 0 &&
+		request.TargetRelativePath == "" &&
+		request.ExecutableRelativePath == "" &&
+		request.RenderingAPI == "" &&
+		request.ProxyFilename == "" &&
+		request.ActiveRuntimeFilename == "" &&
+		request.OptiScalerPrimaryProxyFilename == "" &&
+		request.Architecture == "" &&
+		request.BuildVariant == "" &&
+		!request.BackupAndContinue &&
+		!request.SinglePlayerAcknowledged &&
+		!request.AntiCheatRiskAcknowledged &&
+		len(request.Content.EffectPackages) == 0 &&
+		len(request.Content.Addons) == 0
 }
 
 func managedTargetFromRow(
@@ -542,6 +881,7 @@ func managedTargetFromRow(
 		ExecutableRelativePath: row.ExecutableRelativePath,
 		RenderingAPI:           RenderingAPI(row.RenderingAPI),
 		ProxyFilename:          row.ProxyFilename,
+		ActiveRuntimeFilename:  row.ActiveRuntimeFilename,
 		Architecture:           Architecture(row.Architecture),
 		BuildVariant:           BuildVariant(row.BuildVariant),
 		VariantProvenance:      manifest.VariantProvenance,

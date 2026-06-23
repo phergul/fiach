@@ -405,13 +405,28 @@ func (s *ReshadeService) DiscoverManagedReShadeCandidates(
 	if err != nil {
 		return dto.ManagedReShadeDiscoveryResult{}, err
 	}
-	result, err = reshade.DiscoverCandidates(game.InstallPath, reshade.DiscoveryOptions{})
+	optiScalerTargets, _, err := s.injection.ManagedDirectXOptiScalerTargets(ctx, gameID)
+	if err != nil {
+		return dto.ManagedReShadeDiscoveryResult{}, err
+	}
+	allowedProxyPaths := make([]string, 0, len(optiScalerTargets))
+	for _, target := range optiScalerTargets {
+		targetPath, resolveErr := reshade.ResolveWithinRoot(game.InstallPath, target.TargetRelativePath)
+		if resolveErr != nil {
+			return dto.ManagedReShadeDiscoveryResult{}, resolveErr
+		}
+		allowedProxyPaths = append(allowedProxyPaths, filepath.Join(targetPath, target.ProxyFilename))
+	}
+	result, err = reshade.DiscoverCandidates(game.InstallPath, reshade.DiscoveryOptions{
+		AllowedForeignProxyPaths: allowedProxyPaths,
+	})
 	if err != nil {
 		return dto.ManagedReShadeDiscoveryResult{}, err
 	}
 	diag.complete("ReShade candidate discovery completed",
 		diagnostics.PathAttr("install_path", game.InstallPath),
 		slog.Int("candidate_count", len(result.Candidates)),
+		slog.Int("allowed_optiscaler_proxy_count", len(allowedProxyPaths)),
 		slog.Int("warning_count", len(result.Warnings)),
 	)
 	return result, nil

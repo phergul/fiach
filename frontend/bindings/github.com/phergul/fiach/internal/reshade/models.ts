@@ -664,6 +664,7 @@ export class ManagedTarget {
     "ExecutableRelativePath": string;
     "RenderingAPI": RenderingAPI;
     "ProxyFilename": string;
+    "ActiveRuntimeFilename": string;
     "Architecture": Architecture;
     "BuildVariant": BuildVariant;
     "VariantProvenance": VariantProvenance;
@@ -694,6 +695,9 @@ export class ManagedTarget {
         }
         if (!("ProxyFilename" in $$source)) {
             this["ProxyFilename"] = "";
+        }
+        if (!("ActiveRuntimeFilename" in $$source)) {
+            this["ActiveRuntimeFilename"] = "";
         }
         if (!("Architecture" in $$source)) {
             this["Architecture"] = Architecture.$zero;
@@ -733,10 +737,10 @@ export class ManagedTarget {
      * Creates a new ManagedTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ManagedTarget {
-        const $$createField10_0 = $$createType21;
+        const $$createField11_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Provenance" in $$parsedSource) {
-            $$parsedSource["Provenance"] = $$createField10_0($$parsedSource["Provenance"]);
+            $$parsedSource["Provenance"] = $$createField11_0($$parsedSource["Provenance"]);
         }
         return new ManagedTarget($$parsedSource as Partial<ManagedTarget>);
     }
@@ -1117,6 +1121,8 @@ export class Request {
     "executableRelativePath": string;
     "renderingApi": RenderingAPI;
     "proxyFilename": string;
+    "activeRuntimeFilename"?: string;
+    "optiScalerPrimaryProxyFilename"?: string;
     "architecture": Architecture;
     "buildVariant": BuildVariant;
     "backupAndContinue": boolean;
@@ -1167,10 +1173,10 @@ export class Request {
      * Creates a new Request instance from a string or object.
      */
     static createFrom($$source: any = {}): Request {
-        const $$createField11_0 = $$createType39;
+        const $$createField13_0 = $$createType39;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("content" in $$parsedSource) {
-            $$parsedSource["content"] = $$createField11_0($$parsedSource["content"]);
+            $$parsedSource["content"] = $$createField13_0($$parsedSource["content"]);
         }
         return new Request($$parsedSource as Partial<Request>);
     }

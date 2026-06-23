@@ -138,24 +138,27 @@ func (p *directXPlanner) planInstallOrUpdate(
 	}
 	setupOperation := SetupOperationInstall
 	var existingInputs []SetupInput
+	activeRuntime := activeRuntimeFilename(request)
 	if update && existing != nil {
 		if existing.RenderingAPI == string(request.RenderingAPI) &&
-			strings.EqualFold(existing.ProxyFilename, request.ProxyFilename) {
+			strings.EqualFold(existing.ProxyFilename, request.ProxyFilename) &&
+			strings.EqualFold(existingActiveRuntimeFilename(existing), activeRuntime) {
 			setupOperation = SetupOperationUpdate
 		}
-		existingInputs, err = setupExistingInputs(targetPath, existing.ProxyFilename)
+		existingInputs, err = setupExistingInputs(targetPath, existingActiveRuntimeFilename(existing))
 		if err != nil {
 			return Preview{}, err
 		}
 	}
 	setupResult, err := p.prepareSetup(ctx, SetupRequest{
-		Artifact:         artifact,
-		TargetExecutable: executablePath,
-		RenderingAPI:     request.RenderingAPI,
-		Operation:        setupOperation,
-		Architecture:     request.Architecture,
-		ExpectedProxy:    request.ProxyFilename,
-		ExistingInputs:   existingInputs,
+		Artifact:                        artifact,
+		TargetExecutable:                executablePath,
+		RenderingAPI:                    request.RenderingAPI,
+		Operation:                       setupOperation,
+		Architecture:                    request.Architecture,
+		ExpectedProxy:                   request.ProxyFilename,
+		AllowedProxyOutputRelativePaths: installerProxyOutputAliases(request.RenderingAPI, request.ProxyFilename),
+		ExistingInputs:                  existingInputs,
 		ExpectedOutputRelativePaths: []string{
 			request.ProxyFilename,
 			"ReShade.ini",
@@ -179,7 +182,8 @@ func (p *directXPlanner) planInstallOrUpdate(
 	impacts := []PathImpact{}
 	manifestFiles := []ManagedFile{}
 	if update && existing != nil && !strings.EqualFold(existing.ProxyFilename, request.ProxyFilename) {
-		oldPath := filepath.Join(targetPath, existing.ProxyFilename)
+		oldRuntime := existingActiveRuntimeFilename(existing)
+		oldPath := filepath.Join(targetPath, oldRuntime)
 		oldOperation := Operation{
 			Type:       "delete",
 			TargetPath: oldPath,
@@ -189,29 +193,29 @@ func (p *directXPlanner) planInstallOrUpdate(
 		if decodeErr != nil {
 			return Preview{}, decodeErr
 		}
-		if oldRuntime, found := runtimeManifestFile(oldManifest, existing.ProxyFilename); found &&
-			oldRuntime.BackupPath != nil &&
-			oldRuntime.BackupSHA256 != nil &&
-			oldRuntime.BackupSize != nil {
+		if oldRuntimeFile, found := runtimeManifestFile(oldManifest, oldRuntime); found &&
+			oldRuntimeFile.BackupPath != nil &&
+			oldRuntimeFile.BackupSHA256 != nil &&
+			oldRuntimeFile.BackupSize != nil {
 			matches, matchErr := fileops.FileMatchesIntegrity(
-				*oldRuntime.BackupPath,
-				*oldRuntime.BackupSHA256,
-				*oldRuntime.BackupSize,
+				*oldRuntimeFile.BackupPath,
+				*oldRuntimeFile.BackupSHA256,
+				*oldRuntimeFile.BackupSize,
 			)
 			if matchErr == nil && matches {
 				oldOperation = Operation{
 					Type:       "restore",
-					SourcePath: *oldRuntime.BackupPath,
+					SourcePath: *oldRuntimeFile.BackupPath,
 					TargetPath: oldPath,
-					SHA256:     *oldRuntime.BackupSHA256,
-					SizeBytes:  *oldRuntime.BackupSize,
+					SHA256:     *oldRuntimeFile.BackupSHA256,
+					SizeBytes:  *oldRuntimeFile.BackupSize,
 				}
 				oldAction = "restore backup"
 			}
 		}
 		operations = append(operations, oldOperation)
 		impacts = append(impacts, pathImpact(
-			existing.ProxyFilename,
+			oldRuntime,
 			PathRoleRuntime,
 			oldAction,
 			OwnershipManaged,
@@ -219,7 +223,7 @@ func (p *directXPlanner) planInstallOrUpdate(
 			false,
 		))
 	}
-	proxyTarget := filepath.Join(targetPath, request.ProxyFilename)
+	proxyTarget := filepath.Join(targetPath, activeRuntime)
 	operations = append(operations, Operation{
 		Type:       "copy",
 		SourcePath: proxy.Path,
@@ -227,9 +231,11 @@ func (p *directXPlanner) planInstallOrUpdate(
 		SHA256:     proxy.SHA256,
 		SizeBytes:  proxy.SizeBytes,
 	})
-	manifestFiles = append(manifestFiles, managedFileFromPrepared(proxy, OwnershipManaged))
+	runtimeFile := managedFileFromPrepared(proxy, OwnershipManaged)
+	runtimeFile.RelativePath = activeRuntime
+	manifestFiles = append(manifestFiles, runtimeFile)
 	impacts = append(impacts, pathImpact(
-		request.ProxyFilename,
+		activeRuntime,
 		PathRoleRuntime,
 		"replace",
 		OwnershipManaged,
@@ -342,7 +348,8 @@ func (p *directXPlanner) planAdopt(
 	targetPath string,
 	request Request,
 ) (Preview, error) {
-	runtimePath := filepath.Join(targetPath, request.ProxyFilename)
+	activeRuntime := activeRuntimeFilename(request)
+	runtimePath := filepath.Join(targetPath, activeRuntime)
 	metadata, err := p.readMetadata(runtimePath)
 	if err != nil {
 		return Preview{}, err
@@ -392,7 +399,7 @@ func (p *directXPlanner) planAdopt(
 		PathImpacts: append(
 			[]PathImpact{
 				pathImpact(
-					request.ProxyFilename,
+					activeRuntime,
 					PathRoleRuntime,
 					"adopt",
 					OwnershipAdopted,
@@ -413,7 +420,7 @@ func (p *directXPlanner) planAdopt(
 				Version: ManifestVersion,
 				Files: []ManagedFile{
 					{
-						RelativePath: request.ProxyFilename,
+						RelativePath: activeRuntime,
 						SHA256:       hash,
 						SizeBytes:    size,
 						Ownership:    OwnershipAdopted,
@@ -445,11 +452,19 @@ func (p *directXPlanner) planRepair(
 	if err != nil {
 		return Preview{}, err
 	}
-	runtime, found := runtimeManifestFile(manifest, existing.ProxyFilename)
+	activeRuntime := activeRuntimeFilename(request)
+	runtime, found := runtimeManifestFile(manifest, activeRuntime)
 	if !found {
-		return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		if request.OptiScalerPrimaryProxyFilename == "" {
+			return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		}
+		runtime, found = runtimeManifestFile(manifest, existingActiveRuntimeFilename(existing))
+		if !found {
+			return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		}
+		runtime.RelativePath = activeRuntime
 	}
-	runtimePath := filepath.Join(targetPath, existing.ProxyFilename)
+	runtimePath := filepath.Join(targetPath, activeRuntime)
 	matches, matchErr := fileops.FileMatchesIntegrity(runtimePath, runtime.SHA256, runtime.SizeBytes)
 	if matchErr == nil && matches {
 		userContent, warnings, inventoryErr := inventoryUserContent(gameRoot, targetPath)
@@ -460,7 +475,7 @@ func (p *directXPlanner) planRepair(
 		manifest.UserContent = userContent
 		return Preview{
 			Operations:       []Operation{},
-			PathImpacts:      append([]PathImpact{pathImpact(existing.ProxyFilename, PathRoleRuntime, "verify", runtime.Ownership, true, false)}, userContentImpacts(userContent)...),
+			PathImpacts:      append([]PathImpact{pathImpact(activeRuntime, PathRoleRuntime, "verify", runtime.Ownership, true, false)}, userContentImpacts(userContent)...),
 			Warnings:         warnings,
 			Conflicts:        []string{},
 			Drift:            []Drift{},
@@ -484,14 +499,15 @@ func (p *directXPlanner) planRepair(
 		return Preview{}, err
 	}
 	setupResult, err := p.prepareSetup(ctx, SetupRequest{
-		Artifact:                    artifact,
-		TargetExecutable:            executablePath,
-		RenderingAPI:                request.RenderingAPI,
-		Operation:                   SetupOperationInstall,
-		Architecture:                request.Architecture,
-		ExpectedProxy:               request.ProxyFilename,
-		ExpectedOutputRelativePaths: []string{request.ProxyFilename, "ReShade.ini", "ReShade.log", "ReShadePreset.ini"},
-		Acknowledgements:            installerAcknowledgements(request),
+		Artifact:                        artifact,
+		TargetExecutable:                executablePath,
+		RenderingAPI:                    request.RenderingAPI,
+		Operation:                       SetupOperationInstall,
+		Architecture:                    request.Architecture,
+		ExpectedProxy:                   request.ProxyFilename,
+		AllowedProxyOutputRelativePaths: installerProxyOutputAliases(request.RenderingAPI, request.ProxyFilename),
+		ExpectedOutputRelativePaths:     []string{request.ProxyFilename, "ReShade.ini", "ReShade.log", "ReShadePreset.ini"},
+		Acknowledgements:                installerAcknowledgements(request),
 	}, SetupRunnerOptions{})
 	if err != nil {
 		return Preview{}, err
@@ -523,7 +539,7 @@ func (p *directXPlanner) planRepair(
 			},
 		},
 		PathImpacts: append(
-			[]PathImpact{pathImpact(existing.ProxyFilename, PathRoleRuntime, "repair", runtime.Ownership, pathExists(runtimePath), false)},
+			[]PathImpact{pathImpact(activeRuntime, PathRoleRuntime, "repair", runtime.Ownership, pathExists(runtimePath), false)},
 			userContentImpacts(userContent)...,
 		),
 		Warnings:         warnings,
@@ -556,9 +572,17 @@ func (p *directXPlanner) planUninstall(
 	if err != nil {
 		return Preview{}, err
 	}
-	runtime, found := runtimeManifestFile(manifest, existing.ProxyFilename)
+	activeRuntime := activeRuntimeFilename(request)
+	runtime, found := runtimeManifestFile(manifest, activeRuntime)
 	if !found {
-		return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		if request.OptiScalerPrimaryProxyFilename == "" {
+			return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		}
+		runtime, found = runtimeManifestFile(manifest, existingActiveRuntimeFilename(existing))
+		if !found {
+			return Preview{}, errors.New("managed runtime is missing from the ownership manifest")
+		}
+		runtime.RelativePath = activeRuntime
 	}
 	target := filepath.Join(targetPath, runtime.RelativePath)
 	operation := Operation{
@@ -656,13 +680,20 @@ func (p *directXPlanner) proxyConflicts(
 			reShadeCount++
 		}
 		allowedExisting := existing != nil && strings.EqualFold(existing.ProxyFilename, filename)
+		allowedOptiScalerPrimary := strings.EqualFold(request.OptiScalerPrimaryProxyFilename, filename)
 		switch request.Action {
 		case ActionAdopt:
+			if allowedOptiScalerPrimary {
+				continue
+			}
 			if !strings.EqualFold(request.ProxyFilename, filename) || !isReShade {
 				conflicts = append(conflicts, fmt.Sprintf("Existing DirectX proxy %q blocks adoption.", filename))
 				impacts = append(impacts, blockingProxyImpact(filename))
 			}
 		case ActionInstall:
+			if allowedOptiScalerPrimary {
+				continue
+			}
 			if isReShade {
 				conflicts = append(conflicts,
 					fmt.Sprintf("Existing unmanaged ReShade proxy %q must be adopted instead of overwritten.", filename))
@@ -671,7 +702,7 @@ func (p *directXPlanner) proxyConflicts(
 			}
 			impacts = append(impacts, blockingProxyImpact(filename))
 		default:
-			if !allowedExisting {
+			if !allowedExisting && !allowedOptiScalerPrimary {
 				conflicts = append(conflicts, fmt.Sprintf("Additional DirectX proxy %q blocks managed mutation.", filename))
 				impacts = append(impacts, blockingProxyImpact(filename))
 			}
@@ -679,6 +710,29 @@ func (p *directXPlanner) proxyConflicts(
 	}
 	if reShadeCount > 1 {
 		conflicts = append(conflicts, "Multiple ReShade DirectX proxies were detected in the target.")
+	}
+	activeRuntime := activeRuntimeFilename(request)
+	if !strings.EqualFold(activeRuntime, request.ProxyFilename) {
+		path := filepath.Join(targetPath, activeRuntime)
+		info, err := os.Stat(path)
+		if err == nil && info.Mode().IsRegular() {
+			metadata, metadataErr := p.readMetadata(path)
+			isReShade := metadataErr == nil && isReShadeMetadata(metadata)
+			allowedExisting := existing != nil &&
+				strings.EqualFold(existingActiveRuntimeFilename(existing), activeRuntime)
+			if !allowedExisting {
+				if isReShade {
+					conflicts = append(conflicts,
+						fmt.Sprintf("Existing unmanaged chained ReShade runtime %q must be adopted instead of overwritten.", activeRuntime))
+				} else {
+					conflicts = append(conflicts, fmt.Sprintf("Existing chained runtime %q blocks managed ReShade.", activeRuntime))
+				}
+				impacts = append(impacts, blockingProxyImpact(activeRuntime))
+			}
+		} else if err != nil && !errors.Is(err, os.ErrNotExist) {
+			conflicts = append(conflicts, fmt.Sprintf("Chained runtime %q cannot be safely inspected.", activeRuntime))
+			impacts = append(impacts, blockingProxyImpact(activeRuntime))
+		}
 	}
 	return conflicts, impacts
 }
@@ -708,6 +762,29 @@ func installerAcknowledgements(request Request) InstallerAcknowledgements {
 	}
 }
 
+func installerProxyOutputAliases(renderingAPI RenderingAPI, proxyFilename string) []string {
+	defaultProxy := defaultInstallerProxyFilename(renderingAPI)
+	if defaultProxy == "" || strings.EqualFold(defaultProxy, proxyFilename) {
+		return nil
+	}
+	return []string{defaultProxy}
+}
+
+func defaultInstallerProxyFilename(renderingAPI RenderingAPI) string {
+	switch renderingAPI {
+	case RenderingAPID3D9:
+		return "d3d9.dll"
+	case RenderingAPID3D10:
+		return "d3d10.dll"
+	case RenderingAPID3D11:
+		return "d3d11.dll"
+	case RenderingAPID3D12:
+		return "d3d12.dll"
+	default:
+		return ""
+	}
+}
+
 func setupExistingInputs(targetPath string, proxyFilename string) ([]SetupInput, error) {
 	var inputs []SetupInput
 	for _, relativePath := range []string{proxyFilename, "ReShade.ini", "ReShadePreset.ini"} {
@@ -728,6 +805,30 @@ func setupExistingInputs(targetPath string, proxyFilename string) ([]SetupInput,
 		})
 	}
 	return inputs, nil
+}
+
+func activeRuntimeFilename(request Request) string {
+	if strings.TrimSpace(request.ActiveRuntimeFilename) != "" {
+		return strings.TrimSpace(request.ActiveRuntimeFilename)
+	}
+	return request.ProxyFilename
+}
+
+func existingActiveRuntimeFilename(existing *dbtypes.ReShadeTarget) string {
+	if existing != nil && strings.TrimSpace(existing.ActiveRuntimeFilename) != "" {
+		return strings.TrimSpace(existing.ActiveRuntimeFilename)
+	}
+	if existing == nil {
+		return ""
+	}
+	return existing.ProxyFilename
+}
+
+func chainedReShadeRuntimeFilename(architecture Architecture) string {
+	if architecture == ArchitectureX86 {
+		return "ReShade32.dll"
+	}
+	return "ReShade64.dll"
 }
 
 func preparedFilesByRelativePath(files []PreparedSetupFile) map[string]PreparedSetupFile {
@@ -887,9 +988,17 @@ func retainUserOwnedManifestFiles(existing []ManagedFile, desired []ManagedFile)
 }
 
 func requireExistingLayout(request Request, existing *dbtypes.ReShadeTarget) error {
+	activeRuntimeMatches := strings.EqualFold(existingActiveRuntimeFilename(existing), activeRuntimeFilename(request))
+	if !activeRuntimeMatches &&
+		request.OptiScalerPrimaryProxyFilename != "" &&
+		strings.EqualFold(existingActiveRuntimeFilename(existing), existing.ProxyFilename) &&
+		strings.EqualFold(activeRuntimeFilename(request), chainedReShadeRuntimeFilename(request.Architecture)) {
+		activeRuntimeMatches = true
+	}
 	if existing.ExecutableRelativePath != request.ExecutableRelativePath ||
 		existing.RenderingAPI != string(request.RenderingAPI) ||
 		!strings.EqualFold(existing.ProxyFilename, request.ProxyFilename) ||
+		!activeRuntimeMatches ||
 		existing.Architecture != string(request.Architecture) ||
 		existing.BuildVariant != string(request.BuildVariant) {
 		return errors.New("repair and uninstall requests must match the persisted target layout")

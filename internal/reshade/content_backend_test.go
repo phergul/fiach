@@ -223,7 +223,10 @@ func TestInstallPreviewCombinesLifecycleAndContent(t *testing.T) {
 	dataDir := t.TempDir()
 	writeContentCache(t, dataDir, "https://github.com/crosire/reshade-shaders/archive/slim.zip")
 	writeArchiveCache(t, dataDir, "https://github.com/crosire/reshade-shaders/archive/slim.zip", map[string]string{
+		"reshade-shaders-slim/Shaders/Blending.fxh":    "blend",
+		"reshade-shaders-slim/Shaders/ReShade.fxh":     "common",
 		"reshade-shaders-slim/Shaders/DisplayDepth.fx": "shader",
+		"reshade-shaders-slim/Textures/lut.png":        "texture",
 	})
 	manager := NewManager(newMemoryReShadeStore(), ManagerOptions{
 		DataDir: dataDir,
@@ -281,6 +284,13 @@ func TestInstallPreviewCombinesLifecycleAndContent(t *testing.T) {
 	}
 	if preview.DesiredTarget == nil || !manifestHasSource(preview.DesiredTarget.Manifest, "00") {
 		t.Fatalf("desired target = %+v", preview.DesiredTarget)
+	}
+	repeatedPreview, err := manager.Preview(context.Background(), root, request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repeatedPreview.PreviewHash != preview.PreviewHash {
+		t.Fatalf("repeated preview hash = %q, want %q", repeatedPreview.PreviewHash, preview.PreviewHash)
 	}
 }
 

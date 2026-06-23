@@ -323,7 +323,7 @@ export const GameDetails = () => {
       <ConfirmDialog
         cancelLabel="Cancel"
         confirmLabel="Restore Vanilla"
-        confirmTone="default"
+        confirmTone="warning"
         isBusy={isRestorePending}
         isOpen={isRestoreConfirmOpen}
         message={
