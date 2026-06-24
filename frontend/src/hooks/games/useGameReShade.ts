@@ -1,21 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
-  ManagedReShadeChainTarget,
-  ManagedReShadeContentCatalogue,
-  ManagedReShadeDiscoveryResult,
-  ManagedReShadeInstallerStatus,
-  ManagedReShadeRecoveryState,
-  ManagedReShadeTarget,
+  ReShadeChainTarget,
+  ReShadeContentCatalogue,
+  ReShadeDiscoveryResult,
+  ReShadeInstallerStatus,
+  ReShadeRecoveryState,
+  ReShadeTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
-  DiscoverManagedReShadeCandidates,
-  GetManagedReShadeInstallerStatus,
-  GetManagedReShadeRecoveryState,
-  ListManagedReShadeChainTargets,
-  ListManagedReShadeContentCatalogue,
-  ListManagedReShadeTargets,
-  RollbackManagedReShadeRecovery,
+  DiscoverReShadeCandidates,
+  GetReShadeInstallerStatus,
+  GetReShadeRecoveryState,
+  ListReShadeChainTargets,
+  ListReShadeContentCatalogue,
+  ListReShadeTargets,
+  RollbackReShadeRecovery,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import { getErrorMessage } from '@utils';
 
@@ -31,8 +31,8 @@ export type ReShadeAggregateStatus =
   | 'not_detected';
 
 const releaseForTarget = (
-  target: ManagedReShadeTarget,
-  installerStatus: ManagedReShadeInstallerStatus | null,
+  target: ReShadeTarget,
+  installerStatus: ReShadeInstallerStatus | null,
 ) => {
   if (installerStatus === null) {
     return null;
@@ -40,14 +40,14 @@ const releaseForTarget = (
   return target.BuildVariant === 'addon' ? installerStatus.addon : installerStatus.standard;
 };
 
-const hasDetectedUnmanagedReShade = (discovery: ManagedReShadeDiscoveryResult | null) =>
+const hasDetectedUnmanagedReShade = (discovery: ReShadeDiscoveryResult | null) =>
   discovery?.candidates.some((candidate) =>
     candidate.proxyEvidence.some((evidence) => evidence.isReShade),
   ) ?? false;
 
-export const isManagedReShadeUpdateAvailable = (
-  target: ManagedReShadeTarget,
-  installerStatus: ManagedReShadeInstallerStatus | null,
+export const isReShadeUpdateAvailable = (
+  target: ReShadeTarget,
+  installerStatus: ReShadeInstallerStatus | null,
 ) => {
   const release = releaseForTarget(target, installerStatus);
   return release !== null &&
@@ -58,10 +58,10 @@ export const isManagedReShadeUpdateAvailable = (
 };
 
 export const getReShadeAggregateStatus = (
-  discovery: ManagedReShadeDiscoveryResult | null,
-  targets: ManagedReShadeTarget[],
-  recovery: ManagedReShadeRecoveryState | null,
-  installerStatus: ManagedReShadeInstallerStatus | null,
+  discovery: ReShadeDiscoveryResult | null,
+  targets: ReShadeTarget[],
+  recovery: ReShadeRecoveryState | null,
+  installerStatus: ReShadeInstallerStatus | null,
 ): ReShadeAggregateStatus => {
   if (recovery?.required) {
     return 'recovery';
@@ -75,7 +75,7 @@ export const getReShadeAggregateStatus = (
   if (targets.some((target) => target.Status === 'drifted' || target.Status === 'incompatible_manifest')) {
     return 'drift';
   }
-  if (targets.some((target) => isManagedReShadeUpdateAvailable(target, installerStatus))) {
+  if (targets.some((target) => isReShadeUpdateAvailable(target, installerStatus))) {
     return 'update';
   }
   if (targets.length > 0) {
@@ -88,12 +88,12 @@ export const getReShadeAggregateStatus = (
 };
 
 export const useGameReShade = (gameID: number | null) => {
-  const [discovery, setDiscovery] = useState<ManagedReShadeDiscoveryResult | null>(null);
-  const [targets, setTargets] = useState<ManagedReShadeTarget[]>([]);
-  const [recovery, setRecovery] = useState<ManagedReShadeRecoveryState | null>(null);
-  const [installerStatus, setInstallerStatus] = useState<ManagedReShadeInstallerStatus | null>(null);
-  const [catalogue, setCatalogue] = useState<ManagedReShadeContentCatalogue | null>(null);
-  const [chainTargets, setChainTargets] = useState<ManagedReShadeChainTarget[]>([]);
+  const [discovery, setDiscovery] = useState<ReShadeDiscoveryResult | null>(null);
+  const [targets, setTargets] = useState<ReShadeTarget[]>([]);
+  const [recovery, setRecovery] = useState<ReShadeRecoveryState | null>(null);
+  const [installerStatus, setInstallerStatus] = useState<ReShadeInstallerStatus | null>(null);
+  const [catalogue, setCatalogue] = useState<ReShadeContentCatalogue | null>(null);
+  const [chainTargets, setChainTargets] = useState<ReShadeChainTarget[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -122,12 +122,12 @@ export const useGameReShade = (gameID: number | null) => {
         loadedCatalogue,
         loadedChainTargets,
       ] = await Promise.all([
-        DiscoverManagedReShadeCandidates(gameID),
-        ListManagedReShadeTargets(gameID),
-        GetManagedReShadeRecoveryState(),
-        GetManagedReShadeInstallerStatus(refreshRemote),
-        ListManagedReShadeContentCatalogue(refreshRemote),
-        ListManagedReShadeChainTargets(gameID),
+        DiscoverReShadeCandidates(gameID),
+        ListReShadeTargets(gameID),
+        GetReShadeRecoveryState(),
+        GetReShadeInstallerStatus(refreshRemote),
+        ListReShadeContentCatalogue(refreshRemote),
+        ListReShadeChainTargets(gameID),
       ]);
       setDiscovery(loadedDiscovery);
       setTargets(loadedTargets);
@@ -152,7 +152,7 @@ export const useGameReShade = (gameID: number | null) => {
     }
     setIsRollingBack(true);
     try {
-      const result = await RollbackManagedReShadeRecovery(recovery.journalId);
+      const result = await RollbackReShadeRecovery(recovery.journalId);
       await refresh();
       return result;
     } finally {

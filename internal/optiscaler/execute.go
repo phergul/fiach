@@ -126,7 +126,7 @@ func verifyOperations(operations []Operation) error {
 
 func (m *Manager) commitState(ctx context.Context, targetPath string, preview Preview, snapshots []journalSnapshot) error {
 	if preview.Request.Action == ActionUninstall {
-		if err := m.restoreManagedReShadeAfterUninstall(ctx, targetPath, preview.Request); err != nil {
+		if err := m.restoreReShadeAfterUninstall(ctx, targetPath, preview.Request); err != nil {
 			return err
 		}
 		return m.store.DeleteOptiScalerTarget(ctx, preview.Request.GameID, preview.Request.TargetRelativePath)
@@ -261,7 +261,7 @@ func (m *Manager) commitState(ctx context.Context, targetPath string, preview Pr
 		return err
 	}
 	if manifest.Config.LoadReShade {
-		if err := m.chainManagedReShade(ctx, targetPath, preview.Request, verifiedAt); err != nil {
+		if err := m.chainReShade(ctx, targetPath, preview.Request, verifiedAt); err != nil {
 			return err
 		}
 	}
@@ -298,7 +298,7 @@ func (m *Manager) markRecoveryRequired(ctx context.Context, request Request) err
 	return err
 }
 
-func (m *Manager) chainManagedReShade(
+func (m *Manager) chainReShade(
 	ctx context.Context,
 	targetPath string,
 	request Request,
@@ -345,7 +345,7 @@ func (m *Manager) chainManagedReShade(
 	return err
 }
 
-func (m *Manager) restoreManagedReShadeAfterUninstall(
+func (m *Manager) restoreReShadeAfterUninstall(
 	ctx context.Context,
 	targetPath string,
 	request Request,

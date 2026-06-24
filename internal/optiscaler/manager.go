@@ -168,18 +168,18 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		Drift:                []Drift{},
 	}
 	var chainedReShadeRuntime string
-	var managedReShadeTarget dbtypes.ReShadeTarget
-	var hasManagedReShade bool
+	var chainedReShadeTarget dbtypes.ReShadeTarget
+	var hasChainedReShade bool
 	if reShadeTarget, hasReShade, reShadeErr := m.managedDirectXReShadeTarget(ctx, request); reShadeErr != nil {
 		return Preview{}, reShadeErr
 	} else if hasReShade {
-		managedReShadeTarget = reShadeTarget
-		hasManagedReShade = true
+		chainedReShadeTarget = reShadeTarget
+		hasChainedReShade = true
 		request.EnableReShadeCoexistence = true
 		preview.Request.EnableReShadeCoexistence = true
 		chainedReShadeRuntime = chainedReShadeRuntimeFilename(reShadeTarget.Architecture)
 		if request.GraphicsAPI != GraphicsAPIDirectX {
-			preview.Conflicts = append(preview.Conflicts, "Managed ReShade coexistence requires DirectX OptiScaler.")
+			preview.Conflicts = append(preview.Conflicts, "ReShade coexistence requires DirectX OptiScaler.")
 		}
 	}
 	if (!found || target.WarningAcknowledgedAt == nil || target.WarningVersion != WarningVersion) && !request.AcknowledgeWarning {
@@ -234,11 +234,11 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 			return Preview{}, err
 		}
 		preview.Operations = uninstallOperations(targetPath, manifest)
-		if hasManagedReShade {
-			preview.Operations = appendManagedReShadeRestoreOperation(
+		if hasChainedReShade {
+			preview.Operations = appendReShadeRestoreOperation(
 				targetPath,
 				preview.Operations,
-				managedReShadeTarget,
+				chainedReShadeTarget,
 			)
 		}
 	default:
@@ -720,7 +720,7 @@ func uninstallOperations(targetPath string, manifest Manifest) []Operation {
 	return operations
 }
 
-func appendManagedReShadeRestoreOperation(
+func appendReShadeRestoreOperation(
 	targetPath string,
 	operations []Operation,
 	target dbtypes.ReShadeTarget,

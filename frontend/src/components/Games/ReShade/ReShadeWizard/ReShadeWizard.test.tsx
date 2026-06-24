@@ -9,32 +9,32 @@ import {
   RenderingAPI,
   VariantProvenance,
 } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
-import type { ManagedReShadeContentCatalogue } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ReShadeContentCatalogue } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
-  ApplyManagedReShadeAction,
-  InspectManagedReShadePreset,
-  ListManagedReShadeContentCatalogue,
-  PreviewManagedReShadeAction,
+  ApplyReShadeAction,
+  InspectReShadePreset,
+  ListReShadeContentCatalogue,
+  PreviewReShadeAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 
 import { ReShadeWizard } from './ReShadeWizard';
 import type { ReShadeOperationSelection } from '../ReShadeTargetTable/ReShadeTargetTable';
 
 vi.mock('@bindings/github.com/phergul/fiach/internal/services/reshadeservice', () => ({
-  ApplyManagedReShadeAction: vi.fn(),
-  GetManagedReShadeRecoveryState: vi.fn(),
-  InspectManagedReShadePreset: vi.fn(),
-  ListManagedReShadeContentCatalogue: vi.fn(),
-  PreviewManagedReShadeAction: vi.fn(),
+  ApplyReShadeAction: vi.fn(),
+  GetReShadeRecoveryState: vi.fn(),
+  InspectReShadePreset: vi.fn(),
+  ListReShadeContentCatalogue: vi.fn(),
+  PreviewReShadeAction: vi.fn(),
 }));
 
-const emptyCatalogue = (cached: boolean): ManagedReShadeContentCatalogue => ({
+const emptyCatalogue = (cached: boolean): ReShadeContentCatalogue => ({
   addons: [],
   cached,
   effects: [],
 });
 
-const contentCatalogue = (): ManagedReShadeContentCatalogue => ({
+const contentCatalogue = (): ReShadeContentCatalogue => ({
   addons: [
     {
       description: 'Depth buffer access add-on',
@@ -121,7 +121,7 @@ const configureSelection = (buildVariant: BuildVariant): ReShadeOperationSelecti
 });
 
 const mockPreview = () => {
-  vi.mocked(PreviewManagedReShadeAction).mockResolvedValue({
+  vi.mocked(PreviewReShadeAction).mockResolvedValue({
     canApply: true,
     conflicts: [],
     desiredTarget: null,
@@ -141,7 +141,7 @@ describe('ReShadeWizard', () => {
   });
 
   it('keeps the success result visible when refreshed catalogue props arrive after apply', async () => {
-    vi.mocked(PreviewManagedReShadeAction).mockResolvedValue({
+    vi.mocked(PreviewReShadeAction).mockResolvedValue({
       canApply: true,
       conflicts: [],
       desiredTarget: {
@@ -162,7 +162,7 @@ describe('ReShadeWizard', () => {
       userContentDrift: [],
       warnings: [],
     } as never);
-    vi.mocked(ApplyManagedReShadeAction).mockResolvedValue({
+    vi.mocked(ApplyReShadeAction).mockResolvedValue({
       message: 'Completed',
       rolledBack: false,
       success: true,
@@ -189,7 +189,7 @@ describe('ReShadeWizard', () => {
     expect(await screen.findByRole('button', { name: 'Install' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Install' }));
 
-    await waitFor(() => expect(ApplyManagedReShadeAction).toHaveBeenCalledOnce());
+    await waitFor(() => expect(ApplyReShadeAction).toHaveBeenCalledOnce());
     expect(await screen.findByText('Operation complete')).toBeInTheDocument();
     expect(onRefresh).toHaveBeenCalledOnce();
 
@@ -231,18 +231,18 @@ describe('ReShadeWizard', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Standard effects' }));
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
-    await waitFor(() => expect(PreviewManagedReShadeAction).toHaveBeenCalledOnce());
-    expect(vi.mocked(PreviewManagedReShadeAction).mock.calls[0][0].content).toEqual({
+    await waitFor(() => expect(PreviewReShadeAction).toHaveBeenCalledOnce());
+    expect(vi.mocked(PreviewReShadeAction).mock.calls[0][0].content).toEqual({
       effectPackages: [{ id: 'standard' }],
     });
 
-    vi.mocked(PreviewManagedReShadeAction).mockClear();
+    vi.mocked(PreviewReShadeAction).mockClear();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     fireEvent.click(screen.getByLabelText('Bloom.fx'));
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
-    await waitFor(() => expect(PreviewManagedReShadeAction).toHaveBeenCalledOnce());
-    expect(vi.mocked(PreviewManagedReShadeAction).mock.calls[0][0].content).toEqual({
+    await waitFor(() => expect(PreviewReShadeAction).toHaveBeenCalledOnce());
+    expect(vi.mocked(PreviewReShadeAction).mock.calls[0][0].content).toEqual({
       effectPackages: [{ effectFiles: ['DisplayDepth.fx'], id: 'standard' }],
     });
   });
@@ -266,8 +266,8 @@ describe('ReShadeWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear all effects' }));
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
-    await waitFor(() => expect(PreviewManagedReShadeAction).toHaveBeenCalledOnce());
-    expect(vi.mocked(PreviewManagedReShadeAction).mock.calls[0][0].content).toBeUndefined();
+    await waitFor(() => expect(PreviewReShadeAction).toHaveBeenCalledOnce());
+    expect(vi.mocked(PreviewReShadeAction).mock.calls[0][0].content).toBeUndefined();
   });
 
   it('filters packages by effect file names', () => {
@@ -324,7 +324,7 @@ describe('ReShadeWizard', () => {
 
   it('opens the preset helper and applies package recommendations', async () => {
     mockPreview();
-    vi.mocked(InspectManagedReShadePreset).mockResolvedValue({
+    vi.mocked(InspectReShadePreset).mockResolvedValue({
       missingEffects: [],
       recommendations: [
         {
@@ -359,14 +359,14 @@ describe('ReShadeWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Standard effects' }));
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
-    await waitFor(() => expect(PreviewManagedReShadeAction).toHaveBeenCalledOnce());
-    expect(vi.mocked(PreviewManagedReShadeAction).mock.calls[0][0].content).toEqual({
+    await waitFor(() => expect(PreviewReShadeAction).toHaveBeenCalledOnce());
+    expect(vi.mocked(PreviewReShadeAction).mock.calls[0][0].content).toEqual({
       effectPackages: [{ effectFiles: ['DisplayDepth.fx'], id: 'standard' }],
     });
   });
 
   it('refreshes the content catalogue from the search header', async () => {
-    vi.mocked(ListManagedReShadeContentCatalogue).mockResolvedValue(contentCatalogue());
+    vi.mocked(ListReShadeContentCatalogue).mockResolvedValue(contentCatalogue());
 
     render(
       <ReShadeWizard
@@ -382,6 +382,6 @@ describe('ReShadeWizard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Refresh catalogue' }));
 
-    await waitFor(() => expect(ListManagedReShadeContentCatalogue).toHaveBeenCalledWith(true));
+    await waitFor(() => expect(ListReShadeContentCatalogue).toHaveBeenCalledWith(true));
   });
 });

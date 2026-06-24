@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  ManagedReShadeDiscoveryResult,
-  ManagedReShadeTarget,
+  ReShadeDiscoveryResult,
+  ReShadeTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { Architecture } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 
@@ -10,9 +10,9 @@ import { getReShadeAggregateStatus } from './useGameReShade';
 
 const target = {
   Status: 'managed',
-} as ManagedReShadeTarget;
+} as ReShadeTarget;
 
-const discovery = (isReShade: boolean): ManagedReShadeDiscoveryResult => ({
+const discovery = (isReShade: boolean): ReShadeDiscoveryResult => ({
   candidates: [{
     apiOptions: [],
     architecture: Architecture.ArchitectureX64,

@@ -12,16 +12,16 @@ import {
   type ApplyResult as ReShadeApplyResult,
 } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type {
-  ManagedReShadeChainTarget,
-  ManagedReShadeContentCatalogue,
-  ManagedReShadePresetInspectionResult,
+  ReShadeChainTarget,
+  ReShadeContentCatalogue,
+  ReShadePresetInspectionResult,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
-  ApplyManagedReShadeAction,
-  GetManagedReShadeRecoveryState,
-  InspectManagedReShadePreset,
-  ListManagedReShadeContentCatalogue,
-  PreviewManagedReShadeAction,
+  ApplyReShadeAction,
+  GetReShadeRecoveryState,
+  InspectReShadePreset,
+  ListReShadeContentCatalogue,
+  PreviewReShadeAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { WizardError } from '@components/Common/WizardError/WizardError';
@@ -44,8 +44,8 @@ interface WizardErrorState {
 }
 
 interface ReShadeWizardProps {
-  catalogue: ManagedReShadeContentCatalogue | null;
-  chainTargets: ManagedReShadeChainTarget[];
+  catalogue: ReShadeContentCatalogue | null;
+  chainTargets: ReShadeChainTarget[];
   gameID: number;
   onClose: () => void;
   onRecoveryRequired: () => Promise<void>;
@@ -144,8 +144,8 @@ export const ReShadeWizard = ({
   const [phase, setPhase] = useState<OperationPhase>('idle');
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [presetPath, setPresetPath] = useState('');
-  const [inspection, setInspection] = useState<ManagedReShadePresetInspectionResult | null>(null);
-  const [currentCatalogue, setCurrentCatalogue] = useState<ManagedReShadeContentCatalogue | null>(catalogue);
+  const [inspection, setInspection] = useState<ReShadePresetInspectionResult | null>(null);
+  const [currentCatalogue, setCurrentCatalogue] = useState<ReShadeContentCatalogue | null>(catalogue);
   const currentStepIndex = steps.indexOf(step);
   const chainTarget = chainTargets.find((target) => target.TargetRelativePath === targetRelativePath) ?? null;
   const apiOptions = selection.candidate?.apiOptions ?? [{
@@ -218,7 +218,7 @@ export const ReShadeWizard = ({
     setPhase('previewing');
     setError(null);
     try {
-      setPreview(await PreviewManagedReShadeAction(request));
+      setPreview(await PreviewReShadeAction(request));
       setStep('preview');
     } catch (previewError) {
       setError({
@@ -237,7 +237,7 @@ export const ReShadeWizard = ({
     setPhase('applying');
     setError(null);
     try {
-      const applyResult = await ApplyManagedReShadeAction(request, preview.previewHash);
+      const applyResult = await ApplyReShadeAction(request, preview.previewHash);
       setResult(applyResult);
       setStep('result');
       setPhase('refreshing');
@@ -249,7 +249,7 @@ export const ReShadeWizard = ({
         details: message,
         summary: 'Could not apply the ReShade operation.',
       });
-      const recovery = await GetManagedReShadeRecoveryState().catch(() => null);
+      const recovery = await GetReShadeRecoveryState().catch(() => null);
       if (recovery?.required) {
         await onRecoveryRequired();
       }
@@ -266,7 +266,7 @@ export const ReShadeWizard = ({
   const refreshCatalogue = async () => {
     setPhase('refreshing');
     try {
-      setCurrentCatalogue(await ListManagedReShadeContentCatalogue(true));
+      setCurrentCatalogue(await ListReShadeContentCatalogue(true));
     } catch (catalogueError) {
       setError({
         details: getErrorMessage(catalogueError),
@@ -281,7 +281,7 @@ export const ReShadeWizard = ({
     setPhase('inspecting');
     setError(null);
     try {
-      setInspection(await InspectManagedReShadePreset(gameID, targetRelativePath, path));
+      setInspection(await InspectReShadePreset(gameID, targetRelativePath, path));
     } catch (inspectError) {
       setError({
         details: getErrorMessage(inspectError),
@@ -298,7 +298,7 @@ export const ReShadeWizard = ({
       setPhase('previewing');
       setError(null);
       try {
-        setPreview(await PreviewManagedReShadeAction({ ...request, backupAndContinue: true }));
+        setPreview(await PreviewReShadeAction({ ...request, backupAndContinue: true }));
       } catch (previewError) {
         setError({
           details: getErrorMessage(previewError),

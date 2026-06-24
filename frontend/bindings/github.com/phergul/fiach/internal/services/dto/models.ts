@@ -297,6 +297,39 @@ export class CreateTagInput {
     }
 }
 
+export class DetectedReShadeTarget {
+    "Path": string;
+    "Executables": string[];
+    "ManagementStatus": reshade$0.ManagementStatus;
+
+    /** Creates a new DetectedReShadeTarget instance. */
+    constructor($$source: Partial<DetectedReShadeTarget> = {}) {
+        if (!("Path" in $$source)) {
+            this["Path"] = "";
+        }
+        if (!("Executables" in $$source)) {
+            this["Executables"] = [];
+        }
+        if (!("ManagementStatus" in $$source)) {
+            this["ManagementStatus"] = reshade$0.ManagementStatus.$zero;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DetectedReShadeTarget instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DetectedReShadeTarget {
+        const $$createField1_0 = $$createType11;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Executables" in $$parsedSource) {
+            $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
+        }
+        return new DetectedReShadeTarget($$parsedSource as Partial<DetectedReShadeTarget>);
+    }
+}
+
 export class DiagnosticLogEntry {
     "Timestamp": string;
     "Level": string;
@@ -329,7 +362,7 @@ export class DiagnosticLogEntry {
      * Creates a new DiagnosticLogEntry instance from a string or object.
      */
     static createFrom($$source: any = {}): DiagnosticLogEntry {
-        const $$createField4_0 = $$createType11;
+        const $$createField4_0 = $$createType12;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Details" in $$parsedSource) {
             $$parsedSource["Details"] = $$createField4_0($$parsedSource["Details"]);
@@ -383,7 +416,7 @@ export class ExportDiagnosticLogsInput {
      * Creates a new ExportDiagnosticLogsInput instance from a string or object.
      */
     static createFrom($$source: any = {}): ExportDiagnosticLogsInput {
-        const $$createField1_0 = $$createType13;
+        const $$createField1_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Entries" in $$parsedSource) {
             $$parsedSource["Entries"] = $$createField1_0($$parsedSource["Entries"]);
@@ -436,8 +469,8 @@ export class ImportModInput {
      * Creates a new ImportModInput instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportModInput {
-        const $$createField6_0 = $$createType14;
-        const $$createField7_0 = $$createType16;
+        const $$createField6_0 = $$createType15;
+        const $$createField7_0 = $$createType17;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TagIDs" in $$parsedSource) {
             $$parsedSource["TagIDs"] = $$createField6_0($$parsedSource["TagIDs"]);
@@ -473,9 +506,9 @@ export class ImportModResult {
      * Creates a new ImportModResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportModResult {
-        const $$createField0_0 = $$createType17;
-        const $$createField1_0 = $$createType18;
-        const $$createField2_0 = $$createType19;
+        const $$createField0_0 = $$createType18;
+        const $$createField1_0 = $$createType19;
+        const $$createField2_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -510,8 +543,8 @@ export class ImportTargetDetectionResult {
      * Creates a new ImportTargetDetectionResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportTargetDetectionResult {
-        const $$createField0_0 = $$createType19;
-        const $$createField1_0 = $$createType19;
+        const $$createField0_0 = $$createType11;
+        const $$createField1_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Candidates" in $$parsedSource) {
             $$parsedSource["Candidates"] = $$createField0_0($$parsedSource["Candidates"]);
@@ -551,148 +584,6 @@ export class ListDiagnosticLogsInput {
         return new ListDiagnosticLogsInput($$parsedSource as Partial<ListDiagnosticLogsInput>);
     }
 }
-
-export const ManagedReShadeApplyResult = reshade$0.ApplyResult;
-export type ManagedReShadeApplyResult = reshade$0.ApplyResult;
-
-export class ManagedReShadeChainState {
-    "PreferredProxyFilename": string;
-    "ActiveRuntimeFilename": string;
-    "Status": string;
-
-    /** Creates a new ManagedReShadeChainState instance. */
-    constructor($$source: Partial<ManagedReShadeChainState> = {}) {
-        if (!("PreferredProxyFilename" in $$source)) {
-            this["PreferredProxyFilename"] = "";
-        }
-        if (!("ActiveRuntimeFilename" in $$source)) {
-            this["ActiveRuntimeFilename"] = "";
-        }
-        if (!("Status" in $$source)) {
-            this["Status"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ManagedReShadeChainState instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ManagedReShadeChainState {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ManagedReShadeChainState($$parsedSource as Partial<ManagedReShadeChainState>);
-    }
-}
-
-export class ManagedReShadeChainTarget {
-    "GameID": number;
-    "TargetRelativePath": string;
-    "ExecutableRelativePath": string;
-    "APIFamily": injection$0.APIFamily;
-    "PrimaryOwner": injection$0.Owner;
-    "PrimaryProxyFilename": string;
-    "Status": injection$0.Status;
-    "OptiScaler": ManagedReShadeOptiScalerChainState | null;
-    "ReShade": ManagedReShadeChainState | null;
-
-    /** Creates a new ManagedReShadeChainTarget instance. */
-    constructor($$source: Partial<ManagedReShadeChainTarget> = {}) {
-        if (!("GameID" in $$source)) {
-            this["GameID"] = 0;
-        }
-        if (!("TargetRelativePath" in $$source)) {
-            this["TargetRelativePath"] = "";
-        }
-        if (!("ExecutableRelativePath" in $$source)) {
-            this["ExecutableRelativePath"] = "";
-        }
-        if (!("APIFamily" in $$source)) {
-            this["APIFamily"] = injection$0.APIFamily.$zero;
-        }
-        if (!("PrimaryOwner" in $$source)) {
-            this["PrimaryOwner"] = injection$0.Owner.$zero;
-        }
-        if (!("PrimaryProxyFilename" in $$source)) {
-            this["PrimaryProxyFilename"] = "";
-        }
-        if (!("Status" in $$source)) {
-            this["Status"] = injection$0.Status.$zero;
-        }
-        if (!("OptiScaler" in $$source)) {
-            this["OptiScaler"] = null;
-        }
-        if (!("ReShade" in $$source)) {
-            this["ReShade"] = null;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ManagedReShadeChainTarget instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ManagedReShadeChainTarget {
-        const $$createField7_0 = $$createType21;
-        const $$createField8_0 = $$createType23;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("OptiScaler" in $$parsedSource) {
-            $$parsedSource["OptiScaler"] = $$createField7_0($$parsedSource["OptiScaler"]);
-        }
-        if ("ReShade" in $$parsedSource) {
-            $$parsedSource["ReShade"] = $$createField8_0($$parsedSource["ReShade"]);
-        }
-        return new ManagedReShadeChainTarget($$parsedSource as Partial<ManagedReShadeChainTarget>);
-    }
-}
-
-export const ManagedReShadeContentCatalogue = reshade$0.ContentCatalogue;
-export type ManagedReShadeContentCatalogue = reshade$0.ContentCatalogue;
-
-export const ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
-export type ManagedReShadeDiscoveryResult = reshade$0.DiscoveryResult;
-
-export const ManagedReShadeInstallerStatus = reshade$0.InstallerStatus;
-export type ManagedReShadeInstallerStatus = reshade$0.InstallerStatus;
-
-export class ManagedReShadeOptiScalerChainState {
-    "ProxyFilename": string;
-    "Status": string;
-
-    /** Creates a new ManagedReShadeOptiScalerChainState instance. */
-    constructor($$source: Partial<ManagedReShadeOptiScalerChainState> = {}) {
-        if (!("ProxyFilename" in $$source)) {
-            this["ProxyFilename"] = "";
-        }
-        if (!("Status" in $$source)) {
-            this["Status"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ManagedReShadeOptiScalerChainState instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ManagedReShadeOptiScalerChainState {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ManagedReShadeOptiScalerChainState($$parsedSource as Partial<ManagedReShadeOptiScalerChainState>);
-    }
-}
-
-export const ManagedReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
-export type ManagedReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
-
-export const ManagedReShadePreview = reshade$0.Preview;
-export type ManagedReShadePreview = reshade$0.Preview;
-
-export const ManagedReShadeRecoveryState = reshade$0.RecoveryState;
-export type ManagedReShadeRecoveryState = reshade$0.RecoveryState;
-
-export const ManagedReShadeRequest = reshade$0.Request;
-export type ManagedReShadeRequest = reshade$0.Request;
-
-export const ManagedReShadeTarget = reshade$0.ManagedTarget;
-export type ManagedReShadeTarget = reshade$0.ManagedTarget;
 
 export class Mod {
     "ID": number;
@@ -766,8 +657,8 @@ export class Mod {
      * Creates a new Mod instance from a string or object.
      */
     static createFrom($$source: any = {}): Mod {
-        const $$createField11_0 = $$createType25;
-        const $$createField14_0 = $$createType27;
+        const $$createField11_0 = $$createType21;
+        const $$createField14_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Metadata" in $$parsedSource) {
             $$parsedSource["Metadata"] = $$createField11_0($$parsedSource["Metadata"]);
@@ -971,10 +862,10 @@ export class ModMetadata {
      * Creates a new ModMetadata instance from a string or object.
      */
     static createFrom($$source: any = {}): ModMetadata {
-        const $$createField1_0 = $$createType28;
-        const $$createField2_0 = $$createType28;
-        const $$createField3_0 = $$createType28;
-        const $$createField4_0 = $$createType28;
+        const $$createField1_0 = $$createType24;
+        const $$createField2_0 = $$createType24;
+        const $$createField3_0 = $$createType24;
+        const $$createField4_0 = $$createType24;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Version" in $$parsedSource) {
             $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
@@ -1101,7 +992,7 @@ export class ModPackageSnapshot {
      * Creates a new ModPackageSnapshot instance from a string or object.
      */
     static createFrom($$source: any = {}): ModPackageSnapshot {
-        const $$createField6_0 = $$createType29;
+        const $$createField6_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("DetectedMetadata" in $$parsedSource) {
             $$parsedSource["DetectedMetadata"] = $$createField6_0($$parsedSource["DetectedMetadata"]);
@@ -1226,8 +1117,8 @@ export class OperationPlan {
      * Creates a new OperationPlan instance from a string or object.
      */
     static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType30;
-        const $$createField1_0 = $$createType32;
+        const $$createField0_0 = $$createType26;
+        const $$createField1_0 = $$createType28;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operations" in $$parsedSource) {
             $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
@@ -1409,8 +1300,8 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType33;
-        const $$createField7_0 = $$createType34;
+        const $$createField6_0 = $$createType29;
+        const $$createField7_0 = $$createType30;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -1557,8 +1448,8 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField7_0 = $$createType19;
-        const $$createField10_0 = $$createType19;
+        const $$createField7_0 = $$createType11;
+        const $$createField10_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
             $$parsedSource["TargetFilePaths"] = $$createField7_0($$parsedSource["TargetFilePaths"]);
@@ -1660,9 +1551,105 @@ export class ProfileMod {
     }
 }
 
+export const ReShadeApplyResult = reshade$0.ApplyResult;
+export type ReShadeApplyResult = reshade$0.ApplyResult;
+
+export class ReShadeChainState {
+    "PreferredProxyFilename": string;
+    "ActiveRuntimeFilename": string;
+    "Status": string;
+
+    /** Creates a new ReShadeChainState instance. */
+    constructor($$source: Partial<ReShadeChainState> = {}) {
+        if (!("PreferredProxyFilename" in $$source)) {
+            this["PreferredProxyFilename"] = "";
+        }
+        if (!("ActiveRuntimeFilename" in $$source)) {
+            this["ActiveRuntimeFilename"] = "";
+        }
+        if (!("Status" in $$source)) {
+            this["Status"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReShadeChainState instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReShadeChainState {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ReShadeChainState($$parsedSource as Partial<ReShadeChainState>);
+    }
+}
+
+export class ReShadeChainTarget {
+    "GameID": number;
+    "TargetRelativePath": string;
+    "ExecutableRelativePath": string;
+    "APIFamily": injection$0.APIFamily;
+    "PrimaryOwner": injection$0.Owner;
+    "PrimaryProxyFilename": string;
+    "Status": injection$0.Status;
+    "OptiScaler": ReShadeOptiScalerChainState | null;
+    "ReShade": ReShadeChainState | null;
+
+    /** Creates a new ReShadeChainTarget instance. */
+    constructor($$source: Partial<ReShadeChainTarget> = {}) {
+        if (!("GameID" in $$source)) {
+            this["GameID"] = 0;
+        }
+        if (!("TargetRelativePath" in $$source)) {
+            this["TargetRelativePath"] = "";
+        }
+        if (!("ExecutableRelativePath" in $$source)) {
+            this["ExecutableRelativePath"] = "";
+        }
+        if (!("APIFamily" in $$source)) {
+            this["APIFamily"] = injection$0.APIFamily.$zero;
+        }
+        if (!("PrimaryOwner" in $$source)) {
+            this["PrimaryOwner"] = injection$0.Owner.$zero;
+        }
+        if (!("PrimaryProxyFilename" in $$source)) {
+            this["PrimaryProxyFilename"] = "";
+        }
+        if (!("Status" in $$source)) {
+            this["Status"] = injection$0.Status.$zero;
+        }
+        if (!("OptiScaler" in $$source)) {
+            this["OptiScaler"] = null;
+        }
+        if (!("ReShade" in $$source)) {
+            this["ReShade"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ReShadeChainTarget instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ReShadeChainTarget {
+        const $$createField7_0 = $$createType32;
+        const $$createField8_0 = $$createType34;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("OptiScaler" in $$parsedSource) {
+            $$parsedSource["OptiScaler"] = $$createField7_0($$parsedSource["OptiScaler"]);
+        }
+        if ("ReShade" in $$parsedSource) {
+            $$parsedSource["ReShade"] = $$createField8_0($$parsedSource["ReShade"]);
+        }
+        return new ReShadeChainTarget($$parsedSource as Partial<ReShadeChainTarget>);
+    }
+}
+
+export const ReShadeContentCatalogue = reshade$0.ContentCatalogue;
+export type ReShadeContentCatalogue = reshade$0.ContentCatalogue;
+
 export class ReShadeDetectionResult {
     "Status": ReShadeDetectionStatus;
-    "Targets": ReShadeTarget[];
+    "Targets": DetectedReShadeTarget[];
     "UnsupportedReason": string | null;
 
     /** Creates a new ReShadeDetectionResult instance. */
@@ -1704,38 +1691,51 @@ export enum ReShadeDetectionStatus {
     ReShadeDetectionStatusUnsupported = "unsupported",
 };
 
-export class ReShadeTarget {
-    "Path": string;
-    "Executables": string[];
-    "ManagementStatus": reshade$0.ManagementStatus;
+export const ReShadeDiscoveryResult = reshade$0.DiscoveryResult;
+export type ReShadeDiscoveryResult = reshade$0.DiscoveryResult;
 
-    /** Creates a new ReShadeTarget instance. */
-    constructor($$source: Partial<ReShadeTarget> = {}) {
-        if (!("Path" in $$source)) {
-            this["Path"] = "";
+export const ReShadeInstallerStatus = reshade$0.InstallerStatus;
+export type ReShadeInstallerStatus = reshade$0.InstallerStatus;
+
+export class ReShadeOptiScalerChainState {
+    "ProxyFilename": string;
+    "Status": string;
+
+    /** Creates a new ReShadeOptiScalerChainState instance. */
+    constructor($$source: Partial<ReShadeOptiScalerChainState> = {}) {
+        if (!("ProxyFilename" in $$source)) {
+            this["ProxyFilename"] = "";
         }
-        if (!("Executables" in $$source)) {
-            this["Executables"] = [];
-        }
-        if (!("ManagementStatus" in $$source)) {
-            this["ManagementStatus"] = reshade$0.ManagementStatus.$zero;
+        if (!("Status" in $$source)) {
+            this["Status"] = "";
         }
 
         Object.assign(this, $$source);
     }
 
     /**
-     * Creates a new ReShadeTarget instance from a string or object.
+     * Creates a new ReShadeOptiScalerChainState instance from a string or object.
      */
-    static createFrom($$source: any = {}): ReShadeTarget {
-        const $$createField1_0 = $$createType19;
+    static createFrom($$source: any = {}): ReShadeOptiScalerChainState {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Executables" in $$parsedSource) {
-            $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
-        }
-        return new ReShadeTarget($$parsedSource as Partial<ReShadeTarget>);
+        return new ReShadeOptiScalerChainState($$parsedSource as Partial<ReShadeOptiScalerChainState>);
     }
 }
+
+export const ReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
+export type ReShadePresetInspectionResult = reshade$0.PresetInspectionResult;
+
+export const ReShadePreview = reshade$0.Preview;
+export type ReShadePreview = reshade$0.Preview;
+
+export const ReShadeRecoveryState = reshade$0.RecoveryState;
+export type ReShadeRecoveryState = reshade$0.RecoveryState;
+
+export const ReShadeRequest = reshade$0.Request;
+export type ReShadeRequest = reshade$0.Request;
+
+export const ReShadeTarget = reshade$0.ManagedTarget;
+export type ReShadeTarget = reshade$0.ManagedTarget;
 
 export class ReplacedFileManifestEntry {
     "OperationIndex": number;
@@ -2200,8 +2200,8 @@ export class UpdateModDetailsInput {
      */
     static createFrom($$source: any = {}): UpdateModDetailsInput {
         const $$createField2_0 = $$createType43;
-        const $$createField3_0 = $$createType14;
-        const $$createField4_0 = $$createType16;
+        const $$createField3_0 = $$createType15;
+        const $$createField4_0 = $$createType17;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Metadata" in $$parsedSource) {
             $$parsedSource["Metadata"] = $$createField2_0($$parsedSource["Metadata"]);
@@ -2342,10 +2342,10 @@ export class UpdateModResult {
      * Creates a new UpdateModResult instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModResult {
-        const $$createField0_0 = $$createType17;
+        const $$createField0_0 = $$createType18;
         const $$createField1_0 = $$createType45;
         const $$createField2_0 = $$createType45;
-        const $$createField4_0 = $$createType19;
+        const $$createField4_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -2375,31 +2375,31 @@ const $$createType7 = ApplyOperationResult.createFrom;
 const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = AppliedOperationManifest.createFrom;
 const $$createType10 = Operation.createFrom;
-const $$createType11 = $Create.Map($Create.Any, $Create.Any);
-const $$createType12 = DiagnosticLogEntry.createFrom;
-const $$createType13 = $Create.Array($$createType12);
-const $$createType14 = $Create.Array($Create.Any);
-const $$createType15 = CreateTagInput.createFrom;
-const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = Mod.createFrom;
-const $$createType18 = ModInstallConfig.createFrom;
-const $$createType19 = $Create.Array($Create.Any);
-const $$createType20 = ManagedReShadeOptiScalerChainState.createFrom;
+const $$createType11 = $Create.Array($Create.Any);
+const $$createType12 = $Create.Map($Create.Any, $Create.Any);
+const $$createType13 = DiagnosticLogEntry.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = $Create.Array($Create.Any);
+const $$createType16 = CreateTagInput.createFrom;
+const $$createType17 = $Create.Array($$createType16);
+const $$createType18 = Mod.createFrom;
+const $$createType19 = ModInstallConfig.createFrom;
+const $$createType20 = ModMetadata.createFrom;
 const $$createType21 = $Create.Nullable($$createType20);
-const $$createType22 = ManagedReShadeChainState.createFrom;
-const $$createType23 = $Create.Nullable($$createType22);
-const $$createType24 = ModMetadata.createFrom;
-const $$createType25 = $Create.Nullable($$createType24);
-const $$createType26 = Tag.createFrom;
-const $$createType27 = $Create.Array($$createType26);
-const $$createType28 = ModMetadataField.createFrom;
-const $$createType29 = ModDetectedMetadataSnapshot.createFrom;
-const $$createType30 = $Create.Array($$createType10);
-const $$createType31 = PlanIssue.createFrom;
-const $$createType32 = $Create.Array($$createType31);
-const $$createType33 = $Create.Nullable($$createType0);
-const $$createType34 = $Create.Array($Create.Any);
-const $$createType35 = ReShadeTarget.createFrom;
+const $$createType22 = Tag.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = ModMetadataField.createFrom;
+const $$createType25 = ModDetectedMetadataSnapshot.createFrom;
+const $$createType26 = $Create.Array($$createType10);
+const $$createType27 = PlanIssue.createFrom;
+const $$createType28 = $Create.Array($$createType27);
+const $$createType29 = $Create.Nullable($$createType0);
+const $$createType30 = $Create.Array($Create.Any);
+const $$createType31 = ReShadeOptiScalerChainState.createFrom;
+const $$createType32 = $Create.Nullable($$createType31);
+const $$createType33 = ReShadeChainState.createFrom;
+const $$createType34 = $Create.Nullable($$createType33);
+const $$createType35 = DetectedReShadeTarget.createFrom;
 const $$createType36 = $Create.Array($$createType35);
 const $$createType37 = RestoreMod.createFrom;
 const $$createType38 = RestoreOperation.createFrom;

@@ -4,21 +4,21 @@ import { ChevronDown, ChevronRight, Search, RefreshCw } from 'lucide-react';
 
 import { BuildVariant, type ContentRequest } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type {
-  ManagedReShadeContentCatalogue,
-  ManagedReShadePresetInspectionResult,
+  ReShadeContentCatalogue,
+  ReShadePresetInspectionResult,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ReShadeWizardContentStep.scss';
 
-type AddonPackage = NonNullable<ManagedReShadeContentCatalogue>['addons'][number];
+type AddonPackage = NonNullable<ReShadeContentCatalogue>['addons'][number];
 type ContentTab = 'effects' | 'addons';
-type EffectPackage = NonNullable<ManagedReShadeContentCatalogue>['effects'][number];
+type EffectPackage = NonNullable<ReShadeContentCatalogue>['effects'][number];
 
 interface ReShadeWizardContentStepProps {
   buildVariant: BuildVariant;
-  catalogue: ManagedReShadeContentCatalogue | null;
+  catalogue: ReShadeContentCatalogue | null;
   content: ContentRequest;
-  inspection: ManagedReShadePresetInspectionResult | null;
+  inspection: ReShadePresetInspectionResult | null;
   isInspectingPreset: boolean;
   onContentChange: (content: ContentRequest) => void;
   onInspectPreset: (path: string) => void;
@@ -88,7 +88,7 @@ const toggleEffect = (
 
 const selectRecommendation = (
   content: ContentRequest,
-  recommendation: ManagedReShadePresetInspectionResult['recommendations'][number],
+  recommendation: ReShadePresetInspectionResult['recommendations'][number],
 ): ContentRequest =>
   recommendation.effectFiles.length > 0
     ? upsertPackageSelection(content, recommendation.packageId, recommendation.effectFiles)

@@ -4,36 +4,36 @@ import { Ellipsis, PackagePlus, RefreshCw, ShieldCheck, SlidersHorizontal, Trash
 
 import { Action } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type {
-  ManagedReShadeChainTarget,
-  ManagedReShadeDiscoveryResult,
-  ManagedReShadeInstallerStatus,
-  ManagedReShadeTarget,
+  ReShadeChainTarget,
+  ReShadeDiscoveryResult,
+  ReShadeInstallerStatus,
+  ReShadeTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
-import { isManagedReShadeUpdateAvailable } from '@hooks';
+import { isReShadeUpdateAvailable } from '@hooks';
 
 import './ReShadeTargetTable.scss';
 
 export interface ReShadeOperationSelection {
   action: Action;
-  candidate: ManagedReShadeDiscoveryResult['candidates'][number] | null;
-  target: ManagedReShadeTarget | null;
+  candidate: ReShadeDiscoveryResult['candidates'][number] | null;
+  target: ReShadeTarget | null;
 }
 
 interface ReShadeTargetTableProps {
-  chainTargets: ManagedReShadeChainTarget[];
+  chainTargets: ReShadeChainTarget[];
   disabled: boolean;
-  discovery: ManagedReShadeDiscoveryResult | null;
-  installerStatus: ManagedReShadeInstallerStatus | null;
+  discovery: ReShadeDiscoveryResult | null;
+  installerStatus: ReShadeInstallerStatus | null;
   onStartOperation: (selection: ReShadeOperationSelection) => void;
-  targets: ManagedReShadeTarget[];
+  targets: ReShadeTarget[];
 }
 
 const filename = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
 const targetKey = (path: string) => path.trim().toLocaleLowerCase();
 
-const hasDetectedReShade = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
+const hasDetectedReShade = (candidate: ReShadeDiscoveryResult['candidates'][number]) =>
   candidate.proxyEvidence.some((evidence) => evidence.isReShade);
 
 const formatRenderingAPI = (api: string) => {
@@ -59,14 +59,14 @@ const formatRuntimeVersion = (version: string | null | undefined) => {
   return trimmed.toLowerCase().startsWith('v') ? trimmed : `v${trimmed}`;
 };
 
-const detectedRuntimeVersions = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) => [
+const detectedRuntimeVersions = (candidate: ReShadeDiscoveryResult['candidates'][number]) => [
   ...new Set(candidate.proxyEvidence
     .filter((evidence) => evidence.isReShade)
     .map((evidence) => formatRuntimeVersion(evidence.runtimeVersion))
     .filter((version) => version !== '')),
 ];
 
-const detectedProxyEvidence = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
+const detectedProxyEvidence = (candidate: ReShadeDiscoveryResult['candidates'][number]) =>
   candidate.proxyEvidence
     .filter((evidence) => evidence.exists)
     .map((evidence) => {
@@ -78,7 +78,7 @@ const detectedProxyEvidence = (candidate: ManagedReShadeDiscoveryResult['candida
     });
 
 const chainSummary = (
-  chainTargets: ManagedReShadeChainTarget[],
+  chainTargets: ReShadeChainTarget[],
   targetRelativePath: string,
 ) => {
   const chain = chainTargets.find((item) => targetKey(item.TargetRelativePath) === targetKey(targetRelativePath));
@@ -92,27 +92,27 @@ const chainSummary = (
 };
 
 const managedFacts = (
-  target: ManagedReShadeTarget,
-  installerStatus: ManagedReShadeInstallerStatus | null,
+  target: ReShadeTarget,
+  installerStatus: ReShadeInstallerStatus | null,
 ) => {
   return [
     { label: target.Status === 'drifted' ? 'Drift detected' : target.Status, tone: target.Status === 'drifted' ? 'warning' : 'success' },
-    ...(isManagedReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
+    ...(isReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
   ];
 };
 
-const variantLabel = (target: ManagedReShadeTarget) =>
+const variantLabel = (target: ReShadeTarget) =>
   target.BuildVariant === 'addon' ? 'Full add-on' : 'Standard';
 
-const provenanceLabel = (target: ManagedReShadeTarget) =>
+const provenanceLabel = (target: ReShadeTarget) =>
   target.VariantProvenance === 'user_declared' ? 'User declared' : 'Verified';
 
-const activeRuntimeLabel = (target: ManagedReShadeTarget) =>
+const activeRuntimeLabel = (target: ReShadeTarget) =>
   target.ActiveRuntimeFilename.trim() === '' ? target.ProxyFilename : target.ActiveRuntimeFilename;
 
 const managedDetailFacts = (
-  target: ManagedReShadeTarget,
-  chainTargets: ManagedReShadeChainTarget[],
+  target: ReShadeTarget,
+  chainTargets: ReShadeChainTarget[],
 ) => [
   formatRenderingAPI(target.RenderingAPI),
   target.Architecture,
@@ -131,7 +131,7 @@ const ReShadeManagedActions = ({
 }: {
   disabled: boolean;
   onStartOperation: (selection: ReShadeOperationSelection) => void;
-  target: ManagedReShadeTarget;
+  target: ReShadeTarget;
   updateAvailable: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -226,7 +226,7 @@ export const ReShadeTargetTable = ({
           <p className="reshade-target-empty">No ReShade targets are managed for this game.</p>
         )}
         {targets.map((target) => {
-          const updateAvailable = isManagedReShadeUpdateAvailable(target, installerStatus);
+          const updateAvailable = isReShadeUpdateAvailable(target, installerStatus);
           return (
             <div className="reshade-target-row" key={`managed:${target.ID}`}>
               <div className="reshade-target-identity">

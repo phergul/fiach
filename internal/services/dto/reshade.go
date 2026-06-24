@@ -13,7 +13,7 @@ const (
 	ReShadeDetectionStatusUnsupported  ReShadeDetectionStatus = "unsupported"
 )
 
-type ReShadeTarget struct {
+type DetectedReShadeTarget struct {
 	Path             string
 	Executables      []string
 	ManagementStatus reshade.ManagementStatus
@@ -21,21 +21,21 @@ type ReShadeTarget struct {
 
 type ReShadeDetectionResult struct {
 	Status            ReShadeDetectionStatus
-	Targets           []ReShadeTarget
+	Targets           []DetectedReShadeTarget
 	UnsupportedReason *string
 }
 
-type ManagedReShadeRequest = reshade.Request
-type ManagedReShadePreview = reshade.Preview
-type ManagedReShadeApplyResult = reshade.ApplyResult
-type ManagedReShadeRecoveryState = reshade.RecoveryState
-type ManagedReShadeTarget = reshade.ManagedTarget
-type ManagedReShadeDiscoveryResult = reshade.DiscoveryResult
-type ManagedReShadeContentCatalogue = reshade.ContentCatalogue
-type ManagedReShadePresetInspectionResult = reshade.PresetInspectionResult
-type ManagedReShadeInstallerStatus = reshade.InstallerStatus
+type ReShadeRequest = reshade.Request
+type ReShadePreview = reshade.Preview
+type ReShadeApplyResult = reshade.ApplyResult
+type ReShadeRecoveryState = reshade.RecoveryState
+type ReShadeTarget = reshade.ManagedTarget
+type ReShadeDiscoveryResult = reshade.DiscoveryResult
+type ReShadeContentCatalogue = reshade.ContentCatalogue
+type ReShadePresetInspectionResult = reshade.PresetInspectionResult
+type ReShadeInstallerStatus = reshade.InstallerStatus
 
-type ManagedReShadeChainTarget struct {
+type ReShadeChainTarget struct {
 	GameID                 int64
 	TargetRelativePath     string
 	ExecutableRelativePath string
@@ -43,16 +43,16 @@ type ManagedReShadeChainTarget struct {
 	PrimaryOwner           injection.Owner
 	PrimaryProxyFilename   string
 	Status                 injection.Status
-	OptiScaler             *ManagedReShadeOptiScalerChainState
-	ReShade                *ManagedReShadeChainState
+	OptiScaler             *ReShadeOptiScalerChainState
+	ReShade                *ReShadeChainState
 }
 
-type ManagedReShadeOptiScalerChainState struct {
+type ReShadeOptiScalerChainState struct {
 	ProxyFilename string
 	Status        string
 }
 
-type ManagedReShadeChainState struct {
+type ReShadeChainState struct {
 	PreferredProxyFilename string
 	ActiveRuntimeFilename  string
 	Status                 string

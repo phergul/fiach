@@ -148,7 +148,7 @@ func TestManagerDirectXChainingAndUninstallRestoreReShadeProxy(t *testing.T) {
 	}
 }
 
-func TestManagerInstallAfterManagedReShadeChainsPersistedRuntime(t *testing.T) {
+func TestManagerInstallAfterReShadeChainsPersistedRuntime(t *testing.T) {
 	t.Parallel()
 
 	gameRoot, request := newLifecycleGame(t)

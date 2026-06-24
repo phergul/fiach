@@ -1,10 +1,10 @@
 import type { Operation as ReShadeOperation, PathImpact, Preview as ReShadePreviewModel } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
-import type { ManagedReShadeChainTarget } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ReShadeChainTarget } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ReShadePreview.scss';
 
 interface ReShadePreviewProps {
-  chainTarget: ManagedReShadeChainTarget | null;
+  chainTarget: ReShadeChainTarget | null;
   preview: ReShadePreviewModel;
 }
 
@@ -50,7 +50,7 @@ const filesToAdd = (operations: ReShadeOperation[]) =>
 const filesToRemove = (operations: ReShadeOperation[]) =>
   operations.filter((operation) => operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore');
 
-const chainItems = (chainTarget: ManagedReShadeChainTarget | null) => {
+const chainItems = (chainTarget: ReShadeChainTarget | null) => {
   if (chainTarget === null) {
     return [];
   }

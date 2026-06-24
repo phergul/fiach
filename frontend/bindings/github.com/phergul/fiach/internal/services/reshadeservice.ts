@@ -12,8 +12,8 @@ import * as reshade$0 from "../reshade/models.js";
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
-export function ApplyManagedReShadeAction(request: dto$0.ManagedReShadeRequest, previewHash: string): $CancellablePromise<dto$0.ManagedReShadeApplyResult> {
-    return $Call.ByID(2764908732, request, previewHash).then(($result: any) => {
+export function ApplyReShadeAction(request: dto$0.ReShadeRequest, previewHash: string): $CancellablePromise<dto$0.ReShadeApplyResult> {
+    return $Call.ByID(1595007961, request, previewHash).then(($result: any) => {
         return $$createType0($result);
     });
 }
@@ -24,56 +24,56 @@ export function DetectGameReShade(gameID: number): $CancellablePromise<dto$0.ReS
     });
 }
 
-export function DiscoverManagedReShadeCandidates(gameID: number): $CancellablePromise<dto$0.ManagedReShadeDiscoveryResult> {
-    return $Call.ByID(910385421, gameID).then(($result: any) => {
+export function DiscoverReShadeCandidates(gameID: number): $CancellablePromise<dto$0.ReShadeDiscoveryResult> {
+    return $Call.ByID(3416978506, gameID).then(($result: any) => {
         return $$createType2($result);
     });
 }
 
-export function GetManagedReShadeInstallerStatus(refresh: boolean): $CancellablePromise<dto$0.ManagedReShadeInstallerStatus> {
-    return $Call.ByID(2434708436, refresh).then(($result: any) => {
+export function GetReShadeInstallerStatus(refresh: boolean): $CancellablePromise<dto$0.ReShadeInstallerStatus> {
+    return $Call.ByID(2759383243, refresh).then(($result: any) => {
         return $$createType3($result);
     });
 }
 
-export function GetManagedReShadeRecoveryState(): $CancellablePromise<dto$0.ManagedReShadeRecoveryState> {
-    return $Call.ByID(4192553982).then(($result: any) => {
+export function GetReShadeRecoveryState(): $CancellablePromise<dto$0.ReShadeRecoveryState> {
+    return $Call.ByID(891724529).then(($result: any) => {
         return $$createType4($result);
     });
 }
 
-export function InspectManagedReShadePreset(gameID: number, targetRelativePath: string, presetPath: string): $CancellablePromise<dto$0.ManagedReShadePresetInspectionResult> {
-    return $Call.ByID(80568153, gameID, targetRelativePath, presetPath).then(($result: any) => {
+export function InspectReShadePreset(gameID: number, targetRelativePath: string, presetPath: string): $CancellablePromise<dto$0.ReShadePresetInspectionResult> {
+    return $Call.ByID(296190896, gameID, targetRelativePath, presetPath).then(($result: any) => {
         return $$createType5($result);
     });
 }
 
-export function ListManagedReShadeChainTargets(gameID: number): $CancellablePromise<dto$0.ManagedReShadeChainTarget[]> {
-    return $Call.ByID(2090245913, gameID).then(($result: any) => {
+export function ListReShadeChainTargets(gameID: number): $CancellablePromise<dto$0.ReShadeChainTarget[]> {
+    return $Call.ByID(883715252, gameID).then(($result: any) => {
         return $$createType7($result);
     });
 }
 
-export function ListManagedReShadeContentCatalogue(refresh: boolean): $CancellablePromise<dto$0.ManagedReShadeContentCatalogue> {
-    return $Call.ByID(3028800330, refresh).then(($result: any) => {
+export function ListReShadeContentCatalogue(refresh: boolean): $CancellablePromise<dto$0.ReShadeContentCatalogue> {
+    return $Call.ByID(3130694243, refresh).then(($result: any) => {
         return $$createType8($result);
     });
 }
 
-export function ListManagedReShadeTargets(gameID: number): $CancellablePromise<dto$0.ManagedReShadeTarget[]> {
-    return $Call.ByID(1467684570, gameID).then(($result: any) => {
+export function ListReShadeTargets(gameID: number): $CancellablePromise<dto$0.ReShadeTarget[]> {
+    return $Call.ByID(2028474873, gameID).then(($result: any) => {
         return $$createType10($result);
     });
 }
 
-export function PreviewManagedReShadeAction(request: dto$0.ManagedReShadeRequest): $CancellablePromise<dto$0.ManagedReShadePreview> {
-    return $Call.ByID(2098758272, request).then(($result: any) => {
+export function PreviewReShadeAction(request: dto$0.ReShadeRequest): $CancellablePromise<dto$0.ReShadePreview> {
+    return $Call.ByID(4185928845, request).then(($result: any) => {
         return $$createType11($result);
     });
 }
 
-export function RollbackManagedReShadeRecovery(journalID: string): $CancellablePromise<dto$0.ManagedReShadeApplyResult> {
-    return $Call.ByID(3064756855, journalID).then(($result: any) => {
+export function RollbackReShadeRecovery(journalID: string): $CancellablePromise<dto$0.ReShadeApplyResult> {
+    return $Call.ByID(245310586, journalID).then(($result: any) => {
         return $$createType0($result);
     });
 }
@@ -85,7 +85,7 @@ const $$createType2 = reshade$0.DiscoveryResult.createFrom;
 const $$createType3 = reshade$0.InstallerStatus.createFrom;
 const $$createType4 = reshade$0.RecoveryState.createFrom;
 const $$createType5 = reshade$0.PresetInspectionResult.createFrom;
-const $$createType6 = dto$0.ManagedReShadeChainTarget.createFrom;
+const $$createType6 = dto$0.ReShadeChainTarget.createFrom;
 const $$createType7 = $Create.Array($$createType6);
 const $$createType8 = reshade$0.ContentCatalogue.createFrom;
 const $$createType9 = reshade$0.ManagedTarget.createFrom;

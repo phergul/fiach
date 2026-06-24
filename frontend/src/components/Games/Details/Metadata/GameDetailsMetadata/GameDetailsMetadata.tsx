@@ -62,7 +62,7 @@ const formatOptiScalerStatus = (optiScaler: UseGameOptiScalerResult) => {
   }
 };
 
-const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) => {
+const formatReShadeDetectionStatus = (reShadeDetection: UseGameReShadeDetectionResult) => {
   if (reShadeDetection.isLoading) {
     return 'Checking';
   }
@@ -83,14 +83,14 @@ const formatReShadeStatus = (reShadeDetection: UseGameReShadeDetectionResult) =>
   }
 };
 
-const formatManagedReShadeStatus = (reShade: UseGameReShadeResult, fallback: UseGameReShadeDetectionResult) => {
+const formatReShadeStatus = (reShade: UseGameReShadeResult, fallback: UseGameReShadeDetectionResult) => {
   const count = reShade.targets.length;
   const countLabel = `${count} managed`;
   switch (reShade.aggregateStatus) {
     case 'checking':
       return 'Checking';
     case 'error':
-      return formatReShadeStatus(fallback);
+      return formatReShadeDetectionStatus(fallback);
     case 'recovery':
       return `${countLabel} · Recovery required`;
     case 'conflict':
@@ -104,7 +104,7 @@ const formatManagedReShadeStatus = (reShade: UseGameReShadeResult, fallback: Use
     case 'unmanaged':
       return 'Detected unmanaged';
     case 'not_detected':
-      return formatReShadeStatus(fallback);
+      return formatReShadeDetectionStatus(fallback);
   }
 };
 
@@ -121,7 +121,7 @@ export const GameDetailsMetadata = ({
     { Icon: Package, label: 'Mods installed', value: String(modCount) },
     { Icon: Database, label: 'Storage used', value: formatStorageUsage(storageUsedBytes, isStorageUsageLoading) },
     { Icon: Users, label: 'Profiles', value: String(profileCount) },
-    { Icon: Sparkles, label: 'ReShade', value: formatManagedReShadeStatus(reShade, reShadeDetection) },
+    { Icon: Sparkles, label: 'ReShade', value: formatReShadeStatus(reShade, reShadeDetection) },
     { Icon: Gauge, label: 'OptiScaler', value: formatOptiScalerStatus(optiScaler) },
   ];
 

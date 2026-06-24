@@ -234,7 +234,7 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		}
 		if len(preview.Drift) > 0 && !request.BackupAndContinue {
 			preview.Conflicts = append(preview.Conflicts,
-				"Managed ReShade files have drifted; backup-and-continue must be explicitly selected.")
+				"ReShade-managed files have drifted; backup-and-continue must be explicitly selected.")
 		}
 		preview.UserContentDrift, err = detectUserContentDrift(gameRoot, manifest)
 		if err != nil {

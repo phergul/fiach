@@ -2,14 +2,14 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
-  ManagedReShadeDiscoveryResult,
-  ManagedReShadeTarget,
+  ReShadeDiscoveryResult,
+  ReShadeTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import { ReShadeTargetTable } from './ReShadeTargetTable';
 
 const candidate = (
-  overrides: Partial<ManagedReShadeDiscoveryResult['candidates'][number]> = {},
+  overrides: Partial<ReShadeDiscoveryResult['candidates'][number]> = {},
 ) => ({
   apiOptions: [
     { proxies: ['d3d9.dll'], renderingApi: 'd3d9' },
@@ -23,9 +23,9 @@ const candidate = (
   proxyEvidence: [],
   targetRelativePath: 'Bin',
   ...overrides,
-} as ManagedReShadeDiscoveryResult['candidates'][number]);
+} as ReShadeDiscoveryResult['candidates'][number]);
 
-const target = (overrides: Partial<ManagedReShadeTarget> = {}) => ({
+const target = (overrides: Partial<ReShadeTarget> = {}) => ({
   ActiveRuntimeFilename: 'ReShade64.dll',
   Architecture: 'x64',
   BuildVariant: 'standard',
@@ -38,7 +38,7 @@ const target = (overrides: Partial<ManagedReShadeTarget> = {}) => ({
   TargetRelativePath: 'Bin',
   VariantProvenance: 'verified',
   ...overrides,
-} as ManagedReShadeTarget);
+} as ReShadeTarget);
 
 describe('ReShadeTargetTable', () => {
   it('keeps detected API selection out of the row and suppresses clean placeholders', () => {
@@ -46,7 +46,7 @@ describe('ReShadeTargetTable', () => {
       <ReShadeTargetTable
         chainTargets={[]}
         disabled={false}
-        discovery={{ candidates: [candidate()], warnings: [] } as ManagedReShadeDiscoveryResult}
+        discovery={{ candidates: [candidate()], warnings: [] } as ReShadeDiscoveryResult}
         installerStatus={null}
         onStartOperation={vi.fn()}
         targets={[]}

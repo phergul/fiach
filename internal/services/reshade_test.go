@@ -93,7 +93,7 @@ func TestReshadeServiceDetectGameReShadeReturnsDetectedTargets(t *testing.T) {
 	}
 }
 
-func TestReshadeServiceDiscoverManagedReShadeCandidatesReturnsPerFileWarnings(t *testing.T) {
+func TestReshadeServiceDiscoverReShadeCandidatesReturnsPerFileWarnings(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -105,16 +105,16 @@ func TestReshadeServiceDiscoverManagedReShadeCandidatesReturnsPerFileWarnings(t 
 
 	service := NewReshadeService(store, testLogger(), nil)
 	service.operatingSystem = "windows"
-	result, err := service.DiscoverManagedReShadeCandidates(context.Background(), gameID)
+	result, err := service.DiscoverReShadeCandidates(context.Background(), gameID)
 	if err != nil {
-		t.Fatalf("DiscoverManagedReShadeCandidates() error = %v", err)
+		t.Fatalf("DiscoverReShadeCandidates() error = %v", err)
 	}
 	if len(result.Candidates) != 0 || len(result.Warnings) != 1 {
 		t.Fatalf("result = %+v", result)
 	}
 }
 
-func TestReshadeServiceListManagedReShadeChainTargetsCombinesProducts(t *testing.T) {
+func TestReshadeServiceListReShadeChainTargetsCombinesProducts(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -160,9 +160,9 @@ func TestReshadeServiceListManagedReShadeChainTargetsCombinesProducts(t *testing
 	}
 
 	service := NewReshadeService(store, testLogger(), nil)
-	result, err := service.ListManagedReShadeChainTargets(context.Background(), gameID)
+	result, err := service.ListReShadeChainTargets(context.Background(), gameID)
 	if err != nil {
-		t.Fatalf("ListManagedReShadeChainTargets() error = %v", err)
+		t.Fatalf("ListReShadeChainTargets() error = %v", err)
 	}
 	if len(result) != 1 || result[0].PrimaryOwner != "optiscaler" ||
 		result[0].OptiScaler == nil || result[0].ReShade == nil {

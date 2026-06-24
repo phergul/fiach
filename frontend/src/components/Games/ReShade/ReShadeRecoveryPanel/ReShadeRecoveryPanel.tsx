@@ -1,11 +1,11 @@
-import type { ManagedReShadeRecoveryState } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ReShadeRecoveryState } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ReShadeRecoveryPanel.scss';
 
 interface ReShadeRecoveryPanelProps {
   isRollingBack: boolean;
   onRollback: () => void;
-  recovery: ManagedReShadeRecoveryState;
+  recovery: ReShadeRecoveryState;
 }
 
 export const ReShadeRecoveryPanel = ({
