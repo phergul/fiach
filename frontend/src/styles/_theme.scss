@@ -1,5 +1,10 @@
 @use './variables' as *;
 
+$scrollbar-size: $spacing-sm;
+$scrollbar-thumb-color: $color-border-strong;
+$scrollbar-thumb-hover-color: color-mix(in srgb, $color-text-muted 62%, $color-border-strong);
+$scrollbar-track-color: $color-background;
+
 :root {
   color-scheme: dark;
 }
@@ -8,6 +13,40 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+// * {
+//   scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
+//   scrollbar-width: thin;
+// }
+
+*::-webkit-scrollbar {
+  width: $scrollbar-size;
+  height: $scrollbar-size;
+  background: $scrollbar-track-color;
+}
+
+*::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  background: $scrollbar-track-color;
+}
+
+*::-webkit-scrollbar-track {
+  background: $scrollbar-track-color;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: $scrollbar-thumb-color;
+  border-left: $app-border-width solid $scrollbar-track-color;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: $scrollbar-thumb-hover-color;
+}
+
+*::-webkit-scrollbar-corner {
+  background: $scrollbar-track-color;
 }
 
 html,

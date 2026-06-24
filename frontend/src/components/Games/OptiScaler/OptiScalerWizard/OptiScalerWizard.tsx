@@ -362,7 +362,13 @@ export const OptiScalerWizard = ({
         </ol>
 
         <form className="optiscaler-wizard-form" onSubmit={submit}>
-          {error !== null && <WizardError details={error.details} summary={error.summary} />}
+          {error !== null && (
+            <WizardError
+              details={error.details}
+              onClose={() => setError(null)}
+              summary={error.summary}
+            />
+          )}
           <div className="optiscaler-wizard-scroll">
             {step === 'target' && (
               <OptiScalerWizardTargetStep actionLabel={definition.label} selection={selection} />

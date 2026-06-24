@@ -91,6 +91,10 @@ $reshade-wizard-label-width: 10rem;
   background: $color-background;
 }
 
+.reshade-wizard-scroll-content-step {
+  overflow: hidden;
+}
+
 .reshade-wizard-content {
   display: grid;
   width: min(100%, $wizard-content-max-width);

@@ -46,10 +46,6 @@ $reshade-target-icon-size: 1rem;
   background: $color-background;
 }
 
-.reshade-target-row + .reshade-target-row {
-  margin-top: $spacing-separator;
-}
-
 .reshade-target-table section > h3 {
   display: flex;
   min-height: $input-height;
@@ -66,6 +62,7 @@ $reshade-target-icon-size: 1rem;
   min-height: 5rem;
   background: $color-surface;
   transition: background-color $transition-duration-fast $transition-easing-standard;
+  margin-bottom: $spacing-separator;
 }
 
 .reshade-target-row:hover {

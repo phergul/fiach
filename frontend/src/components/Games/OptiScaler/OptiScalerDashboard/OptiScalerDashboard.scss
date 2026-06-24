@@ -57,9 +57,11 @@ $optiscaler-page-header-height: 5rem;
   top: $optiscaler-toolbar-height;
   right: 0;
   left: 0;
-  height: calc($optiscaler-game-header-height + $optiscaler-page-header-height);
+  height: 40%;
   z-index: 0;
   pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
 }
 
 .optiscaler-dashboard-backdrop::after {

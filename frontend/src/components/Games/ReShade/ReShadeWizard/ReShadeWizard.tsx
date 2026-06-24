@@ -400,8 +400,17 @@ export const ReShadeWizard = ({
         </ol>
 
         <form className="reshade-wizard-form" onSubmit={submit}>
-          {error !== null && <WizardError details={error.details} summary={error.summary} />}
-          <div className="reshade-wizard-scroll">
+          {error !== null && (
+            <WizardError
+              details={error.details}
+              onClose={() => setError(null)}
+              summary={error.summary}
+            />
+          )}
+          <div className={step === 'content'
+            ? 'reshade-wizard-scroll reshade-wizard-scroll-content-step'
+            : 'reshade-wizard-scroll'}
+          >
             {step === 'target' && <ReShadeWizardTargetStep selection={selection} />}
             {step === 'runtime' && (
               <ReShadeWizardRuntimeStep

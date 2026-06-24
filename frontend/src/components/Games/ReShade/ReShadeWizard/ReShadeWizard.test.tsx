@@ -13,6 +13,7 @@ import type { ManagedReShadeContentCatalogue } from '@bindings/github.com/phergu
 import {
   ApplyManagedReShadeAction,
   InspectManagedReShadePreset,
+  ListManagedReShadeContentCatalogue,
   PreviewManagedReShadeAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 
@@ -362,5 +363,25 @@ describe('ReShadeWizard', () => {
     expect(vi.mocked(PreviewManagedReShadeAction).mock.calls[0][0].content).toEqual({
       effectPackages: [{ effectFiles: ['DisplayDepth.fx'], id: 'standard' }],
     });
+  });
+
+  it('refreshes the content catalogue from the search header', async () => {
+    vi.mocked(ListManagedReShadeContentCatalogue).mockResolvedValue(contentCatalogue());
+
+    render(
+      <ReShadeWizard
+        catalogue={contentCatalogue()}
+        chainTargets={[]}
+        gameID={1}
+        onClose={vi.fn()}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={configureSelection(BuildVariant.BuildVariantStandard)}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh catalogue' }));
+
+    await waitFor(() => expect(ListManagedReShadeContentCatalogue).toHaveBeenCalledWith(true));
   });
 });

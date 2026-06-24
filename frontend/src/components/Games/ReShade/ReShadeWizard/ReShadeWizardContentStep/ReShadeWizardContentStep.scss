@@ -3,7 +3,6 @@
 $reshade-content-sidebar-width: 22rem;
 $reshade-content-search-icon-size: 1rem;
 $reshade-content-option-size: 1.25rem;
-$reshade-content-option-offset: 0.125rem;
 $reshade-content-check-top: 0.1875rem;
 $reshade-content-check-left: 0.375rem;
 $reshade-content-check-width: 0.375rem;
@@ -11,22 +10,24 @@ $reshade-content-check-height: 0.625rem;
 $reshade-content-hidden-input-size: 0.0625rem;
 $reshade-content-hidden-input-offset: -0.0625rem;
 $reshade-content-row-min-height: 4rem;
+$reshade-content-row-compact-min-height: 3.25rem;
 $reshade-content-fold-icon-size: 1rem;
 $reshade-content-meta-label-width: 8rem;
 
+.reshade-wizard-content-layout {
+  height: 100%;
+  align-content: stretch;
+  padding: $spacing-md $spacing-xl;
+  overflow: hidden;
+}
+
 .reshade-wizard-content-step {
   display: grid;
-  min-height: 36rem;
-  gap: $spacing-md;
+  min-height: 0;
+  height: 100%;
+  grid-template-rows: minmax(0, 1fr);
 }
 
-.reshade-wizard-content-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  gap: $spacing-sm;
-}
-
-.reshade-wizard-content-toolbar button,
 .reshade-wizard-preset-form button,
 .reshade-wizard-preset-result button,
 .reshade-wizard-content-effect-actions button {
@@ -37,7 +38,7 @@ $reshade-content-meta-label-width: 8rem;
   display: grid;
   gap: $spacing-sm;
   padding: $spacing-md;
-  background: $color-surface;
+  background: $color-background;
 }
 
 .reshade-wizard-preset-form {
@@ -63,13 +64,14 @@ $reshade-content-meta-label-width: 8rem;
   min-height: $input-height;
   padding: $spacing-sm $spacing-md;
   color: $color-text-subtle;
-  background: $color-background;
+  background: $color-surface-elevated;
   font-size: $font-size-sm;
 }
 
 .reshade-wizard-content-browser {
   display: grid;
   min-height: 0;
+  height: 100%;
   grid-template-columns: $reshade-content-sidebar-width minmax(0, 1fr);
   gap: $spacing-separator;
   background: $color-background;
@@ -84,9 +86,10 @@ $reshade-content-meta-label-width: 8rem;
 .reshade-wizard-content-sidebar {
   display: flex;
   flex-direction: column;
+  background-color: $color-background;
 }
 
-.reshade-wizard-content-serach-container {
+.reshade-wizard-content-search-container {
   display: flex;
   gap: $spacing-sm;
   align-items: center;
@@ -146,6 +149,7 @@ $reshade-content-meta-label-width: 8rem;
   gap: $spacing-separator;
   flex: 0 0 auto;
   background: $color-background;
+  margin-bottom: $spacing-separator;
 }
 
 .reshade-wizard-content-tabs button {
@@ -178,6 +182,7 @@ $reshade-content-meta-label-width: 8rem;
   gap: $spacing-lg;
   padding: $spacing-sm $spacing-md;
   background: $color-surface;
+  cursor: pointer;
   text-align: left;
 }
 
@@ -188,13 +193,18 @@ $reshade-content-meta-label-width: 8rem;
 }
 
 .reshade-wizard-content-row-button {
-  display: grid;
-  justify-items: stretch;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   gap: $spacing-xs;
   min-width: 0;
   min-height: auto;
   padding: 0;
   background: transparent;
+  cursor: pointer;
   text-align: left;
 }
 
@@ -203,7 +213,19 @@ $reshade-content-meta-label-width: 8rem;
   background: transparent;
 }
 
-.reshade-wizard-content-row > input,
+.reshade-wizard-content-option,
+.reshade-wizard-content-effects label {
+  cursor: pointer;
+}
+
+.reshade-wizard-content-option {
+  display: grid;
+  width: $reshade-content-option-size;
+  height: $reshade-content-option-size;
+  align-items: center;
+}
+
+.reshade-wizard-content-option input,
 .reshade-wizard-content-effects input {
   position: absolute;
   width: $reshade-content-hidden-input-size;
@@ -217,7 +239,6 @@ $reshade-content-meta-label-width: 8rem;
   position: relative;
   width: $reshade-content-option-size;
   height: $reshade-content-option-size;
-  margin-top: $reshade-content-option-offset;
   background: $color-surface;
   border: $app-border-width solid $color-border;
   border-radius: 0;
@@ -239,28 +260,33 @@ $reshade-content-meta-label-width: 8rem;
   transform: rotate(45deg);
 }
 
-.reshade-wizard-content-row > input:checked + .reshade-wizard-content-option-control,
+.reshade-wizard-content-option input:checked + .reshade-wizard-content-option-control,
 .reshade-wizard-content-effects input:checked + .reshade-wizard-content-option-control {
   background: $color-success;
   border-color: $color-success;
 }
 
-.reshade-wizard-content-row > input:checked + .reshade-wizard-content-option-control::after,
+.reshade-wizard-content-option input:checked + .reshade-wizard-content-option-control::after,
 .reshade-wizard-content-effects input:checked + .reshade-wizard-content-option-control::after {
   opacity: 1;
 }
 
-.reshade-wizard-content-row:has(> input:focus-visible) .reshade-wizard-content-option-control,
-.reshade-wizard-content-effects label:has(input:focus-visible) .reshade-wizard-content-option-control {
+.reshade-wizard-content-option input:focus-visible + .reshade-wizard-content-option-control,
+.reshade-wizard-content-effects input:focus-visible + .reshade-wizard-content-option-control {
   border-color: $color-border-strong;
 }
 
-.reshade-wizard-content-effects label:has(input:disabled) {
-  cursor: not-allowed;
+.reshade-wizard-content-effects input:disabled + .reshade-wizard-content-option-control,
+.reshade-wizard-content-effects input:disabled + .reshade-wizard-content-option-control + span {
   opacity: 0.58;
 }
 
+.reshade-wizard-content-effect-disabled {
+  cursor: not-allowed;
+}
+
 .reshade-wizard-content-row-title {
+  width: 100%;
   overflow: hidden;
   color: $color-text-primary;
   font-weight: $font-weight-semibold;
@@ -269,6 +295,7 @@ $reshade-content-meta-label-width: 8rem;
 }
 
 .reshade-wizard-content-row-description {
+  width: 100%;
   overflow: hidden;
   color: $color-text-muted;
   font-size: $font-size-sm;
@@ -286,7 +313,7 @@ $reshade-content-meta-label-width: 8rem;
 
 .reshade-wizard-content-details-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: $spacing-md;
 }
@@ -312,7 +339,7 @@ $reshade-content-meta-label-width: 8rem;
 .reshade-wizard-content-meta {
   display: grid;
   gap: $spacing-separator;
-  background: $color-background;
+  background: $color-surface;
 }
 
 .reshade-wizard-content-meta div {
@@ -336,7 +363,6 @@ $reshade-content-meta-label-width: 8rem;
 
 .reshade-wizard-content-effect-panel {
   display: grid;
-  gap: $spacing-separator;
   background: $color-background;
 }
 
@@ -359,13 +385,19 @@ $reshade-content-meta-label-width: 8rem;
   display: grid;
   gap: $spacing-md;
   padding: $spacing-md;
-  background: $color-surface;
+  background: $color-background;
 }
 
 .reshade-wizard-content-effect-actions {
   display: flex;
   gap: $spacing-sm;
   justify-content: flex-end;
+}
+
+.reshade-wizard-content-preset-button {
+  background: $color-background;
+  align-self: center;
+  min-height: $input-height;
 }
 
 .reshade-wizard-content-effects {
@@ -387,4 +419,32 @@ $reshade-content-meta-label-width: 8rem;
   color: $color-text-muted;
   background: $color-surface;
   font-size: $font-size-sm;
+}
+
+@media (max-height: 760px) {
+  .reshade-wizard-content-layout {
+    padding: $spacing-sm $spacing-lg;
+  }
+
+  .reshade-wizard-content-search-container,
+  .reshade-wizard-content-details,
+  .reshade-wizard-preset-helper,
+  .reshade-wizard-content-effect-body {
+    padding: $spacing-sm;
+  }
+
+  .reshade-wizard-content-row {
+    min-height: $reshade-content-row-compact-min-height;
+    gap: $spacing-md;
+    padding: $spacing-sm;
+  }
+
+  .reshade-wizard-content-details {
+    gap: $spacing-sm;
+  }
+
+  .reshade-wizard-content-details-header p,
+  .reshade-wizard-content-row-description {
+    font-size: $font-size-xs;
+  }
 }
