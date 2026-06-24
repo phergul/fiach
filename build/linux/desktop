@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Name=Fiach
-Comment=A general-purpose mod manager for any game
+Comment=Fiach: A general-purpose mod manager
 # The Exec line includes %u to pass the URL to the application
 Exec=/usr/local/bin/fiach %u
 Terminal=false

@@ -27,6 +27,56 @@ func TestRequirePathWithinRoot(t *testing.T) {
 	}
 }
 
+func TestHashBytes(t *testing.T) {
+	t.Parallel()
+
+	if got := HashBytes([]byte("fiach")); got == "" {
+		t.Fatal("HashBytes() returned empty string")
+	}
+}
+
+func TestHashJSON(t *testing.T) {
+	t.Parallel()
+
+	hash, err := HashJSON(struct {
+		Name string `json:"name"`
+	}{Name: "fiach"})
+	if err != nil {
+		t.Fatalf("HashJSON() error = %v", err)
+	}
+	if hash == "" {
+		t.Fatal("HashJSON() returned empty string")
+	}
+}
+
+func TestHashParts(t *testing.T) {
+	t.Parallel()
+
+	first := HashParts("alpha", "beta")
+	second := HashParts("alpha", "beta")
+	other := HashParts("alpha", "gamma")
+	if first != second {
+		t.Fatalf("HashParts() = %q and %q, want equal hashes", first, second)
+	}
+	if first == other {
+		t.Fatalf("HashParts() = %q for different inputs, want distinct hashes", first)
+	}
+}
+
+func TestIsUTF8Text(t *testing.T) {
+	t.Parallel()
+
+	if !IsUTF8Text([]byte("hello")) {
+		t.Fatal("IsUTF8Text(valid) = false, want true")
+	}
+	if IsUTF8Text([]byte{0xff, 0xfe, 'x', 0}) {
+		t.Fatal("IsUTF8Text(utf16) = true, want false")
+	}
+	if IsUTF8Text([]byte("a\x00b")) {
+		t.Fatal("IsUTF8Text(null byte) = true, want false")
+	}
+}
+
 func TestFileIntegrityAndMatches(t *testing.T) {
 	t.Parallel()
 

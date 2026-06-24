@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -27,8 +26,6 @@ const (
 	reshadeDownloadBase   = "https://reshade.me/downloads"
 	manifestPath          = "internal/thirdparty/releases.json"
 )
-
-var optiscalerFinalAssetName = regexp.MustCompile(`(?i)^optiscaler_.*final.*\.7z$`)
 
 type githubRelease struct {
 	TagName     string        `json:"tag_name"`
@@ -117,7 +114,7 @@ func resolveOptiScaler(ctx context.Context, client *http.Client) (thirdparty.Opt
 		}
 		matches := make([]githubAsset, 0, 1)
 		for _, asset := range release.Assets {
-			if optiscalerFinalAssetName.MatchString(asset.Name) {
+			if thirdparty.IsOptiScalerFinalAsset(asset.Name) {
 				matches = append(matches, asset)
 			}
 		}

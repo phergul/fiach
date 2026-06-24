@@ -2,8 +2,6 @@ package reshade
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -43,7 +41,7 @@ func ensureContentArchive(ctx context.Context, dataDir string, rawURL string) (p
 	if strings.TrimSpace(name) == "" || name == "." || name == "/" {
 		name = "download.bin"
 	}
-	cacheName := hashBytes([]byte(rawURL))[:16] + "-" + filetxnSafeSegment(name)
+	cacheName := fileops.HashBytes([]byte(rawURL))[:16] + "-" + filetxnSafeSegment(name)
 	cachePath := filepath.Join(dataDir, "cache", "content-archives", cacheName)
 	if hash, cachedSize, matchErr := fileops.FileIntegrity(cachePath); matchErr == nil {
 		return cachePath, hash, cachedSize, nil
@@ -225,13 +223,4 @@ func filetxnSafeSegment(value string) string {
 		return "file"
 	}
 	return clean
-}
-
-func contentHash(values ...string) string {
-	hash := sha256.New()
-	for _, value := range values {
-		_, _ = hash.Write([]byte(value))
-		_, _ = hash.Write([]byte{0})
-	}
-	return hex.EncodeToString(hash.Sum(nil))
 }

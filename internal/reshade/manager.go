@@ -2,8 +2,6 @@ package reshade
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -261,10 +259,11 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		return Preview{}, err
 	}
 	preview.CanApply = len(preview.Conflicts) == 0
-	preview.PreviewHash, err = hashPreview(preview)
+	previewHash, err := fileops.HashJSON(canonicalPreviewForHash(preview))
 	if err != nil {
 		return Preview{}, err
 	}
+	preview.PreviewHash = previewHash
 	return preview, nil
 }
 
@@ -290,7 +289,7 @@ func (m *Manager) composeOptiScalerChainPreview(
 	if err != nil {
 		return Preview{}, err
 	}
-	stagedConfig := filepath.Join(m.dataDir, "staging", "generated", hashBytes(updated)+".ini")
+	stagedConfig := filepath.Join(m.dataDir, "staging", "generated", fileops.HashBytes(updated)+".ini")
 	if err := os.MkdirAll(filepath.Dir(stagedConfig), 0o755); err != nil {
 		return Preview{}, err
 	}
@@ -416,7 +415,7 @@ func (m *Manager) annotateOperationBackups(
 			}
 		}
 	}
-	targetKey := hashBytes([]byte(strings.ToLower(request.TargetRelativePath)))[:16]
+	targetKey := fileops.HashBytes([]byte(strings.ToLower(request.TargetRelativePath)))[:16]
 	for index := range operations {
 		operation := &operations[index]
 		if operation.Type == "adopt" || operation.Type == "delete" || operation.Type == "restore" {
@@ -629,16 +628,6 @@ func proxyAllowedForAPI(renderingAPI RenderingAPI, proxyFilename string) bool {
 	}
 }
 
-func hashPreview(preview Preview) (string, error) {
-	preview = canonicalPreviewForHash(preview)
-	contents, err := json.Marshal(preview)
-	if err != nil {
-		return "", err
-	}
-	sum := sha256.Sum256(contents)
-	return hex.EncodeToString(sum[:]), nil
-}
-
 func canonicalPreviewForHash(preview Preview) Preview {
 	preview.PreviewHash = ""
 	if len(preview.Operations) > 0 {
@@ -656,11 +645,6 @@ func canonicalPreviewForHash(preview Preview) Preview {
 		preview.DesiredTarget = &desired
 	}
 	return preview
-}
-
-func hashBytes(value []byte) string {
-	sum := sha256.Sum256(value)
-	return hex.EncodeToString(sum[:])
 }
 
 func managedTargetFromRow(

@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"unicode/utf8"
+
+	"github.com/phergul/fiach/internal/fileops"
 )
 
 func InspectPreset(path string, catalogue ContentCatalogue) (result PresetInspectionResult, err error) {
@@ -22,7 +23,7 @@ func InspectPreset(path string, catalogue ContentCatalogue) (result PresetInspec
 	if err != nil {
 		return PresetInspectionResult{}, err
 	}
-	if !utf8.Valid(contents) || bytes.IndexByte(contents, 0) >= 0 {
+	if !fileops.IsUTF8Text(contents) {
 		return PresetInspectionResult{}, errors.New("preset is not UTF-8 or ASCII")
 	}
 	references := parsePresetEffectReferences(contents)

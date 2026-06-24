@@ -19,7 +19,7 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 	if err != nil {
 		return ApplyResult{}, err
 	}
-	journalID := fmt.Sprintf("%d-%s", m.now().UnixNano(), hashBytes([]byte(targetPath))[:12])
+	journalID := fmt.Sprintf("%d-%s", m.now().UnixNano(), fileops.HashBytes([]byte(targetPath))[:12])
 	journalPath := filepath.Join(m.dataDir, "journals", journalID+".json")
 	journal := journalDocument{
 		Version:            JournalVersion,
@@ -110,10 +110,6 @@ func (m *Manager) execute(ctx context.Context, gameRoot string, preview Preview)
 
 func (m *Manager) snapshotOperationTargets(journalID string, operations []Operation) ([]journalSnapshot, error) {
 	return filetxn.SnapshotOperations(filepath.Join(m.dataDir, "journals", journalID), operations)
-}
-
-func operationTouchedPaths(operation Operation) []string {
-	return filetxn.TouchedPaths(operation)
 }
 
 func executeOperation(operation Operation) error {

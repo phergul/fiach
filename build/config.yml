@@ -3,14 +3,13 @@
 # Note that this will overwrite any changes you have made to the assets.
 version: '3'
 
-# This information is used to generate the build assets.
 info:
-  companyName: "phergul" # The name of the company
-  productName: "Fiach" # The name of the application
-  productIdentifier: "com.phergul.fiach" # The unique product identifier
-  description: "Fiach" # The application description
-  copyright: "(c) 2026, phergul" # Copyright text
-  version: "0.2.0" # The application version
+  companyName: "phergul"
+  productName: "Fiach"
+  productIdentifier: "com.phergul.fiach"
+  description: "Fiach: A general-purpose mod manager"
+  copyright: "(c) 2026, phergul"
+  version: "0.3.0"
 
 # Dev mode configuration
 dev_mode:

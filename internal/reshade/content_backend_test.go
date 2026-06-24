@@ -548,7 +548,7 @@ func writeArchiveCache(t *testing.T, dataDir string, rawURL string, files map[st
 
 func writeArchiveCacheNamed(t *testing.T, dataDir string, rawURL string, filename string, files map[string]string) {
 	t.Helper()
-	name := hashBytes([]byte(rawURL))[:16] + "-" + filename
+	name := fileops.HashBytes([]byte(rawURL))[:16] + "-" + filename
 	path := filepath.Join(dataDir, "cache", "content-archives", name)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)

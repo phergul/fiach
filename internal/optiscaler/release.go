@@ -11,15 +11,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/phergul/fiach/internal/thirdparty"
 )
 
 const DefaultReleasesURL = thirdparty.DefaultManifestURL
-
-var finalAssetName = regexp.MustCompile(`(?i)^optiscaler_.*final.*\.7z$`)
 
 type ReleaseOptions struct {
 	ReleasesURL          string
@@ -137,7 +134,7 @@ func validateRelease(release Release, trustedHosts []string, allowHTTP bool) err
 	if release.Tag == "" || release.AssetName == "" || release.URL == "" || release.Digest == "" || release.Size <= 0 {
 		return errors.New("release metadata is incomplete")
 	}
-	if !finalAssetName.MatchString(release.AssetName) {
+	if !thirdparty.IsOptiScalerFinalAsset(release.AssetName) {
 		return errors.New("release asset does not match the final-build naming rule")
 	}
 	if filepath.Base(release.AssetName) != release.AssetName || strings.ContainsAny(release.AssetName, `/\`) {

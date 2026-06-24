@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/phergul/fiach/internal/fileops"
 )
@@ -132,7 +131,7 @@ func parseReShadeContentPaths(configPath string) ([]contentPath, []string, error
 	if err != nil {
 		return nil, nil, err
 	}
-	if !utf8.Valid(contents) || bytes.IndexByte(contents, 0) >= 0 {
+	if !fileops.IsUTF8Text(contents) {
 		return defaultReShadeContentPaths(),
 			[]string{"ReShade.ini is not UTF-8 or ASCII; only default content paths were inventoried."},
 			nil

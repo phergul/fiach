@@ -2,8 +2,6 @@ package optiscaler
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -277,10 +275,12 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 		)
 	}
 	preview.CanApply = len(preview.Conflicts) == 0
-	preview.PreviewHash, err = hashPreview(preview)
+	preview.PreviewHash = ""
+	previewHash, err := fileops.HashJSON(preview)
 	if err != nil {
 		return Preview{}, err
 	}
+	preview.PreviewHash = previewHash
 	return preview, nil
 }
 
@@ -305,7 +305,7 @@ func (m *Manager) annotateOperationBackups(
 			}
 		}
 	}
-	targetKey := hashBytes([]byte(strings.ToLower(request.TargetRelativePath)))[:16]
+	targetKey := fileops.HashBytes([]byte(strings.ToLower(request.TargetRelativePath)))[:16]
 	for index := range operations {
 		operation := &operations[index]
 		if operation.Type == "adopt" || operation.Type == "delete" || operation.Type == "restore" {
@@ -556,7 +556,7 @@ func (m *Manager) packageOperations(targetPath string, request Request, pkg Pack
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	stagedConfig := filepath.Join(m.dataDir, "staging", "generated", hashBytes(updated)+".ini")
+	stagedConfig := filepath.Join(m.dataDir, "staging", "generated", fileops.HashBytes(updated)+".ini")
 	if err := os.MkdirAll(filepath.Dir(stagedConfig), 0o755); err != nil {
 		return nil, nil, nil, err
 	}
@@ -770,21 +770,6 @@ func decodeManifest(value string) (Manifest, error) {
 		return Manifest{}, fmt.Errorf("unsupported OptiScaler manifest version %d", manifest.Version)
 	}
 	return manifest, nil
-}
-
-func hashPreview(preview Preview) (string, error) {
-	preview.PreviewHash = ""
-	encoded, err := json.Marshal(preview)
-	if err != nil {
-		return "", err
-	}
-	sum := sha256.Sum256(encoded)
-	return hex.EncodeToString(sum[:]), nil
-}
-
-func hashBytes(value []byte) string {
-	sum := sha256.Sum256(value)
-	return hex.EncodeToString(sum[:])
 }
 
 func (m *Manager) saveTargetStatus(ctx context.Context, target dbtypes.OptiScalerTarget, status string) error {

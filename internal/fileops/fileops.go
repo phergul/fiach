@@ -1,8 +1,10 @@
 package fileops
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"unicode/utf8"
 )
 
 type AtomicCopyOptions struct {
@@ -125,6 +128,32 @@ func RequirePathWithinRoot(name string, path string, root string) error {
 	}
 
 	return nil
+}
+
+func HashBytes(value []byte) string {
+	sum := sha256.Sum256(value)
+	return hex.EncodeToString(sum[:])
+}
+
+func HashJSON(value any) (string, error) {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return "", err
+	}
+	return HashBytes(encoded), nil
+}
+
+func HashParts(values ...string) string {
+	hash := sha256.New()
+	for _, value := range values {
+		_, _ = hash.Write([]byte(value))
+		_, _ = hash.Write([]byte{0})
+	}
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func IsUTF8Text(contents []byte) bool {
+	return utf8.Valid(contents) && bytes.IndexByte(contents, 0) < 0
 }
 
 func FileIntegrity(path string) (string, int64, error) {

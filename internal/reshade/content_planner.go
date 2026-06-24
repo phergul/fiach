@@ -249,7 +249,7 @@ func (m *Manager) stageEffectPackage(ctx context.Context, targetPath string, pkg
 	if err != nil {
 		return nil, "", 0, err
 	}
-	stagingRoot := filepath.Join(m.dataDir, "staging", "content", contentHash(pkg.ID, archiveSHA))
+	stagingRoot := filepath.Join(m.dataDir, "staging", "content", fileops.HashParts(pkg.ID, archiveSHA))
 	files, err := extractContentArchive(ctx, archivePath, stagingRoot)
 	if err != nil {
 		return nil, "", 0, err
@@ -331,7 +331,7 @@ func (m *Manager) stageAddon(ctx context.Context, existing dbtypes.ReShadeTarget
 			sizeBytes:    archiveSize,
 		}, archiveSHA, archiveSize, nil
 	}
-	stagingRoot := filepath.Join(m.dataDir, "staging", "addons", contentHash(addon.ID, archiveSHA))
+	stagingRoot := filepath.Join(m.dataDir, "staging", "addons", fileops.HashParts(addon.ID, archiveSHA))
 	files, err := extractContentArchive(ctx, downloadPath, stagingRoot)
 	if err != nil {
 		return stagedContentFile{}, "", 0, err

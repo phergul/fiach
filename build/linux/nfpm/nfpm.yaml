@@ -6,11 +6,11 @@
 name: "fiach"
 arch: ${GOARCH}
 platform: "linux"
-version: "0.2.0"
+version: "0.3.0"
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
-description: "A general-purpose mod manager for any game"
+description: "Fiach: A general-purpose mod manager"
 vendor: "phergul"
 homepage: "https://wails.io"
 license: "MIT"

@@ -156,7 +156,7 @@ func TestManagerInstallAfterReShadeChainsPersistedRuntime(t *testing.T) {
 	if err := os.WriteFile(proxyPath, []byte("reshade"), 0o644); err != nil {
 		t.Fatalf("WriteFile(ReShade proxy) error = %v", err)
 	}
-	hash, size, err := fileIntegrity(proxyPath)
+	hash, size, err := fileops.FileIntegrity(proxyPath)
 	if err != nil {
 		t.Fatalf("fileIntegrity(ReShade proxy) error = %v", err)
 	}
@@ -237,7 +237,7 @@ func TestManagerUninstallAfterReShadeInstalledSecondRestoresPersistedRuntime(t *
 	if err := os.WriteFile(chainedRuntime, []byte("reshade"), 0o644); err != nil {
 		t.Fatalf("WriteFile(ReShade64.dll) error = %v", err)
 	}
-	hash, size, err := fileIntegrity(chainedRuntime)
+	hash, size, err := fileops.FileIntegrity(chainedRuntime)
 	if err != nil {
 		t.Fatalf("fileIntegrity(ReShade64.dll) error = %v", err)
 	}
@@ -481,7 +481,7 @@ func testPreparedPackageWithRuntime(t *testing.T, runtime string) Package {
 		if err := os.WriteFile(pkg.Files[index].SourcePath, []byte(runtime), 0o644); err != nil {
 			t.Fatalf("WriteFile(runtime) error = %v", err)
 		}
-		hash, size, err := fileIntegrity(pkg.Files[index].SourcePath)
+		hash, size, err := fileops.FileIntegrity(pkg.Files[index].SourcePath)
 		if err != nil {
 			t.Fatalf("fileIntegrity(runtime) error = %v", err)
 		}
@@ -515,8 +515,4 @@ func mustManifest(t *testing.T, value string) Manifest {
 		t.Fatalf("Unmarshal(manifest) error = %v", err)
 	}
 	return manifest
-}
-
-func fileIntegrity(path string) (string, int64, error) {
-	return fileops.FileIntegrity(path)
 }
