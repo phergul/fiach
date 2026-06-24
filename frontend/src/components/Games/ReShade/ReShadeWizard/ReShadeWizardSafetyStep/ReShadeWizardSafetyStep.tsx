@@ -15,7 +15,7 @@ export const ReShadeWizardSafetyStep = ({
 }: ReShadeWizardSafetyStepProps) => (
   <div className="reshade-wizard-content">
     <div className="reshade-wizard-safety-step">
-      <p>The full add-on build is unsigned and should only be used where add-ons are appropriate.</p>
+      <p>The full add-on build should only be used where add-ons are appropriate.</p>
       <label>
         <input
           checked={singlePlayerAcknowledged}

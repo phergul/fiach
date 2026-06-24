@@ -28,6 +28,17 @@ interface ManagedRow {
 
 const executableName = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
+const formatGraphicsAPI = (api: string) => {
+  switch (api) {
+    case 'directx':
+      return 'DirectX';
+    case 'vulkan':
+      return 'Vulkan';
+    default:
+      return api;
+  }
+};
+
 const isUpdateAvailable = (target: OptiScalerTarget, release: OptiScalerRelease | null) =>
   release !== null && (
     target.ReleaseTag !== release.tag ||
@@ -42,7 +53,7 @@ const managedPriority = (row: ManagedRow) => {
 };
 
 const statusFacts = (target: OptiScalerTarget, updateAvailable: boolean) => [
-  { label: target.Status === 'drifted' ? 'Drift detected' : 'Managed', tone: target.Status === 'drifted' ? 'warning' : 'success' },
+  ...(target.Status === 'drifted' ? [{ label: 'Drift detected', tone: 'warning' }] : []),
   ...(updateAvailable ? [{ label: 'Update available', tone: 'info' }] : []),
 ];
 
@@ -50,6 +61,22 @@ const candidateFacts = (candidate: OptiScalerCandidate) => [
   ...(candidate.hasOptiScaler ? [{ label: 'Files present', tone: 'info' }, { label: 'OptiScaler', tone: 'success' }] : []),
   ...(candidate.hasReShade ? [{ label: 'ReShade', tone: 'warning' }] : []),
 ];
+
+const configFacts = (target: OptiScalerTarget) => [
+  ...(target.DXGISpoofing ? ['DXGI spoof'] : []),
+  ...(target.EnableReShadeCoexistence ? ['Loads ReShade'] : []),
+];
+
+const meaningfulEvidence = (candidate: OptiScalerCandidate) =>
+  candidate.evidence.filter((item) => !item.toLocaleLowerCase().startsWith('validated windows '));
+
+const versionLabel = (target: OptiScalerTarget) => {
+  const version = target.ReleaseVersion?.trim() ?? '';
+  if (version !== '') {
+    return version;
+  }
+  return "unknown";
+};
 
 const OptiScalerManagedActions = ({
   disabled,
@@ -140,8 +167,8 @@ export const OptiScalerExecutableTable = ({
     <div className="optiscaler-executable-table">
       <div className="optiscaler-executable-columns" aria-hidden="true">
         <span>Executable</span>
-        <span>Architecture</span>
-        <span>Status</span>
+        <span>Details</span>
+        <span>State</span>
         <span>Action</span>
       </div>
 
@@ -156,13 +183,22 @@ export const OptiScalerExecutableTable = ({
               <strong>{executableName(row.target.ExecutableRelativePath)}</strong>
               <span>{row.target.TargetRelativePath}</span>
             </div>
-            <span className="optiscaler-executable-architecture">x64</span>
-            <div className="optiscaler-executable-status">
-              {statusFacts(row.target, row.updateAvailable).map((fact) => (
-                <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
-              ))}
-              <span>{row.target.GraphicsAPI === 'vulkan' ? 'Vulkan' : 'DirectX'}</span>
+            <div className="optiscaler-executable-details">
+              <span>{formatGraphicsAPI(row.target.GraphicsAPI)}</span>
               <span>{row.target.ProxyFilename}</span>
+              {configFacts(row.target).map((fact) => (
+                <span key={fact}>{fact}</span>
+              ))}
+            </div>
+            <div className="optiscaler-executable-state">
+              <strong>{versionLabel(row.target)}</strong>
+              <div className="optiscaler-executable-status">
+                {statusFacts(row.target, row.updateAvailable).length === 0 ? (
+                  <span className="optiscaler-executable-status-success">Managed</span>
+                ) : statusFacts(row.target, row.updateAvailable).map((fact) => (
+                  <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+                ))}
+              </div>
             </div>
             <OptiScalerManagedActions
               disabled={disabled}
@@ -180,6 +216,7 @@ export const OptiScalerExecutableTable = ({
         )}
         {unmanagedCandidates.map((candidate) => {
           const action = candidate.hasOptiScaler ? Action.ActionAdopt : Action.ActionInstall;
+          const evidence = meaningfulEvidence(candidate);
           return (
             <div
               className="optiscaler-executable-row"
@@ -189,8 +226,13 @@ export const OptiScalerExecutableTable = ({
                 <strong>{candidate.executableName}</strong>
                 <span>{(candidate.targetRelativePath === '.') ? 'Game Root' : candidate.targetRelativePath}</span>
               </div>
-              <span className="optiscaler-executable-architecture">{candidate.architecture}</span>
-              <div className="optiscaler-executable-status">
+              <div className="optiscaler-executable-details">
+                <span>{candidate.architecture}</span>
+                {evidence.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+              <div className="optiscaler-executable-state">
                 {candidateFacts(candidate).map((fact) => (
                   <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
                 ))}

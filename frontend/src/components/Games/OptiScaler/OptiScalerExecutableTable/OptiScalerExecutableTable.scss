@@ -1,8 +1,7 @@
 @use '@styles' as *;
 
 $optiscaler-table-icon-size: 1rem;
-$optiscaler-table-architecture-width: 10rem;
-$optiscaler-table-status-width: 20rem;
+$optiscaler-table-compact-width: 72rem;
 
 .optiscaler-executable-table {
   display: grid;
@@ -18,10 +17,11 @@ $optiscaler-table-status-width: 20rem;
 .optiscaler-executable-row {
   display: grid;
   grid-template-columns:
-    minmax(18rem, 1fr)
-    $optiscaler-table-architecture-width
-    $optiscaler-table-status-width
+    minmax(14rem, 1.2fr)
+    minmax(16rem, 1.7fr)
+    minmax(11rem, 1fr)
     $table-action-width;
+  grid-template-areas: 'identity details state actions';
   align-items: center;
   gap: $spacing-lg;
   padding: 0 $spacing-xl;
@@ -37,6 +37,22 @@ $optiscaler-table-status-width: 20rem;
 
 .optiscaler-executable-columns span:last-child {
   text-align: right;
+}
+
+.optiscaler-executable-columns span:nth-child(1) {
+  grid-area: identity;
+}
+
+.optiscaler-executable-columns span:nth-child(2) {
+  grid-area: details;
+}
+
+.optiscaler-executable-columns span:nth-child(3) {
+  grid-area: state;
+}
+
+.optiscaler-executable-columns span:nth-child(4) {
+  grid-area: actions;
 }
 
 .optiscaler-executable-table section {
@@ -65,7 +81,6 @@ $optiscaler-table-status-width: 20rem;
   min-height: 5rem;
   background: $color-surface;
   transition: background-color $transition-duration-fast $transition-easing-standard;
-  margin-bottom: $spacing-separator;
 }
 
 .optiscaler-executable-row:hover {
@@ -74,6 +89,7 @@ $optiscaler-table-status-width: 20rem;
 
 .optiscaler-executable-identity {
   display: flex;
+  grid-area: identity;
   min-width: 0;
   flex-direction: column;
   gap: $spacing-xs;
@@ -89,24 +105,38 @@ $optiscaler-table-status-width: 20rem;
   font-size: $font-size-sm;
 }
 
-.optiscaler-executable-architecture {
-  width: fit-content;
-  padding: $spacing-xs $spacing-sm;
-  color: $color-text-subtle;
-  background: $color-surface-elevated;
-  font-family: $font-family-monospace;
-  font-size: $font-size-xs;
-}
-
+.optiscaler-executable-details,
 .optiscaler-executable-status {
   display: flex;
   min-width: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: $spacing-xs $spacing-sm;
   color: $color-text-muted;
   font-size: $font-size-sm;
-  white-space: nowrap;
+}
+
+.optiscaler-executable-details {
+  grid-area: details;
+}
+
+.optiscaler-executable-details span {
+  padding: $spacing-xs $spacing-sm;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+}
+
+.optiscaler-executable-state {
+  display: flex;
+  grid-area: state;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.optiscaler-executable-state strong {
+  overflow-wrap: anywhere;
+  font-size: $font-size-sm;
 }
 
 .optiscaler-executable-status-success {
@@ -133,6 +163,7 @@ $optiscaler-table-status-width: 20rem;
 
 .optiscaler-executable-actions {
   display: flex;
+  grid-area: actions;
   align-items: center;
   justify-content: flex-end;
   gap: $spacing-xs;
@@ -166,4 +197,26 @@ $optiscaler-table-status-width: 20rem;
   color: $color-text-muted;
   background: $color-surface;
   margin-bottom: $spacing-separator;
+}
+
+@media (max-width: $optiscaler-table-compact-width) {
+  .optiscaler-executable-columns {
+    display: none;
+  }
+
+  .optiscaler-executable-row {
+    grid-template-columns: minmax(12rem, 1fr) auto;
+    grid-template-areas:
+      'identity actions'
+      'details actions'
+      'state actions';
+    align-items: start;
+    gap: $spacing-sm $spacing-md;
+    min-height: 0;
+    padding: $spacing-md $spacing-xl;
+  }
+
+  .optiscaler-executable-actions {
+    align-self: center;
+  }
 }

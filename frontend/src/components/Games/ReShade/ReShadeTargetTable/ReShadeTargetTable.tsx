@@ -36,8 +36,20 @@ const targetKey = (path: string) => path.trim().toLocaleLowerCase();
 const hasDetectedReShade = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
   candidate.proxyEvidence.some((evidence) => evidence.isReShade);
 
-const apiSummary = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
-  candidate.apiOptions.map((option) => option.renderingApi).join(', ');
+const formatRenderingAPI = (api: string) => {
+  switch (api) {
+    case 'd3d9':
+      return 'D3D9';
+    case 'd3d10':
+      return 'D3D10';
+    case 'd3d11':
+      return 'D3D11';
+    case 'd3d12':
+      return 'D3D12';
+    default:
+      return api;
+  }
+};
 
 const formatRuntimeVersion = (version: string | null | undefined) => {
   const trimmed = version?.trim() ?? '';
@@ -53,6 +65,17 @@ const detectedRuntimeVersions = (candidate: ManagedReShadeDiscoveryResult['candi
     .map((evidence) => formatRuntimeVersion(evidence.runtimeVersion))
     .filter((version) => version !== '')),
 ];
+
+const detectedProxyEvidence = (candidate: ManagedReShadeDiscoveryResult['candidates'][number]) =>
+  candidate.proxyEvidence
+    .filter((evidence) => evidence.exists)
+    .map((evidence) => {
+      if (evidence.isReShade) {
+        const version = formatRuntimeVersion(evidence.runtimeVersion);
+        return version === '' ? evidence.filename : `${evidence.filename} ${version}`;
+      }
+      return evidence.conflict?.trim() ? `${evidence.filename} conflict` : evidence.filename;
+    });
 
 const chainSummary = (
   chainTargets: ManagedReShadeChainTarget[],
@@ -72,16 +95,33 @@ const managedFacts = (
   target: ManagedReShadeTarget,
   installerStatus: ManagedReShadeInstallerStatus | null,
 ) => {
-  const runtimeVersion = formatRuntimeVersion(target.RuntimeVersion);
   return [
     { label: target.Status === 'drifted' ? 'Drift detected' : target.Status, tone: target.Status === 'drifted' ? 'warning' : 'success' },
     ...(isManagedReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
-    { label: target.BuildVariant === 'addon' ? 'Full add-on' : 'Standard', tone: 'neutral' },
-    ...(runtimeVersion !== ''
-      ? [{ label: `Runtime ${runtimeVersion}`, tone: 'neutral' }]
-      : []),
   ];
 };
+
+const variantLabel = (target: ManagedReShadeTarget) =>
+  target.BuildVariant === 'addon' ? 'Full add-on' : 'Standard';
+
+const provenanceLabel = (target: ManagedReShadeTarget) =>
+  target.VariantProvenance === 'user_declared' ? 'User declared' : 'Verified';
+
+const activeRuntimeLabel = (target: ManagedReShadeTarget) =>
+  target.ActiveRuntimeFilename.trim() === '' ? target.ProxyFilename : target.ActiveRuntimeFilename;
+
+const managedDetailFacts = (
+  target: ManagedReShadeTarget,
+  chainTargets: ManagedReShadeChainTarget[],
+) => [
+  formatRenderingAPI(target.RenderingAPI),
+  target.Architecture,
+  variantLabel(target),
+  provenanceLabel(target),
+  target.ProxyFilename,
+  ...(activeRuntimeLabel(target) === target.ProxyFilename ? [] : [activeRuntimeLabel(target)]),
+  chainSummary(chainTargets, target.TargetRelativePath),
+];
 
 const ReShadeManagedActions = ({
   disabled,
@@ -175,8 +215,8 @@ export const ReShadeTargetTable = ({
     <div className="reshade-target-table">
       <div className="reshade-target-columns" aria-hidden="true">
         <span>Executable</span>
-        <span>Runtime</span>
-        <span>Chain</span>
+        <span>Details</span>
+        <span>State</span>
         <span>Action</span>
       </div>
 
@@ -193,14 +233,19 @@ export const ReShadeTargetTable = ({
                 <strong>{filename(target.ExecutableRelativePath)}</strong>
                 <span>{target.TargetRelativePath === '.' ? 'Game Root' : target.TargetRelativePath}</span>
               </div>
-              <div className="reshade-target-status">
-                {managedFacts(target, installerStatus).map((fact) => (
-                  <span className={`reshade-target-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+              <div className="reshade-target-details">
+                {managedDetailFacts(target, chainTargets).map((fact) => (
+                  <span key={fact}>{fact}</span>
                 ))}
-                <span>{target.RenderingAPI}</span>
-                <span>{target.ProxyFilename}</span>
               </div>
-              <span className="reshade-target-chain">{chainSummary(chainTargets, target.TargetRelativePath)}</span>
+              <div className="reshade-target-state">
+                <strong>{formatRuntimeVersion(target.RuntimeVersion) || 'Unknown runtime'}</strong>
+                <div className="reshade-target-status">
+                  {managedFacts(target, installerStatus).map((fact) => (
+                    <span className={`reshade-target-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+                  ))}
+                </div>
+              </div>
               <ReShadeManagedActions
                 disabled={disabled}
                 onStartOperation={onStartOperation}
@@ -220,6 +265,7 @@ export const ReShadeTargetTable = ({
         {detected.map((candidate) => {
           const action = hasDetectedReShade(candidate) ? Action.ActionAdopt : Action.ActionInstall;
           const runtimeVersions = detectedRuntimeVersions(candidate);
+          const proxyEvidence = detectedProxyEvidence(candidate);
           return (
             <div
               className="reshade-target-row"
@@ -229,16 +275,22 @@ export const ReShadeTargetTable = ({
                 <strong>{filename(candidate.executableRelativePath)}</strong>
                 <span>{candidate.targetRelativePath === '.' ? 'Game Root' : candidate.targetRelativePath}</span>
               </div>
-              <div className="reshade-target-status">
+              <div className="reshade-target-details">
+                <span>DirectX target</span>
                 <span>{candidate.architecture}</span>
-                <span>{apiSummary(candidate)}</span>
-                {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
-                {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
-                {runtimeVersions.map((version) => (
+                {runtimeVersions.length === 0 ? (
+                  null
+                ) : runtimeVersions.map((version) => (
                   <span key={version}>Runtime {version}</span>
                 ))}
+                {proxyEvidence.map((evidence) => (
+                  <span key={evidence}>{evidence}</span>
+                ))}
               </div>
-              <span className="reshade-target-chain">{chainSummary(chainTargets, candidate.targetRelativePath)}</span>
+              <div className="reshade-target-state">
+                {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
+                {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
+              </div>
               <div className="reshade-target-actions">
                 <button
                   className="button-main"

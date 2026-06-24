@@ -92,4 +92,25 @@ describe('OptiScalerExecutableTable', () => {
     expect(within(screen.getByRole('button', { name: 'Install' })).getByText('Install')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Install' })).toBeDisabled();
   });
+
+  it('suppresses detected row placeholders and generic validation evidence', () => {
+    render(
+      <OptiScalerExecutableTable
+        candidates={[
+          candidate({
+            evidence: ['validated Windows x64 executable'],
+          }),
+        ]}
+        disabled={false}
+        onStartOperation={vi.fn()}
+        release={null}
+        targets={[]}
+      />,
+    );
+
+    expect(screen.queryByText('Select during install')).not.toBeInTheDocument();
+    expect(screen.queryByText('validated Windows x64 executable')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ready')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Install' })).toBeInTheDocument();
+  });
 });
