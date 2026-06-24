@@ -11,6 +11,8 @@ export {
     ApplyOperationStatus,
     CreateTagInput,
     DetectedReShadeTarget,
+    DevInfo,
+    DevLogEntry,
     DiagnosticLogEntry,
     DiagnosticOperation,
     ExportDiagnosticLogsInput,

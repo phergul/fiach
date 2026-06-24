@@ -12,8 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wailsapp/wails/v3/pkg/application"
-
+	"github.com/phergul/fiach/internal/appmode"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/filetxn"
 	"github.com/phergul/fiach/internal/optiscaler"
@@ -64,7 +63,7 @@ type Manager struct {
 
 func NewManager(store Store, options ManagerOptions) *Manager {
 	if options.DataDir == "" {
-		options.DataDir = filepath.Join(application.Path(application.PathDataHome), "fiach", "reshade")
+		options.DataDir = filepath.Join(appmode.DataRoot(), "reshade")
 	}
 	if options.Now == nil {
 		options.Now = time.Now

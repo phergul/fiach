@@ -4,6 +4,7 @@ import { ThemeProvider } from '@components/Common/ThemeProvider/ThemeProvider';
 import { ToastProvider } from '@components/Common/Toast/Toast';
 import { OptiScalerSessionProvider } from '@components/Games/OptiScaler/OptiScalerSessionProvider/OptiScalerSessionProvider';
 import { Layout } from '@components/Layout/Layout';
+import { DevLogsWindow } from '@components/Dev/DevLogsWindow/DevLogsWindow';
 import { LogsWindow } from '@components/Logs/LogsWindow/LogsWindow';
 import { GameApply, GameDetails, GameOptiScaler, GameReShade, Library, Profiles, Settings } from '@pages';
 
@@ -20,6 +21,10 @@ export const App = () => {
 
   if (windowName === 'logs') {
     return wrapWithProviders(LogsWindow);
+  }
+
+  if (windowName === 'dev-logs') {
+    return wrapWithProviders(DevLogsWindow);
   }
 
   return wrapWithProviders(() =>

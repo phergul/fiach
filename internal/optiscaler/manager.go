@@ -13,8 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wailsapp/wails/v3/pkg/application"
-
+	"github.com/phergul/fiach/internal/appmode"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -66,11 +65,11 @@ type Manager struct {
 func NewManager(store Store, options ManagerOptions) *Manager {
 	dataDir := options.DataDir
 	if dataDir == "" {
-		dataDir = filepath.Join(application.Path(application.PathDataHome), "fiach", "optiscaler")
+		dataDir = filepath.Join(appmode.DataRoot(), "optiscaler")
 	}
 	cacheDir := options.CacheDir
 	if cacheDir == "" {
-		cacheDir = filepath.Join(application.Path(application.PathCacheHome), "fiach", "optiscaler", "releases")
+		cacheDir = filepath.Join(appmode.CacheRoot(), "optiscaler", "releases")
 	}
 	if options.HTTPClient == nil {
 		options.HTTPClient = http.DefaultClient

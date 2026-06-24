@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/phergul/fiach/internal/appmode"
 )
 
 const DefaultDownloadBaseURL = "https://reshade.me/downloads"
@@ -19,7 +19,7 @@ const (
 )
 
 func DefaultInstallerCacheDir() string {
-	return filepath.Join(application.Path(application.PathCacheHome), "fiach", "reshade", "installers")
+	return filepath.Join(appmode.CacheRoot(), "reshade", "installers")
 }
 
 func installerDownloadURL(downloadBaseURL string, installerVersion string, variant InstallerVariant) (string, error) {

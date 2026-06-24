@@ -56,3 +56,21 @@ tasks:
     summary: Builds and runs the Docker image
     cmds:
       - task: common:run:docker
+
+  test:frontend:
+    summary: Runs the frontend tests
+    dir: frontend
+    cmds:
+      - bun run test
+
+  test:backend:
+    summary: Runs the backend tests
+    cmds:
+      - go test ./...
+
+  checks:
+    summary: Runs checks on the application
+    cmds:
+      - go vet ./...
+      - task: test:frontend
+      - task: test:backend

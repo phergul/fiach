@@ -1,0 +1,93 @@
+@use '@styles' as *;
+
+$dev-logs-toolbar-actions-height: 2.25rem;
+$dev-logs-toolbar-height: 3rem;
+
+.dev-logs-window {
+  display: flex;
+  min-width: 0;
+  min-height: 100vh;
+  flex-direction: column;
+  background: $color-background;
+  color: $color-text-primary;
+}
+
+.dev-logs-toolbar {
+  display: flex;
+  min-height: $dev-logs-toolbar-height;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-sm $spacing-sm $spacing-sm $spacing-lg;
+  margin-bottom: $spacing-separator;
+  background: $color-surface;
+}
+
+.dev-logs-toolbar-title {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: $spacing-md;
+}
+
+.dev-logs-toolbar-title h1 {
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.dev-logs-toolbar-title span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.dev-logs-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.dev-logs-toolbar-actions button {
+  width: $dev-logs-toolbar-actions-height;
+  height: $dev-logs-toolbar-actions-height;
+  padding: 0;
+  background: $color-surface-elevated;
+}
+
+.dev-logs-toolbar-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dev-logs-toolbar-actions svg {
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  stroke-width: 1.8;
+}
+
+.dev-logs-raw {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: $spacing-md $spacing-lg;
+  color: $color-text-subtle;
+  background: $color-background;
+}
+
+.dev-logs-raw pre {
+  margin: 0;
+  font-family: $font-family-monospace;
+  font-size: $font-size-xs;
+  line-height: $line-height-base;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dev-logs-state {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  place-items: center;
+  padding: $spacing-xl;
+}

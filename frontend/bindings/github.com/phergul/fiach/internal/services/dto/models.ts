@@ -330,6 +330,56 @@ export class DetectedReShadeTarget {
     }
 }
 
+export class DevInfo {
+    "DataDir": string;
+    "DatabasePath": string;
+
+    /** Creates a new DevInfo instance. */
+    constructor($$source: Partial<DevInfo> = {}) {
+        if (!("DataDir" in $$source)) {
+            this["DataDir"] = "";
+        }
+        if (!("DatabasePath" in $$source)) {
+            this["DatabasePath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DevInfo instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DevInfo {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DevInfo($$parsedSource as Partial<DevInfo>);
+    }
+}
+
+export class DevLogEntry {
+    "Timestamp": string;
+    "Message": string;
+
+    /** Creates a new DevLogEntry instance. */
+    constructor($$source: Partial<DevLogEntry> = {}) {
+        if (!("Timestamp" in $$source)) {
+            this["Timestamp"] = "";
+        }
+        if (!("Message" in $$source)) {
+            this["Message"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new DevLogEntry instance from a string or object.
+     */
+    static createFrom($$source: any = {}): DevLogEntry {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new DevLogEntry($$parsedSource as Partial<DevLogEntry>);
+    }
+}
+
 export class DiagnosticLogEntry {
     "Timestamp": string;
     "Level": string;

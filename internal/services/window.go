@@ -9,6 +9,7 @@ import (
 )
 
 const logsWindowName = "logs"
+const devLogsWindowName = "dev-logs"
 
 type WindowService struct {
 	app **application.App
@@ -48,6 +49,46 @@ func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 		Name:             logsWindowName,
 		Title:            "Logs",
 		URL:              "/?window=logs",
+		Width:            960,
+		Height:           720,
+		MinWidth:         820,
+		MinHeight:        480,
+		BackgroundColour: application.NewRGB(37, 36, 34),
+	})
+	window.Show()
+	window.Focus()
+
+	return nil
+}
+
+func (s *WindowService) OpenDevLogsWindow(ctx context.Context) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("open dev logs window: %w", err)
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	if s.app == nil || *s.app == nil {
+		return errors.New("application is not configured")
+	}
+	app := *s.app
+
+	if window, ok := app.Window.GetByName(devLogsWindowName); ok {
+		window.Show()
+		window.Focus()
+		return nil
+	}
+
+	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Name:             devLogsWindowName,
+		Title:            "Dev Logs",
+		URL:              "/?window=dev-logs",
 		Width:            960,
 		Height:           720,
 		MinWidth:         820,

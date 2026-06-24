@@ -1,19 +1,25 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
 import { NavLink } from 'react-router-dom';
-import { BookOpen, ScrollText, Settings } from 'lucide-react';
+import { BookOpen, Bug, ScrollText, Settings } from 'lucide-react';
 
-import { OpenLogsWindow } from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
+import { IsDevMode } from '@bindings/github.com/phergul/fiach/internal/services/devservice';
+import { OpenDevLogsWindow, OpenLogsWindow } from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
 
 import './Navigation.scss';
 
 const navigationItems = [
   { Icon: BookOpen, label: 'Library', path: '/library' },
-  // { Icon: Users, label: 'Profiles', path: '/profiles' },
   { Icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 export const Navigation = () => {
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    IsDevMode().then(setIsDevMode);
+  }, []);
+
   return (
     <nav className="navigation" aria-label="Main sections">
       {navigationItems.map((item, index) => (
@@ -52,6 +58,26 @@ export const Navigation = () => {
         <ScrollText className="navigation-link-icon" aria-hidden="true" />
         <span className="navigation-link-label">Logs</span>
       </button>
+      {isDevMode && (
+        <>
+          <span className="navigation-separator" aria-hidden="true" />
+          <button
+            className="navigation-link navigation-button"
+            onClick={(event) => {
+              void OpenDevLogsWindow();
+
+              if (event.detail > 0) {
+                event.currentTarget.blur();
+              }
+            }}
+            title="Dev Logs"
+            type="button"
+          >
+            <Bug className="navigation-link-icon" aria-hidden="true" />
+            <span className="navigation-link-label">Dev Logs</span>
+          </button>
+        </>
+      )}
     </nav>
   );
 };

@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/phergul/fiach/internal/appmode"
+	"github.com/phergul/fiach/internal/devlog"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/gamesource"
 	"github.com/phergul/fiach/internal/injection"
@@ -22,15 +24,18 @@ var assets embed.FS
 
 func main() {
 	diagnosticsManager, err := diagnostics.NewManager(diagnostics.Options{
-		LogPath: filepath.Join(application.Path(application.PathDataHome), "fiach", "logs", diagnostics.DefaultLogFileName),
+		LogPath: filepath.Join(appmode.DataRoot(), "logs", diagnostics.DefaultLogFileName),
 	})
 	if err != nil {
 		slog.Error("Failed to initialize diagnostics", "error", err)
 		os.Exit(1)
 	}
 	logger := diagnosticsManager.Logger()
+	devlog.SetLogger(logger)
 
-	store, err := storage.Open(context.Background(), storage.Options{})
+	store, err := storage.Open(context.Background(), storage.Options{
+		AppName: appmode.DataDirName(),
+	})
 	if err != nil {
 		logger.Error("Failed to open storage", diagnostics.ErrorAttr(err))
 		_ = diagnosticsManager.Close()
@@ -62,6 +67,7 @@ func main() {
 			application.NewService(gamesService),
 
 			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),
+			application.NewService(services.NewDevService(store.Path())),
 			application.NewService(services.NewWindowService(&app)),
 		},
 		OnShutdown: func() {
@@ -98,6 +104,20 @@ func main() {
 		MinHeight:        800,
 		URL:              "/",
 	})
+
+	devlog.SetEmitter(func(entry devlog.Entry) {
+		window, ok := app.Window.GetByName("dev-logs")
+		if !ok {
+			return
+		}
+
+		window.EmitEvent("dev:log-entry", dto.DevLogEntry{
+			Timestamp: entry.Timestamp,
+			Message:   entry.Message,
+		})
+	})
+	devlog.Logf("dev mode enabled — data root: %s", appmode.DataRoot())
+	devlog.Logf("using database: %s", store.Path())
 
 	err = app.Run()
 
