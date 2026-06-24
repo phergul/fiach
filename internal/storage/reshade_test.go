@@ -171,6 +171,50 @@ func TestReShadeTargetListsLegacyNullRenderingAPIWithProxyFallback(t *testing.T)
 	}
 }
 
+func TestReShadeOpenGLTargetPersistsAPIFamilyWithoutDirectXAPI(t *testing.T) {
+	t.Parallel()
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+	gameID := insertProfileTestGame(t, store, "Game", t.TempDir())
+
+	_, err := store.SaveReShadeTarget(context.Background(), dbtypes.SaveReShadeTargetInput{
+		GameID:                 gameID,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           "opengl",
+		ProxyFilename:          "opengl32.dll",
+		Architecture:           "x64",
+		BuildVariant:           "standard",
+		RuntimeVersion:         "6.7.3",
+		ManagementOrigin:       "installed",
+		Status:                 "managed",
+		ManifestJSON:           `{"version":1}`,
+	})
+	if err != nil {
+		t.Fatalf("SaveReShadeTarget() error = %v", err)
+	}
+	targets, err := store.ListReShadeTargets(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListReShadeTargets() error = %v", err)
+	}
+	if len(targets) != 1 || targets[0].RenderingAPI != "opengl" {
+		t.Fatalf("ListReShadeTargets() = %+v", targets)
+	}
+	var apiFamily string
+	var directXAPI *string
+	err = store.DB().QueryRow(`
+		SELECT api_family, directx_api
+		FROM injection_targets
+		WHERE game_id = ? AND target_relative_path = ?
+	`, gameID, ".").Scan(&apiFamily, &directXAPI)
+	if err != nil {
+		t.Fatalf("query injection target: %v", err)
+	}
+	if apiFamily != "opengl" || directXAPI != nil {
+		t.Fatalf("api family = %q, directx_api = %v", apiFamily, directXAPI)
+	}
+}
+
 func TestReShadeTargetPersistenceRejectsInvalidValues(t *testing.T) {
 	t.Parallel()
 	store := openMigratedStore(t)

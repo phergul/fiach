@@ -43,11 +43,55 @@ func TestDiscoverCandidatesReturnsValidExecutablesAndWarnings(t *testing.T) {
 	candidate := result.Candidates[0]
 	if candidate.Architecture != ArchitectureX64 ||
 		candidate.ExecutableRelativePath != filepath.Join("bin", "Game.exe") ||
-		len(candidate.APIOptions) != 4 {
+		len(candidate.APIOptions) != 5 {
 		t.Fatalf("candidate = %+v", candidate)
+	}
+	openGL := candidate.APIOptions[len(candidate.APIOptions)-1]
+	if openGL.RenderingAPI != RenderingAPIOpenGL ||
+		len(openGL.Proxies) != 1 ||
+		openGL.Proxies[0] != "opengl32.dll" {
+		t.Fatalf("OpenGL API option = %+v", openGL)
 	}
 	if result.Warnings[0].Path != filepath.Join("tools", "Broken.exe") {
 		t.Fatalf("warning = %+v", result.Warnings[0])
+	}
+}
+
+func TestDiscoverCandidatesReportsOpenGLProxyEvidence(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	for _, path := range []string{
+		filepath.Join(root, "Game.exe"),
+		filepath.Join(root, "opengl32.dll"),
+	} {
+		if err := os.WriteFile(path, []byte("file"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	result, err := DiscoverCandidates(root, DiscoveryOptions{
+		InspectArchitecture: func(string) (Architecture, error) {
+			return ArchitectureX64, nil
+		},
+		ReadMetadata: func(string) (winversion.Metadata, error) {
+			return winversion.Metadata{
+				ProductName:      "ReShade",
+				OriginalFilename: "ReShade64.dll",
+				ProductVersion:   "6.7.3",
+			}, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Candidates) != 1 {
+		t.Fatalf("candidates = %+v", result.Candidates)
+	}
+	evidence := result.Candidates[0].ProxyEvidence
+	if len(evidence) != 1 ||
+		evidence[0].Filename != "opengl32.dll" ||
+		!evidence[0].IsReShade ||
+		evidence[0].RuntimeVersion != "6.7.3" {
+		t.Fatalf("proxy evidence = %+v", evidence)
 	}
 }
 

@@ -1112,6 +1112,7 @@ export enum RenderingAPI {
     RenderingAPID3D10 = "d3d10",
     RenderingAPID3D11 = "d3d11",
     RenderingAPID3D12 = "d3d12",
+    RenderingAPIOpenGL = "opengl",
 };
 
 export class Request {

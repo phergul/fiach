@@ -8,6 +8,7 @@ type APIFamily string
 
 const (
 	APIFamilyDirectX APIFamily = "directx"
+	APIFamilyOpenGL  APIFamily = "opengl"
 	APIFamilyVulkan  APIFamily = "vulkan"
 )
 

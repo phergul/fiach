@@ -16,6 +16,7 @@ const candidate = (
     { proxies: ['dxgi.dll'], renderingApi: 'd3d10' },
     { proxies: ['dxgi.dll'], renderingApi: 'd3d11' },
     { proxies: ['dxgi.dll'], renderingApi: 'd3d12' },
+    { proxies: ['opengl32.dll'], renderingApi: 'opengl' },
   ],
   architecture: 'x64',
   conflicts: [],
@@ -41,7 +42,7 @@ const target = (overrides: Partial<ReShadeTarget> = {}) => ({
 } as ReShadeTarget);
 
 describe('ReShadeTargetTable', () => {
-  it('keeps detected API selection out of the row and suppresses clean placeholders', () => {
+  it('shows detected API options and suppresses clean placeholders', () => {
     render(
       <ReShadeTargetTable
         chainTargets={[]}
@@ -53,11 +54,11 @@ describe('ReShadeTargetTable', () => {
       />,
     );
 
-    expect(screen.getByText('DirectX target')).toBeInTheDocument();
-    expect(screen.queryByText('D3D9, D3D10, D3D11, D3D12')).not.toBeInTheDocument();
+    expect(screen.getByText('D3D9, D3D10, D3D11, D3D12, OpenGL')).toBeInTheDocument();
     expect(screen.queryByText('No runtime found')).not.toBeInTheDocument();
     expect(screen.queryByText('No managed chain')).not.toBeInTheDocument();
     expect(screen.queryByText('Ready')).not.toBeInTheDocument();
+    expect(screen.getByText('Vulkan is unsupported in managed ReShade; use the official ReShade installer.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Install' })).toBeInTheDocument();
   });
 

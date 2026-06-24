@@ -363,11 +363,44 @@ func TestDirectXPlannerForeignProxyBlocksInstall(t *testing.T) {
 	}
 }
 
+func TestDirectXPlannerInstallSupportsOpenGL(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	planner, prepared := testDirectXPlanner(t)
+	preview, err := planner.Plan(context.Background(), root, Request{
+		Action:                 ActionInstall,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           RenderingAPIOpenGL,
+		ProxyFilename:          "opengl32.dll",
+		Architecture:           ArchitectureX64,
+		BuildVariant:           BuildVariantStandard,
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(preview.Operations) == 0 ||
+		preview.Operations[0].SourcePath != prepared["opengl32.dll"].Path ||
+		filepath.Base(preview.Operations[0].TargetPath) != "opengl32.dll" {
+		t.Fatalf("operations = %+v", preview.Operations)
+	}
+	if preview.DesiredTarget == nil ||
+		len(preview.DesiredTarget.Manifest.Files) == 0 ||
+		preview.DesiredTarget.Manifest.Files[0].RelativePath != "opengl32.dll" {
+		t.Fatalf("desired target = %+v", preview.DesiredTarget)
+	}
+}
+
 func testDirectXPlanner(t *testing.T) (Planner, map[string]PreparedSetupFile) {
 	t.Helper()
 	root := t.TempDir()
 	prepared := map[string]PreparedSetupFile{}
-	for _, name := range []string{"dxgi.dll", "d3d11.dll", "ReShade.ini", "ReShadePreset.ini"} {
+	for _, name := range []string{"dxgi.dll", "d3d11.dll", "opengl32.dll", "ReShade.ini", "ReShadePreset.ini"} {
 		path := filepath.Join(root, name)
 		if err := os.WriteFile(path, []byte(name), 0o644); err != nil {
 			t.Fatal(err)

@@ -17,6 +17,23 @@ interface ReShadeWizardRuntimeStepProps {
   renderingAPI: RenderingAPI | '';
 }
 
+const formatRenderingAPI = (api: RenderingAPI) => {
+  switch (api) {
+    case RenderingAPI.RenderingAPID3D9:
+      return 'D3D9';
+    case RenderingAPI.RenderingAPID3D10:
+      return 'D3D10';
+    case RenderingAPI.RenderingAPID3D11:
+      return 'D3D11';
+    case RenderingAPI.RenderingAPID3D12:
+      return 'D3D12';
+    case RenderingAPI.RenderingAPIOpenGL:
+      return 'OpenGL';
+    default:
+      return api;
+  }
+};
+
 export const ReShadeWizardRuntimeStep = ({
   apiOptions,
   buildVariant,
@@ -41,7 +58,9 @@ export const ReShadeWizardRuntimeStep = ({
           >
             <option value="">Select API</option>
             {apiOptions.map((option) => (
-              <option key={option.renderingApi} value={option.renderingApi}>{option.renderingApi}</option>
+              <option key={option.renderingApi} value={option.renderingApi}>
+                {formatRenderingAPI(option.renderingApi)}
+              </option>
             ))}
           </select>
         </label>

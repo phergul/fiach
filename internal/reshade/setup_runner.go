@@ -304,14 +304,15 @@ func validateSetupRequest(
 	if request.RenderingAPI != RenderingAPID3D9 &&
 		request.RenderingAPI != RenderingAPID3D10 &&
 		request.RenderingAPI != RenderingAPID3D11 &&
-		request.RenderingAPI != RenderingAPID3D12 {
+		request.RenderingAPI != RenderingAPID3D12 &&
+		request.RenderingAPI != RenderingAPIOpenGL {
 		return SetupRequest{}, "", fmt.Errorf("rendering API %q is unsupported", request.RenderingAPI)
 	}
 	if request.Architecture != ArchitectureX86 && request.Architecture != ArchitectureX64 {
 		return SetupRequest{}, "", fmt.Errorf("architecture %q is unsupported", request.Architecture)
 	}
 	request.ExpectedProxy = strings.TrimSpace(request.ExpectedProxy)
-	if !isSupportedDirectXProxy(request.ExpectedProxy) {
+	if !isSupportedLocalProxy(request.ExpectedProxy) {
 		return SetupRequest{}, "", fmt.Errorf("expected proxy %q is unsupported", request.ExpectedProxy)
 	}
 	if request.Artifact.Path == "" || !filepath.IsAbs(request.Artifact.Path) {
@@ -779,9 +780,9 @@ func writePreparedSetup(path string, prepared PreparedSetup) error {
 	return nil
 }
 
-func isSupportedDirectXProxy(name string) bool {
+func isSupportedLocalProxy(name string) bool {
 	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "d3d9.dll", "d3d10.dll", "d3d10core.dll", "d3d11.dll", "d3d12.dll", "dxgi.dll":
+	case "d3d9.dll", "d3d10.dll", "d3d10core.dll", "d3d11.dll", "d3d12.dll", "dxgi.dll", "opengl32.dll":
 		return true
 	default:
 		return false

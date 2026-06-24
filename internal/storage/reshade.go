@@ -14,14 +14,17 @@ import (
 
 const reShadeTargetColumns = `
 	t.id, t.game_id, t.target_relative_path, t.executable_relative_path,
-	COALESCE(t.directx_api, CASE LOWER(r.preferred_proxy_filename)
-		WHEN 'd3d9.dll' THEN 'd3d9'
-		WHEN 'd3d10.dll' THEN 'd3d10'
-		WHEN 'd3d10core.dll' THEN 'd3d10'
-		WHEN 'd3d11.dll' THEN 'd3d11'
-		WHEN 'd3d12.dll' THEN 'd3d12'
-		WHEN 'dxgi.dll' THEN 'd3d11'
-	END) AS rendering_api,
+	CASE
+		WHEN t.api_family = 'opengl' THEN 'opengl'
+		ELSE COALESCE(t.directx_api, CASE LOWER(r.preferred_proxy_filename)
+			WHEN 'd3d9.dll' THEN 'd3d9'
+			WHEN 'd3d10.dll' THEN 'd3d10'
+			WHEN 'd3d10core.dll' THEN 'd3d10'
+			WHEN 'd3d11.dll' THEN 'd3d11'
+			WHEN 'd3d12.dll' THEN 'd3d12'
+			WHEN 'dxgi.dll' THEN 'd3d11'
+		END)
+	END AS rendering_api,
 	r.preferred_proxy_filename AS proxy_filename, r.active_runtime_filename, t.architecture, r.build_variant, r.runtime_version, r.installer_tag,
 	r.installer_asset_name, r.installer_url, r.installer_digest, r.installer_size,
 	r.management_origin, t.status, r.manifest_json, t.created_at, t.updated_at, t.last_verified_at
@@ -48,13 +51,19 @@ func (s *Store) SaveReShadeTarget(ctx context.Context, input dbtypes.SaveReShade
 		primaryOwner = "optiscaler"
 		primaryProxyFilename = existingProxy
 	}
-	directXAPI := input.RenderingAPI
+	apiFamily := "directx"
+	var directXAPI *string
+	if input.RenderingAPI == "opengl" {
+		apiFamily = "opengl"
+	} else {
+		directXAPI = &input.RenderingAPI
+	}
 	targetID, err := s.saveInjectionTarget(ctx, injectionTargetInput{
 		GameID:                 input.GameID,
 		TargetRelativePath:     input.TargetRelativePath,
 		ExecutableRelativePath: input.ExecutableRelativePath,
-		APIFamily:              "directx",
-		DirectXAPI:             &directXAPI,
+		APIFamily:              apiFamily,
+		DirectXAPI:             directXAPI,
 		Architecture:           input.Architecture,
 		PrimaryOwner:           primaryOwner,
 		PrimaryProxyFilename:   primaryProxyFilename,
@@ -213,7 +222,7 @@ func validateSaveReShadeTargetInput(input dbtypes.SaveReShadeTargetInput) (dbtyp
 	if err != nil {
 		return input, err
 	}
-	if !slices.Contains([]string{"d3d9", "d3d10", "d3d11", "d3d12"}, input.RenderingAPI) {
+	if !slices.Contains([]string{"d3d9", "d3d10", "d3d11", "d3d12", "opengl"}, input.RenderingAPI) {
 		return input, errors.New("rendering API is invalid")
 	}
 	if strings.TrimSpace(input.ProxyFilename) == "" {

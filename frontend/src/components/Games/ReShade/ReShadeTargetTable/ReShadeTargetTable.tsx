@@ -46,6 +46,8 @@ const formatRenderingAPI = (api: string) => {
       return 'D3D11';
     case 'd3d12':
       return 'D3D12';
+    case 'opengl':
+      return 'OpenGL';
     default:
       return api;
   }
@@ -260,7 +262,7 @@ export const ReShadeTargetTable = ({
       <section aria-labelledby="reshade-detected-heading">
         <h3 id="reshade-detected-heading">Detected - Not managed</h3>
         {detected.length === 0 && (
-          <p className="reshade-target-empty">No unmanaged DirectX executable targets were detected.</p>
+          <p className="reshade-target-empty">No unmanaged ReShade executable targets were detected.</p>
         )}
         {detected.map((candidate) => {
           const action = hasDetectedReShade(candidate) ? Action.ActionAdopt : Action.ActionInstall;
@@ -276,7 +278,7 @@ export const ReShadeTargetTable = ({
                 <span>{candidate.targetRelativePath === '.' ? 'Game Root' : candidate.targetRelativePath}</span>
               </div>
               <div className="reshade-target-details">
-                <span>DirectX target</span>
+                <span>{candidate.apiOptions.map((option) => formatRenderingAPI(option.renderingApi)).join(', ')}</span>
                 <span>{candidate.architecture}</span>
                 {runtimeVersions.length === 0 ? (
                   null

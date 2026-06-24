@@ -523,7 +523,13 @@ func normalizeRequest(gameRoot string, request Request) (Request, string, error)
 	}, request.Action) {
 		return Request{}, "", errors.New("action is invalid")
 	}
-	if !slices.Contains([]RenderingAPI{RenderingAPID3D9, RenderingAPID3D10, RenderingAPID3D11, RenderingAPID3D12}, request.RenderingAPI) {
+	if !slices.Contains([]RenderingAPI{
+		RenderingAPID3D9,
+		RenderingAPID3D10,
+		RenderingAPID3D11,
+		RenderingAPID3D12,
+		RenderingAPIOpenGL,
+	}, request.RenderingAPI) {
 		return Request{}, "", errors.New("rendering API is invalid")
 	}
 	if !slices.Contains([]Architecture{ArchitectureX86, ArchitectureX64}, request.Architecture) {
@@ -570,6 +576,14 @@ func (m *Manager) directXOptiScalerTarget(
 	ctx context.Context,
 	request Request,
 ) (dbtypes.OptiScalerTarget, bool, error) {
+	if !slices.Contains([]RenderingAPI{
+		RenderingAPID3D9,
+		RenderingAPID3D10,
+		RenderingAPID3D11,
+		RenderingAPID3D12,
+	}, request.RenderingAPI) {
+		return dbtypes.OptiScalerTarget{}, false, nil
+	}
 	store, ok := m.store.(optiScalerTargetStore)
 	if !ok {
 		return dbtypes.OptiScalerTarget{}, false, nil
@@ -632,6 +646,8 @@ func proxyAllowedForAPI(renderingAPI RenderingAPI, proxyFilename string) bool {
 		return slices.Contains([]string{"d3d11.dll", "dxgi.dll"}, proxyFilename)
 	case RenderingAPID3D12:
 		return slices.Contains([]string{"d3d12.dll", "dxgi.dll"}, proxyFilename)
+	case RenderingAPIOpenGL:
+		return proxyFilename == "opengl32.dll"
 	default:
 		return false
 	}

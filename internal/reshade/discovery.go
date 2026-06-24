@@ -12,13 +12,14 @@ import (
 	"github.com/phergul/fiach/internal/winversion"
 )
 
-var supportedDirectXProxies = []string{
+var supportedLocalProxies = []string{
 	"d3d9.dll",
 	"d3d10.dll",
 	"d3d10core.dll",
 	"d3d11.dll",
 	"d3d12.dll",
 	"dxgi.dll",
+	"opengl32.dll",
 }
 
 type DiscoveryOptions struct {
@@ -81,7 +82,7 @@ func DiscoverCandidates(gameRoot string, options DiscoveryOptions) (result Disco
 			TargetRelativePath:     targetRelativePath,
 			ExecutableRelativePath: executableRelativePath,
 			Architecture:           architecture,
-			APIOptions:             directXAPIOptions(),
+			APIOptions:             localAPIOptions(),
 			ProxyEvidence:          evidence,
 			Conflicts:              conflicts,
 		})
@@ -101,10 +102,10 @@ func DiscoverCandidates(gameRoot string, options DiscoveryOptions) (result Disco
 }
 
 func inspectProxyEvidence(targetPath string, options DiscoveryOptions) ([]ProxyEvidence, []string) {
-	evidence := make([]ProxyEvidence, 0, len(supportedDirectXProxies))
+	evidence := make([]ProxyEvidence, 0, len(supportedLocalProxies))
 	var conflicts []string
 	reShadeCount := 0
-	for _, filename := range supportedDirectXProxies {
+	for _, filename := range supportedLocalProxies {
 		path := filepath.Join(targetPath, filename)
 		info, err := os.Stat(path)
 		if errors.Is(err, os.ErrNotExist) {
@@ -126,7 +127,7 @@ func inspectProxyEvidence(targetPath string, options DiscoveryOptions) ([]ProxyE
 				evidence = append(evidence, item)
 				continue
 			}
-			item.Conflict = "An existing foreign or unidentified DirectX proxy blocks managed ReShade."
+			item.Conflict = "An existing foreign or unidentified rendering proxy blocks managed ReShade."
 			conflicts = append(conflicts, filename+": "+item.Conflict)
 			evidence = append(evidence, item)
 			continue
@@ -169,7 +170,7 @@ func discoveryAllowsForeignProxy(path string, options DiscoveryOptions) bool {
 	return false
 }
 
-func directXAPIOptions() []APIProxyOptions {
+func localAPIOptions() []APIProxyOptions {
 	return []APIProxyOptions{
 		{
 			RenderingAPI: RenderingAPID3D9,
@@ -186,6 +187,10 @@ func directXAPIOptions() []APIProxyOptions {
 		{
 			RenderingAPI: RenderingAPID3D12,
 			Proxies:      []string{"d3d12.dll", "dxgi.dll"},
+		},
+		{
+			RenderingAPI: RenderingAPIOpenGL,
+			Proxies:      []string{"opengl32.dll"},
 		},
 	}
 }

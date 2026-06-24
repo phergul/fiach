@@ -57,7 +57,7 @@ func (c *Coordinator) ListTargets(ctx context.Context, gameID int64) (targets []
 				GameID:                 target.GameID,
 				TargetRelativePath:     target.TargetRelativePath,
 				ExecutableRelativePath: target.ExecutableRelativePath,
-				APIFamily:              APIFamilyDirectX,
+				APIFamily:              reShadeAPIFamily(target),
 				PrimaryOwner:           OwnerReShade,
 				PrimaryProxyFilename:   target.ProxyFilename,
 				Status:                 Status(target.Status),
@@ -129,6 +129,13 @@ func (c *Coordinator) ManagedDirectXOptiScalerTargets(ctx context.Context, gameI
 		}
 	}
 	return targets, blocked, nil
+}
+
+func reShadeAPIFamily(target dbtypes.ReShadeTarget) APIFamily {
+	if strings.EqualFold(target.RenderingAPI, string(APIFamilyOpenGL)) {
+		return APIFamilyOpenGL
+	}
+	return APIFamilyDirectX
 }
 
 func targetKey(path string) string {

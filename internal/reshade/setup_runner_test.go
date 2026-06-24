@@ -115,6 +115,48 @@ func TestPrepareSetupAcceptsInstallerDefaultProxyAlias(t *testing.T) {
 	}
 }
 
+func TestPrepareSetupSupportsOpenGL(t *testing.T) {
+	t.Parallel()
+
+	request, verifier := setupTestRequest(t)
+	request.RenderingAPI = RenderingAPIOpenGL
+	request.ExpectedProxy = "opengl32.dll"
+	request.ExpectedOutputRelativePaths = []string{"opengl32.dll"}
+	var gotArguments []string
+	processRunner := setupProcessRunnerFunc(func(
+		_ context.Context,
+		processRequest setupProcessRequest,
+	) (setupProcessResult, error) {
+		gotArguments = append([]string(nil), processRequest.Arguments...)
+		if err := os.WriteFile(
+			filepath.Join(processRequest.WorkingDir, "opengl32.dll"),
+			[]byte("runtime"),
+			0o644,
+		); err != nil {
+			return setupProcessResult{}, err
+		}
+		now := time.Now()
+		return setupProcessResult{StartedAt: now, FinishedAt: now, ExitCode: 0}, nil
+	})
+
+	result, err := PrepareSetup(
+		context.Background(),
+		request,
+		setupTestRunnerOptions(t, verifier, processRunner),
+	)
+	if err != nil {
+		t.Fatalf("PrepareSetup() error = %v", err)
+	}
+	if result.Prepared == nil ||
+		len(result.Prepared.Files) != 1 ||
+		result.Prepared.Files[0].RelativePath != "opengl32.dll" {
+		t.Fatalf("Prepared = %+v", result.Prepared)
+	}
+	if len(gotArguments) != 4 || gotArguments[2] != "--api" || gotArguments[3] != "opengl" {
+		t.Fatalf("arguments = %#v", gotArguments)
+	}
+}
+
 func TestPrepareSetupUpdateArgumentsPreserveHostilePath(t *testing.T) {
 	t.Parallel()
 

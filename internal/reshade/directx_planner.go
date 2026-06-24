@@ -663,14 +663,14 @@ func (p *directXPlanner) proxyConflicts(
 	var conflicts []string
 	var impacts []PathImpact
 	reShadeCount := 0
-	for _, filename := range supportedDirectXProxies {
+	for _, filename := range supportedLocalProxies {
 		path := filepath.Join(targetPath, filename)
 		info, err := os.Stat(path)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 		if err != nil || !info.Mode().IsRegular() {
-			conflicts = append(conflicts, fmt.Sprintf("DirectX proxy %q cannot be safely inspected.", filename))
+			conflicts = append(conflicts, fmt.Sprintf("Rendering proxy %q cannot be safely inspected.", filename))
 			impacts = append(impacts, blockingProxyImpact(filename))
 			continue
 		}
@@ -687,7 +687,7 @@ func (p *directXPlanner) proxyConflicts(
 				continue
 			}
 			if !strings.EqualFold(request.ProxyFilename, filename) || !isReShade {
-				conflicts = append(conflicts, fmt.Sprintf("Existing DirectX proxy %q blocks adoption.", filename))
+				conflicts = append(conflicts, fmt.Sprintf("Existing rendering proxy %q blocks adoption.", filename))
 				impacts = append(impacts, blockingProxyImpact(filename))
 			}
 		case ActionInstall:
@@ -698,18 +698,18 @@ func (p *directXPlanner) proxyConflicts(
 				conflicts = append(conflicts,
 					fmt.Sprintf("Existing unmanaged ReShade proxy %q must be adopted instead of overwritten.", filename))
 			} else {
-				conflicts = append(conflicts, fmt.Sprintf("Existing foreign DirectX proxy %q blocks install.", filename))
+				conflicts = append(conflicts, fmt.Sprintf("Existing foreign rendering proxy %q blocks install.", filename))
 			}
 			impacts = append(impacts, blockingProxyImpact(filename))
 		default:
 			if !allowedExisting && !allowedOptiScalerPrimary {
-				conflicts = append(conflicts, fmt.Sprintf("Additional DirectX proxy %q blocks managed mutation.", filename))
+				conflicts = append(conflicts, fmt.Sprintf("Additional rendering proxy %q blocks managed mutation.", filename))
 				impacts = append(impacts, blockingProxyImpact(filename))
 			}
 		}
 	}
 	if reShadeCount > 1 {
-		conflicts = append(conflicts, "Multiple ReShade DirectX proxies were detected in the target.")
+		conflicts = append(conflicts, "Multiple ReShade rendering proxies were detected in the target.")
 	}
 	activeRuntime := activeRuntimeFilename(request)
 	if !strings.EqualFold(activeRuntime, request.ProxyFilename) {
@@ -780,6 +780,8 @@ func defaultInstallerProxyFilename(renderingAPI RenderingAPI) string {
 		return "d3d11.dll"
 	case RenderingAPID3D12:
 		return "d3d12.dll"
+	case RenderingAPIOpenGL:
+		return "opengl32.dll"
 	default:
 		return ""
 	}

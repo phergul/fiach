@@ -130,7 +130,7 @@ func validateInjectionTargetInput(input injectionTargetInput) (injectionTargetIn
 	if err != nil {
 		return input, err
 	}
-	if !slices.Contains([]string{"directx", "vulkan"}, input.APIFamily) {
+	if !slices.Contains([]string{"directx", "opengl", "vulkan"}, input.APIFamily) {
 		return input, errors.New("API family is invalid")
 	}
 	if input.DirectXAPI != nil && !slices.Contains([]string{"d3d9", "d3d10", "d3d11", "d3d12"}, *input.DirectXAPI) {

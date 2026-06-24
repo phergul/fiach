@@ -395,14 +395,14 @@ func verifyAppliedReShadeState(targetPath string, preview Preview) error {
 		)
 	}
 	reShadeProxies := 0
-	for _, filename := range supportedDirectXProxies {
+	for _, filename := range supportedLocalProxies {
 		path := filepath.Join(targetPath, filename)
 		info, statErr := os.Stat(path)
 		if errors.Is(statErr, os.ErrNotExist) {
 			continue
 		}
 		if statErr != nil || !info.Mode().IsRegular() {
-			return fmt.Errorf("inspect final DirectX proxy %q", filename)
+			return fmt.Errorf("inspect final rendering proxy %q", filename)
 		}
 		proxyMetadata, metadataErr := winversion.Read(path)
 		if metadataErr == nil && isReShadeMetadata(proxyMetadata) {

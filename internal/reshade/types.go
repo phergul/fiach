@@ -25,10 +25,11 @@ const (
 type RenderingAPI string
 
 const (
-	RenderingAPID3D9  RenderingAPI = "d3d9"
-	RenderingAPID3D10 RenderingAPI = "d3d10"
-	RenderingAPID3D11 RenderingAPI = "d3d11"
-	RenderingAPID3D12 RenderingAPI = "d3d12"
+	RenderingAPID3D9   RenderingAPI = "d3d9"
+	RenderingAPID3D10  RenderingAPI = "d3d10"
+	RenderingAPID3D11  RenderingAPI = "d3d11"
+	RenderingAPID3D12  RenderingAPI = "d3d12"
+	RenderingAPIOpenGL RenderingAPI = "opengl"
 )
 
 type Architecture string

@@ -4,7 +4,7 @@ CREATE TABLE injection_targets (
     game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     target_relative_path TEXT NOT NULL COLLATE NOCASE,
     executable_relative_path TEXT NOT NULL,
-    api_family TEXT NOT NULL CHECK (api_family IN ('directx', 'vulkan')),
+    api_family TEXT NOT NULL CHECK (api_family IN ('directx', 'opengl', 'vulkan')),
     directx_api TEXT CHECK (directx_api IS NULL OR directx_api IN ('d3d9', 'd3d10', 'd3d11', 'd3d12')),
     architecture TEXT NOT NULL CHECK (architecture IN ('x86', 'x64')),
     primary_owner TEXT NOT NULL CHECK (primary_owner IN ('reshade', 'optiscaler')),

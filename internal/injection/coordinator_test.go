@@ -79,3 +79,28 @@ func TestCoordinatorReportsDirectXTargetsAndVulkanBlock(t *testing.T) {
 		t.Fatalf("targets = %+v, want only DirectX target", targets)
 	}
 }
+
+func TestCoordinatorReportsOpenGLReShadeAPIFamily(t *testing.T) {
+	t.Parallel()
+
+	coordinator := NewCoordinator(memoryStore{
+		reShade: []dbtypes.ReShadeTarget{{
+			GameID:                 1,
+			TargetRelativePath:     ".",
+			ExecutableRelativePath: "Game.exe",
+			RenderingAPI:           "opengl",
+			ProxyFilename:          "opengl32.dll",
+			Status:                 "managed",
+		}},
+	})
+
+	targets, err := coordinator.ListTargets(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("ListTargets() error = %v", err)
+	}
+	if len(targets) != 1 ||
+		targets[0].APIFamily != APIFamilyOpenGL ||
+		targets[0].PrimaryProxyFilename != "opengl32.dll" {
+		t.Fatalf("targets = %+v", targets)
+	}
+}

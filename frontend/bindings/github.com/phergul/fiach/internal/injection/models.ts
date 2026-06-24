@@ -12,6 +12,7 @@ export enum APIFamily {
     $zero = "",
 
     APIFamilyDirectX = "directx",
+    APIFamilyOpenGL = "opengl",
     APIFamilyVulkan = "vulkan",
 };
 
