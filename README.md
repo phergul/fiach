@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.26.4-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.26.4"></a>
   <a href="https://v3.wails.io/"><img src="https://img.shields.io/badge/Wails-v3-DF0000?style=for-the-badge&logo=wails&logoColor=white" alt="Wails v3"></a>
-  <a href="https://github.com/phergul/mod-manager/releases"><img src="https://img.shields.io/github/v/release/phergul/mod-manager?style=for-the-badge&logo=github&logoColor=white&label=release" alt="Release"></a>
+  <a href="https://github.com/phergul/fiach/releases"><img src="https://img.shields.io/github/v/release/phergul/fiach?style=for-the-badge&logo=github&logoColor=white&label=release" alt="Release"></a>
 </p>
 
 ## Features
@@ -21,9 +21,9 @@
 
 ## Install
 
-Pre-built binaries are published to [GitHub Releases](https://github.com/phergul/mod-manager/releases).
+Pre-built binaries are published to [GitHub Releases](https://github.com/phergul/fiach/releases).
 
-1. Open [GitHub Releases](https://github.com/phergul/mod-manager/releases) and download the artifact for your OS.
+1. Open [GitHub Releases](https://github.com/phergul/fiach/releases) and download the artifact for your OS.
 2. **Windows** - Run the installer, or use the portable `.exe` directly.
 3. **macOS** - Unzip and open `fiach.app`.
 4. **Linux** - Use the AppImage, `.deb`, `.rpm`, or standalone binary as you prefer.
@@ -48,7 +48,7 @@ Pre-built binaries are published to [GitHub Releases](https://github.com/phergul
 
 Fiach is built with [Wails v3](https://v3.wails.io/) (Go backend, React frontend).
 
-**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha.77`, Bun 1.3.x. On Linux, install GTK/WebKit development packages (`libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, and related build tools).
+**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha.77`, Bun 1.3.x. On Linux, install GTK/WebKit development packages (`libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, and related build tools).@
 
 ```bash
 wails3 task dev      # development
@@ -62,4 +62,4 @@ cd frontend && bun install && bun run test
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE) - [THIRD PARTY NOTICES](THIRD_PARTY_NOTICES).
