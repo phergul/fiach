@@ -197,6 +197,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 			slog.String("event", "metadata_unavailable"),
 			slog.Int64("game_id", input.GameID),
 			slog.Int64("mod_id", importResult.Mod.ID),
+			slog.String("mod_name", importResult.Mod.Name),
 			slog.String("source_type", string(input.SourceType)),
 			diagnostics.PathAttr("source_path", input.SourcePath),
 			diagnostics.ErrorAttr(importResult.MetadataError),
@@ -205,6 +206,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 
 	diag.complete("Mod import completed",
 		slog.Int64("mod_id", importResult.Mod.ID),
+		slog.String("mod_name", importResult.Mod.Name),
 	)
 
 	resultMod := mappers.ToDTOMod(importResult.Mod)
@@ -248,6 +250,7 @@ func (s *ModService) PreviewUpdateMod(ctx context.Context, input dto.UpdateModIn
 	diag.complete("Mod update preview completed",
 		slog.Int64("game_id", updateResult.After.GameID),
 		slog.Int64("mod_id", updateResult.After.ID),
+		slog.String("mod_name", updateResult.After.Name),
 		slog.Bool("requires_reapply", result.RequiresReapply),
 	)
 
@@ -289,6 +292,7 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 			slog.String("event", "metadata_unavailable"),
 			slog.Int64("game_id", updateResult.After.GameID),
 			slog.Int64("mod_id", updateResult.After.ID),
+			slog.String("mod_name", updateResult.After.Name),
 			slog.String("source_type", string(input.SourceType)),
 			diagnostics.PathAttr("source_path", input.SourcePath),
 			diagnostics.ErrorAttr(updateResult.MetadataError),
@@ -298,6 +302,7 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 	diag.complete("Mod update completed",
 		slog.Int64("game_id", updateResult.After.GameID),
 		slog.Int64("mod_id", updateResult.After.ID),
+		slog.String("mod_name", updateResult.After.Name),
 		slog.Bool("requires_reapply", result.RequiresReapply),
 	)
 

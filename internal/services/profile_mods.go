@@ -37,6 +37,13 @@ func (s *ProfileService) AddModToProfile(ctx context.Context, profileID int64, m
 		}
 	}()
 
+	if profile, found, lookupErr := s.store.GetProfile(ctx, profileID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("profile_name", profile.Name))
+	}
+	if mod, found, lookupErr := s.store.GetMod(ctx, modID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("mod_name", mod.Name))
+	}
+
 	storedProfileMod, err := s.store.AddModToProfile(ctx, profileID, modID)
 	if err != nil {
 		return dto.ProfileMod{}, err
@@ -63,6 +70,13 @@ func (s *ProfileService) RemoveModFromProfile(ctx context.Context, profileID int
 		}
 	}()
 
+	if profile, found, lookupErr := s.store.GetProfile(ctx, profileID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("profile_name", profile.Name))
+	}
+	if mod, found, lookupErr := s.store.GetMod(ctx, modID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("mod_name", mod.Name))
+	}
+
 	if err := s.store.RemoveModFromProfile(ctx, profileID, modID); err != nil {
 		return err
 	}
@@ -84,6 +98,13 @@ func (s *ProfileService) SetProfileModEnabled(ctx context.Context, profileID int
 			err = fmt.Errorf("set profile mod enabled: %w", err)
 		}
 	}()
+
+	if profile, found, lookupErr := s.store.GetProfile(ctx, profileID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("profile_name", profile.Name))
+	}
+	if mod, found, lookupErr := s.store.GetMod(ctx, modID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("mod_name", mod.Name))
+	}
 
 	storedProfileMod, err := s.store.SetProfileModEnabled(ctx, profileID, modID, enabled)
 	if err != nil {
@@ -109,6 +130,10 @@ func (s *ProfileService) ReorderProfileMods(ctx context.Context, profileID int64
 			err = fmt.Errorf("reorder profile mods: %w", err)
 		}
 	}()
+
+	if profile, found, lookupErr := s.store.GetProfile(ctx, profileID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("profile_name", profile.Name))
+	}
 
 	profileMods, err := s.store.ReorderProfileMods(ctx, profileID, modIDs)
 	if err != nil {

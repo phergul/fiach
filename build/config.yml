@@ -8,7 +8,7 @@ info:
   companyName: "phergul" # The name of the company
   productName: "Fiach" # The name of the application
   productIdentifier: "com.phergul.fiach" # The unique product identifier
-  description: "A general-purpose mod manager for any game" # The application description
+  description: "Fiach" # The application description
   copyright: "(c) 2026, phergul" # Copyright text
   version: "0.2.0" # The application version
 

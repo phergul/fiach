@@ -103,6 +103,7 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 	if err != nil {
 		return dto.ReShadeDetectionResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 
 	installPath := strings.TrimSpace(game.InstallPath)
 	if installPath == "" {

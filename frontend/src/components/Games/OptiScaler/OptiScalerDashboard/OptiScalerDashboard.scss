@@ -69,6 +69,8 @@ $optiscaler-page-header-height: 5rem;
   inset: 0;
   content: '';
   background: rgb(#{$color-background-rgb} / 72%);
+  background: linear-gradient(to bottom, rgb(#{$color-background-rgb} / 70%) 0%, rgb(#{$color-background-rgb} / 80%) 100%),
+  linear-gradient(to right, rgb(#{$color-background-rgb} / 50%) 0%, transparent 20%, transparent 80%, rgb(#{$color-background-rgb} / 50%) 100%);
 }
 
 .optiscaler-dashboard-backdrop-image {

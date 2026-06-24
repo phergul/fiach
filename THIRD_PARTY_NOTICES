@@ -1,0 +1,21 @@
+Fiach uses or interacts with third-party software that is licensed separately from Fiach.
+
+The following notices are provided for information only.
+
+
+1) License Notice for OptiScaler
+--------------------------------
+
+OptiScaler is licensed under the GNU General Public License version 3.
+
+Project: https://github.com/optiscaler/OptiScaler
+License: https://github.com/optiscaler/OptiScaler/blob/master/LICENSE
+
+
+2) License Notice for ReShade
+-----------------------------
+
+ReShade is licensed under the BSD 3-Clause License.
+
+Project: https://github.com/crosire/reshade
+License: https://github.com/crosire/reshade/blob/main/LICENSE.md

@@ -61,6 +61,10 @@ func (s *ProfileService) DuplicateProfile(ctx context.Context, profileID int64) 
 		}
 	}()
 
+	if sourceProfile, found, lookupErr := s.store.GetProfile(ctx, profileID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs, slog.String("source_profile_name", sourceProfile.Name))
+	}
+
 	storedProfile, err := s.store.DuplicateProfile(ctx, profileID)
 	if err != nil {
 		return dto.ModProfile{}, err

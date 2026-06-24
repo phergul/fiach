@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strings"
 	"unicode"
 
+	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
@@ -39,11 +41,22 @@ func (s *ModService) GetModMetadata(ctx context.Context, modID int64) (metadata 
 }
 
 func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModMetadataInput) (metadata dto.ModMetadata, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationUpdateModMetadata, "Mod metadata update started",
+		slog.Int64("mod_id", input.ModID),
+	)
 	defer func() {
 		if err != nil {
+			diag.fail("Mod metadata update failed", err)
 			err = fmt.Errorf("update mod metadata: %w", err)
 		}
 	}()
+
+	if existingMod, found, lookupErr := s.store.GetMod(ctx, input.ModID); lookupErr == nil && found {
+		diag.attrs = append(diag.attrs,
+			slog.String("mod_name", existingMod.Name),
+			slog.Int64("game_id", existingMod.GameID),
+		)
+	}
 
 	storageInput, err := toStorageUpdateModMetadataInput(input)
 	if err != nil {
@@ -55,7 +68,10 @@ func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModM
 		return dto.ModMetadata{}, err
 	}
 
-	return mappers.ToDTOModMetadata(storedMetadata), nil
+	metadata = mappers.ToDTOModMetadata(storedMetadata)
+	diag.complete("Mod metadata update completed")
+
+	return metadata, nil
 }
 
 func toStorageUpdateModMetadataInput(input dto.UpdateModMetadataInput) (dbtypes.UpdateModMetadataInput, error) {
