@@ -324,13 +324,103 @@ func TestDirectXPlannerUninstallPreservesUserContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(preview.Operations) != 1 || preview.Operations[0].Type != "delete" {
+	if len(preview.Operations) != 0 {
 		t.Fatalf("operations = %+v", preview.Operations)
 	}
 	if len(preview.PathImpacts) != 2 ||
+		preview.PathImpacts[0].Action != "preserve" ||
+		preview.PathImpacts[0].Ownership != OwnershipAdopted ||
 		preview.PathImpacts[1].Action != "preserve" ||
 		preview.PathImpacts[1].Ownership != OwnershipUser {
 		t.Fatalf("path impacts = %+v", preview.PathImpacts)
+	}
+}
+
+func TestDirectXPlannerInstallPreviewOmitsNonExistentDefaultPaths(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	planner, _ := testDirectXPlanner(t)
+	preview, err := planner.Plan(context.Background(), root, Request{
+		Action:                 ActionInstall,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           RenderingAPID3D11,
+		ProxyFilename:          "dxgi.dll",
+		Architecture:           ArchitectureX64,
+		BuildVariant:           BuildVariantStandard,
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, impact := range preview.PathImpacts {
+		if impact.Action != "preserve" {
+			continue
+		}
+		t.Fatalf("unexpected preserve impact on fresh install: %+v", impact)
+	}
+	createPaths := map[string]bool{}
+	for _, impact := range preview.PathImpacts {
+		if impact.Action == "create" {
+			createPaths[strings.ToLower(impact.Path)] = true
+		}
+	}
+	if !createPaths["reshade.ini"] || !createPaths["reshadepreset.ini"] {
+		t.Fatalf("expected create impacts for default config files, got %+v", preview.PathImpacts)
+	}
+}
+
+func TestDirectXPlannerUninstallDeletesManagedCreatedConfigs(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"dxgi.dll", "ReShade.ini", "ReShadePreset.ini"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(name), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	planner, _ := testDirectXPlanner(t)
+	existing := &dbtypes.ReShadeTarget{
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           "d3d11",
+		ProxyFilename:          "dxgi.dll",
+		Architecture:           "x64",
+		BuildVariant:           "standard",
+		RuntimeVersion:         "6.7.3",
+		ManagementOrigin:       "installed",
+		ManifestJSON: `{"version":1,"files":[` +
+			`{"relativePath":"dxgi.dll","sha256":"runtime","sizeBytes":7,"ownership":"managed","role":"runtime"},` +
+			`{"relativePath":"ReShade.ini","sha256":"config","sizeBytes":7,"ownership":"managed","role":"configuration"},` +
+			`{"relativePath":"ReShadePreset.ini","sha256":"preset","sizeBytes":7,"ownership":"managed","role":"preset"}` +
+			`],"variantProvenance":"verified"}`,
+	}
+	preview, err := planner.Plan(context.Background(), root, Request{
+		Action:                 ActionUninstall,
+		GameID:                 1,
+		TargetRelativePath:     ".",
+		ExecutableRelativePath: "Game.exe",
+		RenderingAPI:           RenderingAPID3D11,
+		ProxyFilename:          "dxgi.dll",
+		Architecture:           ArchitectureX64,
+		BuildVariant:           BuildVariantStandard,
+	}, existing)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(preview.Operations) != 3 {
+		t.Fatalf("operations = %+v", preview.Operations)
+	}
+	for _, operation := range preview.Operations {
+		if operation.Type != "delete" {
+			t.Fatalf("expected delete operations only: %+v", operation)
+		}
 	}
 }
 

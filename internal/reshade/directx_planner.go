@@ -277,12 +277,14 @@ func (p *directXPlanner) planInstallOrUpdate(
 				SHA256:     prepared.SHA256,
 				SizeBytes:  prepared.SizeBytes,
 			})
-			manifestFiles = append(manifestFiles, managedFileFromPrepared(prepared, OwnershipUser))
+			created := managedFileFromPrepared(prepared, OwnershipManaged)
+			created.Role = defaultFile.Role
+			manifestFiles = append(manifestFiles, created)
 			impacts = append(impacts, pathImpact(
 				defaultFile.Name,
 				defaultFile.Role,
 				"create",
-				OwnershipUser,
+				OwnershipManaged,
 				false,
 				false,
 			))
@@ -300,7 +302,6 @@ func (p *directXPlanner) planInstallOrUpdate(
 	if err != nil {
 		return Preview{}, err
 	}
-	userContent = mergePreparedUserContent(gameRoot, targetPath, userContent, setupResult.Prepared.Files, update)
 	impacts = append(impacts, userContentImpacts(userContent)...)
 	preview := Preview{
 		Operations:  operations,
@@ -384,8 +385,7 @@ func (p *directXPlanner) planAdopt(
 		return Preview{}, err
 	}
 	warnings = append(warnings,
-		"The build variant is user-declared and cannot be cryptographically verified.",
-		"Exact pre-adoption rollback is unavailable; uninstall removes only the adopted runtime.",
+		"Uninstall stops managing this target and removes only files that were added after adoption.",
 	)
 	return Preview{
 		Operations: []Operation{
@@ -585,32 +585,50 @@ func (p *directXPlanner) planUninstall(
 		runtime.RelativePath = activeRuntime
 	}
 	target := filepath.Join(targetPath, runtime.RelativePath)
-	operation := Operation{
-		Type:       "delete",
-		TargetPath: target,
-	}
-	action := "remove"
-	if runtime.BackupPath != nil && runtime.BackupSHA256 != nil && runtime.BackupSize != nil {
-		matches, matchErr := fileops.FileMatchesIntegrity(
-			*runtime.BackupPath,
-			*runtime.BackupSHA256,
-			*runtime.BackupSize,
-		)
-		if matchErr == nil && matches {
-			operation = Operation{
-				Type:       "restore",
-				SourcePath: *runtime.BackupPath,
-				TargetPath: target,
-				SHA256:     *runtime.BackupSHA256,
-				SizeBytes:  *runtime.BackupSize,
-			}
-			action = "restore backup"
+	operations := []Operation{}
+	impacts := []PathImpact{}
+	if runtime.Ownership == OwnershipAdopted {
+		impacts = append(impacts, pathImpact(
+			runtime.RelativePath,
+			PathRoleRuntime,
+			"preserve",
+			runtime.Ownership,
+			pathExists(target),
+			true,
+		))
+	} else {
+		operation := Operation{
+			Type:       "delete",
+			TargetPath: target,
 		}
+		action := "remove"
+		if runtime.BackupPath != nil && runtime.BackupSHA256 != nil && runtime.BackupSize != nil {
+			matches, matchErr := fileops.FileMatchesIntegrity(
+				*runtime.BackupPath,
+				*runtime.BackupSHA256,
+				*runtime.BackupSize,
+			)
+			if matchErr == nil && matches {
+				operation = Operation{
+					Type:       "restore",
+					SourcePath: *runtime.BackupPath,
+					TargetPath: target,
+					SHA256:     *runtime.BackupSHA256,
+					SizeBytes:  *runtime.BackupSize,
+				}
+				action = "restore backup"
+			}
+		}
+		operations = append(operations, operation)
+		impacts = append(impacts, pathImpact(
+			runtime.RelativePath,
+			PathRoleRuntime,
+			action,
+			runtime.Ownership,
+			pathExists(target),
+			false,
+		))
 	}
-	impacts := []PathImpact{
-		pathImpact(runtime.RelativePath, PathRoleRuntime, action, runtime.Ownership, pathExists(target), false),
-	}
-	operations := []Operation{operation}
 	for _, file := range manifest.Files {
 		if strings.EqualFold(filepath.Clean(file.RelativePath), filepath.Clean(runtime.RelativePath)) {
 			continue
@@ -907,45 +925,6 @@ func releaseFromRow(row *dbtypes.ReShadeTarget) (InstallerRelease, error) {
 	return release, nil
 }
 
-func mergePreparedUserContent(
-	gameRoot string,
-	targetPath string,
-	current []UserContent,
-	prepared []PreparedSetupFile,
-	update bool,
-) []UserContent {
-	if update {
-		return current
-	}
-	for _, file := range prepared {
-		role := PathRole("")
-		switch strings.ToLower(filepath.Clean(file.RelativePath)) {
-		case "reshade.ini":
-			role = PathRoleConfiguration
-		case "reshadepreset.ini":
-			role = PathRolePreset
-		default:
-			continue
-		}
-		target := filepath.Join(targetPath, file.RelativePath)
-		if pathExists(target) {
-			continue
-		}
-		relative, err := filepath.Rel(gameRoot, target)
-		if err != nil {
-			continue
-		}
-		current = append(current, UserContent{
-			Path:      relative,
-			Role:      role,
-			SHA256:    file.SHA256,
-			SizeBytes: file.SizeBytes,
-			Exists:    true,
-		})
-	}
-	return deduplicateUserContent(current)
-}
-
 func pathImpact(
 	path string,
 	role PathRole,
@@ -967,6 +946,9 @@ func pathImpact(
 func userContentImpacts(content []UserContent) []PathImpact {
 	result := make([]PathImpact, 0, len(content))
 	for _, item := range content {
+		if !item.Exists {
+			continue
+		}
 		result = append(result, pathImpact(
 			item.Path,
 			item.Role,

@@ -31,6 +31,10 @@ func inventoryUserContent(gameRoot string, targetPath string) ([]UserContent, []
 	if exists {
 		content = append(content, config)
 	}
+	if !exists {
+		content = deduplicateUserContent(content)
+		return content, warnings, nil
+	}
 	paths, parseWarnings, err := parseReShadeContentPaths(configPath)
 	if err != nil {
 		return nil, nil, err
@@ -57,15 +61,6 @@ func inventoryUserContent(gameRoot string, targetPath string) ([]UserContent, []
 		}
 		info, statErr := os.Stat(resolved)
 		if errors.Is(statErr, os.ErrNotExist) {
-			relative, relativeErr := filepath.Rel(gameRoot, resolved)
-			if relativeErr != nil {
-				return nil, nil, relativeErr
-			}
-			content = append(content, UserContent{
-				Path:      relative,
-				Role:      item.Role,
-				Directory: item.Role != PathRolePreset,
-			})
 			continue
 		}
 		if statErr != nil {

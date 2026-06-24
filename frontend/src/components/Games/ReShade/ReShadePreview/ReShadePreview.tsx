@@ -38,9 +38,6 @@ const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
   );
 };
 
-const impactsByRole = (impacts: PathImpact[], roles: string[]) =>
-  impacts.filter((impact) => roles.includes(impact.role));
-
 const pathImpactLabel = (impact: PathImpact) =>
   `${impact.action}: ${impact.path}${impact.preservationOnly ? ' (preserve)' : ''}`;
 
@@ -61,11 +58,17 @@ const chainItems = (chainTarget: ReShadeChainTarget | null) => {
   ];
 };
 
+const impactsByRole = (impacts: PathImpact[], roles: string[]) =>
+  impacts.filter((impact) => roles.includes(impact.role));
+
 export const ReShadePreview = ({ chainTarget, preview }: ReShadePreviewProps) => {
-  const runtimeImpacts = impactsByRole(preview.pathImpacts, ['runtime']);
-  const configurationImpacts = impactsByRole(preview.pathImpacts, ['configuration', 'preset']);
-  const contentImpacts = impactsByRole(preview.pathImpacts, ['effects', 'textures', 'addons']);
-  const backupImpacts = impactsByRole(preview.pathImpacts, ['backup']);
+  const visibleImpacts = preview.pathImpacts.filter(
+    (impact) => !(impact.preservationOnly && !impact.exists),
+  );
+  const runtimeImpacts = impactsByRole(visibleImpacts, ['runtime']);
+  const configurationImpacts = impactsByRole(visibleImpacts, ['configuration', 'preset']);
+  const contentImpacts = impactsByRole(visibleImpacts, ['effects', 'textures', 'addons']);
+  const backupImpacts = impactsByRole(visibleImpacts, ['backup']);
 
   return (
     <div className="reshade-preview">

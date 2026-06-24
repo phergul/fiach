@@ -58,6 +58,22 @@ func TestInventoryUserContentHashesInternalFilesAndDoesNotTraverseExternalPaths(
 	}
 }
 
+func TestInventoryUserContentIgnoresMissingDefaultPaths(t *testing.T) {
+	t.Parallel()
+	gameRoot := t.TempDir()
+	targetPath := filepath.Join(gameRoot, "bin")
+	if err := os.MkdirAll(targetPath, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	content, _, err := inventoryUserContent(gameRoot, targetPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(content) != 0 {
+		t.Fatalf("expected no inventoried content without ReShade.ini, got %+v", content)
+	}
+}
+
 func TestDetectUserContentDriftIsSeparateFromManagedDrift(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
