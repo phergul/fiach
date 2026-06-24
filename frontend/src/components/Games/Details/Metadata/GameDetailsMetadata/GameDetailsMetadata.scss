@@ -11,6 +11,10 @@ $game-details-metadata-icon-size: 1.25rem;
   backdrop-filter: blur(12px);
   gap: $spacing-separator;
   padding-bottom: $spacing-separator;
+
+  &:has(> .game-details-metadata-item:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .game-details-metadata-item {

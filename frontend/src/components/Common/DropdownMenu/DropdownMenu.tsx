@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import type { ComponentType } from 'react';
+import { useEffect, useState } from "react";
+import type { ComponentType } from "react";
 
-import { ChevronRight, type LucideProps } from 'lucide-react';
+import { ChevronRight, type LucideProps } from "lucide-react";
 
-import './DropdownMenu.scss';
+import "./DropdownMenu.scss";
 
 export interface DropdownMenuItem {
   children?: DropdownMenuItem[];
@@ -14,14 +14,14 @@ export interface DropdownMenuItem {
 }
 
 interface DropdownMenuProps {
-  align?: 'left' | 'right';
+  align?: "left" | "right";
   ariaLabel: string;
   isOpen: boolean;
   items: DropdownMenuItem[];
 }
 
 export const DropdownMenu = ({
-  align = 'right',
+  align = "right",
   ariaLabel,
   isOpen,
   items,
@@ -39,17 +39,22 @@ export const DropdownMenu = ({
   }
 
   return (
-    <div className={`dropdown-menu dropdown-menu-${align}`} role="menu" aria-label={ariaLabel}>
+    <div
+      className={`dropdown-menu dropdown-menu-${align}`}
+      role="menu"
+      aria-label={ariaLabel}
+    >
       {items.map((item) => {
         const Icon = item.icon;
-        const hasSubmenu = item.children !== undefined && item.children.length > 0;
+        const hasSubmenu =
+          item.children !== undefined && item.children.length > 0;
         const isSubmenuOpen = hasSubmenu && openSubmenuLabel === item.label;
 
         return (
           <div className="dropdown-menu-entry" key={item.label}>
             <button
               aria-expanded={hasSubmenu ? isSubmenuOpen : undefined}
-              aria-haspopup={hasSubmenu ? 'menu' : undefined}
+              aria-haspopup={hasSubmenu ? "menu" : undefined}
               className="dropdown-menu-item"
               disabled={item.disabled}
               onClick={() => {
@@ -62,13 +67,24 @@ export const DropdownMenu = ({
               role="menuitem"
               type="button"
             >
-              {Icon !== undefined && <Icon className="dropdown-menu-icon" aria-hidden="true" />}
+              {Icon !== undefined && (
+                <Icon className="dropdown-menu-icon" aria-hidden="true" />
+              )}
               <span className="dropdown-menu-item-label">{item.label}</span>
-              {hasSubmenu && <ChevronRight className="dropdown-menu-submenu-icon" aria-hidden="true" />}
+              {hasSubmenu && (
+                <ChevronRight
+                  className="dropdown-menu-submenu-icon"
+                  aria-hidden="true"
+                />
+              )}
             </button>
 
             {isSubmenuOpen && (
-              <div className="dropdown-menu dropdown-menu-submenu" role="menu" aria-label={item.label}>
+              <div
+                className="dropdown-menu dropdown-menu-submenu"
+                role="menu"
+                aria-label={item.label}
+              >
                 {item.children?.map((child) => {
                   const ChildIcon = child.icon;
                   return (
@@ -81,9 +97,14 @@ export const DropdownMenu = ({
                       type="button"
                     >
                       {ChildIcon !== undefined && (
-                        <ChildIcon className="dropdown-menu-icon" aria-hidden="true" />
+                        <ChildIcon
+                          className="dropdown-menu-icon"
+                          aria-hidden="true"
+                        />
                       )}
-                      <span className="dropdown-menu-item-label">{child.label}</span>
+                      <span className="dropdown-menu-item-label">
+                        {child.label}
+                      </span>
                     </button>
                   );
                 })}

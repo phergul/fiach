@@ -23,3 +23,6 @@ export { useGameReShadeDetection } from './games/useGameReShadeDetection';
 export type { UseGameReShadeDetectionResult } from './games/useGameReShadeDetection';
 export { useGameStorageOverride } from './games/useGameStorageOverride';
 export type { UseGameStorageOverrideResult } from './games/useGameStorageOverride';
+
+//runtime
+export { useRuntime } from './useRuntime';
