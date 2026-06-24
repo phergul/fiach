@@ -368,7 +368,7 @@ func TestUninstallRemovesManagedContentAndPreservesUserContent(t *testing.T) {
 	})
 	manager := NewManager(store, ManagerOptions{
 		DataDir: t.TempDir(),
-		Planner: NewDirectXPlanner(DirectXPlannerOptions{
+		Planner: NewInstallerPlanner(InstallerPlannerOptions{
 			InspectArchitecture: func(string) (Architecture, error) {
 				return ArchitectureX64, nil
 			},

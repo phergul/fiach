@@ -6,14 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/phergul/fiach/internal/thirdparty"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-const (
-	DefaultTagsURL         = thirdparty.DefaultManifestURL
-	DefaultDownloadBaseURL = "https://reshade.me/downloads"
-)
+const DefaultDownloadBaseURL = "https://reshade.me/downloads"
 
 type InstallerVariant string
 

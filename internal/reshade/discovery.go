@@ -139,7 +139,7 @@ func inspectProxyEvidence(targetPath string, options DiscoveryOptions) ([]ProxyE
 		evidence = append(evidence, item)
 	}
 	if reShadeCount > 1 {
-		conflicts = append(conflicts, "Multiple ReShade DirectX proxies were detected in the same target.")
+		conflicts = append(conflicts, "Multiple ReShade rendering proxies were detected in the same target.")
 	}
 	return evidence, conflicts
 }

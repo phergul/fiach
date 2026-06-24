@@ -73,7 +73,7 @@ func NewManager(store Store, options ManagerOptions) *Manager {
 	}
 	productionPlanner := options.Planner == nil
 	if productionPlanner {
-		options.Planner = NewDirectXPlanner(DirectXPlannerOptions{})
+		options.Planner = NewInstallerPlanner(InstallerPlannerOptions{})
 	}
 	if options.VerifyApplied == nil {
 		options.VerifyApplied = func(string, Preview) error {
@@ -265,10 +265,6 @@ func (m *Manager) Preview(ctx context.Context, gameRoot string, request Request)
 	if err != nil {
 		return Preview{}, err
 	}
-	m.writePreviewDebugLog("preview_built", previewDebugPayload{
-		PreviewHash: preview.PreviewHash,
-		Preview:     preview,
-	})
 	return preview, nil
 }
 
@@ -469,10 +465,6 @@ func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, p
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.writePreviewDebugLog("apply_started", previewDebugPayload{
-		ProvidedHash: previewHash,
-		Request:      request,
-	})
 	recovery, err := m.RecoveryState()
 	if err != nil {
 		return ApplyResult{}, err
@@ -485,27 +477,11 @@ func (m *Manager) Apply(ctx context.Context, gameRoot string, request Request, p
 		return ApplyResult{}, err
 	}
 	if !preview.CanApply {
-		m.writePreviewDebugLog("apply_rebuilt_preview_blocked", previewDebugPayload{
-			ProvidedHash: previewHash,
-			PreviewHash:  preview.PreviewHash,
-			Preview:      preview,
-		})
 		return ApplyResult{}, errors.New("preview has blocking conflicts")
 	}
 	if previewHash == "" || !strings.EqualFold(preview.PreviewHash, previewHash) {
-		m.writePreviewDebugLog("apply_hash_mismatch", previewDebugPayload{
-			ProvidedHash: previewHash,
-			PreviewHash:  preview.PreviewHash,
-			Request:      request,
-			Preview:      preview,
-		})
 		return ApplyResult{}, errors.New("preview hash is stale or does not match")
 	}
-	m.writePreviewDebugLog("apply_hash_match", previewDebugPayload{
-		ProvidedHash: previewHash,
-		PreviewHash:  preview.PreviewHash,
-		Preview:      preview,
-	})
 	return m.execute(ctx, gameRoot, preview)
 }
 
@@ -685,204 +661,6 @@ func canonicalPreviewForHash(preview Preview) Preview {
 func hashBytes(value []byte) string {
 	sum := sha256.Sum256(value)
 	return hex.EncodeToString(sum[:])
-}
-
-type previewDebugPayload struct {
-	ProvidedHash string
-	PreviewHash  string
-	Request      Request
-	Preview      Preview
-}
-
-type previewDebugEntry struct {
-	Timestamp string               `json:"timestamp"`
-	Event     string               `json:"event"`
-	DataDir   string               `json:"dataDir"`
-	Payload   previewDebugPayload  `json:"payload"`
-	Hashes    previewDebugHashes   `json:"hashes"`
-	Summary   previewDebugSummary  `json:"summary"`
-	Preview   previewDebugSnapshot `json:"preview"`
-}
-
-type previewDebugHashes struct {
-	CanonicalPreview string `json:"canonicalPreview"`
-	RawPreview       string `json:"rawPreview"`
-	Request          string `json:"request"`
-	Operations       string `json:"operations"`
-	PathImpacts      string `json:"pathImpacts"`
-	Warnings         string `json:"warnings"`
-	Conflicts        string `json:"conflicts"`
-	Drift            string `json:"drift"`
-	UserContentDrift string `json:"userContentDrift"`
-	DesiredTarget    string `json:"desiredTarget"`
-}
-
-type previewDebugSummary struct {
-	ProvidedHash             string `json:"providedHash,omitempty"`
-	PreviewHash              string `json:"previewHash,omitempty"`
-	Action                   Action `json:"action,omitempty"`
-	GameID                   int64  `json:"gameId,omitempty"`
-	TargetRelativePath       string `json:"targetRelativePath,omitempty"`
-	ExecutableRelativePath   string `json:"executableRelativePath,omitempty"`
-	RenderingAPI             string `json:"renderingApi,omitempty"`
-	ProxyFilename            string `json:"proxyFilename,omitempty"`
-	ActiveRuntimeFilename    string `json:"activeRuntimeFilename,omitempty"`
-	OptiScalerProxyFilename  string `json:"optiScalerProxyFilename,omitempty"`
-	Architecture             string `json:"architecture,omitempty"`
-	BuildVariant             string `json:"buildVariant,omitempty"`
-	BackupAndContinue        bool   `json:"backupAndContinue,omitempty"`
-	CanApply                 bool   `json:"canApply"`
-	OperationCount           int    `json:"operationCount"`
-	PathImpactCount          int    `json:"pathImpactCount"`
-	WarningCount             int    `json:"warningCount"`
-	ConflictCount            int    `json:"conflictCount"`
-	DriftCount               int    `json:"driftCount"`
-	UserContentDriftCount    int    `json:"userContentDriftCount"`
-	DesiredTargetPresent     bool   `json:"desiredTargetPresent"`
-	DesiredRuntimeVersion    string `json:"desiredRuntimeVersion,omitempty"`
-	DesiredManagementOrigin  string `json:"desiredManagementOrigin,omitempty"`
-	DesiredManifestFileCount int    `json:"desiredManifestFileCount,omitempty"`
-}
-
-type previewDebugSnapshot struct {
-	Request          Request            `json:"request"`
-	Operations       []Operation        `json:"operations"`
-	PathImpacts      []PathImpact       `json:"pathImpacts"`
-	Warnings         []string           `json:"warnings"`
-	Conflicts        []string           `json:"conflicts"`
-	Drift            []Drift            `json:"drift"`
-	UserContentDrift []UserContentDrift `json:"userContentDrift"`
-	DesiredTarget    *TargetState       `json:"desiredTarget,omitempty"`
-	PreviewHash      string             `json:"previewHash"`
-	CanApply         bool               `json:"canApply"`
-}
-
-func (m *Manager) writePreviewDebugLog(event string, payload previewDebugPayload) {
-	path := filepath.Join(m.dataDir, "logs", "preview-hash-debug.jsonl")
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return
-	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	preview := payload.Preview
-	if payload.PreviewHash == "" {
-		payload.PreviewHash = preview.PreviewHash
-	}
-	if previewDebugRequestEmpty(payload.Request) {
-		payload.Request = preview.Request
-	}
-	entry := previewDebugEntry{
-		Timestamp: time.Now().UTC().Format(time.RFC3339Nano),
-		Event:     event,
-		DataDir:   m.dataDir,
-		Payload:   payload,
-		Hashes:    previewDebugSectionHashes(preview),
-		Summary:   previewDebugSummaryFor(payload),
-		Preview: previewDebugSnapshot{
-			Request:          preview.Request,
-			Operations:       preview.Operations,
-			PathImpacts:      preview.PathImpacts,
-			Warnings:         preview.Warnings,
-			Conflicts:        preview.Conflicts,
-			Drift:            preview.Drift,
-			UserContentDrift: preview.UserContentDrift,
-			DesiredTarget:    preview.DesiredTarget,
-			PreviewHash:      preview.PreviewHash,
-			CanApply:         preview.CanApply,
-		},
-	}
-	contents, err := json.Marshal(entry)
-	if err != nil {
-		return
-	}
-	_, _ = file.Write(append(contents, '\n'))
-}
-
-func previewDebugSectionHashes(preview Preview) previewDebugHashes {
-	canonical, _ := json.Marshal(canonicalPreviewForHash(preview))
-	raw, _ := json.Marshal(preview)
-	request, _ := json.Marshal(preview.Request)
-	operations, _ := json.Marshal(preview.Operations)
-	pathImpacts, _ := json.Marshal(preview.PathImpacts)
-	warnings, _ := json.Marshal(preview.Warnings)
-	conflicts, _ := json.Marshal(preview.Conflicts)
-	drift, _ := json.Marshal(preview.Drift)
-	userContentDrift, _ := json.Marshal(preview.UserContentDrift)
-	desiredTarget, _ := json.Marshal(preview.DesiredTarget)
-	return previewDebugHashes{
-		CanonicalPreview: hashBytes(canonical),
-		RawPreview:       hashBytes(raw),
-		Request:          hashBytes(request),
-		Operations:       hashBytes(operations),
-		PathImpacts:      hashBytes(pathImpacts),
-		Warnings:         hashBytes(warnings),
-		Conflicts:        hashBytes(conflicts),
-		Drift:            hashBytes(drift),
-		UserContentDrift: hashBytes(userContentDrift),
-		DesiredTarget:    hashBytes(desiredTarget),
-	}
-}
-
-func previewDebugSummaryFor(payload previewDebugPayload) previewDebugSummary {
-	preview := payload.Preview
-	request := payload.Request
-	if previewDebugRequestEmpty(request) {
-		request = preview.Request
-	}
-	summary := previewDebugSummary{
-		ProvidedHash:            payload.ProvidedHash,
-		PreviewHash:             payload.PreviewHash,
-		Action:                  request.Action,
-		GameID:                  request.GameID,
-		TargetRelativePath:      request.TargetRelativePath,
-		ExecutableRelativePath:  request.ExecutableRelativePath,
-		RenderingAPI:            string(request.RenderingAPI),
-		ProxyFilename:           request.ProxyFilename,
-		ActiveRuntimeFilename:   request.ActiveRuntimeFilename,
-		OptiScalerProxyFilename: request.OptiScalerPrimaryProxyFilename,
-		Architecture:            string(request.Architecture),
-		BuildVariant:            string(request.BuildVariant),
-		BackupAndContinue:       request.BackupAndContinue,
-		CanApply:                preview.CanApply,
-		OperationCount:          len(preview.Operations),
-		PathImpactCount:         len(preview.PathImpacts),
-		WarningCount:            len(preview.Warnings),
-		ConflictCount:           len(preview.Conflicts),
-		DriftCount:              len(preview.Drift),
-		UserContentDriftCount:   len(preview.UserContentDrift),
-		DesiredTargetPresent:    preview.DesiredTarget != nil,
-	}
-	if summary.PreviewHash == "" {
-		summary.PreviewHash = preview.PreviewHash
-	}
-	if preview.DesiredTarget != nil {
-		summary.DesiredRuntimeVersion = preview.DesiredTarget.RuntimeVersion
-		summary.DesiredManagementOrigin = preview.DesiredTarget.ManagementOrigin
-		summary.DesiredManifestFileCount = len(preview.DesiredTarget.Manifest.Files)
-	}
-	return summary
-}
-
-func previewDebugRequestEmpty(request Request) bool {
-	return request.Action == "" &&
-		request.GameID == 0 &&
-		request.TargetRelativePath == "" &&
-		request.ExecutableRelativePath == "" &&
-		request.RenderingAPI == "" &&
-		request.ProxyFilename == "" &&
-		request.ActiveRuntimeFilename == "" &&
-		request.OptiScalerPrimaryProxyFilename == "" &&
-		request.Architecture == "" &&
-		request.BuildVariant == "" &&
-		!request.BackupAndContinue &&
-		!request.SinglePlayerAcknowledged &&
-		!request.AntiCheatRiskAcknowledged &&
-		len(request.Content.EffectPackages) == 0 &&
-		len(request.Content.Addons) == 0
 }
 
 func managedTargetFromRow(

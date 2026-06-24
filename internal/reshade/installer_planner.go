@@ -13,7 +13,7 @@ import (
 	"github.com/phergul/fiach/internal/winversion"
 )
 
-type DirectXPlannerOptions struct {
+type InstallerPlannerOptions struct {
 	ResolveInstaller    func(context.Context, InstallerVariant, InstallerResolveOptions) (InstallerRelease, error)
 	AcquireInstaller    func(context.Context, InstallerRelease, InstallerAcquireOptions) (InstallerArtifact, error)
 	PrepareSetup        func(context.Context, SetupRequest, SetupRunnerOptions) (SetupRunResult, error)
@@ -21,7 +21,7 @@ type DirectXPlannerOptions struct {
 	ReadMetadata        func(string) (winversion.Metadata, error)
 }
 
-type directXPlanner struct {
+type installerPlanner struct {
 	resolveInstaller    func(context.Context, InstallerVariant, InstallerResolveOptions) (InstallerRelease, error)
 	acquireInstaller    func(context.Context, InstallerRelease, InstallerAcquireOptions) (InstallerArtifact, error)
 	prepareSetup        func(context.Context, SetupRequest, SetupRunnerOptions) (SetupRunResult, error)
@@ -29,7 +29,7 @@ type directXPlanner struct {
 	readMetadata        func(string) (winversion.Metadata, error)
 }
 
-func NewDirectXPlanner(options DirectXPlannerOptions) Planner {
+func NewInstallerPlanner(options InstallerPlannerOptions) Planner {
 	if options.ResolveInstaller == nil {
 		options.ResolveInstaller = ResolveLatestInstaller
 	}
@@ -45,7 +45,7 @@ func NewDirectXPlanner(options DirectXPlannerOptions) Planner {
 	if options.ReadMetadata == nil {
 		options.ReadMetadata = winversion.Read
 	}
-	return &directXPlanner{
+	return &installerPlanner{
 		resolveInstaller:    options.ResolveInstaller,
 		acquireInstaller:    options.AcquireInstaller,
 		prepareSetup:        options.PrepareSetup,
@@ -54,7 +54,7 @@ func NewDirectXPlanner(options DirectXPlannerOptions) Planner {
 	}
 }
 
-func (p *directXPlanner) Plan(
+func (p *installerPlanner) Plan(
 	ctx context.Context,
 	gameRoot string,
 	request Request,
@@ -62,7 +62,7 @@ func (p *directXPlanner) Plan(
 ) (preview Preview, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("plan managed ReShade DirectX lifecycle: %w", err)
+			err = fmt.Errorf("plan managed ReShade lifecycle: %w", err)
 		}
 	}()
 	targetPath, err := ResolveWithinRoot(gameRoot, request.TargetRelativePath)
@@ -115,7 +115,7 @@ func (p *directXPlanner) Plan(
 	}
 }
 
-func (p *directXPlanner) planInstallOrUpdate(
+func (p *installerPlanner) planInstallOrUpdate(
 	ctx context.Context,
 	gameRoot string,
 	targetPath string,
@@ -334,7 +334,7 @@ func (p *directXPlanner) planInstallOrUpdate(
 		if existing.RenderingAPI != string(request.RenderingAPI) ||
 			!strings.EqualFold(existing.ProxyFilename, request.ProxyFilename) {
 			preview.Warnings = append(preview.Warnings,
-				"The update changes the managed DirectX proxy layout.")
+				"The update changes the managed rendering proxy layout.")
 		}
 		if existing.BuildVariant != string(request.BuildVariant) {
 			preview.Warnings = append(preview.Warnings,
@@ -344,7 +344,7 @@ func (p *directXPlanner) planInstallOrUpdate(
 	return preview, nil
 }
 
-func (p *directXPlanner) planAdopt(
+func (p *installerPlanner) planAdopt(
 	gameRoot string,
 	targetPath string,
 	request Request,
@@ -434,7 +434,7 @@ func (p *directXPlanner) planAdopt(
 	}, nil
 }
 
-func (p *directXPlanner) planRepair(
+func (p *installerPlanner) planRepair(
 	ctx context.Context,
 	gameRoot string,
 	targetPath string,
@@ -555,7 +555,7 @@ func (p *directXPlanner) planRepair(
 	}, nil
 }
 
-func (p *directXPlanner) planUninstall(
+func (p *installerPlanner) planUninstall(
 	gameRoot string,
 	targetPath string,
 	request Request,
@@ -673,7 +673,7 @@ func (p *directXPlanner) planUninstall(
 	}, nil
 }
 
-func (p *directXPlanner) proxyConflicts(
+func (p *installerPlanner) proxyConflicts(
 	targetPath string,
 	request Request,
 	existing *dbtypes.ReShadeTarget,

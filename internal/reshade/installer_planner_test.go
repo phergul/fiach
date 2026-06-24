@@ -12,7 +12,7 @@ import (
 	"github.com/phergul/fiach/internal/winversion"
 )
 
-func TestDirectXPlannerInstallUsesPreparedRuntimeAndPreservesExistingConfig(t *testing.T) {
+func TestInstallerPlannerInstallUsesPreparedRuntimeAndPreservesExistingConfig(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	executable := filepath.Join(root, "Game.exe")
@@ -23,7 +23,7 @@ func TestDirectXPlannerInstallUsesPreparedRuntimeAndPreservesExistingConfig(t *t
 	if err := os.WriteFile(config, []byte("[GENERAL]\nPresetPath=Custom.ini\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	planner, prepared := testDirectXPlanner(t)
+	planner, prepared := testInstallerPlanner(t)
 	request := Request{
 		Action:                 ActionInstall,
 		GameID:                 1,
@@ -56,7 +56,7 @@ func TestDirectXPlannerInstallUsesPreparedRuntimeAndPreservesExistingConfig(t *t
 	}
 }
 
-func TestDirectXPlannerAllowsInstallerDefaultProxyOutputForDXGISelection(t *testing.T) {
+func TestInstallerPlannerAllowsInstallerDefaultProxyOutputForDXGISelection(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
@@ -82,7 +82,7 @@ func TestDirectXPlannerAllowsInstallerDefaultProxyOutputForDXGISelection(t *test
 		SizeBytes: 100,
 		SHA256:    strings.Repeat("a", 64),
 	}
-	planner := NewDirectXPlanner(DirectXPlannerOptions{
+	planner := NewInstallerPlanner(InstallerPlannerOptions{
 		ResolveInstaller: func(
 			context.Context,
 			InstallerVariant,
@@ -150,7 +150,7 @@ func TestDirectXPlannerAllowsInstallerDefaultProxyOutputForDXGISelection(t *test
 	}
 }
 
-func TestDirectXPlannerAdoptRecordsUserDeclaredVariant(t *testing.T) {
+func TestInstallerPlannerAdoptRecordsUserDeclaredVariant(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	executable := filepath.Join(root, "Game.exe")
@@ -160,7 +160,7 @@ func TestDirectXPlannerAdoptRecordsUserDeclaredVariant(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	planner := NewDirectXPlanner(DirectXPlannerOptions{
+	planner := NewInstallerPlanner(InstallerPlannerOptions{
 		InspectArchitecture: func(string) (Architecture, error) {
 			return ArchitectureX64, nil
 		},
@@ -199,14 +199,14 @@ func TestDirectXPlannerAdoptRecordsUserDeclaredVariant(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerRepairUsesRecordedRelease(t *testing.T) {
+func TestInstallerPlannerRepairUsesRecordedRelease(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	executable := filepath.Join(root, "Game.exe")
 	if err := os.WriteFile(executable, []byte("game"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	manifest := `{"version":1,"files":[{"relativePath":"dxgi.dll","sha256":"missing","sizeBytes":7,"ownership":"managed"}],"variantProvenance":"verified"}`
 	tag := "v6.7.3"
 	asset := "ReShade_Setup_6.7.3.exe"
@@ -249,7 +249,7 @@ func TestDirectXPlannerRepairUsesRecordedRelease(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerUpdateCanChangeProxyLayout(t *testing.T) {
+func TestInstallerPlannerUpdateCanChangeProxyLayout(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	for _, name := range []string{"Game.exe", "dxgi.dll"} {
@@ -257,7 +257,7 @@ func TestDirectXPlannerUpdateCanChangeProxyLayout(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	existing := &dbtypes.ReShadeTarget{
 		GameID:                 1,
 		TargetRelativePath:     ".",
@@ -291,13 +291,13 @@ func TestDirectXPlannerUpdateCanChangeProxyLayout(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerUninstallPreservesUserContent(t *testing.T) {
+func TestInstallerPlannerUninstallPreservesUserContent(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	existing := &dbtypes.ReShadeTarget{
 		GameID:                 1,
 		TargetRelativePath:     ".",
@@ -336,13 +336,13 @@ func TestDirectXPlannerUninstallPreservesUserContent(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerInstallPreviewOmitsNonExistentDefaultPaths(t *testing.T) {
+func TestInstallerPlannerInstallPreviewOmitsNonExistentDefaultPaths(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	preview, err := planner.Plan(context.Background(), root, Request{
 		Action:                 ActionInstall,
 		GameID:                 1,
@@ -373,7 +373,7 @@ func TestDirectXPlannerInstallPreviewOmitsNonExistentDefaultPaths(t *testing.T) 
 	}
 }
 
-func TestDirectXPlannerUninstallDeletesManagedCreatedConfigs(t *testing.T) {
+func TestInstallerPlannerUninstallDeletesManagedCreatedConfigs(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
@@ -384,7 +384,7 @@ func TestDirectXPlannerUninstallDeletesManagedCreatedConfigs(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	existing := &dbtypes.ReShadeTarget{
 		GameID:                 1,
 		TargetRelativePath:     ".",
@@ -424,7 +424,7 @@ func TestDirectXPlannerUninstallDeletesManagedCreatedConfigs(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerForeignProxyBlocksInstall(t *testing.T) {
+func TestInstallerPlannerForeignProxyBlocksInstall(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	for _, name := range []string{"Game.exe", "dxgi.dll"} {
@@ -432,7 +432,7 @@ func TestDirectXPlannerForeignProxyBlocksInstall(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	planner, _ := testDirectXPlanner(t)
+	planner, _ := testInstallerPlanner(t)
 	preview, err := planner.Plan(context.Background(), root, Request{
 		Action:                 ActionInstall,
 		GameID:                 1,
@@ -453,14 +453,14 @@ func TestDirectXPlannerForeignProxyBlocksInstall(t *testing.T) {
 	}
 }
 
-func TestDirectXPlannerInstallSupportsOpenGL(t *testing.T) {
+func TestInstallerPlannerInstallSupportsOpenGL(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "Game.exe"), []byte("game"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	planner, prepared := testDirectXPlanner(t)
+	planner, prepared := testInstallerPlanner(t)
 	preview, err := planner.Plan(context.Background(), root, Request{
 		Action:                 ActionInstall,
 		GameID:                 1,
@@ -486,7 +486,7 @@ func TestDirectXPlannerInstallSupportsOpenGL(t *testing.T) {
 	}
 }
 
-func testDirectXPlanner(t *testing.T) (Planner, map[string]PreparedSetupFile) {
+func testInstallerPlanner(t *testing.T) (Planner, map[string]PreparedSetupFile) {
 	t.Helper()
 	root := t.TempDir()
 	prepared := map[string]PreparedSetupFile{}
@@ -517,7 +517,7 @@ func testDirectXPlanner(t *testing.T) (Planner, map[string]PreparedSetupFile) {
 		SizeBytes: 100,
 		SHA256:    strings.Repeat("a", 64),
 	}
-	planner := NewDirectXPlanner(DirectXPlannerOptions{
+	planner := NewInstallerPlanner(InstallerPlannerOptions{
 		ResolveInstaller: func(
 			context.Context,
 			InstallerVariant,

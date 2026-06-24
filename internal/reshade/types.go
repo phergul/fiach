@@ -325,12 +325,6 @@ type AddonPackage struct {
 	RepositoryURL     string `json:"repositoryUrl"`
 }
 
-type PresetInspectionRequest struct {
-	GameID             int64  `json:"gameId"`
-	TargetRelativePath string `json:"targetRelativePath"`
-	PresetPath         string `json:"presetPath"`
-}
-
 type PresetInspectionResult struct {
 	ReferencedEffects []string               `json:"referencedEffects"`
 	Recommendations   []PresetRecommendation `json:"recommendations"`

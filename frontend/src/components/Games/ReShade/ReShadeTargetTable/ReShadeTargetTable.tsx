@@ -290,8 +290,10 @@ export const ReShadeTargetTable = ({
                 ))}
               </div>
               <div className="reshade-target-state">
-                {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
-                {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
+                <div className="reshade-target-status">
+                  {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
+                  {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
+                </div>
               </div>
               <div className="reshade-target-actions">
                 <button

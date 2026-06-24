@@ -34,10 +34,6 @@ var reshadeDLLNames = map[string]struct{}{
 	"opengl32.dll":  {},
 }
 
-func Scan(root string) (result Result, err error) {
-	return ScanManaged(root, nil)
-}
-
 func ScanManaged(root string, managedChainedTargets []string) (result Result, err error) {
 	return scan(root, managedChainedTargets, winversion.Read)
 }

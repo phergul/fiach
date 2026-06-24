@@ -131,6 +131,7 @@ $optiscaler-table-compact-width: 72rem;
   grid-area: state;
   min-width: 0;
   flex-direction: column;
+  align-items: flex-start;
   gap: $spacing-xs;
 }
 
@@ -139,20 +140,26 @@ $optiscaler-table-compact-width: 72rem;
   font-size: $font-size-sm;
 }
 
-.optiscaler-executable-status-success {
+.optiscaler-executable-status-success,
+.optiscaler-executable-status-warning,
+.optiscaler-executable-status-info {
+  width: fit-content;
   padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-sm;
+  line-height: 1;
+}
+
+.optiscaler-executable-status-success {
   color: $color-success;
   background: color-mix(in srgb, $color-success 12%, $color-surface-elevated);
 }
 
 .optiscaler-executable-status-warning {
-  padding: $spacing-xs $spacing-sm;
   color: $color-warning;
   background: color-mix(in srgb, $color-warning 12%, $color-surface-elevated);
 }
 
 .optiscaler-executable-status-info {
-  padding: $spacing-xs $spacing-sm;
   color: $color-info;
   background: color-mix(in srgb, $color-info 12%, $color-surface-elevated);
 }

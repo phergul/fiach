@@ -233,9 +233,11 @@ export const OptiScalerExecutableTable = ({
                 ))}
               </div>
               <div className="optiscaler-executable-state">
-                {candidateFacts(candidate).map((fact) => (
-                  <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
-                ))}
+                <div className="optiscaler-executable-status">
+                  {candidateFacts(candidate).map((fact) => (
+                    <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+                  ))}
+                </div>
               </div>
               <div className="optiscaler-executable-actions">
                 <button
