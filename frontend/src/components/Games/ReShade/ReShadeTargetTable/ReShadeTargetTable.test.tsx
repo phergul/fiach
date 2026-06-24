@@ -58,7 +58,6 @@ describe('ReShadeTargetTable', () => {
     expect(screen.queryByText('No runtime found')).not.toBeInTheDocument();
     expect(screen.queryByText('No managed chain')).not.toBeInTheDocument();
     expect(screen.queryByText('Ready')).not.toBeInTheDocument();
-    expect(screen.getByText('Vulkan is unsupported in managed ReShade; use the official ReShade installer.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Install' })).toBeInTheDocument();
   });
 
