@@ -42,8 +42,43 @@ func (op diagnosticOperation) complete(message string, attrs ...slog.Attr) {
 	op.logger.LogAttrs(op.ctx, slog.LevelInfo, message, op.eventAttrs(diagnostics.EventCompleted, attrs...)...)
 }
 
+func (op diagnosticOperation) infoEvent(event string, message string, attrs ...slog.Attr) {
+	op.logger.LogAttrs(op.ctx, slog.LevelInfo, message, op.eventAttrs(event, attrs...)...)
+}
+
+func (op diagnosticOperation) warn(message string, attrs ...slog.Attr) {
+	op.logger.LogAttrs(op.ctx, slog.LevelWarn, message, op.eventAttrs(diagnostics.EventCompleted, attrs...)...)
+}
+
+func (op diagnosticOperation) warnEvent(event string, message string, attrs ...slog.Attr) {
+	op.logger.LogAttrs(op.ctx, slog.LevelWarn, message, op.eventAttrs(event, attrs...)...)
+}
+
+func logOperationEvent(ctx context.Context, logger *slog.Logger, level slog.Level, operation string, event string, message string, attrs ...slog.Attr) {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	baseAttrs := append([]slog.Attr{
+		slog.String("operation", operation),
+		slog.String("event", event),
+	}, attrs...)
+	logger.LogAttrs(ctx, level, message, baseAttrs...)
+}
+
 func (op diagnosticOperation) fail(message string, err error, attrs ...slog.Attr) {
 	op.logger.LogAttrs(op.ctx, slog.LevelError, message, op.eventAttrs(diagnostics.EventFailed, append(attrs, diagnostics.ErrorAttr(err))...)...)
+}
+
+func (op diagnosticOperation) failWithMappedError(message string, err error, mapUserError func(error) error) error {
+	if err == nil {
+		return nil
+	}
+	if mapUserError != nil {
+		err = mapUserError(err)
+	}
+	op.fail(message, err)
+	return err
 }
 
 func (op diagnosticOperation) eventAttrs(event string, attrs ...slog.Attr) []slog.Attr {

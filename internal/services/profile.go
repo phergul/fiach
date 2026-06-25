@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -31,8 +32,7 @@ func (s *ProfileService) CreateProfile(ctx context.Context, gameID int64, name s
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile create failed", err)
-			err = fmt.Errorf("create profile: %w", err)
+			err = diag.failWithMappedError("Profile create failed", err, profileUserError)
 		}
 	}()
 
@@ -56,8 +56,7 @@ func (s *ProfileService) DuplicateProfile(ctx context.Context, profileID int64) 
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile duplicate failed", err)
-			err = fmt.Errorf("duplicate profile: %w", err)
+			err = diag.failWithMappedError("Profile duplicate failed", err, profileUserError)
 		}
 	}()
 
@@ -100,8 +99,7 @@ func (s *ProfileService) RenameProfile(ctx context.Context, profileID int64, nam
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile rename failed", err)
-			err = fmt.Errorf("rename profile: %w", err)
+			err = diag.failWithMappedError("Profile rename failed", err, profileUserError)
 		}
 	}()
 
@@ -125,8 +123,7 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile delete failed", err)
-			err = fmt.Errorf("delete profile: %w", err)
+			err = diag.failWithMappedError("Profile delete failed", err, profileUserError)
 		}
 	}()
 
@@ -144,7 +141,7 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, profileID int64) (er
 			return err
 		}
 		if appliedFound && appliedState.ProfileID == profileID {
-			return fmt.Errorf("profile %d is currently applied; restore vanilla before deleting it", profileID)
+			return apperror.New("Restore vanilla before deleting an applied profile.")
 		}
 	}
 

@@ -118,8 +118,8 @@ func TestModServicePreValidateImportFailureWritesDiagnostics(t *testing.T) {
 	if !ok {
 		t.Fatal("PreValidateImport() did not write failed diagnostic event")
 	}
-	if failed.Details["Error"] == "" {
-		t.Fatalf("failed pre-validation details = %+v, want error detail", failed.Details)
+	if failed.Details["Error message"] == "" || failed.Details["Error detail"] == "" {
+		t.Fatalf("failed pre-validation details = %+v, want error message and detail", failed.Details)
 	}
 	if _, ok := failed.Details["Source path"]; ok {
 		t.Fatalf("failed pre-validation details = %+v, want raw source path omitted", failed.Details)

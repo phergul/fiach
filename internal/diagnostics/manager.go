@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/fileops"
 )
 
@@ -73,6 +74,8 @@ const (
 	OperationRenameTag                 = "rename_tag"
 	OperationUpdateModDetails          = "update_mod_details"
 	OperationUpdateModMetadata         = "update_mod_metadata"
+	OperationGetModMetadata            = "get_mod_metadata"
+	OperationDetectImportTargets       = "detect_import_targets"
 )
 
 const (
@@ -199,6 +202,8 @@ func Operations() []OperationDescriptor {
 		{Value: OperationRenameTag, Label: "Rename tag"},
 		{Value: OperationUpdateModDetails, Label: "Update mod details"},
 		{Value: OperationUpdateModMetadata, Label: "Update mod metadata"},
+		{Value: OperationGetModMetadata, Label: "Get mod metadata"},
+		{Value: OperationDetectImportTargets, Label: "Detect import targets"},
 	}
 }
 
@@ -317,7 +322,15 @@ func ErrorAttr(err error) slog.Attr {
 		return slog.String("error", "")
 	}
 
-	return slog.String("error", sanitizeDetail(err.Error()))
+	detail := apperror.Detail(err)
+	if msg := apperror.UserMessage(err); msg != "" {
+		return slog.Group("error",
+			slog.String("message", msg),
+			slog.String("detail", sanitizeDetail(detail)),
+		)
+	}
+
+	return slog.String("error", sanitizeDetail(detail))
 }
 
 func DurationAttr(start time.Time) slog.Attr {
@@ -379,11 +392,7 @@ func parseLogLine(line []byte) (LogEntry, bool) {
 			continue
 		}
 
-		detail := stringValue(value)
-		if detail == "" {
-			continue
-		}
-		entry.Details[readableDetailKey(key)] = sanitizeDetail(detail)
+		collectDetail(entry.Details, key, value)
 	}
 
 	return entry, true
@@ -447,6 +456,21 @@ func (w managerLogWriter) Write(p []byte) (int, error) {
 	}
 
 	return n, nil
+}
+
+func collectDetail(details map[string]string, key string, value any) {
+	if nested, ok := value.(map[string]any); ok {
+		for nestedKey, nestedValue := range nested {
+			collectDetail(details, key+"_"+nestedKey, nestedValue)
+		}
+		return
+	}
+
+	detail := stringValue(value)
+	if detail == "" {
+		return
+	}
+	details[readableDetailKey(key)] = sanitizeDetail(detail)
 }
 
 func stringValue(value any) string {

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/injection"
@@ -51,8 +51,7 @@ func (s *ReshadeService) ServiceStartup(ctx context.Context, _ application.Servi
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationReShadeStartup, "ReShade startup recovery inspection started")
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade startup recovery inspection failed", err)
-			err = fmt.Errorf("inspect ReShade recovery state at startup: %w", err)
+			err = diag.failWithMappedError("ReShade startup recovery inspection failed", err, platformUserError)
 		}
 	}()
 	state, err := s.manager.RecoveryState()
@@ -61,7 +60,6 @@ func (s *ReshadeService) ServiceStartup(ctx context.Context, _ application.Servi
 	}
 	if state.Required {
 		attrs := []slog.Attr{
-			slog.String("operation", diagnostics.OperationReShadeRecovery),
 			slog.String("journal_id", state.JournalID),
 			slog.Int64("game_id", state.GameID),
 			slog.String("target_path", state.TargetPath),
@@ -72,7 +70,7 @@ func (s *ReshadeService) ServiceStartup(ctx context.Context, _ application.Servi
 		if game, lookupErr := s.store.GetStoredGame(ctx, state.GameID); lookupErr == nil {
 			attrs = append(attrs, slog.String("game_name", game.Name))
 		}
-		s.logger.LogAttrs(ctx, slog.LevelWarn, "ReShade recovery required", attrs...)
+		logOperationEvent(ctx, s.logger, slog.LevelWarn, diagnostics.OperationReShadeRecovery, "recovery_required", "ReShade recovery required", attrs...)
 	}
 	diag.complete("ReShade startup recovery inspection completed", reShadeRecoveryStateAttrs(ctx, s.store, state)...)
 	return nil
@@ -85,8 +83,7 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade detection failed", err)
-			err = fmt.Errorf("detect game ReShade runtime: %w", err)
+			err = diag.failWithMappedError("ReShade detection failed", err, platformUserError)
 		}
 	}()
 
@@ -111,7 +108,7 @@ func (s *ReshadeService) DetectGameReShade(ctx context.Context, gameID int64) (r
 
 	installPath := strings.TrimSpace(game.InstallPath)
 	if installPath == "" {
-		return dto.ReShadeDetectionResult{}, errors.New("game install path is required")
+		return dto.ReShadeDetectionResult{}, apperror.New("This game does not have an install path configured.")
 	}
 
 	info, err := os.Stat(installPath)
@@ -206,8 +203,7 @@ func (s *ReshadeService) ListReShadeTargets(ctx context.Context, gameID int64) (
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade targets list failed", err)
-			err = fmt.Errorf("list game managed ReShade targets: %w", err)
+			err = diag.failWithMappedError("ReShade targets list failed", err, platformUserError)
 		}
 	}()
 	game, err := s.store.GetStoredGame(ctx, gameID)
@@ -235,8 +231,7 @@ func (s *ReshadeService) ListReShadeContentCatalogue(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade content catalogue list failed", err)
-			err = fmt.Errorf("list ReShade content catalogue: %w", err)
+			err = diag.failWithMappedError("ReShade content catalogue list failed", err, platformUserError)
 		}
 	}()
 	result, err = s.manager.ListContentCatalogue(ctx, refresh)
@@ -261,12 +256,11 @@ func (s *ReshadeService) GetReShadeInstallerStatus(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade installer status failed", err)
-			err = fmt.Errorf("get ReShade installer status: %w", err)
+			err = diag.failWithMappedError("ReShade installer status failed", err, platformUserError)
 		}
 	}()
 	if s.operatingSystem != "windows" {
-		return dto.ReShadeInstallerStatus{}, errors.New("ReShade management is only supported on Windows")
+		return dto.ReShadeInstallerStatus{}, apperror.New("ReShade management is only supported on Windows.")
 	}
 	result = reshade.ResolveInstallerStatus(ctx, refresh)
 	diag.complete("ReShade installer status completed",
@@ -291,8 +285,7 @@ func (s *ReshadeService) ListReShadeChainTargets(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade chain targets list failed", err)
-			err = fmt.Errorf("list ReShade injection chain targets: %w", err)
+			err = diag.failWithMappedError("ReShade chain targets list failed", err, platformUserError)
 		}
 	}()
 	if game, lookupErr := s.store.GetStoredGame(ctx, gameID); lookupErr == nil {
@@ -304,7 +297,7 @@ func (s *ReshadeService) ListReShadeChainTargets(
 	}
 	result = make([]dto.ReShadeChainTarget, 0, len(targets))
 	for _, target := range targets {
-		result = append(result, toDTOReShadeChainTarget(target))
+		result = append(result, mappers.ToDTOReShadeChainTarget(target))
 	}
 	diag.complete("ReShade chain targets list completed",
 		slog.Int("target_count", len(result)),
@@ -326,8 +319,7 @@ func (s *ReshadeService) InspectReShadePreset(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade preset inspection failed", err)
-			err = fmt.Errorf("inspect ReShade preset: %w", err)
+			err = diag.failWithMappedError("ReShade preset inspection failed", err, platformUserError)
 		}
 	}()
 	game, err := s.store.GetStoredGame(ctx, gameID)
@@ -366,32 +358,6 @@ func (s *ReshadeService) InspectReShadePreset(
 	return result, nil
 }
 
-func toDTOReShadeChainTarget(target injection.ChainTarget) dto.ReShadeChainTarget {
-	result := dto.ReShadeChainTarget{
-		GameID:                 target.GameID,
-		TargetRelativePath:     target.TargetRelativePath,
-		ExecutableRelativePath: target.ExecutableRelativePath,
-		APIFamily:              target.APIFamily,
-		PrimaryOwner:           target.PrimaryOwner,
-		PrimaryProxyFilename:   target.PrimaryProxyFilename,
-		Status:                 target.Status,
-	}
-	if target.OptiScaler != nil {
-		result.OptiScaler = &dto.ReShadeOptiScalerChainState{
-			ProxyFilename: target.OptiScaler.ProxyFilename,
-			Status:        target.OptiScaler.Target.Status,
-		}
-	}
-	if target.ReShade != nil {
-		result.ReShade = &dto.ReShadeChainState{
-			PreferredProxyFilename: target.ReShade.PreferredProxyFilename,
-			ActiveRuntimeFilename:  target.ReShade.ActiveRuntimeFilename,
-			Status:                 target.ReShade.Target.Status,
-		}
-	}
-	return result
-}
-
 func (s *ReshadeService) DiscoverReShadeCandidates(
 	ctx context.Context,
 	gameID int64,
@@ -402,13 +368,12 @@ func (s *ReshadeService) DiscoverReShadeCandidates(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade candidate discovery failed", err)
-			err = fmt.Errorf("discover game ReShade candidates: %w", err)
+			err = diag.failWithMappedError("ReShade candidate discovery failed", err, platformUserError)
 		}
 	}()
 	if s.operatingSystem != "windows" {
-		return dto.ReShadeDiscoveryResult{}, errors.New(
-			"ReShade discovery is only supported on Windows",
+		return dto.ReShadeDiscoveryResult{}, apperror.New(
+			"ReShade discovery is only supported on Windows.",
 		)
 	}
 	game, err := s.store.GetStoredGame(ctx, gameID)
@@ -449,12 +414,11 @@ func (s *ReshadeService) PreviewReShadeAction(ctx context.Context, request dto.R
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade preview failed", err)
-			err = fmt.Errorf("preview game ReShade action: %w", err)
+			err = diag.failWithMappedError("ReShade preview failed", err, platformUserError)
 		}
 	}()
 	if s.operatingSystem != "windows" {
-		return dto.ReShadePreview{}, errors.New("ReShade management is only supported on Windows")
+		return dto.ReShadePreview{}, apperror.New("ReShade management is only supported on Windows.")
 	}
 	game, err := s.store.GetStoredGame(ctx, request.GameID)
 	if err != nil {
@@ -491,12 +455,11 @@ func (s *ReshadeService) ApplyReShadeAction(
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationApplyReShade, "ReShade apply started", attrs...)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade apply failed", err)
-			err = fmt.Errorf("apply game ReShade action: %w", err)
+			err = diag.failWithMappedError("ReShade apply failed", err, platformUserError)
 		}
 	}()
 	if s.operatingSystem != "windows" {
-		return dto.ReShadeApplyResult{}, errors.New("ReShade management is only supported on Windows")
+		return dto.ReShadeApplyResult{}, apperror.New("ReShade management is only supported on Windows.")
 	}
 	game, err := s.store.GetStoredGame(ctx, request.GameID)
 	if err != nil {
@@ -520,8 +483,7 @@ func (s *ReshadeService) GetReShadeRecoveryState(ctx context.Context) (result dt
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationReShadeRecovery, "ReShade recovery state read started")
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade recovery state read failed", err)
-			err = fmt.Errorf("get ReShade recovery state: %w", err)
+			err = diag.failWithMappedError("ReShade recovery state read failed", err, platformUserError)
 		}
 	}()
 	result, err = s.manager.RecoveryState()
@@ -546,8 +508,7 @@ func (s *ReshadeService) RollbackReShadeRecovery(
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("ReShade recovery rollback failed", err)
-			err = fmt.Errorf("rollback ReShade recovery state: %w", err)
+			err = diag.failWithMappedError("ReShade recovery rollback failed", err, platformUserError)
 		}
 	}()
 	if state, stateErr := s.manager.RecoveryState(); stateErr == nil && state.JournalID == journalID && state.GameID > 0 {

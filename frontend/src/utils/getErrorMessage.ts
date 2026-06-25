@@ -1,5 +1,9 @@
 const fallbackErrorMessage = 'Something went wrong.';
+const genericFallbackErrorMessage = 'Something went wrong. Check the logs for details.';
 const runtimeErrorMessage = 'RuntimeError';
+
+const technicalErrorPattern =
+  /\b(UNIQUE constraint failed|SQLITE|constraint failed|FOREIGN KEY constraint failed|\(\d{4}\))\b/i;
 
 const sentenceCase = (message: string) => {
   const trimmedMessage = message.trim();
@@ -61,14 +65,6 @@ const withTerminalPeriod = (message: string) => {
   return `${trimmedMessage}.`;
 };
 
-const operationSummary = (operation: string) => {
-  const normalizedOperation = sentenceCase(operation);
-  if (/\b(failed|could not|unable to)\b/i.test(normalizedOperation)) {
-    return normalizedOperation;
-  }
-
-  return `${normalizedOperation} failed`;
-};
 
 const friendlyFromRawMessage = (message: string) => {
   const normalizedMessage = stripNoisyPrefix(message);
@@ -77,14 +73,11 @@ const friendlyFromRawMessage = (message: string) => {
   }
 
   const segments = splitErrorChain(normalizedMessage);
-  if (segments.length <= 1) {
-    return withTerminalPeriod(sentenceCase(segments[0] ?? normalizedMessage));
+  if (segments.length > 1 || technicalErrorPattern.test(normalizedMessage)) {
+    return genericFallbackErrorMessage;
   }
 
-  const operation = operationSummary(segments[0]);
-  const cause = withTerminalPeriod(segments[segments.length - 1]);
-
-  return `${operation}: ${cause}`;
+  return withTerminalPeriod(sentenceCase(segments[0] ?? normalizedMessage));
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {

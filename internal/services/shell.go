@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -22,9 +23,10 @@ func NewShellService(app **application.App) *ShellService {
 
 func (s *ShellService) OpenDirectory(ctx context.Context, path string) (err error) {
 	defer func() {
-		if err != nil {
-			err = fmt.Errorf("open directory in file manager: %w", err)
+		if err == nil || apperror.IsUserError(err) {
+			return
 		}
+		err = shellUserError(fmt.Errorf("open directory in file manager: %w", err))
 	}()
 
 	cleanPath, err := fileops.CleanRequiredAbsPath("directory path", path)
@@ -44,7 +46,7 @@ func (s *ShellService) OpenDirectory(ctx context.Context, path string) (err erro
 	}
 
 	if s.app == nil || *s.app == nil {
-		return errors.New("application is not configured")
+		return apperror.New("The application is not configured.")
 	}
 
 	return (*s.app).Env.OpenFileManager(cleanPath, false)

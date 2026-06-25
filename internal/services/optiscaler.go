@@ -2,11 +2,10 @@ package services
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
 	"runtime"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/injection"
 	"github.com/phergul/fiach/internal/optiscaler"
@@ -44,8 +43,7 @@ func (s *OptiScalerService) ServiceStartup(ctx context.Context, _ application.Se
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationOptiScalerStartup, "OptiScaler startup recovery inspection started")
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler startup recovery inspection failed", err)
-			err = fmt.Errorf("inspect OptiScaler recovery state at startup: %w", err)
+			err = diag.failWithMappedError("OptiScaler startup recovery inspection failed", err, platformUserError)
 		}
 	}()
 	state, err := s.manager.RecoveryState()
@@ -54,7 +52,6 @@ func (s *OptiScalerService) ServiceStartup(ctx context.Context, _ application.Se
 	}
 	if state.Required {
 		attrs := []slog.Attr{
-			slog.String("operation", diagnostics.OperationOptiScalerRecovery),
 			slog.String("journal_id", state.JournalID),
 			slog.Int64("game_id", state.GameID),
 			slog.String("target_path", state.TargetPath),
@@ -62,10 +59,10 @@ func (s *OptiScalerService) ServiceStartup(ctx context.Context, _ application.Se
 			slog.Time("started_at", state.StartedAt),
 			slog.String("recovery_error", state.Error),
 		}
-		if game, err := s.store.GetStoredGame(ctx, state.GameID); err == nil {
+		if game, lookupErr := s.store.GetStoredGame(ctx, state.GameID); lookupErr == nil {
 			attrs = append(attrs, slog.String("game_name", game.Name))
 		}
-		s.logger.LogAttrs(ctx, slog.LevelWarn, "OptiScaler recovery required", attrs...)
+		logOperationEvent(ctx, s.logger, slog.LevelWarn, diagnostics.OperationOptiScalerRecovery, "recovery_required", "OptiScaler recovery required", attrs...)
 	}
 	diag.complete("OptiScaler startup recovery inspection completed", optiScalerRecoveryStateAttrs(ctx, s.store, state)...)
 	return nil
@@ -78,8 +75,7 @@ func (s *OptiScalerService) DiscoverOptiScalerCandidates(ctx context.Context, ga
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler discovery failed", err)
-			err = fmt.Errorf("discover game OptiScaler candidates: %w", err)
+			err = diag.failWithMappedError("OptiScaler discovery failed", err, platformUserError)
 		}
 	}()
 	if err := s.requireWindows(); err != nil {
@@ -106,8 +102,7 @@ func (s *OptiScalerService) ListOptiScalerTargets(ctx context.Context, gameID in
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler targets list failed", err)
-			err = fmt.Errorf("list game OptiScaler targets: %w", err)
+			err = diag.failWithMappedError("OptiScaler targets list failed", err, platformUserError)
 		}
 	}()
 	if game, lookupErr := s.store.GetStoredGame(ctx, gameID); lookupErr == nil {
@@ -134,8 +129,7 @@ func (s *OptiScalerService) GetOptiScalerReleaseStatus(ctx context.Context, refr
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler release status failed", err)
-			err = fmt.Errorf("get OptiScaler stable release status: %w", err)
+			err = diag.failWithMappedError("OptiScaler release status failed", err, platformUserError)
 		}
 	}()
 	if err := s.requireWindows(); err != nil {
@@ -169,8 +163,7 @@ func (s *OptiScalerService) PreviewOptiScalerAction(ctx context.Context, request
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler preview failed", err)
-			err = fmt.Errorf("preview game OptiScaler action: %w", err)
+			err = diag.failWithMappedError("OptiScaler preview failed", err, platformUserError)
 		}
 	}()
 	if err := s.requireWindows(); err != nil {
@@ -207,8 +200,7 @@ func (s *OptiScalerService) ApplyOptiScalerAction(ctx context.Context, request d
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationApplyOptiScaler, "OptiScaler apply started", attrs...)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler apply failed", err)
-			err = fmt.Errorf("apply game OptiScaler action: %w", err)
+			err = diag.failWithMappedError("OptiScaler apply failed", err, platformUserError)
 		}
 	}()
 	if err := s.requireWindows(); err != nil {
@@ -235,8 +227,7 @@ func (s *OptiScalerService) GetOptiScalerRecoveryState(ctx context.Context) (res
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationOptiScalerRecovery, "OptiScaler recovery state read started")
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler recovery state read failed", err)
-			err = fmt.Errorf("get OptiScaler recovery state: %w", err)
+			err = diag.failWithMappedError("OptiScaler recovery state read failed", err, platformUserError)
 		}
 	}()
 	result, err = s.manager.RecoveryState()
@@ -258,8 +249,7 @@ func (s *OptiScalerService) RollbackOptiScalerRecovery(ctx context.Context, jour
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("OptiScaler recovery rollback failed", err)
-			err = fmt.Errorf("rollback OptiScaler recovery state: %w", err)
+			err = diag.failWithMappedError("OptiScaler recovery rollback failed", err, platformUserError)
 		}
 	}()
 	if state, stateErr := s.manager.RecoveryState(); stateErr == nil && state.JournalID == journalID && state.GameID > 0 {
@@ -282,7 +272,7 @@ func (s *OptiScalerService) RollbackOptiScalerRecovery(ctx context.Context, jour
 
 func (s *OptiScalerService) requireWindows() error {
 	if s.operatingSystem != "windows" {
-		return errors.New("OptiScaler management is only supported on Windows")
+		return apperror.New("OptiScaler management is only supported on Windows.")
 	}
 	return nil
 }

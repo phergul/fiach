@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -173,7 +175,7 @@ func TestProfileServiceRejectsDeletingAppliedProfile(t *testing.T) {
 	if err == nil {
 		t.Fatal("DeleteProfile() error = nil, want applied profile guard")
 	}
-	if !strings.Contains(err.Error(), "delete profile") || !strings.Contains(err.Error(), "restore vanilla before deleting") {
+	if err.Error() != "Restore vanilla before deleting an applied profile." {
 		t.Fatalf("DeleteProfile() error = %q, want applied guard detail", err.Error())
 	}
 
@@ -277,16 +279,41 @@ func TestProfileServiceWrapsStorageErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("CreateProfile() error = nil, want storage error")
 	}
-	if !strings.Contains(err.Error(), "create profile") || !strings.Contains(err.Error(), "insert profile row") {
-		t.Fatalf("CreateProfile() error = %q, want distinct service and storage context", err.Error())
+	if !strings.Contains(apperror.Detail(err), "insert profile row") {
+		t.Fatalf("CreateProfile() detail = %q, want storage context", apperror.Detail(err))
 	}
 
 	_, err = service.AddModToProfile(context.Background(), 1, 999)
 	if err == nil {
 		t.Fatal("AddModToProfile() error = nil, want storage error")
 	}
-	if !strings.Contains(err.Error(), "add mod to profile") || !strings.Contains(err.Error(), "insert profile mod row") {
-		t.Fatalf("AddModToProfile() error = %q, want distinct service and storage context", err.Error())
+	if !strings.Contains(apperror.Detail(err), "insert profile mod row") {
+		t.Fatalf("AddModToProfile() detail = %q, want storage context", apperror.Detail(err))
+	}
+}
+
+func TestProfileServiceReturnsFriendlyDuplicateNameError(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	service := NewProfileService(store, testLogger())
+
+	if _, err := service.CreateProfile(context.Background(), gameID, "Default"); err != nil {
+		t.Fatalf("CreateProfile() initial error = %v", err)
+	}
+
+	_, err := service.CreateProfile(context.Background(), gameID, "Default")
+	if err == nil {
+		t.Fatal("CreateProfile() duplicate error = nil, want error")
+	}
+	if err.Error() != "A profile with this name already exists for this game." {
+		t.Fatalf("CreateProfile() error = %q", err.Error())
+	}
+	if !errors.Is(err, storage.ErrDuplicateProfileName) {
+		t.Fatal("errors.Is(err, storage.ErrDuplicateProfileName) = false, want true")
 	}
 }
 

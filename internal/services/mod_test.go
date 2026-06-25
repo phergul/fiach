@@ -263,7 +263,7 @@ func TestModServiceGetModMetadataReportsMissingMod(t *testing.T) {
 	if err == nil {
 		t.Fatal("GetModMetadata() error = nil, want missing mod error")
 	}
-	if !strings.Contains(err.Error(), "mod 999 was not found") {
+	if err.Error() != "Mod was not found." {
 		t.Fatalf("GetModMetadata() error = %q, want missing mod context", err.Error())
 	}
 }
@@ -353,7 +353,7 @@ func TestModServiceDeleteRejectsSourcePathOutsideManagedStorage(t *testing.T) {
 	if err == nil {
 		t.Fatal("DeleteMod() error = nil, want unsafe path error")
 	}
-	if !strings.Contains(err.Error(), "outside managed storage") {
+	if err.Error() != "This mod is stored outside managed mod storage and cannot be deleted safely." {
 		t.Fatalf("DeleteMod() error = %q, want managed storage guard", err.Error())
 	}
 
@@ -1640,7 +1640,7 @@ func TestModServiceImportValidationErrors(t *testing.T) {
 			name:             "missing name",
 			modName:          " ",
 			sourceFolderPath: makeSourceFolder(t, map[string]string{"mod.esp": "one"}),
-			wantError:        "mod name is required",
+			wantError:        "Mod name is required.",
 		},
 		{
 			name:             "missing folder",
@@ -1692,7 +1692,7 @@ func TestModServiceImportArchiveValidationErrorsCleanManagedStorage(t *testing.T
 	if err == nil {
 		t.Fatal("ImportMod() error = nil, want invalid archive error")
 	}
-	if !strings.Contains(err.Error(), "open zip archive") {
+	if err.Error() != "The archive format was not recognized." {
 		t.Fatalf("ImportMod() error = %q, want archive context", err.Error())
 	}
 

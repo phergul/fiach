@@ -257,7 +257,7 @@ func (s *Store) RenameTag(ctx context.Context, tagID int64, name string, color d
 				updated_at = CURRENT_TIMESTAMP
 			WHERE id = ?
 		`, cleanName, normalizedName, color, current.ID); err != nil {
-			return err
+			return mapSQLiteError(err)
 		}
 
 		tag, err = getTagByID(ctx, tx, current.ID)

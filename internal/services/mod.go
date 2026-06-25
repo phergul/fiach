@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/fileignore"
 	"github.com/phergul/fiach/internal/installconfig"
@@ -61,7 +62,7 @@ func (s *ModService) ListMods(ctx context.Context, gameID int64) (mods []dto.Mod
 			return nil, err
 		}
 		if !found {
-			return nil, fmt.Errorf("mod %d metadata was not found", storedMod.ID)
+			return nil, apperror.New("Mod was not found.")
 		}
 		dtoMod := mappers.ToDTOModWithMetadata(storedMod, metadata)
 		dtoMod.Tags = mappers.ToDTOTags(tagsByModID[storedMod.ID])
@@ -77,8 +78,7 @@ func (s *ModService) RenameMod(ctx context.Context, modID int64, name string) (m
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod rename failed", err)
-			err = fmt.Errorf("rename mod: %w", err)
+			err = diag.failWithMappedError("Mod rename failed", err, modUserError)
 		}
 	}()
 
@@ -107,8 +107,7 @@ func (s *ModService) GetModDeleteSummary(ctx context.Context, modID int64) (summ
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod delete summary failed", err)
-			err = fmt.Errorf("get mod delete summary: %w", err)
+			err = diag.failWithMappedError("Mod delete summary failed", err, modUserError)
 		}
 	}()
 
@@ -117,7 +116,7 @@ func (s *ModService) GetModDeleteSummary(ctx context.Context, modID int64) (summ
 		return dto.ModDeleteSummary{}, err
 	}
 	if !found {
-		return dto.ModDeleteSummary{}, fmt.Errorf("mod %d was not found", modID)
+		return dto.ModDeleteSummary{}, apperror.New("Mod was not found.")
 	}
 
 	profileUsageCount, err := s.store.CountProfilesUsingMod(ctx, modID)
@@ -154,8 +153,7 @@ func (s *ModService) DeleteMod(ctx context.Context, modID int64) (err error) {
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod delete failed", err)
-			err = fmt.Errorf("delete mod: %w", err)
+			err = diag.failWithMappedError("Mod delete failed", err, modUserError)
 		}
 	}()
 
@@ -164,7 +162,7 @@ func (s *ModService) DeleteMod(ctx context.Context, modID int64) (err error) {
 		return err
 	}
 	if !found {
-		return fmt.Errorf("mod %d was not found", modID)
+		return apperror.New("Mod was not found.")
 	}
 	diag.attrs = append(diag.attrs,
 		slog.Int64("game_id", mod.GameID),

@@ -12,10 +12,10 @@ import (
 const maxEntries = 500
 
 var (
-	mu       sync.RWMutex
-	entries  []Entry
-	emitter  func(Entry)
-	logger   *slog.Logger
+	mu      sync.RWMutex
+	entries []Entry
+	emitter func(Entry)
+	logger  *slog.Logger
 )
 
 func SetLogger(l *slog.Logger) {
@@ -46,7 +46,7 @@ func List(limit int) []Entry {
 		limit = len(entries)
 	}
 
-	start := max(len(entries) - limit, 0)
+	start := max(len(entries)-limit, 0)
 
 	result := make([]Entry, limit)
 	copy(result, entries[start:])

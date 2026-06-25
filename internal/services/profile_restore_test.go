@@ -79,7 +79,7 @@ func TestProfileServiceRestoreVanillaStateReturnsClearErrorWithoutAppliedState(t
 	if err == nil {
 		t.Fatal("RestoreVanillaState() error = nil, want no applied state error")
 	}
-	if !strings.Contains(err.Error(), "restore vanilla state") || !strings.Contains(err.Error(), "no applied profile state found") {
+	if err.Error() != "No profile is currently applied for this game." {
 		t.Fatalf("RestoreVanillaState() error = %q, want clear no-state detail", err.Error())
 	}
 }

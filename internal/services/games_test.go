@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/gamesource"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
@@ -101,8 +102,8 @@ func TestGamesServiceScanAndSaveReturnsLibraryErrorWithoutWrites(t *testing.T) {
 	if err == nil {
 		t.Fatal("ScanAndSaveGames() error = nil, want error")
 	}
-	if !contains(err.Error(), "scan and save games") {
-		t.Fatalf("ScanAndSaveGames() error = %q, want scan/save context", err.Error())
+	if !strings.Contains(apperror.Detail(err), "collect steam games") {
+		t.Fatalf("ScanAndSaveGames() detail = %q, want scan context", apperror.Detail(err))
 	}
 
 	var count int

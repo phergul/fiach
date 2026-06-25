@@ -47,8 +47,8 @@ func TestReshadeServiceDetectGameReShadeValidatesInstallPath(t *testing.T) {
 	if err == nil {
 		t.Fatal("DetectGameReShade() error = nil, want error")
 	}
-	if !contains(err.Error(), "detect game ReShade runtime") || !contains(err.Error(), "not a directory") {
-		t.Fatalf("DetectGameReShade() error = %q, want service and path context", err.Error())
+	if err.Error() != "The game install path is not a valid folder." {
+		t.Fatalf("DetectGameReShade() error = %q, want install path validation", err.Error())
 	}
 }
 

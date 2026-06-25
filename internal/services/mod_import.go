@@ -23,8 +23,7 @@ func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidat
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod import validation failed", err)
-			err = fmt.Errorf("pre-validate import: %w", err)
+			err = diag.failWithMappedError("Mod import validation failed", err, modImportUserError)
 		}
 	}()
 
@@ -59,9 +58,13 @@ func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidat
 }
 
 func (s *ModService) DetectImportTargets(ctx context.Context, gameID int64, strategyType dto.StrategyType) (result dto.ImportTargetDetectionResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationDetectImportTargets, "Import target detection started",
+		slog.Int64("game_id", gameID),
+		slog.String("strategy_type", string(strategyType)),
+	)
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("detect import targets: %w", err)
+			err = diag.failWithMappedError("Import target detection failed", err, modImportUserError)
 		}
 	}()
 
@@ -69,6 +72,10 @@ func (s *ModService) DetectImportTargets(ctx context.Context, gameID int64, stra
 		return dto.ImportTargetDetectionResult{}, errors.New("game ID must be positive")
 	}
 	if strategyType != dto.StrategyTypeUnrealPak {
+		diag.complete("Import target detection completed",
+			slog.Int("candidate_count", 0),
+			slog.Int("warning_count", 0),
+		)
 		return dto.ImportTargetDetectionResult{
 			Candidates: []string{},
 			Warnings:   []string{},
@@ -79,15 +86,22 @@ func (s *ModService) DetectImportTargets(ctx context.Context, gameID int64, stra
 	if err != nil {
 		return dto.ImportTargetDetectionResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	detection, err := unrealpak.DetectTargets(game.InstallPath)
 	if err != nil {
 		return dto.ImportTargetDetectionResult{}, err
 	}
 
-	return dto.ImportTargetDetectionResult{
+	result = dto.ImportTargetDetectionResult{
 		Candidates: detection.Candidates,
 		Warnings:   detection.Warnings,
-	}, nil
+	}
+	diag.complete("Import target detection completed",
+		slog.Int("candidate_count", len(result.Candidates)),
+		slog.Int("warning_count", len(result.Warnings)),
+	)
+
+	return result, nil
 }
 
 func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.PreviewImportConfigurationInput) (preview dto.Preview, err error) {
@@ -98,8 +112,7 @@ func (s *ModService) PreviewImportConfiguration(ctx context.Context, input dto.P
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod import preview failed", err)
-			err = fmt.Errorf("preview import configuration: %w", err)
+			err = diag.failWithMappedError("Mod import preview failed", err, modImportUserError)
 		}
 	}()
 
@@ -156,8 +169,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod import failed", err)
-			err = fmt.Errorf("import mod: %w", err)
+			err = diag.failWithMappedError("Mod import failed", err, modImportUserError)
 		}
 	}()
 
@@ -192,9 +204,7 @@ func (s *ModService) ImportMod(ctx context.Context, input dto.ImportModInput) (r
 		return dto.ImportModResult{}, err
 	}
 	if importResult.MetadataError != nil {
-		s.logger.WarnContext(ctx, "Mod metadata unavailable",
-			slog.String("operation", diagnostics.OperationImportMod),
-			slog.String("event", "metadata_unavailable"),
+		diag.warnEvent("metadata_unavailable", "Mod metadata unavailable",
 			slog.Int64("game_id", input.GameID),
 			slog.Int64("mod_id", importResult.Mod.ID),
 			slog.String("mod_name", importResult.Mod.Name),
@@ -226,8 +236,7 @@ func (s *ModService) PreviewUpdateMod(ctx context.Context, input dto.UpdateModIn
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod update preview failed", err)
-			err = fmt.Errorf("preview mod update: %w", err)
+			err = diag.failWithMappedError("Mod update preview failed", err, modImportUserError)
 		}
 	}()
 
@@ -265,8 +274,7 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod update failed", err)
-			err = fmt.Errorf("update mod: %w", err)
+			err = diag.failWithMappedError("Mod update failed", err, modImportUserError)
 		}
 	}()
 
@@ -287,9 +295,7 @@ func (s *ModService) UpdateMod(ctx context.Context, input dto.UpdateModInput) (r
 		return dto.UpdateModResult{}, err
 	}
 	if updateResult.MetadataError != nil {
-		s.logger.WarnContext(ctx, "Mod metadata unavailable",
-			slog.String("operation", diagnostics.OperationUpdateMod),
-			slog.String("event", "metadata_unavailable"),
+		diag.warnEvent("metadata_unavailable", "Mod metadata unavailable",
 			slog.Int64("game_id", updateResult.After.GameID),
 			slog.Int64("mod_id", updateResult.After.ID),
 			slog.String("mod_name", updateResult.After.Name),

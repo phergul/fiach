@@ -80,8 +80,7 @@ func (s *DiagnosticsService) ExportLogs(ctx context.Context, input dto.ExportDia
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Diagnostic logs export failed", err)
-			err = fmt.Errorf("export diagnostic logs: %w", err)
+			err = diag.failWithMappedError("Diagnostic logs export failed", err, shellUserError)
 		}
 	}()
 

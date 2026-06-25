@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 
 import { getErrorMessage, getRawErrorMessage } from '../src/utils/getErrorMessage';
 
+const genericFallback = 'Something went wrong. Check the logs for details.';
+
 describe('getErrorMessage', () => {
   test('formats a plain Error', () => {
     expect(getErrorMessage(new Error('disk full'))).toBe('Disk full.');
@@ -11,25 +13,46 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage('permission denied')).toBe('Permission denied.');
   });
 
-  test('formats a Wails-style message object', () => {
-    expect(getErrorMessage({ message: 'open logs window: application is not configured' }))
-      .toBe('Open logs window failed: application is not configured.');
+  test('passes through a backend friendly message', () => {
+    expect(getErrorMessage('A profile with this name already exists for this game.')).toBe(
+      'A profile with this name already exists for this game.',
+    );
   });
 
-  test('uses a RuntimeError cause instead of the runtime envelope', () => {
+  test('uses generic fallback for chained Go errors', () => {
+    expect(getErrorMessage('import mod: import mod source: read source folder: permission denied')).toBe(
+      genericFallback,
+    );
+  });
+
+  test('uses generic fallback for technical sqlite errors', () => {
+    expect(
+      getErrorMessage(
+        'create profile: insert profile row: constraint failed: UNIQUE constraint failed: profiles.game_id, profiles.name (2067)',
+      ),
+    ).toBe(genericFallback);
+  });
+
+  test('uses generic fallback for Wails-style chained message objects', () => {
+    expect(getErrorMessage({ message: 'open logs window: application is not configured' })).toBe(
+      genericFallback,
+    );
+  });
+
+  test('uses generic fallback for a RuntimeError cause chain', () => {
     const error = new Error('RuntimeError', {
       cause: 'pre validate import: prepare folder import source: source folder "/mods/Empty" is empty',
     });
     error.name = 'RuntimeError';
 
-    expect(getErrorMessage(error)).toBe('Pre validate import failed: source folder "/mods/Empty" is empty.');
+    expect(getErrorMessage(error)).toBe(genericFallback);
   });
 
   test('unwraps a serialized RuntimeError cause', () => {
     const error = new Error('{"message":"RuntimeError","cause":{"message":"pre validate import: source folder is empty"}}');
     error.name = 'RuntimeError';
 
-    expect(getErrorMessage(error)).toBe('Pre validate import failed: source folder is empty.');
+    expect(getErrorMessage(error)).toBe(genericFallback);
   });
 
   test('does not format a bare serialized RuntimeError envelope as a chain', () => {
@@ -37,21 +60,6 @@ describe('getErrorMessage', () => {
     error.name = 'RuntimeError';
 
     expect(getErrorMessage(error)).toBe('Something went wrong.');
-  });
-
-  test('summarizes a chained Go error', () => {
-    expect(getErrorMessage('import mod: import mod source: read source folder: permission denied'))
-      .toBe('Import mod failed: permission denied.');
-  });
-
-  test('deduplicates repeated chain segments', () => {
-    expect(getErrorMessage('import mod: import mod: permission denied'))
-      .toBe('Import mod failed: permission denied.');
-  });
-
-  test('does not split Windows drive paths as chain separators', () => {
-    expect(getErrorMessage('open installer: C:\\Games\\ReShade.exe: access denied'))
-      .toBe('Open installer failed: access denied.');
   });
 
   test('falls back for unknown objects', () => {

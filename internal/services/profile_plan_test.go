@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/phergul/fiach/internal/apperror"
+
 	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -84,8 +86,11 @@ func TestProfileServiceWrapsUnexpectedPlannerErrors(t *testing.T) {
 	if err == nil {
 		t.Fatal("BuildProfileOperationPlan() error = nil, want planner error")
 	}
-	if !strings.Contains(err.Error(), "build profile operation plan") || !strings.Contains(err.Error(), "resolve profile plan") || !strings.Contains(err.Error(), "profile 999 was not found") {
-		t.Fatalf("BuildProfileOperationPlan() error = %q, want wrapped resolver detail", err.Error())
+	if err.Error() != "Profile was not found." {
+		t.Fatalf("BuildProfileOperationPlan() error = %q, want missing profile detail", err.Error())
+	}
+	if !strings.Contains(apperror.Detail(err), "resolve profile plan") {
+		t.Fatalf("BuildProfileOperationPlan() detail = %q, want resolver context", apperror.Detail(err))
 	}
 }
 
@@ -291,7 +296,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsWhenProfileAlreadyApplied
 	if blockedResult.Success || blockedResult.CompletedCount != 0 {
 		t.Fatalf("ApplyProfileOperationPlan() blocked result = %+v, want empty failure result", blockedResult)
 	}
-	if !strings.Contains(err.Error(), "restore vanilla before applying another profile") {
+	if err.Error() != "Restore vanilla before applying another profile." {
 		t.Fatalf("ApplyProfileOperationPlan() second error = %q, want applied-state guard", err.Error())
 	}
 	if _, err := os.Stat(secondTargetPath); !os.IsNotExist(err) {
@@ -344,8 +349,8 @@ func TestProfileServiceApplyProfileOperationPlanReturnsResultWhenStatePersistenc
 	if !result.Success || result.CompletedCount != 1 {
 		t.Fatalf("ApplyProfileOperationPlan() result = %+v, want populated successful apply result", result)
 	}
-	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "save applied profile state") || !strings.Contains(err.Error(), "forced applied state failure") {
-		t.Fatalf("ApplyProfileOperationPlan() error = %q, want service and persistence detail", err.Error())
+	if !strings.Contains(apperror.Detail(err), "save applied profile state") || !strings.Contains(apperror.Detail(err), "forced applied state failure") {
+		t.Fatalf("ApplyProfileOperationPlan() error = %q, want persistence detail", apperror.Detail(err))
 	}
 	assertServiceFileContents(t, targetPath, "modded")
 
@@ -369,7 +374,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsBlockingIssues(t *testing
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want blocking issue error")
 	}
-	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "operation plan has blocking issues") {
+	if err.Error() != "Fix the issues in the plan before applying." {
 		t.Fatalf("ApplyProfileOperationPlan() error = %q, want blocking issue detail", err.Error())
 	}
 }
@@ -385,7 +390,7 @@ func TestProfileServiceApplyProfileOperationPlanRejectsInvalidProfileID(t *testi
 	if err == nil {
 		t.Fatal("ApplyProfileOperationPlan() error = nil, want invalid profile ID error")
 	}
-	if !strings.Contains(err.Error(), "apply profile operation plan") || !strings.Contains(err.Error(), "profile ID must be positive") {
+	if err.Error() != "A valid profile must be selected." {
 		t.Fatalf("ApplyProfileOperationPlan() error = %q, want profile ID detail", err.Error())
 	}
 }

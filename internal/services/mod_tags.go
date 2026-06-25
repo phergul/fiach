@@ -31,8 +31,7 @@ func (s *ModService) RenameTag(ctx context.Context, tagID int64, name string, co
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Tag rename failed", err)
-			err = fmt.Errorf("rename tag: %w", err)
+			err = diag.failWithMappedError("Tag rename failed", err, modUserError)
 		}
 	}()
 
@@ -56,8 +55,7 @@ func (s *ModService) UpdateModDetails(ctx context.Context, input dto.UpdateModDe
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod details update failed", err)
-			err = fmt.Errorf("update mod details: %w", err)
+			err = diag.failWithMappedError("Mod details update failed", err, modUserError)
 		}
 	}()
 
@@ -70,7 +68,7 @@ func (s *ModService) UpdateModDetails(ctx context.Context, input dto.UpdateModDe
 
 	metadataInput := input.Metadata
 	metadataInput.ModID = input.ModID
-	storageMetadata, err := toStorageUpdateModMetadataInput(metadataInput)
+	storageMetadata, err := mappers.ToStorageUpdateModMetadataInput(metadataInput)
 	if err != nil {
 		return dto.Mod{}, err
 	}

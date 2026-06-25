@@ -32,8 +32,7 @@ func (s *ProfileService) AddModToProfile(ctx context.Context, profileID int64, m
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile mod add failed", err)
-			err = fmt.Errorf("add mod to profile: %w", err)
+			err = diag.failWithMappedError("Profile mod add failed", err, profileUserError)
 		}
 	}()
 
@@ -65,8 +64,7 @@ func (s *ProfileService) RemoveModFromProfile(ctx context.Context, profileID int
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile mod remove failed", err)
-			err = fmt.Errorf("remove mod from profile: %w", err)
+			err = diag.failWithMappedError("Profile mod remove failed", err, profileUserError)
 		}
 	}()
 
@@ -94,8 +92,7 @@ func (s *ProfileService) SetProfileModEnabled(ctx context.Context, profileID int
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile mod enabled update failed", err)
-			err = fmt.Errorf("set profile mod enabled: %w", err)
+			err = diag.failWithMappedError("Profile mod enabled update failed", err, profileUserError)
 		}
 	}()
 
@@ -126,8 +123,7 @@ func (s *ProfileService) ReorderProfileMods(ctx context.Context, profileID int64
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Profile mods reorder failed", err)
-			err = fmt.Errorf("reorder profile mods: %w", err)
+			err = diag.failWithMappedError("Profile mods reorder failed", err, profileUserError)
 		}
 	}()
 

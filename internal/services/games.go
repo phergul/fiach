@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/gamesource"
@@ -45,24 +44,14 @@ func (s *GamesService) GetStoredGames(ctx context.Context) (games []dto.StoredGa
 }
 
 func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceScanResult, err error) {
-	startedAt := time.Now()
-	defer func() {
-		if err != nil {
-			s.logger.ErrorContext(ctx, "Game scan failed",
-				slog.String("operation", diagnostics.OperationScanGames),
-				slog.String("event", diagnostics.EventFailed),
-				diagnostics.DurationAttr(startedAt),
-				diagnostics.ErrorAttr(err),
-			)
-			err = fmt.Errorf("scan and save games: %w", err)
-		}
-	}()
-
-	s.logger.InfoContext(ctx, "Game scan started",
-		slog.String("operation", diagnostics.OperationScanGames),
-		slog.String("event", diagnostics.EventStarted),
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationScanGames, "Game scan started",
 		slog.Int("source_count", len(s.sources)),
 	)
+	defer func() {
+		if err != nil {
+			err = diag.failWithMappedError("Game scan failed", err, gamesUserError)
+		}
+	}()
 
 	if len(s.sources) == 0 {
 		return dto.SourceScanResult{}, errors.New("game sources are not configured")
@@ -88,9 +77,7 @@ func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceS
 			return dto.SourceScanResult{}, fmt.Errorf("save %s games: %w", sourceID, err)
 		}
 
-		s.logger.InfoContext(ctx, fmt.Sprintf("%s scan saved", sourceID),
-			slog.String("operation", diagnostics.OperationScanGames),
-			slog.String("event", "source_saved"),
+		diag.infoEvent("source_saved", fmt.Sprintf("%s scan saved", sourceID),
 			slog.String("source", sourceID),
 			slog.Int("inserted_count", sourceResult.Inserted),
 			slog.Int("updated_count", sourceResult.Updated),
@@ -104,14 +91,11 @@ func (s *GamesService) ScanAndSaveGames(ctx context.Context) (result dto.SourceS
 		result.Games = append(result.Games, mappers.ToDTOStoredGames(sourceResult.Games)...)
 	}
 
-	s.logger.InfoContext(ctx, "Game scan completed",
-		slog.String("operation", diagnostics.OperationScanGames),
-		slog.String("event", diagnostics.EventCompleted),
+	diag.complete("Game scan completed",
 		slog.Int("inserted_count", result.Inserted),
 		slog.Int("updated_count", result.Updated),
 		slog.Int("unavailable_count", result.MarkedUnavailable),
 		slog.Int("game_count", len(result.Games)),
-		diagnostics.DurationAttr(startedAt),
 	)
 
 	return result, nil

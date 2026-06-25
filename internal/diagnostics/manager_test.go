@@ -2,12 +2,16 @@ package diagnostics
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/phergul/fiach/internal/apperror"
 )
 
 func TestManagerRotatesLogsAndReadsNewestEntries(t *testing.T) {
@@ -164,6 +168,58 @@ func TestPathLabelUsesOnlyLastPathSegments(t *testing.T) {
 	got := PathLabel(filepath.Join("Users", "fergal", "Games", "Mod.zip"))
 	if got != filepath.Join("Games", "Mod.zip") {
 		t.Fatalf("PathLabel() = %q, want Games/Mod.zip", got)
+	}
+}
+
+func TestErrorAttrLogsUserMessageAndDetail(t *testing.T) {
+	t.Parallel()
+
+	root := errors.New("constraint failed: UNIQUE constraint failed")
+	wrapped := fmt.Errorf("insert profile row: %w", root)
+	err := apperror.Wrap("A profile with this name already exists for this game.", wrapped)
+
+	attr := ErrorAttr(err)
+	if attr.Key != "error" {
+		t.Fatalf("attr.Key = %q, want error", attr.Key)
+	}
+
+	group, ok := attr.Value.Any().([]slog.Attr)
+	if !ok {
+		t.Fatalf("attr.Value type = %T, want []slog.Attr", attr.Value.Any())
+	}
+	if len(group) != 2 {
+		t.Fatalf("group length = %d, want 2", len(group))
+	}
+
+	details := map[string]string{}
+	for _, item := range group {
+		details[item.Key] = item.Value.String()
+	}
+	if details["message"] != "A profile with this name already exists for this game." {
+		t.Fatalf("message = %q", details["message"])
+	}
+	if !strings.Contains(details["detail"], "insert profile row") {
+		t.Fatalf("detail = %q, want insert profile row segment", details["detail"])
+	}
+}
+
+func TestParseLogLineFlattensNestedErrorDetails(t *testing.T) {
+	t.Parallel()
+
+	entry, ok := parseLogLine([]byte(`{
+		"time":"2026-06-25T12:00:00Z",
+		"level":"ERROR",
+		"msg":"Profile create failed",
+		"error":{"message":"A profile with this name already exists for this game.","detail":"insert profile row: constraint failed"}
+	}`))
+	if !ok {
+		t.Fatal("parseLogLine() = false, want true")
+	}
+	if entry.Details["Error message"] != "A profile with this name already exists for this game." {
+		t.Fatalf("Error message detail = %q", entry.Details["Error message"])
+	}
+	if entry.Details["Error detail"] != "insert profile row: constraint failed" {
+		t.Fatalf("Error detail detail = %q", entry.Details["Error detail"])
 	}
 }
 

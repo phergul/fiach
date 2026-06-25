@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"strings"
 	"testing"
 )
 
@@ -12,12 +11,12 @@ func TestShellServiceOpenDirectoryValidatesPath(t *testing.T) {
 	service := NewShellService(nil)
 
 	err := service.OpenDirectory(context.Background(), "")
-	if err == nil || !strings.Contains(err.Error(), "directory path is required") {
+	if err == nil || err.Error() != "Directory path is required." {
 		t.Fatalf("OpenDirectory() error = %v, want required path validation", err)
 	}
 
 	err = service.OpenDirectory(context.Background(), t.TempDir())
-	if err == nil || !strings.Contains(err.Error(), "application is not configured") {
+	if err == nil || err.Error() != "The application is not configured." {
 		t.Fatalf("OpenDirectory() error = %v, want application configuration error", err)
 	}
 }

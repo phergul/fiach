@@ -14,8 +14,7 @@ func TestOptiScalerServiceRejectsUnsupportedPlatformWithServiceContext(t *testin
 	service := NewOptiScalerService(nil, testLogger(), nil)
 	service.operatingSystem = "linux"
 	_, err := service.PreviewOptiScalerAction(context.Background(), optiscaler.Request{GameID: 1})
-	if err == nil || !strings.Contains(err.Error(), "preview game OptiScaler action") ||
-		!strings.Contains(err.Error(), "only supported on Windows") {
+	if err == nil || err.Error() != "OptiScaler management is only supported on Windows." {
 		t.Fatalf("PreviewOptiScalerAction() error = %v", err)
 	}
 }

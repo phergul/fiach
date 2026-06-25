@@ -42,8 +42,7 @@ func (s *SettingsService) SetGlobalModStorageRoot(ctx context.Context, path stri
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Global mod storage root update failed", err)
-			err = fmt.Errorf("set global mod storage root: %w", err)
+			err = diag.failWithMappedError("Global mod storage root update failed", err, settingsUserError)
 		}
 	}()
 
@@ -70,8 +69,7 @@ func (s *SettingsService) SetThemeID(ctx context.Context, themeID string) (err e
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationSetTheme, "Theme update started")
 	defer func() {
 		if err != nil {
-			diag.fail("Theme update failed", err)
-			err = fmt.Errorf("set theme ID: %w", err)
+			err = diag.failWithMappedError("Theme update failed", err, settingsUserError)
 		}
 	}()
 
@@ -98,8 +96,7 @@ func (s *SettingsService) SetGameModStoragePathOverride(ctx context.Context, gam
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Game mod storage override update failed", err)
-			err = fmt.Errorf("set game mod storage path override: %w", err)
+			err = diag.failWithMappedError("Game mod storage override update failed", err, settingsUserError)
 		}
 	}()
 

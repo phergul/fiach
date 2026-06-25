@@ -2,30 +2,21 @@ package services
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
-	"net/url"
-	"strings"
-	"unicode"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
-	"github.com/phergul/fiach/internal/storage/dbtypes"
-)
-
-const (
-	modMetadataShortFieldLimit  = 128
-	modMetadataSourceURLLimit   = 2048
-	modMetadataDescriptionLimit = 4000
-	modMetadataNotesLimit       = 8000
 )
 
 func (s *ModService) GetModMetadata(ctx context.Context, modID int64) (metadata dto.ModMetadata, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationGetModMetadata, "Mod metadata read started",
+		slog.Int64("mod_id", modID),
+	)
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("get mod metadata: %w", err)
+			err = diag.failWithMappedError("Mod metadata read failed", err, modUserError)
 		}
 	}()
 
@@ -34,10 +25,13 @@ func (s *ModService) GetModMetadata(ctx context.Context, modID int64) (metadata 
 		return dto.ModMetadata{}, err
 	}
 	if !found {
-		return dto.ModMetadata{}, fmt.Errorf("mod %d was not found", modID)
+		return dto.ModMetadata{}, apperror.New("Mod was not found.")
 	}
 
-	return mappers.ToDTOModMetadata(storedMetadata), nil
+	metadata = mappers.ToDTOModMetadata(storedMetadata)
+	diag.complete("Mod metadata read completed")
+
+	return metadata, nil
 }
 
 func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModMetadataInput) (metadata dto.ModMetadata, err error) {
@@ -46,8 +40,7 @@ func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModM
 	)
 	defer func() {
 		if err != nil {
-			diag.fail("Mod metadata update failed", err)
-			err = fmt.Errorf("update mod metadata: %w", err)
+			err = diag.failWithMappedError("Mod metadata update failed", err, modUserError)
 		}
 	}()
 
@@ -58,7 +51,7 @@ func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModM
 		)
 	}
 
-	storageInput, err := toStorageUpdateModMetadataInput(input)
+	storageInput, err := mappers.ToStorageUpdateModMetadataInput(input)
 	if err != nil {
 		return dto.ModMetadata{}, err
 	}
@@ -72,96 +65,4 @@ func (s *ModService) UpdateModMetadata(ctx context.Context, input dto.UpdateModM
 	diag.complete("Mod metadata update completed")
 
 	return metadata, nil
-}
-
-func toStorageUpdateModMetadataInput(input dto.UpdateModMetadataInput) (dbtypes.UpdateModMetadataInput, error) {
-	if input.ModID <= 0 {
-		return dbtypes.UpdateModMetadataInput{}, errors.New("mod ID must be positive")
-	}
-
-	version, err := toStorageModMetadataFieldUpdate("version", input.Version, modMetadataShortFieldLimit, false)
-	if err != nil {
-		return dbtypes.UpdateModMetadataInput{}, err
-	}
-	author, err := toStorageModMetadataFieldUpdate("author", input.Author, modMetadataShortFieldLimit, false)
-	if err != nil {
-		return dbtypes.UpdateModMetadataInput{}, err
-	}
-	description, err := toStorageModMetadataFieldUpdate("description", input.Description, modMetadataDescriptionLimit, false)
-	if err != nil {
-		return dbtypes.UpdateModMetadataInput{}, err
-	}
-	sourceURL, err := toStorageModMetadataFieldUpdate("source URL", input.SourceURL, modMetadataSourceURLLimit, true)
-	if err != nil {
-		return dbtypes.UpdateModMetadataInput{}, err
-	}
-	notes, err := cleanModMetadataText("notes", input.Notes, modMetadataNotesLimit)
-	if err != nil {
-		return dbtypes.UpdateModMetadataInput{}, err
-	}
-
-	return dbtypes.UpdateModMetadataInput{
-		ModID:       input.ModID,
-		Version:     version,
-		Author:      author,
-		Description: description,
-		SourceURL:   sourceURL,
-		Notes:       notes,
-	}, nil
-}
-
-func toStorageModMetadataFieldUpdate(label string, input dto.ModMetadataFieldUpdate, limit int, validateURL bool) (dbtypes.ModMetadataFieldUpdate, error) {
-	switch input.Mode {
-	case dto.ModMetadataFieldUpdateModeReset:
-		return dbtypes.ModMetadataFieldUpdate{}, nil
-	case dto.ModMetadataFieldUpdateModeClear:
-		return dbtypes.ModMetadataFieldUpdate{UserSet: true}, nil
-	case dto.ModMetadataFieldUpdateModeUser:
-		value, err := cleanModMetadataText(label, input.Value, limit)
-		if err != nil {
-			return dbtypes.ModMetadataFieldUpdate{}, err
-		}
-		if validateURL && value != nil {
-			if err := validateModMetadataSourceURL(*value); err != nil {
-				return dbtypes.ModMetadataFieldUpdate{}, err
-			}
-		}
-
-		return dbtypes.ModMetadataFieldUpdate{UserSet: true, Value: value}, nil
-	default:
-		return dbtypes.ModMetadataFieldUpdate{}, fmt.Errorf("%s update mode is required", label)
-	}
-}
-
-func cleanModMetadataText(label string, value *string, limit int) (*string, error) {
-	if value == nil {
-		return nil, nil
-	}
-
-	cleaned := strings.TrimSpace(*value)
-	if cleaned == "" {
-		return nil, nil
-	}
-	if len(cleaned) > limit {
-		return nil, fmt.Errorf("%s must be %d characters or fewer", label, limit)
-	}
-	for _, r := range cleaned {
-		if unicode.IsControl(r) {
-			return nil, fmt.Errorf("%s contains unsupported control characters", label)
-		}
-	}
-
-	return &cleaned, nil
-}
-
-func validateModMetadataSourceURL(value string) error {
-	parsed, err := url.Parse(value)
-	if err != nil {
-		return fmt.Errorf("source URL is invalid: %w", err)
-	}
-	if !parsed.IsAbs() || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
-		return errors.New("source URL must be an absolute http or https URL")
-	}
-
-	return nil
 }

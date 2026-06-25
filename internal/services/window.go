@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -23,9 +23,10 @@ func NewWindowService(app **application.App) *WindowService {
 
 func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 	defer func() {
-		if err != nil {
-			err = fmt.Errorf("open logs window: %w", err)
+		if err == nil || apperror.IsUserError(err) {
+			return
 		}
+		err = shellUserError(fmt.Errorf("open logs window: %w", err))
 	}()
 
 	select {
@@ -35,7 +36,7 @@ func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 	}
 
 	if s.app == nil || *s.app == nil {
-		return errors.New("application is not configured")
+		return apperror.New("The application is not configured.")
 	}
 	app := *s.app
 
@@ -63,9 +64,10 @@ func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 
 func (s *WindowService) OpenDevLogsWindow(ctx context.Context) (err error) {
 	defer func() {
-		if err != nil {
-			err = fmt.Errorf("open dev logs window: %w", err)
+		if err == nil || apperror.IsUserError(err) {
+			return
 		}
+		err = shellUserError(fmt.Errorf("open dev logs window: %w", err))
 	}()
 
 	select {
@@ -75,7 +77,7 @@ func (s *WindowService) OpenDevLogsWindow(ctx context.Context) (err error) {
 	}
 
 	if s.app == nil || *s.app == nil {
-		return errors.New("application is not configured")
+		return apperror.New("The application is not configured.")
 	}
 	app := *s.app
 

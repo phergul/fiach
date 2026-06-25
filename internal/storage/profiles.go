@@ -32,7 +32,7 @@ func (s *Store) CreateProfile(ctx context.Context, gameID int64, name string) (p
 		VALUES (?, ?)
 	`, gameID, name)
 	if err != nil {
-		return dbtypes.ModProfile{}, err
+		return dbtypes.ModProfile{}, mapSQLiteError(err)
 	}
 
 	id, err := result.LastInsertId()
@@ -75,7 +75,7 @@ func (s *Store) DuplicateProfile(ctx context.Context, profileID int64) (profile 
 			VALUES (?, ?)
 		`, originalProfile.GameID, name)
 		if err != nil {
-			return err
+			return mapSQLiteError(err)
 		}
 
 		newProfileID, err := result.LastInsertId()
@@ -153,7 +153,7 @@ func (s *Store) RenameProfile(ctx context.Context, profileID int64, name string)
 		WHERE id = ?
 	`, name, profileID)
 	if err != nil {
-		return dbtypes.ModProfile{}, err
+		return dbtypes.ModProfile{}, mapSQLiteError(err)
 	}
 
 	affected, err := result.RowsAffected()
@@ -229,7 +229,7 @@ func getProfileByID(ctx context.Context, db profileGetter, profileID int64) (dbt
 func normalizeProfileName(name string) (string, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return "", errors.New("profile name is required")
+		return "", ErrProfileNameRequired
 	}
 
 	return name, nil
