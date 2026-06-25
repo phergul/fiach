@@ -67,7 +67,7 @@ func (s *OptiScalerService) ServiceStartup(ctx context.Context, _ application.Se
 		}
 		s.logger.LogAttrs(ctx, slog.LevelWarn, "OptiScaler recovery required", attrs...)
 	}
-	diag.complete("OptiScaler startup recovery inspection completed", optiScalerRecoveryStateAttrs(state)...)
+	diag.complete("OptiScaler startup recovery inspection completed", optiScalerRecoveryStateAttrs(ctx, s.store, state)...)
 	return nil
 }
 
@@ -110,6 +110,9 @@ func (s *OptiScalerService) ListOptiScalerTargets(ctx context.Context, gameID in
 			err = fmt.Errorf("list game OptiScaler targets: %w", err)
 		}
 	}()
+	if game, lookupErr := s.store.GetStoredGame(ctx, gameID); lookupErr == nil {
+		diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+	}
 	targets, err := s.store.ListOptiScalerTargets(ctx, gameID)
 	if err != nil {
 		return nil, err
@@ -240,7 +243,12 @@ func (s *OptiScalerService) GetOptiScalerRecoveryState(ctx context.Context) (res
 	if err != nil {
 		return dto.OptiScalerRecoveryState{}, err
 	}
-	diag.complete("OptiScaler recovery state read completed", optiScalerRecoveryStateAttrs(result)...)
+	if result.GameID > 0 {
+		if game, lookupErr := s.store.GetStoredGame(ctx, result.GameID); lookupErr == nil {
+			diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+		}
+	}
+	diag.complete("OptiScaler recovery state read completed", optiScalerRecoveryStateAttrs(ctx, s.store, result)...)
 	return result, nil
 }
 
@@ -254,6 +262,12 @@ func (s *OptiScalerService) RollbackOptiScalerRecovery(ctx context.Context, jour
 			err = fmt.Errorf("rollback OptiScaler recovery state: %w", err)
 		}
 	}()
+	if state, stateErr := s.manager.RecoveryState(); stateErr == nil && state.JournalID == journalID && state.GameID > 0 {
+		diag.attrs = append(diag.attrs, slog.Int64("game_id", state.GameID))
+		if game, lookupErr := s.store.GetStoredGame(ctx, state.GameID); lookupErr == nil {
+			diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+		}
+	}
 	result, err = s.manager.RollbackRecovery(journalID)
 	if err != nil {
 		return dto.OptiScalerApplyResult{}, err
@@ -292,8 +306,8 @@ func optiScalerRequestAttrs(request dto.OptiScalerRequest) []slog.Attr {
 	return attrs
 }
 
-func optiScalerRecoveryStateAttrs(state dto.OptiScalerRecoveryState) []slog.Attr {
-	return []slog.Attr{
+func optiScalerRecoveryStateAttrs(ctx context.Context, store *storage.Store, state dto.OptiScalerRecoveryState) []slog.Attr {
+	attrs := []slog.Attr{
 		slog.Bool("required", state.Required),
 		slog.String("journal_id", state.JournalID),
 		slog.Int64("game_id", state.GameID),
@@ -302,4 +316,10 @@ func optiScalerRecoveryStateAttrs(state dto.OptiScalerRecoveryState) []slog.Attr
 		slog.Time("started_at", state.StartedAt),
 		slog.String("recovery_error", state.Error),
 	}
+	if store != nil && state.GameID > 0 {
+		if game, err := store.GetStoredGame(ctx, state.GameID); err == nil {
+			attrs = append(attrs, slog.String("game_name", game.Name))
+		}
+	}
+	return attrs
 }

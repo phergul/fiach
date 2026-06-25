@@ -60,7 +60,7 @@ func (s *ReshadeService) ServiceStartup(ctx context.Context, _ application.Servi
 		return err
 	}
 	if state.Required {
-		s.logger.WarnContext(ctx, "ReShade recovery required",
+		attrs := []slog.Attr{
 			slog.String("operation", diagnostics.OperationReShadeRecovery),
 			slog.String("journal_id", state.JournalID),
 			slog.Int64("game_id", state.GameID),
@@ -68,9 +68,13 @@ func (s *ReshadeService) ServiceStartup(ctx context.Context, _ application.Servi
 			slog.String("action", string(state.Action)),
 			slog.Time("started_at", state.StartedAt),
 			slog.String("recovery_error", state.Error),
-		)
+		}
+		if game, lookupErr := s.store.GetStoredGame(ctx, state.GameID); lookupErr == nil {
+			attrs = append(attrs, slog.String("game_name", game.Name))
+		}
+		s.logger.LogAttrs(ctx, slog.LevelWarn, "ReShade recovery required", attrs...)
 	}
-	diag.complete("ReShade startup recovery inspection completed", reShadeRecoveryStateAttrs(state)...)
+	diag.complete("ReShade startup recovery inspection completed", reShadeRecoveryStateAttrs(ctx, s.store, state)...)
 	return nil
 }
 
@@ -210,6 +214,7 @@ func (s *ReshadeService) ListReShadeTargets(ctx context.Context, gameID int64) (
 	if err != nil {
 		return nil, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.ListTargets(ctx, game.InstallPath, gameID)
 	if err != nil {
 		return nil, err
@@ -290,6 +295,9 @@ func (s *ReshadeService) ListReShadeChainTargets(
 			err = fmt.Errorf("list ReShade injection chain targets: %w", err)
 		}
 	}()
+	if game, lookupErr := s.store.GetStoredGame(ctx, gameID); lookupErr == nil {
+		diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+	}
 	targets, err := s.injection.ListTargets(ctx, gameID)
 	if err != nil {
 		return nil, err
@@ -326,6 +334,7 @@ func (s *ReshadeService) InspectReShadePreset(
 	if err != nil {
 		return dto.ReShadePresetInspectionResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	targetPath, err := reshade.ResolveWithinRoot(game.InstallPath, targetRelativePath)
 	if err != nil {
 		return dto.ReShadePresetInspectionResult{}, err
@@ -406,6 +415,7 @@ func (s *ReshadeService) DiscoverReShadeCandidates(
 	if err != nil {
 		return dto.ReShadeDiscoveryResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	optiScalerTargets, _, err := s.injection.ManagedDirectXOptiScalerTargets(ctx, gameID)
 	if err != nil {
 		return dto.ReShadeDiscoveryResult{}, err
@@ -450,6 +460,7 @@ func (s *ReshadeService) PreviewReShadeAction(ctx context.Context, request dto.R
 	if err != nil {
 		return dto.ReShadePreview{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.Preview(ctx, game.InstallPath, request)
 	if err != nil {
 		return dto.ReShadePreview{}, err
@@ -491,6 +502,7 @@ func (s *ReshadeService) ApplyReShadeAction(
 	if err != nil {
 		return dto.ReShadeApplyResult{}, err
 	}
+	diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
 	result, err = s.manager.Apply(ctx, game.InstallPath, request, previewHash)
 	if err != nil {
 		return dto.ReShadeApplyResult{}, err
@@ -516,7 +528,12 @@ func (s *ReshadeService) GetReShadeRecoveryState(ctx context.Context) (result dt
 	if err != nil {
 		return dto.ReShadeRecoveryState{}, err
 	}
-	diag.complete("ReShade recovery state read completed", reShadeRecoveryStateAttrs(result)...)
+	if result.GameID > 0 {
+		if game, lookupErr := s.store.GetStoredGame(ctx, result.GameID); lookupErr == nil {
+			diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+		}
+	}
+	diag.complete("ReShade recovery state read completed", reShadeRecoveryStateAttrs(ctx, s.store, result)...)
 	return result, nil
 }
 
@@ -533,6 +550,12 @@ func (s *ReshadeService) RollbackReShadeRecovery(
 			err = fmt.Errorf("rollback ReShade recovery state: %w", err)
 		}
 	}()
+	if state, stateErr := s.manager.RecoveryState(); stateErr == nil && state.JournalID == journalID && state.GameID > 0 {
+		diag.attrs = append(diag.attrs, slog.Int64("game_id", state.GameID))
+		if game, lookupErr := s.store.GetStoredGame(ctx, state.GameID); lookupErr == nil {
+			diag.attrs = append(diag.attrs, slog.String("game_name", game.Name))
+		}
+	}
 	result, err = s.manager.RollbackRecovery(journalID)
 	if err != nil {
 		return dto.ReShadeApplyResult{}, err
@@ -563,8 +586,8 @@ func reShadeRequestAttrs(request dto.ReShadeRequest) []slog.Attr {
 	}
 }
 
-func reShadeRecoveryStateAttrs(state dto.ReShadeRecoveryState) []slog.Attr {
-	return []slog.Attr{
+func reShadeRecoveryStateAttrs(ctx context.Context, store *storage.Store, state dto.ReShadeRecoveryState) []slog.Attr {
+	attrs := []slog.Attr{
 		slog.Bool("required", state.Required),
 		slog.String("journal_id", state.JournalID),
 		slog.Int64("game_id", state.GameID),
@@ -573,4 +596,10 @@ func reShadeRecoveryStateAttrs(state dto.ReShadeRecoveryState) []slog.Attr {
 		slog.Time("started_at", state.StartedAt),
 		slog.String("recovery_error", state.Error),
 	}
+	if store != nil && state.GameID > 0 {
+		if game, err := store.GetStoredGame(ctx, state.GameID); err == nil {
+			attrs = append(attrs, slog.String("game_name", game.Name))
+		}
+	}
+	return attrs
 }
