@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 includes:
   common: ./build/Taskfile.yml
@@ -9,7 +9,7 @@ includes:
 vars:
   APP_NAME: "fiach"
   BIN_DIR: "bin"
-  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  VITE_PORT: "{{.WAILS_VITE_PORT | default 9245}}"
 
 tasks:
   build:
@@ -72,5 +72,6 @@ tasks:
     summary: Runs checks on the application
     cmds:
       - go vet ./...
+      - go fmt ./...
       - task: test:frontend
       - task: test:backend

@@ -1,7 +1,9 @@
 @use '@styles' as *;
 
 $game-profiles-list-item-control-height: 2.5rem;
-$game-profiles-list-item-actions-width: 5.5rem;
+$game-profiles-list-item-actions-width: calc(
+  3 * #{$game-profiles-list-item-control-height} + 2 * #{$spacing-xs} + #{$spacing-md}
+);
 $game-profiles-list-item-icon-size: 1rem;
 $game-profiles-list-item-min-height: 4.5rem;
 
@@ -88,8 +90,7 @@ $game-profiles-list-item-min-height: 4.5rem;
 }
 
 .game-profiles-list-item-actions {
-  display: grid;
-  grid-template-columns: repeat(3, $game-profiles-list-item-control-height);
+  display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: $spacing-xs;
@@ -97,10 +98,9 @@ $game-profiles-list-item-min-height: 4.5rem;
 }
 
 .game-profiles-list-item-input {
-  width: calc(100% - $spacing-xl);
+  width: 100%;
   height: $game-profiles-list-item-control-height;
   min-width: 0;
-  margin-left: $spacing-md;
   padding: 0 $spacing-md;
   border: $app-border;
   background: $color-background;

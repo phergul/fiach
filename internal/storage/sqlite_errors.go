@@ -7,9 +7,9 @@ import (
 )
 
 type uniqueConstraint struct {
-	table  string
+	table   string
 	columns []string
-	target error
+	target  error
 }
 
 var uniqueConstraintMatchers = []uniqueConstraint{

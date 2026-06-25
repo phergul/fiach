@@ -30,8 +30,6 @@ $mod-tag-editor-chip-height: calc(
   height: auto;
   min-height: 0;
   padding: $spacing-xs $spacing-sm;
-  border: $mod-tag-editor-border;
-  border-radius: 0;
   font-size: $font-size-sm;
   line-height: $line-height-heading;
 }
@@ -70,7 +68,7 @@ $mod-tag-editor-chip-height: calc(
 .mod-tag-editor-add-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0;
+  gap: $spacing-sm;
 }
 
 .mod-tag-editor-input {
@@ -85,7 +83,6 @@ $mod-tag-editor-chip-height: calc(
 
 .mod-tag-editor-add-row .mod-tag-editor-inline-button {
   height: $mod-tag-editor-control-height;
-  border-left: 0;
 }
 
 .mod-tag-editor-inline-row .mod-tag-editor-inline-button {
@@ -102,6 +99,11 @@ $mod-tag-editor-chip-height: calc(
   border: $app-border-width solid var(--mod-tag-editor-color);
   border-radius: 0;
   background: transparent;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: var(--mod-tag-editor-color);
+  }
 }
 
 .mod-tag-editor-color[aria-pressed='true'] {
@@ -170,8 +172,6 @@ $mod-tag-editor-chip-height: calc(
 .mod-tag-editor-create-button {
   min-height: 0;
   padding: $spacing-xs $spacing-sm;
-  border: $mod-tag-editor-border;
-  border-radius: 0;
   font-size: $font-size-sm;
   line-height: $line-height-heading;
   white-space: nowrap;

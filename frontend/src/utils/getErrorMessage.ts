@@ -65,7 +65,6 @@ const withTerminalPeriod = (message: string) => {
   return `${trimmedMessage}.`;
 };
 
-
 const friendlyFromRawMessage = (message: string) => {
   const normalizedMessage = stripNoisyPrefix(message);
   if (normalizedMessage === '') {

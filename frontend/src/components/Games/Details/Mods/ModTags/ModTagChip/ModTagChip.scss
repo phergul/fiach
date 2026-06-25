@@ -3,31 +3,35 @@
 $mod-tag-chip-icon-size: 0.75rem;
 $mod-tag-chip-border-alpha: 62%;
 $mod-tag-chip-bg-alpha: 34%;
+$mod-tag-chip-height: calc(
+  #{$font-size-sm * $line-height-heading} + #{2 * $spacing-xs} + #{2 * $app-border-width}
+);
+$mod-tag-chip-inner-size: calc(#{$mod-tag-chip-height} - #{2 * $app-border-width});
 
 .mod-tag-chip {
   display: inline-flex;
+  flex-shrink: 0;
   min-width: 0;
-  align-items: baseline;
+  align-items: center;
   overflow: hidden;
+  height: $mod-tag-chip-height;
   border: $app-border-width solid
     color-mix(in srgb, var(--mod-tag-color) $mod-tag-chip-border-alpha, $color-border);
   background: rgb(#{$color-surface-rgb} / #{$mod-tag-chip-bg-alpha});
   color: var(--mod-tag-color);
   font-size: $font-size-sm;
-  line-height: $line-height-heading;
 }
 
 .mod-tag-chip-content {
   display: inline-flex;
-  min-width: 0;
-  align-items: baseline;
+  flex: 0 0 auto;
+  min-width: auto;
   padding: $spacing-xs $spacing-sm;
   color: inherit;
   font-weight: $font-weight-semibold;
 }
 
-.mod-tag-chip-edit,
-.mod-tag-chip-remove {
+.mod-tag-chip-edit {
   align-self: stretch;
   min-height: 0;
   border: 0;
@@ -47,7 +51,16 @@ $mod-tag-chip-bg-alpha: 34%;
 }
 
 .mod-tag-chip-remove {
-  padding: $spacing-xs $spacing-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 $mod-tag-chip-inner-size;
+  width: $mod-tag-chip-inner-size;
+  height: $mod-tag-chip-inner-size;
+  align-self: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   color: inherit;
   border-left: $app-border-width solid
     color-mix(in srgb, var(--mod-tag-color) 48%, $color-border-subtle);
