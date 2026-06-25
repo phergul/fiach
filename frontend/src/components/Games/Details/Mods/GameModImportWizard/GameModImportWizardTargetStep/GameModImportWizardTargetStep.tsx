@@ -36,9 +36,11 @@ export const GameModImportWizardTargetStep = ({
           {candidates.map((candidate) => (
             <button
               aria-pressed={targetRelativePath === candidate}
-              className={targetRelativePath === candidate
-                ? 'game-mod-import-wizard-target-step-candidate game-mod-import-wizard-target-step-candidate-selected'
-                : 'game-mod-import-wizard-target-step-candidate'}
+              className={
+                targetRelativePath === candidate
+                  ? 'game-mod-import-wizard-target-step-candidate game-mod-import-wizard-target-step-candidate-selected'
+                  : 'game-mod-import-wizard-target-step-candidate'
+              }
               disabled={isBusy}
               key={candidate}
               onClick={() => onTargetRelativePathChange(candidate)}
@@ -66,7 +68,9 @@ export const GameModImportWizardTargetStep = ({
       </label>
 
       {detectionWarnings.map((warning) => (
-        <p className="game-mod-import-wizard-target-step-warning" key={warning}>{warning}</p>
+        <p className="game-mod-import-wizard-target-step-warning" key={warning}>
+          {warning}
+        </p>
       ))}
       {detectionError !== null && (
         <p className="game-mod-import-wizard-target-step-error">{detectionError}</p>

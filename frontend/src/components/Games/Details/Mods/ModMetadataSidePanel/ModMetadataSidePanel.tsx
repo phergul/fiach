@@ -56,12 +56,13 @@ const valueFromField = (field: ModMetadataField | undefined) => {
     return '';
   }
 
-  return field.UserSet ? field.User ?? '' : field.Effective ?? '';
+  return field.UserSet ? (field.User ?? '') : (field.Effective ?? '');
 };
 
 const resetValueFromField = (field: ModMetadataField | undefined) => field?.Detected ?? '';
 
-const hasDetectedValue = (field: ModMetadataField | undefined) => (field?.Detected ?? '').trim() !== '';
+const hasDetectedValue = (field: ModMetadataField | undefined) =>
+  (field?.Detected ?? '').trim() !== '';
 
 const buildFieldState = (field: ModMetadataField | undefined): FieldState => ({
   value: valueFromField(field),
@@ -132,11 +133,13 @@ export const ModMetadataSidePanel = ({
     setDescription(buildFieldState(metadata?.Description));
     setSourceURL(buildFieldState(metadata?.SourceURL));
     setNotes(metadata?.Notes ?? '');
-    setTags((mod?.Tags ?? []).map((tag) => ({
-      ID: tag.ID,
-      Name: tag.Name,
-      Color: tag.Color,
-    })));
+    setTags(
+      (mod?.Tags ?? []).map((tag) => ({
+        ID: tag.ID,
+        Name: tag.Name,
+        Color: tag.Color,
+      })),
+    );
     setFieldErrors({});
   }, [mod?.ID]);
 
@@ -144,20 +147,14 @@ export const ModMetadataSidePanel = ({
     return null;
   }
 
-  const updateField = (
-    setter: (value: FieldState) => void,
-    nextValue: string,
-  ) => {
+  const updateField = (setter: (value: FieldState) => void, nextValue: string) => {
     setter({
       value: nextValue,
       resetToDetected: false,
     });
   };
 
-  const resetField = (
-    field: ModMetadataField | undefined,
-    setter: (value: FieldState) => void,
-  ) => {
+  const resetField = (field: ModMetadataField | undefined, setter: (value: FieldState) => void) => {
     setter({
       value: resetValueFromField(field),
       resetToDetected: true,
@@ -219,7 +216,9 @@ export const ModMetadataSidePanel = ({
       {state.resetToDetected && hasDetectedValue(field) && (
         <span className="mod-metadata-side-panel-status">Will reset on save.</span>
       )}
-      {errorMessage !== undefined && <span className="mod-metadata-side-panel-error">{errorMessage}</span>}
+      {errorMessage !== undefined && (
+        <span className="mod-metadata-side-panel-error">{errorMessage}</span>
+      )}
     </label>
   );
 
@@ -295,7 +294,13 @@ export const ModMetadataSidePanel = ({
             )}
           </label>
 
-          {buildTextInput('Source URL', metadata?.SourceURL, sourceURL, setSourceURL, fieldErrors.sourceURL)}
+          {buildTextInput(
+            'Source URL',
+            metadata?.SourceURL,
+            sourceURL,
+            setSourceURL,
+            fieldErrors.sourceURL,
+          )}
 
           <label className="mod-metadata-side-panel-field">
             <span className="mod-metadata-side-panel-label">Notes</span>

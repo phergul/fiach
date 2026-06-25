@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { GetThemeID, SetThemeID } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
+import {
+  GetThemeID,
+  SetThemeID,
+} from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { applyThemeCSSVariables } from '@theme/themeCSSVariables';
 import { defaultTheme, resolveTheme, themes } from '@theme/themes';
 import type { ThemeDefinition } from '@theme/themeTypes';

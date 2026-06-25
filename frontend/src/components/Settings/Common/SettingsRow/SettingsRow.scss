@@ -7,7 +7,10 @@ $settings-row-control-width: 42rem;
 .settings-row {
   display: grid;
   min-height: $settings-row-min-height;
-  grid-template-columns: minmax($settings-row-copy-width, 1fr) minmax(0, $settings-row-control-width);
+  grid-template-columns: minmax($settings-row-copy-width, 1fr) minmax(
+      0,
+      $settings-row-control-width
+    );
   align-items: center;
   gap: $spacing-xl;
   padding: $spacing-lg $spacing-xl;

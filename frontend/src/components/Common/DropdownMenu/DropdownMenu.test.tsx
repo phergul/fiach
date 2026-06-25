@@ -10,13 +10,15 @@ describe('DropdownMenu', () => {
       <DropdownMenu
         ariaLabel="Game actions"
         isOpen
-        items={[{
-          children: [
-            { label: 'OptiScaler', onSelect },
-            { label: 'Manage ReShade', onSelect },
-          ],
-          label: 'Manage graphics tools',
-        }]}
+        items={[
+          {
+            children: [
+              { label: 'OptiScaler', onSelect },
+              { label: 'Manage ReShade', onSelect },
+            ],
+            label: 'Manage graphics tools',
+          },
+        ]}
       />,
     );
 

@@ -13,18 +13,22 @@ const target = {
 } as ReShadeTarget;
 
 const discovery = (isReShade: boolean): ReShadeDiscoveryResult => ({
-  candidates: [{
-    apiOptions: [],
-    architecture: Architecture.ArchitectureX64,
-    conflicts: [],
-    executableRelativePath: 'Game.exe',
-    proxyEvidence: [{
-      exists: true,
-      filename: 'dxgi.dll',
-      isReShade,
-    }],
-    targetRelativePath: '.',
-  }],
+  candidates: [
+    {
+      apiOptions: [],
+      architecture: Architecture.ArchitectureX64,
+      conflicts: [],
+      executableRelativePath: 'Game.exe',
+      proxyEvidence: [
+        {
+          exists: true,
+          filename: 'dxgi.dll',
+          isReShade,
+        },
+      ],
+      targetRelativePath: '.',
+    },
+  ],
   warnings: [],
 });
 

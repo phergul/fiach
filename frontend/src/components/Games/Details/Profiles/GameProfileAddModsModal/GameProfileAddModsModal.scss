@@ -128,16 +128,19 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
   transform: rotate(45deg);
 }
 
-.game-profile-add-mods-modal-option input:checked+.game-profile-add-mods-modal-option-control {
+.game-profile-add-mods-modal-option input:checked + .game-profile-add-mods-modal-option-control {
   background: $color-success;
   border-color: $color-success;
 }
 
-.game-profile-add-mods-modal-option input:checked+.game-profile-add-mods-modal-option-control::after {
+.game-profile-add-mods-modal-option
+  input:checked
+  + .game-profile-add-mods-modal-option-control::after {
   opacity: 1;
 }
 
-.game-profile-add-mods-modal-option:has(input:focus-visible) .game-profile-add-mods-modal-option-control {
+.game-profile-add-mods-modal-option:has(input:focus-visible)
+  .game-profile-add-mods-modal-option-control {
   border-color: $color-border-strong;
 }
 

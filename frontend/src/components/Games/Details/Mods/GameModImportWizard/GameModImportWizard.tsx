@@ -96,7 +96,8 @@ export const GameModImportWizard = ({
   const canContinueFromDetails = trimmedName !== '';
   const canContinueFromStrategy = selectedStrategyType !== null && strategyLoadError === null;
   const canPreviewTarget = selectedStrategyType !== null && targetRelativePath.trim() !== '';
-  const isNextDisabled = isBusy ||
+  const isNextDisabled =
+    isBusy ||
     isPreviewing ||
     isDetectingTargets ||
     (isDetailsStep && !canContinueFromDetails) ||
@@ -187,9 +188,9 @@ export const GameModImportWizard = ({
         setTargetCandidates(detection.Candidates);
         setTargetDetectionWarnings(detection.Warnings);
         if (detection.Candidates.length === 1) {
-          setTargetRelativePath((currentPath) => (
-            currentPath.trim() === '' ? detection.Candidates[0] : currentPath
-          ));
+          setTargetRelativePath((currentPath) =>
+            currentPath.trim() === '' ? detection.Candidates[0] : currentPath,
+          );
         }
       })
       .catch((detectionError) => {
@@ -307,27 +308,23 @@ export const GameModImportWizard = ({
   const footer = (
     <>
       {!isDetailsStep && (
-        <button
-          disabled={isBusy}
-          onClick={goBack}
-          type="button"
-        >
+        <button disabled={isBusy} onClick={goBack} type="button">
           Back
         </button>
       )}
-      <button
-        disabled={isBusy}
-        onClick={onClose}
-        type="button"
-      >
+      <button disabled={isBusy} onClick={onClose} type="button">
         Cancel
       </button>
-      <button
-        className="button-main"
-        disabled={isNextDisabled}
-        type="submit"
-      >
-        {isPreviewStep ? (isBusy ? 'Importing...' : 'Import Mod') : isTargetStep ? (isPreviewing ? 'Previewing...' : 'Preview') : 'Next'}
+      <button className="button-main" disabled={isNextDisabled} type="submit">
+        {isPreviewStep
+          ? isBusy
+            ? 'Importing...'
+            : 'Import Mod'
+          : isTargetStep
+            ? isPreviewing
+              ? 'Previewing...'
+              : 'Preview'
+            : 'Next'}
       </button>
     </>
   );
@@ -350,11 +347,13 @@ export const GameModImportWizard = ({
       <ol className="game-mod-import-wizard-steps" aria-label="Import steps">
         {stepOrder.map((stepName, index) => (
           <li
-            className={index < currentStepIndex
-              ? 'game-mod-import-wizard-step game-mod-import-wizard-step-complete'
-              : stepName === step
-                ? 'game-mod-import-wizard-step game-mod-import-wizard-step-active'
-                : 'game-mod-import-wizard-step'}
+            className={
+              index < currentStepIndex
+                ? 'game-mod-import-wizard-step game-mod-import-wizard-step-complete'
+                : stepName === step
+                  ? 'game-mod-import-wizard-step game-mod-import-wizard-step-active'
+                  : 'game-mod-import-wizard-step'
+            }
             key={stepName}
           >
             {index + 1}. {stepLabels[stepName]}

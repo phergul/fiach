@@ -83,7 +83,11 @@ export const GameProfilesListItem = ({
 
   return (
     <li
-      className={isSelected ? 'game-profiles-list-item game-profiles-list-item-selected' : 'game-profiles-list-item'}
+      className={
+        isSelected
+          ? 'game-profiles-list-item game-profiles-list-item-selected'
+          : 'game-profiles-list-item'
+      }
       onClick={handleSelect}
       onKeyDown={handleKeyDown}
       role="button"
@@ -107,7 +111,9 @@ export const GameProfilesListItem = ({
             <span className="game-profiles-list-item-meta">
               <span className="game-profiles-list-item-meta-part">
                 {assignedSummary}
-                <span className="game-profiles-list-item-meta-separator" aria-hidden="true">·</span>
+                <span className="game-profiles-list-item-meta-separator" aria-hidden="true">
+                  ·
+                </span>
                 {enabledSummary}
               </span>
               <span className="game-profiles-list-item-meta-part">{editedSummary}</span>

@@ -1,4 +1,12 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import type { OptiScalerRelease } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { GetOptiScalerReleaseStatus } from '@bindings/github.com/phergul/fiach/internal/services/optiscalerservice';
@@ -23,54 +31,58 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
   const [isReleaseLoading, setIsReleaseLoading] = useState(false);
   const releasePromiseRef = useRef<Promise<OptiScalerRelease | null> | null>(null);
 
-  const loadRelease = useCallback((refresh = false) => {
-    if (!refresh && release !== null) {
-      return Promise.resolve(release);
-    }
-    if (!refresh && releasePromiseRef.current !== null) {
-      return releasePromiseRef.current;
-    }
+  const loadRelease = useCallback(
+    (refresh = false) => {
+      if (!refresh && release !== null) {
+        return Promise.resolve(release);
+      }
+      if (!refresh && releasePromiseRef.current !== null) {
+        return releasePromiseRef.current;
+      }
 
-    setIsReleaseLoading(true);
-    setReleaseError(null);
-    let shouldCacheRequest = false;
-    const request = GetOptiScalerReleaseStatus(refresh)
-      .then((result) => {
-        const releaseError = result.error ?? '';
-        if (releaseError !== '') {
-          setRelease(null);
-          setReleaseError(releaseError);
+      setIsReleaseLoading(true);
+      setReleaseError(null);
+      let shouldCacheRequest = false;
+      const request = GetOptiScalerReleaseStatus(refresh)
+        .then((result) => {
+          const releaseError = result.error ?? '';
+          if (releaseError !== '') {
+            setRelease(null);
+            setReleaseError(releaseError);
+            return null;
+          }
+          shouldCacheRequest = true;
+          setRelease(result);
+          return result;
+        })
+        .catch((error) => {
+          setReleaseError(getErrorMessage(error));
           return null;
-        }
-        shouldCacheRequest = true;
-        setRelease(result);
-        return result;
-      })
-      .catch((error) => {
-        setReleaseError(getErrorMessage(error));
-        return null;
-      })
-      .finally(() => {
-        setIsReleaseLoading(false);
-        if (!shouldCacheRequest && releasePromiseRef.current === request) {
-          releasePromiseRef.current = null;
-        }
-      });
-    releasePromiseRef.current = request;
-    return request;
-  }, [release]);
+        })
+        .finally(() => {
+          setIsReleaseLoading(false);
+          if (!shouldCacheRequest && releasePromiseRef.current === request) {
+            releasePromiseRef.current = null;
+          }
+        });
+      releasePromiseRef.current = request;
+      return request;
+    },
+    [release],
+  );
 
-  const value = useMemo(() => ({
-    isReleaseLoading,
-    loadRelease,
-    release,
-    releaseError,
-  }), [isReleaseLoading, loadRelease, release, releaseError]);
+  const value = useMemo(
+    () => ({
+      isReleaseLoading,
+      loadRelease,
+      release,
+      releaseError,
+    }),
+    [isReleaseLoading, loadRelease, release, releaseError],
+  );
 
   return (
-    <OptiScalerSessionContext.Provider value={value}>
-      {children}
-    </OptiScalerSessionContext.Provider>
+    <OptiScalerSessionContext.Provider value={value}>{children}</OptiScalerSessionContext.Provider>
   );
 };
 

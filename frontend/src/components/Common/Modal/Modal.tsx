@@ -57,7 +57,9 @@ export const Modal = ({
     `modal-panel-${size}`,
     `modal-panel-${background}`,
     panelClassName,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
   const bodyClassNames = ['modal-body', bodyClassName].filter(Boolean).join(' ');
 
   return (

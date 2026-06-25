@@ -27,7 +27,8 @@ export const ModsSettings = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isApplyingGlobalRoot, setIsApplyingGlobalRoot] = useState(false);
-  const [pendingGlobalRootChange, setPendingGlobalRootChange] = useState<PendingGlobalRootChange | null>(null);
+  const [pendingGlobalRootChange, setPendingGlobalRootChange] =
+    useState<PendingGlobalRootChange | null>(null);
 
   useEffect(() => {
     let isMounted = true;

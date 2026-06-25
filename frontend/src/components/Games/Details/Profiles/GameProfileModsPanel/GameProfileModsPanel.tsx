@@ -4,7 +4,11 @@ import { Link } from 'react-router-dom';
 import { CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 
 import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import type { Mod, ModProfile, ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  Mod,
+  ModProfile,
+  ProfileMod,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
 import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/GameProfileAssignedModsList/GameProfileAssignedModsList';
@@ -47,16 +51,17 @@ export const GameProfileModsPanel = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEnabledOnly, setIsEnabledOnly] = useState(false);
   const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
-  const assignedModIDs = useMemo(() => new Set(profileMods.map((profileMod) => profileMod.ModID)), [profileMods]);
-  const modsByID = useMemo(
-    () => new Map(gameMods.map((mod) => [mod.ID, mod])),
-    [gameMods],
+  const assignedModIDs = useMemo(
+    () => new Set(profileMods.map((profileMod) => profileMod.ModID)),
+    [profileMods],
   );
+  const modsByID = useMemo(() => new Map(gameMods.map((mod) => [mod.ID, mod])), [gameMods]);
   const assignedMods = useMemo(
-    () => profileMods.flatMap((profileMod) => {
-      const mod = modsByID.get(profileMod.ModID);
-      return mod === undefined ? [] : [mod];
-    }),
+    () =>
+      profileMods.flatMap((profileMod) => {
+        const mod = modsByID.get(profileMod.ModID);
+        return mod === undefined ? [] : [mod];
+      }),
     [modsByID, profileMods],
   );
   const tagsByModID = useMemo(
@@ -68,14 +73,15 @@ export const GameProfileModsPanel = ({
     [profileMods],
   );
   const visibleProfileMods = useMemo(
-    () => profileMods.filter((profileMod) => {
-      if (isEnabledOnly && !profileMod.Enabled) {
-        return false;
-      }
+    () =>
+      profileMods.filter((profileMod) => {
+        if (isEnabledOnly && !profileMod.Enabled) {
+          return false;
+        }
 
-      const modTags = modsByID.get(profileMod.ModID)?.Tags ?? [];
-      return selectedTagIDs.every((tagID) => modTags.some((tag) => tag.ID === tagID));
-    }),
+        const modTags = modsByID.get(profileMod.ModID)?.Tags ?? [];
+        return selectedTagIDs.every((tagID) => modTags.some((tag) => tag.ID === tagID));
+      }),
     [isEnabledOnly, modsByID, profileMods, selectedTagIDs],
   );
   const availableMods = useMemo(
@@ -84,10 +90,12 @@ export const GameProfileModsPanel = ({
   );
   const canOpenAddModal = !isBusy && !isGameModsLoading && availableMods.length > 0;
   const isSelectedProfileApplied = profile !== null && appliedProfile?.ProfileID === profile.ID;
-  const isAnotherProfileApplied = profile !== null && appliedProfile !== null && !isSelectedProfileApplied;
-  const blockedApplyTitle = appliedProfile === null
-    ? undefined
-    : `${appliedProfile.ProfileName} is applied. Restore vanilla before applying another profile.`;
+  const isAnotherProfileApplied =
+    profile !== null && appliedProfile !== null && !isSelectedProfileApplied;
+  const blockedApplyTitle =
+    appliedProfile === null
+      ? undefined
+      : `${appliedProfile.ProfileName} is applied. Restore vanilla before applying another profile.`;
 
   useEffect(() => {
     setIsAddModalOpen(false);
@@ -97,7 +105,9 @@ export const GameProfileModsPanel = ({
 
   useEffect(() => {
     const availableTagIDs = new Set(assignedMods.flatMap((mod) => mod.Tags.map((tag) => tag.ID)));
-    setSelectedTagIDs((currentTagIDs) => currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)));
+    setSelectedTagIDs((currentTagIDs) =>
+      currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)),
+    );
   }, [assignedMods]);
 
   const handleAddMods = async (modIDs: number[]) => {
@@ -136,7 +146,9 @@ export const GameProfileModsPanel = ({
       <section className="game-profile-mods-panel" aria-label="Profile mods">
         <StateBlock
           className="game-profile-mods-panel-empty"
-          message={isProfilesLoading ? 'Loading profile details...' : 'Create a profile to configure mods.'}
+          message={
+            isProfilesLoading ? 'Loading profile details...' : 'Create a profile to configure mods.'
+          }
         />
       </section>
     );
@@ -146,7 +158,10 @@ export const GameProfileModsPanel = ({
     <section className="game-profile-mods-panel" aria-label={`${profile.Name} mods`}>
       <div className="game-profile-mods-panel-body">
         {isGameModsLoading && (
-          <StateBlock className="game-profile-mods-panel-empty" message="Loading imported mods..." />
+          <StateBlock
+            className="game-profile-mods-panel-empty"
+            message="Loading imported mods..."
+          />
         )}
 
         {!isGameModsLoading && gameMods.length === 0 && (
@@ -179,7 +194,9 @@ export const GameProfileModsPanel = ({
                 onMoveMod={handleMoveProfileMod}
                 onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
                 onRemoveMod={(modID) => onRemoveModFromProfile(profile.ID, modID)}
-                onSetModEnabled={(modID, enabled) => onSetProfileModEnabled(profile.ID, modID, enabled)}
+                onSetModEnabled={(modID, enabled) =>
+                  onSetProfileModEnabled(profile.ID, modID, enabled)
+                }
               />
             )}
           </>
@@ -239,7 +256,11 @@ export const GameProfileModsPanel = ({
           </button>
         ) : (
           <Link
-            className={isBusy ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled' : 'game-profile-mods-panel-apply-button button-main'}
+            className={
+              isBusy
+                ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled'
+                : 'game-profile-mods-panel-apply-button button-main'
+            }
             to={`${applyProfilePath}/${profile.ID}`}
             onClick={(event) => {
               if (isBusy) {

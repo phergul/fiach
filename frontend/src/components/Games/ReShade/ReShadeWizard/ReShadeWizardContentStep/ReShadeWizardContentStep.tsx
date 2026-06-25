@@ -2,7 +2,10 @@ import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import { ChevronDown, ChevronRight, Search, RefreshCw } from 'lucide-react';
 
-import { BuildVariant, type ContentRequest } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
+import {
+  BuildVariant,
+  type ContentRequest,
+} from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type {
   ReShadeContentCatalogue,
   ReShadePresetInspectionResult,
@@ -36,17 +39,20 @@ const selectedAddon = (content: ContentRequest, id: string) =>
 const effectFileNames = (pkg: EffectPackage) =>
   pkg.effectFiles.map((effect) => effect.trim()).filter((effect) => effect !== '');
 
-const upsertPackageSelection = (content: ContentRequest, id: string, effectFiles?: string[]): ContentRequest => {
-  const nextSelection = effectFiles !== undefined && effectFiles.length > 0
-    ? { id, effectFiles }
-    : { id };
+const upsertPackageSelection = (
+  content: ContentRequest,
+  id: string,
+  effectFiles?: string[],
+): ContentRequest => {
+  const nextSelection =
+    effectFiles !== undefined && effectFiles.length > 0 ? { id, effectFiles } : { id };
   const currentSelections = content.effectPackages ?? [];
   const hasPackage = currentSelections.some((selection) => selection.id === id);
 
   return {
     ...content,
     effectPackages: hasPackage
-      ? currentSelections.map((selection) => selection.id === id ? nextSelection : selection)
+      ? currentSelections.map((selection) => (selection.id === id ? nextSelection : selection))
       : [...currentSelections, nextSelection],
   };
 };
@@ -67,9 +73,10 @@ const toggleEffect = (
 ): ContentRequest => {
   const effects = effectFileNames(pkg);
   const selection = selectedPackage(content, pkg.id);
-  const selectedEffects = selection?.effectFiles !== undefined && selection.effectFiles.length > 0
-    ? selection.effectFiles
-    : effects;
+  const selectedEffects =
+    selection?.effectFiles !== undefined && selection.effectFiles.length > 0
+      ? selection.effectFiles
+      : effects;
   const nextEffects = enabled
     ? [...selectedEffects, effect]
     : selectedEffects.filter((item) => item !== effect);
@@ -104,7 +111,8 @@ const toggleAddon = (content: ContentRequest, id: string, enabled: boolean): Con
 const searchableText = (parts: string[]) => parts.join(' ').toLowerCase();
 
 const packageMatchesSearch = (pkg: EffectPackage, query: string) =>
-  query === '' || searchableText([
+  query === '' ||
+  searchableText([
     pkg.id,
     pkg.name,
     pkg.description,
@@ -114,7 +122,8 @@ const packageMatchesSearch = (pkg: EffectPackage, query: string) =>
   ]).includes(query);
 
 const addonMatchesSearch = (addon: AddonPackage, query: string) =>
-  query === '' || searchableText([
+  query === '' ||
+  searchableText([
     addon.id,
     addon.name,
     addon.description,
@@ -135,7 +144,7 @@ const selectedEffectCount = (content: ContentRequest, pkg: EffectPackage) => {
   return selection.effectFiles.length;
 };
 
-const firstAvailableTab = (showAddons: boolean): ContentTab => showAddons ? 'effects' : 'effects';
+const firstAvailableTab = (showAddons: boolean): ContentTab => (showAddons ? 'effects' : 'effects');
 
 export const ReShadeWizardContentStep = ({
   buildVariant,
@@ -167,21 +176,24 @@ export const ReShadeWizardContentStep = ({
     () => addons.filter((addon) => addonMatchesSearch(addon, trimmedSearchQuery)),
     [addons, trimmedSearchQuery],
   );
-  const activeEffect = trimmedSearchQuery === ''
-    ? effects.find((pkg) => pkg.id === activeEffectID) ?? effects[0] ?? null
-    : filteredEffects.find((pkg) => pkg.id === activeEffectID) ?? filteredEffects[0] ?? null;
-  const activeAddon = trimmedSearchQuery === ''
-    ? addons.find((addon) => addon.id === activeAddonID) ?? addons[0] ?? null
-    : filteredAddons.find((addon) => addon.id === activeAddonID) ?? filteredAddons[0] ?? null;
+  const activeEffect =
+    trimmedSearchQuery === ''
+      ? (effects.find((pkg) => pkg.id === activeEffectID) ?? effects[0] ?? null)
+      : (filteredEffects.find((pkg) => pkg.id === activeEffectID) ?? filteredEffects[0] ?? null);
+  const activeAddon =
+    trimmedSearchQuery === ''
+      ? (addons.find((addon) => addon.id === activeAddonID) ?? addons[0] ?? null)
+      : (filteredAddons.find((addon) => addon.id === activeAddonID) ?? filteredAddons[0] ?? null);
   const activeType = activeTab === 'addons' && showAddons ? 'addon' : 'effect';
   const hasAddons = showAddons && addons.length > 0;
   const currentSelection = activeEffect === null ? null : selectedPackage(content, activeEffect.id);
   const currentEffectFiles = activeEffect === null ? [] : effectFileNames(activeEffect);
-  const currentSelectedEffects = currentSelection === null
-    ? []
-    : currentSelection.effectFiles !== undefined && currentSelection.effectFiles.length > 0
-      ? currentSelection.effectFiles
-      : currentEffectFiles;
+  const currentSelectedEffects =
+    currentSelection === null
+      ? []
+      : currentSelection.effectFiles !== undefined && currentSelection.effectFiles.length > 0
+        ? currentSelection.effectFiles
+        : currentEffectFiles;
 
   useEffect(() => {
     if (!showAddons && activeTab === 'addons') {
@@ -215,28 +227,19 @@ export const ReShadeWizardContentStep = ({
     setActiveAddonID(id);
   };
 
-  const changePackageSelection = (
-    event: ChangeEvent<HTMLInputElement>,
-    pkg: EffectPackage,
-  ) => {
+  const changePackageSelection = (event: ChangeEvent<HTMLInputElement>, pkg: EffectPackage) => {
     event.stopPropagation();
     chooseEffectPackage(pkg.id);
     onContentChange(togglePackage(content, pkg.id, event.target.checked));
   };
 
-  const changeAddonSelection = (
-    event: ChangeEvent<HTMLInputElement>,
-    addon: AddonPackage,
-  ) => {
+  const changeAddonSelection = (event: ChangeEvent<HTMLInputElement>, addon: AddonPackage) => {
     event.stopPropagation();
     chooseAddon(addon.id);
     onContentChange(toggleAddon(content, addon.id, event.target.checked));
   };
 
-  const changeEffectSelection = (
-    event: ChangeEvent<HTMLInputElement>,
-    effect: string,
-  ) => {
+  const changeEffectSelection = (event: ChangeEvent<HTMLInputElement>, effect: string) => {
     event.stopPropagation();
     if (activeEffect !== null) {
       onContentChange(toggleEffect(content, activeEffect, effect, event.target.checked));
@@ -304,77 +307,96 @@ export const ReShadeWizardContentStep = ({
             )}
 
             <div className="reshade-wizard-content-list">
-              {(activeTab === 'effects' || !showAddons) && (
-                filteredEffects.length === 0 ? (
-                  <p className="reshade-wizard-content-empty">No effect packages match this search.</p>
-                ) : filteredEffects.map((pkg) => (
-                  <div
-                    className={activeType === 'effect' && activeEffect?.id === pkg.id
-                      ? 'reshade-wizard-content-row reshade-wizard-content-row-active'
-                      : 'reshade-wizard-content-row'}
-                    key={pkg.id}
-                    onClick={() => chooseEffectPackage(pkg.id)}
-                  >
-                    <label
-                      className="reshade-wizard-content-option"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <input
-                        aria-label={`Select ${pkg.name}`}
-                        checked={selectedPackage(content, pkg.id) !== null}
-                        onChange={(event) => changePackageSelection(event, pkg)}
-                        onClick={(event) => event.stopPropagation()}
-                        type="checkbox"
-                      />
-                      <span className="reshade-wizard-content-option-control" aria-hidden="true" />
-                    </label>
-                    <button
-                      className="reshade-wizard-content-row-button"
+              {(activeTab === 'effects' || !showAddons) &&
+                (filteredEffects.length === 0 ? (
+                  <p className="reshade-wizard-content-empty">
+                    No effect packages match this search.
+                  </p>
+                ) : (
+                  filteredEffects.map((pkg) => (
+                    <div
+                      className={
+                        activeType === 'effect' && activeEffect?.id === pkg.id
+                          ? 'reshade-wizard-content-row reshade-wizard-content-row-active'
+                          : 'reshade-wizard-content-row'
+                      }
+                      key={pkg.id}
                       onClick={() => chooseEffectPackage(pkg.id)}
-                      type="button"
                     >
-                      <span className="reshade-wizard-content-row-title">{pkg.name}</span>
-                      <span className="reshade-wizard-content-row-description">{pkg.description || pkg.id}</span>
-                    </button>
-                  </div>
-                ))
-              )}
-
-              {activeTab === 'addons' && showAddons && (
-                filteredAddons.length === 0 ? (
-                  <p className="reshade-wizard-content-empty">No add-ons match this search.</p>
-                ) : filteredAddons.map((addon) => (
-                  <div
-                    className={activeType === 'addon' && activeAddon?.id === addon.id
-                      ? 'reshade-wizard-content-row reshade-wizard-content-row-active'
-                      : 'reshade-wizard-content-row'}
-                    key={addon.id}
-                    onClick={() => chooseAddon(addon.id)}
-                  >
-                    <label
-                      className="reshade-wizard-content-option"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <input
-                        aria-label={`Select ${addon.name}`}
-                        checked={selectedAddon(content, addon.id)}
-                        onChange={(event) => changeAddonSelection(event, addon)}
+                      <label
+                        className="reshade-wizard-content-option"
                         onClick={(event) => event.stopPropagation()}
-                        type="checkbox"
-                      />
-                      <span className="reshade-wizard-content-option-control" aria-hidden="true" />
-                    </label>
-                    <button
-                      className="reshade-wizard-content-row-button"
+                      >
+                        <input
+                          aria-label={`Select ${pkg.name}`}
+                          checked={selectedPackage(content, pkg.id) !== null}
+                          onChange={(event) => changePackageSelection(event, pkg)}
+                          onClick={(event) => event.stopPropagation()}
+                          type="checkbox"
+                        />
+                        <span
+                          className="reshade-wizard-content-option-control"
+                          aria-hidden="true"
+                        />
+                      </label>
+                      <button
+                        className="reshade-wizard-content-row-button"
+                        onClick={() => chooseEffectPackage(pkg.id)}
+                        type="button"
+                      >
+                        <span className="reshade-wizard-content-row-title">{pkg.name}</span>
+                        <span className="reshade-wizard-content-row-description">
+                          {pkg.description || pkg.id}
+                        </span>
+                      </button>
+                    </div>
+                  ))
+                ))}
+
+              {activeTab === 'addons' &&
+                showAddons &&
+                (filteredAddons.length === 0 ? (
+                  <p className="reshade-wizard-content-empty">No add-ons match this search.</p>
+                ) : (
+                  filteredAddons.map((addon) => (
+                    <div
+                      className={
+                        activeType === 'addon' && activeAddon?.id === addon.id
+                          ? 'reshade-wizard-content-row reshade-wizard-content-row-active'
+                          : 'reshade-wizard-content-row'
+                      }
+                      key={addon.id}
                       onClick={() => chooseAddon(addon.id)}
-                      type="button"
                     >
-                      <span className="reshade-wizard-content-row-title">{addon.name}</span>
-                      <span className="reshade-wizard-content-row-description">{addon.description || addon.id}</span>
-                    </button>
-                  </div>
-                ))
-              )}
+                      <label
+                        className="reshade-wizard-content-option"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <input
+                          aria-label={`Select ${addon.name}`}
+                          checked={selectedAddon(content, addon.id)}
+                          onChange={(event) => changeAddonSelection(event, addon)}
+                          onClick={(event) => event.stopPropagation()}
+                          type="checkbox"
+                        />
+                        <span
+                          className="reshade-wizard-content-option-control"
+                          aria-hidden="true"
+                        />
+                      </label>
+                      <button
+                        className="reshade-wizard-content-row-button"
+                        onClick={() => chooseAddon(addon.id)}
+                        type="button"
+                      >
+                        <span className="reshade-wizard-content-row-title">{addon.name}</span>
+                        <span className="reshade-wizard-content-row-description">
+                          {addon.description || addon.id}
+                        </span>
+                      </button>
+                    </div>
+                  ))
+                ))}
             </div>
           </aside>
 
@@ -388,7 +410,11 @@ export const ReShadeWizardContentStep = ({
                     <h3>{activeEffect.name}</h3>
                     <p>{activeEffect.description || activeEffect.id}</p>
                   </div>
-                  <button className="reshade-wizard-content-preset-button" onClick={() => setIsPresetHelperOpen((current) => !current)} type="button">
+                  <button
+                    className="reshade-wizard-content-preset-button"
+                    onClick={() => setIsPresetHelperOpen((current) => !current)}
+                    type="button"
+                  >
                     Preset helper
                   </button>
                 </div>
@@ -438,21 +464,39 @@ export const ReShadeWizardContentStep = ({
                 )}
 
                 <dl className="reshade-wizard-content-meta">
-                  <div><dt>Install path</dt><dd>{activeEffect.installPath || '.'}</dd></div>
-                  <div><dt>Textures</dt><dd>{activeEffect.textureInstallPath || 'Default'}</dd></div>
-                  <div><dt>Source</dt><dd>{activeEffect.repositoryUrl || activeEffect.downloadUrl || 'Catalogue'}</dd></div>
+                  <div>
+                    <dt>Install path</dt>
+                    <dd>{activeEffect.installPath || '.'}</dd>
+                  </div>
+                  <div>
+                    <dt>Textures</dt>
+                    <dd>{activeEffect.textureInstallPath || 'Default'}</dd>
+                  </div>
+                  <div>
+                    <dt>Source</dt>
+                    <dd>{activeEffect.repositoryUrl || activeEffect.downloadUrl || 'Catalogue'}</dd>
+                  </div>
                 </dl>
 
-                <section className="reshade-wizard-content-effect-panel" aria-label="Package effects">
+                <section
+                  className="reshade-wizard-content-effect-panel"
+                  aria-label="Package effects"
+                >
                   <button
                     aria-expanded={isEffectsOpen}
                     className="reshade-wizard-content-fold"
                     onClick={() => setIsEffectsOpen((current) => !current)}
                     type="button"
                   >
-                    {isEffectsOpen ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+                    {isEffectsOpen ? (
+                      <ChevronDown aria-hidden="true" />
+                    ) : (
+                      <ChevronRight aria-hidden="true" />
+                    )}
                     <span>Effects</span>
-                    <span>{selectedEffectCount(content, activeEffect)} / {currentEffectFiles.length}</span>
+                    <span>
+                      {selectedEffectCount(content, activeEffect)} / {currentEffectFiles.length}
+                    </span>
                   </button>
 
                   {isEffectsOpen && (
@@ -475,27 +519,37 @@ export const ReShadeWizardContentStep = ({
                       </div>
 
                       {currentEffectFiles.length === 0 ? (
-                        <p className="reshade-wizard-content-empty">No effect files are listed for this package.</p>
+                        <p className="reshade-wizard-content-empty">
+                          No effect files are listed for this package.
+                        </p>
                       ) : (
                         <div className="reshade-wizard-content-effects">
                           {currentEffectFiles.map((effect) => {
-                            const isEffectDisabled = !activeEffect.modifiable || currentSelection === null;
+                            const isEffectDisabled =
+                              !activeEffect.modifiable || currentSelection === null;
 
                             return (
                               <label
-                                className={isEffectDisabled ? 'reshade-wizard-content-effect-disabled' : undefined}
+                                className={
+                                  isEffectDisabled
+                                    ? 'reshade-wizard-content-effect-disabled'
+                                    : undefined
+                                }
                                 key={effect}
                               >
-                              <input
-                                checked={currentSelectedEffects.includes(effect)}
-                                disabled={isEffectDisabled}
-                                onChange={(event) => changeEffectSelection(event, effect)}
-                                onClick={(event) => event.stopPropagation()}
-                                type="checkbox"
-                              />
-                              <span className="reshade-wizard-content-option-control" aria-hidden="true" />
-                              <span>{effect}</span>
-                            </label>
+                                <input
+                                  checked={currentSelectedEffects.includes(effect)}
+                                  disabled={isEffectDisabled}
+                                  onChange={(event) => changeEffectSelection(event, effect)}
+                                  onClick={(event) => event.stopPropagation()}
+                                  type="checkbox"
+                                />
+                                <span
+                                  className="reshade-wizard-content-option-control"
+                                  aria-hidden="true"
+                                />
+                                <span>{effect}</span>
+                              </label>
                             );
                           })}
                         </div>
@@ -514,8 +568,14 @@ export const ReShadeWizardContentStep = ({
                 </div>
 
                 <dl className="reshade-wizard-content-meta">
-                  <div><dt>Install path</dt><dd>{activeAddon.effectInstallPath || 'Addons'}</dd></div>
-                  <div><dt>Source</dt><dd>{activeAddon.repositoryUrl || activeAddon.downloadUrl || 'Catalogue'}</dd></div>
+                  <div>
+                    <dt>Install path</dt>
+                    <dd>{activeAddon.effectInstallPath || 'Addons'}</dd>
+                  </div>
+                  <div>
+                    <dt>Source</dt>
+                    <dd>{activeAddon.repositoryUrl || activeAddon.downloadUrl || 'Catalogue'}</dd>
+                  </div>
                 </dl>
               </>
             ) : (

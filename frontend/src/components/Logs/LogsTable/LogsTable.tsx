@@ -66,7 +66,10 @@ export const LogsTable = ({
   if (entries.length === 0) {
     return (
       <div className="logs-table-state">
-        <StateBlock title="No logs to show" message="Change filters or refresh to reload persisted entries." />
+        <StateBlock
+          title="No logs to show"
+          message="Change filters or refresh to reload persisted entries."
+        />
       </div>
     );
   }
@@ -81,7 +84,10 @@ export const LogsTable = ({
       </div>
       <div className="logs-table-body">
         {entries.map((entry, index) => (
-          <LogEntryRow entry={entry} key={`${entry.Timestamp}-${entry.Level}-${entry.Operation}-${index}`} />
+          <LogEntryRow
+            entry={entry}
+            key={`${entry.Timestamp}-${entry.Level}-${entry.Operation}-${index}`}
+          />
         ))}
       </div>
     </section>

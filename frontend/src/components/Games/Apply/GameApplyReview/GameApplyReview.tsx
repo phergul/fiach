@@ -144,7 +144,10 @@ const resolveConflictOperations = (issue: PlanIssue, operations: Operation[]) =>
 };
 
 const formatConflictOperationDetail = (operation: Operation) => {
-  const detail = [operation.Mod.ModName.trim() || 'Unknown mod', formatOperationType(operation.Type)];
+  const detail = [
+    operation.Mod.ModName.trim() || 'Unknown mod',
+    formatOperationType(operation.Type),
+  ];
 
   if (operation.SourcePath !== null && operation.SourcePath.trim() !== '') {
     detail.push(`Source: ${operation.SourcePath}`);
@@ -155,7 +158,10 @@ const formatConflictOperationDetail = (operation: Operation) => {
 
 const issueRows = (issues: PlanIssue[], severity: PlanIssueSeverity, tone: ReviewTone) => {
   return issues
-    .filter((issue) => issue.Severity === severity && issue.Kind !== PlanIssueKind.PlanIssueTargetPathConflict)
+    .filter(
+      (issue) =>
+        issue.Severity === severity && issue.Kind !== PlanIssueKind.PlanIssueTargetPathConflict,
+    )
     .map((issue, index) => ({
       id: `${severity}-${issue.Kind}-${index}`,
       meta: formatIssueMeta(issue),
@@ -164,7 +170,12 @@ const issueRows = (issues: PlanIssue[], severity: PlanIssueSeverity, tone: Revie
     }));
 };
 
-const conflictRows = (issues: PlanIssue[], operations: Operation[], gameInstallPath: string, gameName: string) => {
+const conflictRows = (
+  issues: PlanIssue[],
+  operations: Operation[],
+  gameInstallPath: string,
+  gameName: string,
+) => {
   return issues
     .filter(
       (issue) =>
@@ -181,7 +192,10 @@ const conflictRows = (issues: PlanIssue[], operations: Operation[], gameInstallP
       return {
         details: conflictOperations.map(formatConflictOperationDetail),
         id: `conflict-${issue.TargetPath ?? index}-${index}`,
-        meta: conflictOperations.length > 0 ? [pluralizeMods(conflictOperations.length)] : formatIssueMeta(issue),
+        meta:
+          conflictOperations.length > 0
+            ? [pluralizeMods(conflictOperations.length)]
+            : formatIssueMeta(issue),
         title,
         tone: 'blocked' as ReviewTone,
       };
@@ -205,14 +219,30 @@ const operationRows = (
     }));
 };
 
-const buildGroups = (plan: OperationPlan, gameInstallPath: string, gameName: string): ReviewGroup[] => {
+const buildGroups = (
+  plan: OperationPlan,
+  gameInstallPath: string,
+  gameName: string,
+): ReviewGroup[] => {
   const blockingRows = [
     ...conflictRows(plan.Issues, plan.Operations, gameInstallPath, gameName),
     ...issueRows(plan.Issues, PlanIssueSeverity.PlanIssueSeverityError, 'blocked'),
   ];
   const warningRows = issueRows(plan.Issues, PlanIssueSeverity.PlanIssueSeverityWarning, 'warning');
-  const addRows = operationRows(plan.Operations, OperationType.OperationTypeCopy, 'add', gameInstallPath, gameName);
-  const replaceRows = operationRows(plan.Operations, OperationType.OperationTypeReplace, 'replace', gameInstallPath, gameName);
+  const addRows = operationRows(
+    plan.Operations,
+    OperationType.OperationTypeCopy,
+    'add',
+    gameInstallPath,
+    gameName,
+  );
+  const replaceRows = operationRows(
+    plan.Operations,
+    OperationType.OperationTypeReplace,
+    'replace',
+    gameInstallPath,
+    gameName,
+  );
   const folderRows = operationRows(
     plan.Operations,
     OperationType.OperationTypeCreateDirectory,
@@ -326,7 +356,10 @@ export const GameApplyReview = ({ gameInstallPath, gameName, plan }: GameApplyRe
                       {row.details !== undefined && row.details.length > 0 && (
                         <ul className="game-apply-review-row-details">
                           {row.details.map((detail, detailIndex) => (
-                            <li className="game-apply-review-row-detail" key={`${detail}-${detailIndex}`}>
+                            <li
+                              className="game-apply-review-row-detail"
+                              key={`${detail}-${detailIndex}`}
+                            >
                               {detail}
                             </li>
                           ))}

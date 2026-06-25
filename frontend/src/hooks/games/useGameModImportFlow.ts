@@ -1,7 +1,10 @@
 import { useState } from 'react';
 
 import type { StrategyType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { ImportMod, PreValidateImport } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import {
+  ImportMod,
+  PreValidateImport,
+} from '@bindings/github.com/phergul/fiach/internal/services/modservice';
 import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ResolveGameModStoragePath } from '@bindings/github.com/phergul/fiach/internal/services/settingsservice';
 import { useToast } from '@components/Common/Toast/Toast';
@@ -46,10 +49,7 @@ const getArchiveName = (path: string) => {
   return archiveName.trim() === '' ? 'Imported Mod' : archiveName;
 };
 
-export const useGameModImportFlow = ({
-  gameID,
-  refreshMods,
-}: UseGameModImportFlowInput) => {
+export const useGameModImportFlow = ({ gameID, refreshMods }: UseGameModImportFlowInput) => {
   const { addErrorToast, addToast } = useToast();
   const [importWizard, setImportWizard] = useState<ImportReviewState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -106,23 +106,25 @@ export const useGameModImportFlow = ({
     }
   };
 
-  const startFolderImportFlow = () => startImportFlow({
-    buttonText: 'Configure Import',
-    initialNameForPath: getFolderName,
-    selectPath: openDirectory,
-    sourceLabel: 'Source folder',
-    sourceType: ModSourceType.ModSourceTypeFolder,
-    title: 'Select mod folder',
-  });
+  const startFolderImportFlow = () =>
+    startImportFlow({
+      buttonText: 'Configure Import',
+      initialNameForPath: getFolderName,
+      selectPath: openDirectory,
+      sourceLabel: 'Source folder',
+      sourceType: ModSourceType.ModSourceTypeFolder,
+      title: 'Select mod folder',
+    });
 
-  const startArchiveImportFlow = () => startImportFlow({
-    buttonText: 'Configure Import',
-    initialNameForPath: getArchiveName,
-    selectPath: openArchive,
-    sourceLabel: 'Source archive',
-    sourceType: ModSourceType.ModSourceTypeArchive,
-    title: 'Select mod archive',
-  });
+  const startArchiveImportFlow = () =>
+    startImportFlow({
+      buttonText: 'Configure Import',
+      initialNameForPath: getArchiveName,
+      selectPath: openArchive,
+      sourceLabel: 'Source archive',
+      sourceType: ModSourceType.ModSourceTypeArchive,
+      title: 'Select mod archive',
+    });
 
   const closeImportReview = () => {
     if (isImporting) {
@@ -154,10 +156,10 @@ export const useGameModImportFlow = ({
         SourcePath: importWizard.sourcePath,
         StrategyType: strategyType,
         TargetRelativePath: targetRelativePath,
-        TagIDs: tags.flatMap((tag) => tag.ID === null ? [] : [tag.ID]),
-        NewTags: tags.flatMap((tag) => tag.ID === null
-          ? [{ Name: tag.Name, Color: tag.Color }]
-          : []),
+        TagIDs: tags.flatMap((tag) => (tag.ID === null ? [] : [tag.ID])),
+        NewTags: tags.flatMap((tag) =>
+          tag.ID === null ? [{ Name: tag.Name, Color: tag.Color }] : [],
+        ),
       });
       setImportWizard(null);
 

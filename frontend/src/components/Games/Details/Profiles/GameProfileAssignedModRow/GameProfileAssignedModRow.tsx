@@ -5,7 +5,10 @@ import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import type { ProfileMod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ProfileMod,
+  Tag,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ModTagList } from '@components/Games/Details/Mods/ModTags/ModTagList/ModTagList';
 
 import './GameProfileAssignedModRow.scss';
@@ -36,14 +39,10 @@ export const GameProfileAssignedModRow = ({
   onSetModEnabled,
 }: GameProfileAssignedModRowProps) => {
   const displayLoadOrder = mod.LoadOrder + 1;
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: mod.ModID, disabled: isBusy || !canReorder });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: mod.ModID,
+    disabled: isBusy || !canReorder,
+  });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -52,12 +51,17 @@ export const GameProfileAssignedModRow = ({
   return (
     <li
       ref={setNodeRef}
-      className={isDragging
-        ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging'
-        : 'game-profile-assigned-mod-row'}
+      className={
+        isDragging
+          ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging'
+          : 'game-profile-assigned-mod-row'
+      }
       style={style}
     >
-      <div className="game-profile-assigned-mod-row-order" aria-label={`Load order ${displayLoadOrder}`}>
+      <div
+        className="game-profile-assigned-mod-row-order"
+        aria-label={`Load order ${displayLoadOrder}`}
+      >
         {displayLoadOrder}
       </div>
 
@@ -104,7 +108,10 @@ export const GameProfileAssignedModRow = ({
           </button>
         </div>
 
-        <label className="game-profile-assigned-mod-row-toggle" title={mod.Enabled ? 'Disable mod' : 'Enable mod'}>
+        <label
+          className="game-profile-assigned-mod-row-toggle"
+          title={mod.Enabled ? 'Disable mod' : 'Enable mod'}
+        >
           <input
             aria-label={`${mod.Enabled ? 'Disable' : 'Enable'} ${mod.Name}`}
             checked={mod.Enabled}

@@ -52,17 +52,20 @@ export const ModTagEditor = ({
   const [editingColor, setEditingColor] = useState<TagColor>(TagColor.TagColorRed);
   const [isRenaming, setIsRenaming] = useState(false);
   const selectedIDs = useMemo(
-    () => new Set(selectedTags.flatMap((tag) => tag.ID === null ? [] : [tag.ID])),
+    () => new Set(selectedTags.flatMap((tag) => (tag.ID === null ? [] : [tag.ID]))),
     [selectedTags],
   );
   const suggestions = useMemo(() => {
     const normalizedQuery = normalizedTagName(query);
     return availableTags.filter((tag) => {
-      return !selectedIDs.has(tag.ID) &&
-        (normalizedQuery === '' || normalizedTagName(tag.Name).includes(normalizedQuery));
+      return (
+        !selectedIDs.has(tag.ID) &&
+        (normalizedQuery === '' || normalizedTagName(tag.Name).includes(normalizedQuery))
+      );
     });
   }, [availableTags, query, selectedIDs]);
-  const canCreate = query.trim() !== '' &&
+  const canCreate =
+    query.trim() !== '' &&
     newTagColor !== null &&
     !availableTags.some((tag) => normalizedTagName(tag.Name) === normalizedTagName(query)) &&
     !selectedTags.some((tag) => normalizedTagName(tag.Name) === normalizedTagName(query));
@@ -74,11 +77,14 @@ export const ModTagEditor = ({
   };
 
   const addExistingTag = (tag: Tag) => {
-    onChange([...selectedTags, {
-      ID: tag.ID,
-      Name: tag.Name,
-      Color: tag.Color,
-    }]);
+    onChange([
+      ...selectedTags,
+      {
+        ID: tag.ID,
+        Name: tag.Name,
+        Color: tag.Color,
+      },
+    ]);
     closeAdd();
   };
 
@@ -87,11 +93,14 @@ export const ModTagEditor = ({
       return;
     }
 
-    onChange([...selectedTags, {
-      ID: null,
-      Name: query.trim(),
-      Color: newTagColor,
-    }]);
+    onChange([
+      ...selectedTags,
+      {
+        ID: null,
+        Name: query.trim(),
+        Color: newTagColor,
+      },
+    ]);
     closeAdd();
   };
 
@@ -107,11 +116,11 @@ export const ModTagEditor = ({
     }
 
     if (editingTag.ID === null || onRenameTag === undefined) {
-      onChange(selectedTags.map((tag) => (
-        tag === editingTag
-          ? { ...tag, Name: editingName.trim(), Color: editingColor }
-          : tag
-      )));
+      onChange(
+        selectedTags.map((tag) =>
+          tag === editingTag ? { ...tag, Name: editingName.trim(), Color: editingColor } : tag,
+        ),
+      );
       setEditingTag(null);
       return;
     }
@@ -120,12 +129,15 @@ export const ModTagEditor = ({
     try {
       const renamed = await onRenameTag(editingTag.ID, editingName.trim(), editingColor);
       const nextTags = selectedTags
-        .map((tag) => tag.ID === editingTag.ID
-          ? { ID: renamed.ID, Name: renamed.Name, Color: renamed.Color }
-          : tag)
-        .filter((tag, index, allTags) => (
-          tag.ID === null || allTags.findIndex((candidate) => candidate.ID === tag.ID) === index
-        ));
+        .map((tag) =>
+          tag.ID === editingTag.ID
+            ? { ID: renamed.ID, Name: renamed.Name, Color: renamed.Color }
+            : tag,
+        )
+        .filter(
+          (tag, index, allTags) =>
+            tag.ID === null || allTags.findIndex((candidate) => candidate.ID === tag.ID) === index,
+        );
       onChange(nextTags);
       setEditingTag(null);
     } catch {

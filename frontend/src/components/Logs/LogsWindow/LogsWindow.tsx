@@ -84,7 +84,9 @@ export const LogsWindow = () => {
   const [entries, setEntries] = useState<DiagnosticLogEntry[]>([]);
   const [level, setLevel] = useState<LogLevelFilter>('all');
   const [operation, setOperation] = useState<LogOperationFilter>('all');
-  const [operationOptions, setOperationOptions] = useState<LogOperationOption[]>([allOperationOption]);
+  const [operationOptions, setOperationOptions] = useState<LogOperationOption[]>([
+    allOperationOption,
+  ]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRawJsonVisible, setIsRawJsonVisible] = useState(false);
   const [rawJson, setRawJson] = useState('[]');
@@ -94,7 +96,8 @@ export const LogsWindow = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const visibleEntries = useMemo(
-    () => entries.filter((entry) => matchesLevel(entry, level) && matchesOperation(entry, operation)),
+    () =>
+      entries.filter((entry) => matchesLevel(entry, level) && matchesOperation(entry, operation)),
     [entries, level, operation],
   );
 
@@ -187,7 +190,9 @@ export const LogsWindow = () => {
 
   const clearVisibleLogs = () => {
     setEntries((currentEntries) =>
-      currentEntries.filter((entry) => !(matchesLevel(entry, level) && matchesOperation(entry, operation))),
+      currentEntries.filter(
+        (entry) => !(matchesLevel(entry, level) && matchesOperation(entry, operation)),
+      ),
     );
     setErrorMessage(null);
   };

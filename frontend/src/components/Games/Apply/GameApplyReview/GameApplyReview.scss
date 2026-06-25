@@ -16,7 +16,7 @@ $game-apply-review-icon-size: 1rem;
   background: $color-background;
 }
 
-.game-apply-review-group+.game-apply-review-group {
+.game-apply-review-group + .game-apply-review-group {
   margin-top: $spacing-separator;
 }
 
@@ -84,7 +84,7 @@ $game-apply-review-icon-size: 1rem;
   background: $color-background;
 }
 
-.game-apply-review-row+.game-apply-review-row {
+.game-apply-review-row + .game-apply-review-row {
   margin-top: $spacing-xs;
 }
 

@@ -39,11 +39,11 @@ export const GameProfileAddModsModal = ({
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredMods = useMemo(() => {
     return availableMods.filter((mod) => {
-      const matchesSearch = trimmedSearchQuery === '' || (
+      const matchesSearch =
+        trimmedSearchQuery === '' ||
         mod.Name.toLowerCase().includes(trimmedSearchQuery) ||
-        mod.SourcePath.toLowerCase().includes(trimmedSearchQuery)
-        || mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery))
-      );
+        mod.SourcePath.toLowerCase().includes(trimmedSearchQuery) ||
+        mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery));
       const matchesTags = selectedTagIDs.every((tagID) => mod.Tags.some((tag) => tag.ID === tagID));
       return matchesSearch && matchesTags;
     });
@@ -104,9 +104,9 @@ export const GameProfileAddModsModal = ({
       panelClassName="game-profile-add-mods-modal-panel"
       size="lg"
       title="Add Mods to Profile"
-      footer={(
+      footer={
         <div className="game-profile-add-mods-modal-footer">
-                    <button
+          <button
             className="game-profile-add-mods-modal-cancel-button"
             disabled={isBusy}
             onClick={onClose}
@@ -123,7 +123,7 @@ export const GameProfileAddModsModal = ({
             Add Mods
           </button>
         </div>
-      )}
+      }
     >
       <>
         <div className="game-profile-add-mods-modal-controls">
@@ -147,15 +147,24 @@ export const GameProfileAddModsModal = ({
 
         <div className="game-profile-add-mods-modal-list-body">
           {isGameModsLoading && (
-            <StateBlock className="game-profile-add-mods-modal-state" message="Loading imported mods..." />
+            <StateBlock
+              className="game-profile-add-mods-modal-state"
+              message="Loading imported mods..."
+            />
           )}
 
           {!isGameModsLoading && availableMods.length === 0 && (
-            <StateBlock className="game-profile-add-mods-modal-state" message="No available mods to add." />
+            <StateBlock
+              className="game-profile-add-mods-modal-state"
+              message="No available mods to add."
+            />
           )}
 
           {!isGameModsLoading && availableMods.length > 0 && filteredMods.length === 0 && (
-            <StateBlock className="game-profile-add-mods-modal-state" message="No available mods match this search." />
+            <StateBlock
+              className="game-profile-add-mods-modal-state"
+              message="No available mods match this search."
+            />
           )}
 
           {!isGameModsLoading && filteredMods.length > 0 && (
@@ -172,7 +181,10 @@ export const GameProfileAddModsModal = ({
                         onChange={() => toggleSelectedMod(mod.ID)}
                         type="checkbox"
                       />
-                      <span className="game-profile-add-mods-modal-option-control" aria-hidden="true" />
+                      <span
+                        className="game-profile-add-mods-modal-option-control"
+                        aria-hidden="true"
+                      />
                       <span className="game-profile-add-mods-modal-option-copy">
                         <span className="game-profile-add-mods-modal-option-name">{mod.Name}</span>
                         <ModMetadataSummary items={buildModMetadataSummaryItems(mod)} />

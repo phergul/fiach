@@ -27,30 +27,32 @@ export const OptiScalerDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { addErrorToast, addToast } = useToast();
-  const { games, isLoading: isLoadingGames, isScanning, loadError: gamesError, retryLoadGames } = useStoredGames();
+  const {
+    games,
+    isLoading: isLoadingGames,
+    isScanning,
+    loadError: gamesError,
+    retryLoadGames,
+  } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
-  const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
+  const game =
+    parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
-  const [operationSelection, setOperationSelection] = useState<OptiScalerOperationSelection | null>(null);
+  const [operationSelection, setOperationSelection] = useState<OptiScalerOperationSelection | null>(
+    null,
+  );
   useEffect(() => {
-    if ((location.state as { reShadeCoordination?: unknown } | null)?.reShadeCoordination !== undefined) {
+    if (
+      (location.state as { reShadeCoordination?: unknown } | null)?.reShadeCoordination !==
+      undefined
+    ) {
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location.pathname, location.state, navigate]);
-  const {
-    artworkSource: heroArtworkSource,
-    handleArtworkError: handleHeroArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'hero',
-  );
-  const {
-    artworkSource: logoArtworkSource,
-    handleArtworkError: handleLogoArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'logo',
-  );
+  const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
+  const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'logo');
   const isWaitingForGame = (isLoadingGames || isScanning) && game === undefined;
   const hasLoadError = gamesError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
@@ -70,9 +72,11 @@ export const OptiScalerDashboard = () => {
 
   return (
     <section
-      className={heroArtworkSource === ''
-        ? 'optiscaler-dashboard'
-        : 'optiscaler-dashboard optiscaler-dashboard-with-backdrop'}
+      className={
+        heroArtworkSource === ''
+          ? 'optiscaler-dashboard'
+          : 'optiscaler-dashboard optiscaler-dashboard-with-backdrop'
+      }
       aria-label="OptiScaler management"
     >
       <div className="optiscaler-dashboard-toolbar">
@@ -145,7 +149,9 @@ export const OptiScalerDashboard = () => {
                 onRefresh={optiScaler.refresh}
                 selection={operationSelection}
               />
-            ) : optiScaler.isLoading && optiScaler.targets.length === 0 && optiScaler.candidates.length === 0 ? (
+            ) : optiScaler.isLoading &&
+              optiScaler.targets.length === 0 &&
+              optiScaler.candidates.length === 0 ? (
               <GameDetailsState title="Discovering OptiScaler targets." />
             ) : optiScaler.loadError !== null ? (
               <GameDetailsState

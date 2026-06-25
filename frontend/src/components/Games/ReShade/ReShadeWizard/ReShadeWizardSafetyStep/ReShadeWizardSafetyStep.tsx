@@ -22,7 +22,9 @@ export const ReShadeWizardSafetyStep = ({
           onChange={(event) => onSinglePlayerAcknowledgedChange(event.target.checked)}
           type="checkbox"
         />
-        <span>I will use this ReShade build for single-player or explicitly allowed scenarios.</span>
+        <span>
+          I will use this ReShade build for single-player or explicitly allowed scenarios.
+        </span>
       </label>
       <label>
         <input

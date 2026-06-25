@@ -4,10 +4,8 @@ $log-row-time-column-min-width: 10rem;
 $log-row-level-column-min-width: 4.5rem;
 $log-row-operation-column-min-width: 12rem;
 $log-row-message-column-min-width: 18rem;
-$log-row-grid-columns:
-  minmax($log-row-time-column-min-width, 0.9fr)
-  minmax($log-row-level-column-min-width, 0.25fr)
-  minmax($log-row-operation-column-min-width, 1fr)
+$log-row-grid-columns: minmax($log-row-time-column-min-width, 0.9fr)
+  minmax($log-row-level-column-min-width, 0.25fr) minmax($log-row-operation-column-min-width, 1fr)
   minmax($log-row-message-column-min-width, 2.5fr);
 $log-row-toggle-size: 1rem;
 

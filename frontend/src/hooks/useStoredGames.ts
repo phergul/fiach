@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { GetStoredGames, ScanAndSaveGames } from '@bindings/github.com/phergul/fiach/internal/services/gamesservice';
+import {
+  GetStoredGames,
+  ScanAndSaveGames,
+} from '@bindings/github.com/phergul/fiach/internal/services/gamesservice';
 import type {
   SourceScanResult,
   StoredGame,
@@ -35,9 +38,9 @@ export const useStoredGames = () => {
   const [scanError, setScanError] = useState<string | null>(null);
 
   const updateStoredGame = useCallback((updatedGame: StoredGame) => {
-    setGames((currentGames) => (
-      currentGames.map((game) => (game.ID === updatedGame.ID ? updatedGame : game))
-    ));
+    setGames((currentGames) =>
+      currentGames.map((game) => (game.ID === updatedGame.ID ? updatedGame : game)),
+    );
   }, []);
 
   const loadGames = useCallback(async () => {

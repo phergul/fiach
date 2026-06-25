@@ -7,10 +7,7 @@ interface OpenArchiveOptions {
   title: string;
 }
 
-export const openArchive = async ({
-  buttonText,
-  title,
-}: OpenArchiveOptions) => {
+export const openArchive = async ({ buttonText, title }: OpenArchiveOptions) => {
   let selectedPath: string | string[] | null;
 
   try {
@@ -22,7 +19,8 @@ export const openArchive = async ({
       Filters: [
         {
           DisplayName: 'Mod Archives',
-          Pattern: '*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.bz2;*.tbz2;*.tar.xz;*.txz;*.tar.zst;*.tzst',
+          Pattern:
+            '*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.bz2;*.tbz2;*.tar.xz;*.txz;*.tar.zst;*.tzst',
         },
       ],
       Title: title,

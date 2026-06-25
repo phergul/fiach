@@ -16,8 +16,7 @@ $game-mod-list-item-icon-size: 1rem;
   padding: $spacing-md $spacing-xl;
   background: $color-background;
   margin-top: $spacing-separator;
-  transition:
-    background-color $transition-duration-fast $transition-easing-standard;
+  transition: background-color $transition-duration-fast $transition-easing-standard;
 }
 
 .game-mod-list-item-editing {

@@ -4,7 +4,10 @@ import { NavLink } from 'react-router-dom';
 import { BookOpen, Bug, ScrollText, Settings } from 'lucide-react';
 
 import { IsDevMode } from '@bindings/github.com/phergul/fiach/internal/services/devservice';
-import { OpenDevLogsWindow, OpenLogsWindow } from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
+import {
+  OpenDevLogsWindow,
+  OpenLogsWindow,
+} from '@bindings/github.com/phergul/fiach/internal/services/windowservice';
 
 import './Navigation.scss';
 

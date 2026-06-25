@@ -21,7 +21,11 @@ export const GameCard = ({ game }: GameCardProps) => {
 
   return (
     <article className="game-card">
-      <Link className="game-card-link" to={`/library/${game.ID}`} aria-label={`View ${game.Name} details`}>
+      <Link
+        className="game-card-link"
+        to={`/library/${game.ID}`}
+        aria-label={`View ${game.Name} details`}
+      >
         <div className="game-card-artwork">
           {artworkSource !== '' && (
             <img
@@ -38,7 +42,9 @@ export const GameCard = ({ game }: GameCardProps) => {
           >
             {game.Source === 'steam' ? (
               <img className="game-card-source-image" src={steamLogo} alt="" />
-            ) : 'M'}
+            ) : (
+              'M'
+            )}
           </span>
         </div>
         <h2 className="game-card-title">{game.Name}</h2>

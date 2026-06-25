@@ -108,20 +108,22 @@ interface WizardValues {
 const initialValues = (selection: OptiScalerOperationSelection): WizardValues => {
   const executableRelativePath =
     selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
-  const executableName = selection.candidate?.executableName
-    ?? executableRelativePath.split(/[\\/]/).pop()
-    ?? '';
+  const executableName =
+    selection.candidate?.executableName ?? executableRelativePath.split(/[\\/]/).pop() ?? '';
   const storedGraphicsAPI = selection.target?.GraphicsAPI;
 
   return {
     dxgiSpoofing: selection.target === null ? null : selection.target.DXGISpoofing,
-    enableReShadeCoexistence: selection.target?.EnableReShadeCoexistence ?? selection.candidate?.hasReShade ?? false,
-    graphicsAPI: storedGraphicsAPI === GraphicsAPI.GraphicsAPIVulkan
-      ? GraphicsAPI.GraphicsAPIVulkan
-      : storedGraphicsAPI === GraphicsAPI.GraphicsAPIDirectX
-        ? GraphicsAPI.GraphicsAPIDirectX
-        : '',
-    processFilter: selection.target === null ? executableName : selection.target.ProcessFilter ?? '',
+    enableReShadeCoexistence:
+      selection.target?.EnableReShadeCoexistence ?? selection.candidate?.hasReShade ?? false,
+    graphicsAPI:
+      storedGraphicsAPI === GraphicsAPI.GraphicsAPIVulkan
+        ? GraphicsAPI.GraphicsAPIVulkan
+        : storedGraphicsAPI === GraphicsAPI.GraphicsAPIDirectX
+          ? GraphicsAPI.GraphicsAPIDirectX
+          : '',
+    processFilter:
+      selection.target === null ? executableName : (selection.target.ProcessFilter ?? ''),
     proxyFilename: selection.target?.ProxyFilename ?? '',
     targetConfirmed: false,
     warningAcknowledged: false,
@@ -152,7 +154,8 @@ export const OptiScalerWizard = ({
   const [phase, setPhase] = useState<OperationPhase>('idle');
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const currentStepIndex = definition.steps.indexOf(step);
-  const isNewTarget = selection.action === Action.ActionInstall || selection.action === Action.ActionAdopt;
+  const isNewTarget =
+    selection.action === Action.ActionInstall || selection.action === Action.ActionAdopt;
   const isDirty = JSON.stringify(values) !== JSON.stringify(initial) || backupAndContinue;
 
   useEffect(() => {
@@ -200,15 +203,17 @@ export const OptiScalerWizard = ({
 
   const chooseGraphicsAPI = (nextAPI: GraphicsAPI | '') => {
     updateValues({
-      enableReShadeCoexistence: nextAPI === GraphicsAPI.GraphicsAPIVulkan
-        ? false
-        : values.enableReShadeCoexistence || (selection.candidate?.hasReShade ?? false),
+      enableReShadeCoexistence:
+        nextAPI === GraphicsAPI.GraphicsAPIVulkan
+          ? false
+          : values.enableReShadeCoexistence || (selection.candidate?.hasReShade ?? false),
       graphicsAPI: nextAPI,
-      proxyFilename: nextAPI === GraphicsAPI.GraphicsAPIDirectX
-        ? 'dxgi.dll'
-        : nextAPI === GraphicsAPI.GraphicsAPIVulkan
-          ? 'winmm.dll'
-          : '',
+      proxyFilename:
+        nextAPI === GraphicsAPI.GraphicsAPIDirectX
+          ? 'dxgi.dll'
+          : nextAPI === GraphicsAPI.GraphicsAPIVulkan
+            ? 'winmm.dll'
+            : '',
     });
   };
 
@@ -272,13 +277,14 @@ export const OptiScalerWizard = ({
     await loadPreview({ ...request, backupAndContinue: true });
   };
 
-  const canContinue = step === 'configuration'
-    ? request !== null
-    : step === 'safety'
-      ? values.targetConfirmed && values.warningAcknowledged
-      : step === 'preview'
-        ? preview?.canApply === true
-        : true;
+  const canContinue =
+    step === 'configuration'
+      ? request !== null
+      : step === 'safety'
+        ? values.targetConfirmed && values.warningAcknowledged
+        : step === 'preview'
+          ? preview?.canApply === true
+          : true;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -314,15 +320,16 @@ export const OptiScalerWizard = ({
     onClose();
   };
 
-  const primaryLabel = phase === 'previewing'
-    ? 'Building preview...'
-    : phase === 'applying'
-      ? 'Applying...'
-      : step === 'preview'
-        ? definition.label
-        : definition.steps[currentStepIndex + 1] === 'preview'
-          ? 'Preview'
-          : 'Next';
+  const primaryLabel =
+    phase === 'previewing'
+      ? 'Building preview...'
+      : phase === 'applying'
+        ? 'Applying...'
+        : step === 'preview'
+          ? definition.label
+          : definition.steps[currentStepIndex + 1] === 'preview'
+            ? 'Preview'
+            : 'Next';
 
   return (
     <>
@@ -349,11 +356,13 @@ export const OptiScalerWizard = ({
         >
           {definition.steps.map((wizardStep, index) => (
             <li
-              className={index < currentStepIndex
-                ? 'optiscaler-wizard-step-complete'
-                : wizardStep === step
-                  ? 'optiscaler-wizard-step-active'
-                  : ''}
+              className={
+                index < currentStepIndex
+                  ? 'optiscaler-wizard-step-complete'
+                  : wizardStep === step
+                    ? 'optiscaler-wizard-step-active'
+                    : ''
+              }
               key={wizardStep}
             >
               {index + 1}. {stepLabels[wizardStep]}
@@ -392,7 +401,9 @@ export const OptiScalerWizard = ({
               <OptiScalerWizardSafetyStep
                 executableRelativePath={executableRelativePath}
                 onTargetConfirmedChange={(value) => updateValues({ targetConfirmed: value })}
-                onWarningAcknowledgedChange={(value) => updateValues({ warningAcknowledged: value })}
+                onWarningAcknowledgedChange={(value) =>
+                  updateValues({ warningAcknowledged: value })
+                }
                 proxyFilename={values.proxyFilename}
                 targetConfirmed={values.targetConfirmed}
                 warningAcknowledged={values.warningAcknowledged}
@@ -401,15 +412,18 @@ export const OptiScalerWizard = ({
             {step === 'preview' && preview !== null && (
               <div className="optiscaler-wizard-content">
                 <dl className="optiscaler-wizard-summary optiscaler-wizard-preview-summary">
-                  <div><dt>Executable</dt><dd>{executableName}</dd></div>
+                  <div>
+                    <dt>Executable</dt>
+                    <dd>{executableName}</dd>
+                  </div>
                   <div>
                     <dt>Version</dt>
                     <dd>
-                      {preview.release?.version
-                        || preview.release?.tag
-                        || selection.target?.ReleaseVersion
-                        || selection.target?.ReleaseTag
-                        || 'Latest stable'}
+                      {preview.release?.version ||
+                        preview.release?.tag ||
+                        selection.target?.ReleaseVersion ||
+                        selection.target?.ReleaseTag ||
+                        'Latest stable'}
                     </dd>
                   </div>
                 </dl>
@@ -430,9 +444,12 @@ export const OptiScalerWizard = ({
             )}
             {step === 'result' && result !== null && (
               <div className="optiscaler-wizard-content">
-                <div className={result.success
-                  ? 'optiscaler-wizard-result optiscaler-wizard-result-success'
-                  : 'optiscaler-wizard-result optiscaler-wizard-result-error'}
+                <div
+                  className={
+                    result.success
+                      ? 'optiscaler-wizard-result optiscaler-wizard-result-success'
+                      : 'optiscaler-wizard-result optiscaler-wizard-result-error'
+                  }
                 >
                   <h3>
                     {result.success
@@ -450,14 +467,25 @@ export const OptiScalerWizard = ({
 
           <footer className="optiscaler-wizard-footer">
             {currentStepIndex > 0 && step !== 'result' && (
-              <button disabled={phase !== 'idle'} onClick={goBack} type="button">Back</button>
+              <button disabled={phase !== 'idle'} onClick={goBack} type="button">
+                Back
+              </button>
             )}
             {step !== 'result' ? (
-              <button className="button-main" disabled={!canContinue || phase !== 'idle'} type="submit">
+              <button
+                className="button-main"
+                disabled={!canContinue || phase !== 'idle'}
+                type="submit"
+              >
                 {primaryLabel}
               </button>
             ) : (
-              <button className="button-main" disabled={phase !== 'idle'} onClick={onClose} type="button">
+              <button
+                className="button-main"
+                disabled={phase !== 'idle'}
+                onClick={onClose}
+                type="button"
+              >
                 Done
               </button>
             )}

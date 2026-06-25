@@ -40,10 +40,9 @@ const formatGraphicsAPI = (api: string) => {
 };
 
 const isUpdateAvailable = (target: OptiScalerTarget, release: OptiScalerRelease | null) =>
-  release !== null && (
-    target.ReleaseTag !== release.tag ||
-    (target.ReleaseDigest !== '' && target.ReleaseDigest !== release.digest)
-  );
+  release !== null &&
+  (target.ReleaseTag !== release.tag ||
+    (target.ReleaseDigest !== '' && target.ReleaseDigest !== release.digest));
 
 const managedPriority = (row: ManagedRow) => {
   if (row.target.Status === 'drifted') {
@@ -58,7 +57,12 @@ const statusFacts = (target: OptiScalerTarget, updateAvailable: boolean) => [
 ];
 
 const candidateFacts = (candidate: OptiScalerCandidate) => [
-  ...(candidate.hasOptiScaler ? [{ label: 'Files present', tone: 'info' }, { label: 'OptiScaler', tone: 'success' }] : []),
+  ...(candidate.hasOptiScaler
+    ? [
+        { label: 'Files present', tone: 'info' },
+        { label: 'OptiScaler', tone: 'success' },
+      ]
+    : []),
   ...(candidate.hasReShade ? [{ label: 'ReShade', tone: 'warning' }] : []),
 ];
 
@@ -75,7 +79,7 @@ const versionLabel = (target: OptiScalerTarget) => {
   if (version !== '') {
     return version;
   }
-  return "unknown";
+  return 'unknown';
 };
 
 const OptiScalerManagedActions = ({
@@ -88,16 +92,14 @@ const OptiScalerManagedActions = ({
   row: ManagedRow;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const primaryAction = row.target.Status === 'drifted'
-    ? Action.ActionRepair
-    : row.updateAvailable
-      ? Action.ActionUpdate
-      : Action.ActionRepair;
-  const primaryLabel = row.target.Status === 'drifted'
-    ? 'Repair'
-    : row.updateAvailable
-      ? 'Update'
-      : 'Manage';
+  const primaryAction =
+    row.target.Status === 'drifted'
+      ? Action.ActionRepair
+      : row.updateAvailable
+        ? Action.ActionUpdate
+        : Action.ActionRepair;
+  const primaryLabel =
+    row.target.Status === 'drifted' ? 'Repair' : row.updateAvailable ? 'Update' : 'Manage';
   const start = (action: Action) => {
     setIsOpen(false);
     onStartOperation({ action, candidate: null, target: row.target });
@@ -175,7 +177,9 @@ export const OptiScalerExecutableTable = ({
       <section aria-labelledby="optiscaler-managed-heading">
         <h3 id="optiscaler-managed-heading">Managed</h3>
         {managedRows.length === 0 && (
-          <p className="optiscaler-executable-empty">No OptiScaler targets are managed for this game.</p>
+          <p className="optiscaler-executable-empty">
+            No OptiScaler targets are managed for this game.
+          </p>
         )}
         {managedRows.map((row) => (
           <div className="optiscaler-executable-row" key={`managed:${row.target.ID}`}>
@@ -195,9 +199,13 @@ export const OptiScalerExecutableTable = ({
               <div className="optiscaler-executable-status">
                 {statusFacts(row.target, row.updateAvailable).length === 0 ? (
                   <span className="optiscaler-executable-status-success">Managed</span>
-                ) : statusFacts(row.target, row.updateAvailable).map((fact) => (
-                  <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
-                ))}
+                ) : (
+                  statusFacts(row.target, row.updateAvailable).map((fact) => (
+                    <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>
+                      {fact.label}
+                    </span>
+                  ))
+                )}
               </div>
             </div>
             <OptiScalerManagedActions
@@ -212,7 +220,9 @@ export const OptiScalerExecutableTable = ({
       <section aria-labelledby="optiscaler-detected-heading">
         <h3 id="optiscaler-detected-heading">Detected — Not managed</h3>
         {unmanagedCandidates.length === 0 && (
-          <p className="optiscaler-executable-empty">No unmanaged x64 executable targets were detected.</p>
+          <p className="optiscaler-executable-empty">
+            No unmanaged x64 executable targets were detected.
+          </p>
         )}
         {unmanagedCandidates.map((candidate) => {
           const action = candidate.hasOptiScaler ? Action.ActionAdopt : Action.ActionInstall;
@@ -224,7 +234,11 @@ export const OptiScalerExecutableTable = ({
             >
               <div className="optiscaler-executable-identity">
                 <strong>{candidate.executableName}</strong>
-                <span>{(candidate.targetRelativePath === '.') ? 'Game Root' : candidate.targetRelativePath}</span>
+                <span>
+                  {candidate.targetRelativePath === '.'
+                    ? 'Game Root'
+                    : candidate.targetRelativePath}
+                </span>
               </div>
               <div className="optiscaler-executable-details">
                 <span>{candidate.architecture}</span>
@@ -235,7 +249,9 @@ export const OptiScalerExecutableTable = ({
               <div className="optiscaler-executable-state">
                 <div className="optiscaler-executable-status">
                   {candidateFacts(candidate).map((fact) => (
-                    <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+                    <span className={`optiscaler-executable-status-${fact.tone}`} key={fact.label}>
+                      {fact.label}
+                    </span>
                   ))}
                 </div>
               </div>

@@ -57,10 +57,14 @@ export const GameProfilesSection = ({
     () => profiles.find((profile) => profile.ID === selectedProfileID) ?? profiles[0] ?? null,
     [profiles, selectedProfileID],
   );
-  const selectedProfileMods = selectedProfile === null ? [] : profileModsByProfileID[selectedProfile.ID] ?? [];
+  const selectedProfileMods =
+    selectedProfile === null ? [] : (profileModsByProfileID[selectedProfile.ID] ?? []);
 
   useEffect(() => {
-    if (selectedProfileID !== null && profiles.some((profile) => profile.ID === selectedProfileID)) {
+    if (
+      selectedProfileID !== null &&
+      profiles.some((profile) => profile.ID === selectedProfileID)
+    ) {
       return;
     }
 
@@ -190,12 +194,12 @@ export const GameProfilesSection = ({
   return (
     <section className="game-profiles-section" aria-label="Profiles">
       {loadError !== null && (
-        <StateBlock className="game-profiles-section-state" title="Could not load profiles." message={loadError}>
-          <button
-            className="game-profiles-section-button"
-            onClick={refreshProfiles}
-            type="button"
-          >
+        <StateBlock
+          className="game-profiles-section-state"
+          title="Could not load profiles."
+          message={loadError}
+        >
+          <button className="game-profiles-section-button" onClick={refreshProfiles} type="button">
             Retry
           </button>
         </StateBlock>
@@ -263,9 +267,7 @@ export const GameProfilesSection = ({
         confirmLabel="Delete"
         isOpen={deleteCandidate !== null}
         message={
-          deleteCandidate === null
-            ? ''
-            : `Delete "${deleteCandidate.Name}"? This cannot be undone.`
+          deleteCandidate === null ? '' : `Delete "${deleteCandidate.Name}"? This cannot be undone.`
         }
         onCancel={() => setDeleteCandidate(null)}
         onConfirm={handleDeleteProfile}

@@ -30,29 +30,42 @@ const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
     return null;
   }
   return (
-    <section className={tone === undefined
-      ? 'optiscaler-preview-group'
-      : `optiscaler-preview-group optiscaler-preview-group-${tone}`}
+    <section
+      className={
+        tone === undefined
+          ? 'optiscaler-preview-group'
+          : `optiscaler-preview-group optiscaler-preview-group-${tone}`
+      }
     >
       <h3>{title}</h3>
-      <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
     </section>
   );
 };
 
 export const OptiScalerPreview = ({ preview }: OptiScalerPreviewProps) => {
-  const filesToAdd = preview.operations.filter((operation) =>
-    operation.type === 'copy' || operation.type === 'adopt');
+  const filesToAdd = preview.operations.filter(
+    (operation) => operation.type === 'copy' || operation.type === 'adopt',
+  );
   const filesToBackup = preview.operations.filter((operation) => operation.backupPath);
-  const filesToRemove = preview.operations.filter((operation) =>
-    operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore');
+  const filesToRemove = preview.operations.filter(
+    (operation) =>
+      operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore',
+  );
 
   return (
     <div className="optiscaler-preview">
       <PreviewGroup items={preview.conflicts} title="Blocking conflicts" tone="danger" />
       <PreviewGroup
         items={preview.drift.map((drift) => (
-          <>{drift.relativePath}{drift.missing ? ' is missing' : ' has changed'}</>
+          <>
+            {drift.relativePath}
+            {drift.missing ? ' is missing' : ' has changed'}
+          </>
         ))}
         title="Drifted files"
         tone="warning"
@@ -60,7 +73,10 @@ export const OptiScalerPreview = ({ preview }: OptiScalerPreviewProps) => {
       <PreviewGroup items={preview.warnings} title="Warnings" tone="warning" />
       <PreviewGroup
         items={filesToAdd.map((operation) => (
-          <><span className="optiscaler-preview-symbol">+</span>{operationDescription(operation)}</>
+          <>
+            <span className="optiscaler-preview-symbol">+</span>
+            {operationDescription(operation)}
+          </>
         ))}
         title="Files to add"
         tone="success"
@@ -77,7 +93,10 @@ export const OptiScalerPreview = ({ preview }: OptiScalerPreviewProps) => {
       />
       <PreviewGroup
         items={filesToRemove.map((operation) => (
-          <><span className="optiscaler-preview-symbol">−</span>{operationDescription(operation)}</>
+          <>
+            <span className="optiscaler-preview-symbol">−</span>
+            {operationDescription(operation)}
+          </>
         ))}
         title="Files to remove"
         tone="danger"
@@ -93,8 +112,8 @@ export const OptiScalerPreview = ({ preview }: OptiScalerPreviewProps) => {
         <section className="optiscaler-preview-group">
           <h3>Retained after uninstall</h3>
           <p>
-            Fiach archives the ownership manifest, OptiScaler settings, and available backup snapshot.
-            A chained ReShade runtime is restored to its original proxy filename.
+            Fiach archives the ownership manifest, OptiScaler settings, and available backup
+            snapshot. A chained ReShade runtime is restored to its original proxy filename.
           </p>
         </section>
       )}

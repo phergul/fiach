@@ -8,38 +8,38 @@ import type {
 
 import { ReShadeTargetTable } from './ReShadeTargetTable';
 
-const candidate = (
-  overrides: Partial<ReShadeDiscoveryResult['candidates'][number]> = {},
-) => ({
-  apiOptions: [
-    { proxies: ['d3d9.dll'], renderingApi: 'd3d9' },
-    { proxies: ['dxgi.dll'], renderingApi: 'd3d10' },
-    { proxies: ['dxgi.dll'], renderingApi: 'd3d11' },
-    { proxies: ['dxgi.dll'], renderingApi: 'd3d12' },
-    { proxies: ['opengl32.dll'], renderingApi: 'opengl' },
-  ],
-  architecture: 'x64',
-  conflicts: [],
-  executableRelativePath: 'Bin/Game.exe',
-  proxyEvidence: [],
-  targetRelativePath: 'Bin',
-  ...overrides,
-} as ReShadeDiscoveryResult['candidates'][number]);
+const candidate = (overrides: Partial<ReShadeDiscoveryResult['candidates'][number]> = {}) =>
+  ({
+    apiOptions: [
+      { proxies: ['d3d9.dll'], renderingApi: 'd3d9' },
+      { proxies: ['dxgi.dll'], renderingApi: 'd3d10' },
+      { proxies: ['dxgi.dll'], renderingApi: 'd3d11' },
+      { proxies: ['dxgi.dll'], renderingApi: 'd3d12' },
+      { proxies: ['opengl32.dll'], renderingApi: 'opengl' },
+    ],
+    architecture: 'x64',
+    conflicts: [],
+    executableRelativePath: 'Bin/Game.exe',
+    proxyEvidence: [],
+    targetRelativePath: 'Bin',
+    ...overrides,
+  }) as ReShadeDiscoveryResult['candidates'][number];
 
-const target = (overrides: Partial<ReShadeTarget> = {}) => ({
-  ActiveRuntimeFilename: 'ReShade64.dll',
-  Architecture: 'x64',
-  BuildVariant: 'standard',
-  ExecutableRelativePath: 'Bin/Game.exe',
-  ID: 1,
-  ProxyFilename: 'dxgi.dll',
-  RenderingAPI: 'd3d11',
-  RuntimeVersion: '6.7.3',
-  Status: 'managed',
-  TargetRelativePath: 'Bin',
-  VariantProvenance: 'verified',
-  ...overrides,
-} as ReShadeTarget);
+const target = (overrides: Partial<ReShadeTarget> = {}) =>
+  ({
+    ActiveRuntimeFilename: 'ReShade64.dll',
+    Architecture: 'x64',
+    BuildVariant: 'standard',
+    ExecutableRelativePath: 'Bin/Game.exe',
+    ID: 1,
+    ProxyFilename: 'dxgi.dll',
+    RenderingAPI: 'd3d11',
+    RuntimeVersion: '6.7.3',
+    Status: 'managed',
+    TargetRelativePath: 'Bin',
+    VariantProvenance: 'verified',
+    ...overrides,
+  }) as ReShadeTarget;
 
 describe('ReShadeTargetTable', () => {
   it('shows detected API options and suppresses clean placeholders', () => {

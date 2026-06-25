@@ -10,7 +10,12 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
 
 .game-profile-assigned-mod-row {
   display: grid;
-  grid-template-columns: $game-profile-assigned-mod-row-order-width $game-profile-assigned-mod-row-handle-width minmax(0, 1fr) auto;
+  grid-template-columns:
+    $game-profile-assigned-mod-row-order-width $game-profile-assigned-mod-row-handle-width minmax(
+      0,
+      1fr
+    )
+    auto;
   align-items: center;
   gap: $spacing-md;
   min-height: 4.75rem;
@@ -148,16 +153,21 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
     left $transition-duration-fast $transition-easing-standard;
 }
 
-.game-profile-assigned-mod-row-toggle input:checked+.game-profile-assigned-mod-row-toggle-control {
+.game-profile-assigned-mod-row-toggle
+  input:checked
+  + .game-profile-assigned-mod-row-toggle-control {
   border-color: $color-success;
 }
 
-.game-profile-assigned-mod-row-toggle input:checked+.game-profile-assigned-mod-row-toggle-control::after {
+.game-profile-assigned-mod-row-toggle
+  input:checked
+  + .game-profile-assigned-mod-row-toggle-control::after {
   left: calc(100% - $game-profile-assigned-mod-row-toggle-knob-size - $spacing-xs);
   background: $color-success;
 }
 
-.game-profile-assigned-mod-row-toggle:has(input:focus-visible) .game-profile-assigned-mod-row-toggle-control {
+.game-profile-assigned-mod-row-toggle:has(input:focus-visible)
+  .game-profile-assigned-mod-row-toggle-control {
   border-color: $color-border-strong;
 }
 

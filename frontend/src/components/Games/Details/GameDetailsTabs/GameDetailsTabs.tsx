@@ -7,10 +7,7 @@ interface GameDetailsTabsProps {
   onActiveTabChange: (tab: GameDetailsTab) => void;
 }
 
-export const GameDetailsTabs = ({
-  activeTab,
-  onActiveTabChange,
-}: GameDetailsTabsProps) => {
+export const GameDetailsTabs = ({ activeTab, onActiveTabChange }: GameDetailsTabsProps) => {
   return (
     <div className="game-details-tabs" role="tablist" aria-label="Game detail sections">
       <button

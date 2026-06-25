@@ -17,7 +17,11 @@ export { useGameModUpdateFlow } from './games/useGameModUpdateFlow';
 export type { UseGameModUpdateFlowResult } from './games/useGameModUpdateFlow';
 export { getOptiScalerAggregateStatus, useGameOptiScaler } from './games/useGameOptiScaler';
 export type { OptiScalerAggregateStatus, UseGameOptiScalerResult } from './games/useGameOptiScaler';
-export { getReShadeAggregateStatus, isReShadeUpdateAvailable, useGameReShade } from './games/useGameReShade';
+export {
+  getReShadeAggregateStatus,
+  isReShadeUpdateAvailable,
+  useGameReShade,
+} from './games/useGameReShade';
 export type { ReShadeAggregateStatus, UseGameReShadeResult } from './games/useGameReShade';
 export { useGameReShadeDetection } from './games/useGameReShadeDetection';
 export type { UseGameReShadeDetectionResult } from './games/useGameReShadeDetection';

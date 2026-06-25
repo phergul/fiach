@@ -9,7 +9,10 @@ import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { GameDetailsActionsMenu } from '@components/Games/Details/GameDetailsActionsMenu/GameDetailsActionsMenu';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
-import { GameDetailsTabs, type GameDetailsTab } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
+import {
+  GameDetailsTabs,
+  type GameDetailsTab,
+} from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
 import { GameModImportWizard } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizard';
 import { GameModUpdateModal } from '@components/Games/Details/Mods/GameModUpdateModal/GameModUpdateModal';
@@ -50,9 +53,11 @@ export const GameDetails = () => {
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
-  const { games, isLoading, isScanning, loadError, retryLoadGames, updateStoredGame } = useStoredGames();
+  const { games, isLoading, isScanning, loadError, retryLoadGames, updateStoredGame } =
+    useStoredGames();
   const parsedGameID = parseGameID(gameId);
-  const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
+  const game =
+    parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
   const gameModManager = useGameMods(game?.ID ?? null);
@@ -78,26 +83,17 @@ export const GameDetails = () => {
     onMenuClose: () => setIsActionsMenuOpen(false),
     updateStoredGame,
   });
-  const {
-    artworkSource: heroArtworkSource,
-    handleArtworkError: handleHeroArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'hero',
-  );
-  const {
-    artworkSource: logoArtworkSource,
-    handleArtworkError: handleLogoArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'logo',
-  );
+  const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
+  const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'logo');
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const applyProfilePath = game === undefined ? '/library' : `/library/${game.ID}/apply`;
   const isRestorePending = appliedProfileManager.pendingAction === 'restore';
-  const canRestoreVanilla = game !== undefined && appliedProfileManager.appliedProfile !== null && !isRestorePending;
+  const canRestoreVanilla =
+    game !== undefined && appliedProfileManager.appliedProfile !== null && !isRestorePending;
 
   const openRestoreConfirm = () => {
     if (canRestoreVanilla) {
@@ -135,7 +131,9 @@ export const GameDetails = () => {
 
   return (
     <section
-      className={heroArtworkSource === '' ? 'game-details' : 'game-details game-details-with-backdrop'}
+      className={
+        heroArtworkSource === '' ? 'game-details' : 'game-details game-details-with-backdrop'
+      }
       aria-label="Game details"
     >
       <div className="game-details-toolbar">
@@ -192,7 +190,7 @@ export const GameDetails = () => {
             </button>
 
             {game !== undefined && (
-            <GameDetailsActionsMenu
+              <GameDetailsActionsMenu
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}

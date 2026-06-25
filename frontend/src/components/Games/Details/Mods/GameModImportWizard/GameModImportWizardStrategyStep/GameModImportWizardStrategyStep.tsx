@@ -1,6 +1,9 @@
 import { Check, Loader2 } from 'lucide-react';
 
-import type { StrategyDescriptor, StrategyType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  StrategyDescriptor,
+  StrategyType,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './GameModImportWizardStrategyStep.scss';
 
@@ -37,7 +40,11 @@ export const GameModImportWizardStrategyStep = ({
   }
 
   if (strategies.length === 0) {
-    return <p className="game-mod-import-wizard-strategy-step-error">No import strategies are available.</p>;
+    return (
+      <p className="game-mod-import-wizard-strategy-step-error">
+        No import strategies are available.
+      </p>
+    );
   }
 
   return (
@@ -48,9 +55,11 @@ export const GameModImportWizardStrategyStep = ({
 
         return (
           <button
-            className={isSelected
-              ? 'game-mod-import-wizard-strategy-step-option game-mod-import-wizard-strategy-step-option-selected'
-              : 'game-mod-import-wizard-strategy-step-option'}
+            className={
+              isSelected
+                ? 'game-mod-import-wizard-strategy-step-option game-mod-import-wizard-strategy-step-option-selected'
+                : 'game-mod-import-wizard-strategy-step-option'
+            }
             disabled={isBusy}
             key={strategy.Type}
             onClick={() => onStrategySelect(strategy.Type)}
@@ -59,14 +68,23 @@ export const GameModImportWizardStrategyStep = ({
           >
             <span className="game-mod-import-wizard-strategy-step-copy">
               <span className="game-mod-import-wizard-strategy-step-option-heading">
-                <span className="game-mod-import-wizard-strategy-step-option-label">{strategy.Label}</span>
+                <span className="game-mod-import-wizard-strategy-step-option-label">
+                  {strategy.Label}
+                </span>
                 {suggestedStrategyType === strategy.Type && (
                   <span className="game-mod-import-wizard-strategy-step-detected">Detected</span>
                 )}
               </span>
-              <span className="game-mod-import-wizard-strategy-step-description">{strategy.Description}</span>
+              <span className="game-mod-import-wizard-strategy-step-description">
+                {strategy.Description}
+              </span>
             </span>
-            {isSelected && <Check className="game-mod-import-wizard-strategy-step-option-icon" aria-hidden="true" />}
+            {isSelected && (
+              <Check
+                className="game-mod-import-wizard-strategy-step-option-icon"
+                aria-hidden="true"
+              />
+            )}
           </button>
         );
       })}

@@ -1,19 +1,10 @@
-import {
-  FolderCog,
-  Gauge,
-  RotateCcw,
-  SlidersHorizontal,
-  Sparkles,
-} from "lucide-react";
+import { FolderCog, Gauge, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
 
-import type { StoredGame } from "@bindings/github.com/phergul/fiach/internal/services/dto/models";
-import {
-  DropdownMenu,
-  type DropdownMenuItem,
-} from "@components/Common/DropdownMenu/DropdownMenu";
+import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { DropdownMenu, type DropdownMenuItem } from '@components/Common/DropdownMenu/DropdownMenu';
 
-import "./GameDetailsActionsMenu.scss";
-import { useRuntime } from "@hooks";
+import './GameDetailsActionsMenu.scss';
+import { useRuntime } from '@hooks';
 
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
@@ -37,19 +28,18 @@ export const GameDetailsActionsMenu = ({
   }
 
   const hasOverride =
-    game.ModStoragePathOverride !== null &&
-    game.ModStoragePathOverride.trim() !== "";
+    game.ModStoragePathOverride !== null && game.ModStoragePathOverride.trim() !== '';
 
   const items: DropdownMenuItem[] = [
     {
       icon: FolderCog,
-      label: "Set mod storage override",
+      label: 'Set mod storage override',
       onSelect: onSetStorageOverride,
     },
     {
       disabled: !hasOverride,
       icon: RotateCcw,
-      label: "Clear mod storage override",
+      label: 'Clear mod storage override',
       onSelect: onClearStorageOverride,
     },
   ];
@@ -58,23 +48,21 @@ export const GameDetailsActionsMenu = ({
   if (isWindows) {
     items.unshift({
       icon: SlidersHorizontal,
-      label: "Manage graphics tools",
+      label: 'Manage graphics tools',
       children: [
         {
           icon: Gauge,
-          label: "OptiScaler",
+          label: 'OptiScaler',
           onSelect: onOpenOptiScaler,
         },
         {
           icon: Sparkles,
-          label: "ReShade",
+          label: 'ReShade',
           onSelect: onOpenReShade,
         },
       ],
     });
   }
 
-  return (
-    <DropdownMenu ariaLabel="Game actions" isOpen={isOpen} items={items} />
-  );
+  return <DropdownMenu ariaLabel="Game actions" isOpen={isOpen} items={items} />;
 };

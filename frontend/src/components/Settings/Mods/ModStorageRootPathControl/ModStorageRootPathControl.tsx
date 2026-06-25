@@ -22,9 +22,7 @@ export const ModStorageRootPathControl = ({
 
   return (
     <div className="mod-storage-root-path-control">
-      <div className={valueClassName}>
-        {hasValue ? value : 'Not set'}
-      </div>
+      <div className={valueClassName}>{hasValue ? value : 'Not set'}</div>
 
       <div className="mod-storage-root-path-control-actions">
         <button

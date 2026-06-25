@@ -26,22 +26,34 @@ const target = {
 
 describe('getOptiScalerAggregateStatus', () => {
   it('uses the required priority order', () => {
-    expect(getOptiScalerAggregateStatus([candidate], [{ ...target, Status: 'drifted' }], null, 'v2', null)).toBe('drift');
+    expect(
+      getOptiScalerAggregateStatus(
+        [candidate],
+        [{ ...target, Status: 'drifted' }],
+        null,
+        'v2',
+        null,
+      ),
+    ).toBe('drift');
     expect(getOptiScalerAggregateStatus([candidate], [target], null, 'v2', null)).toBe('update');
     expect(getOptiScalerAggregateStatus([candidate], [target], null, 'v1', null)).toBe('managed');
-    expect(getOptiScalerAggregateStatus([{ ...candidate, hasOptiScaler: true }], [], null, 'v1', null)).toBe('unmanaged');
+    expect(
+      getOptiScalerAggregateStatus([{ ...candidate, hasOptiScaler: true }], [], null, 'v1', null),
+    ).toBe('unmanaged');
     expect(getOptiScalerAggregateStatus([candidate], [], null, 'v1', null)).toBe('not_detected');
     expect(getOptiScalerAggregateStatus([], [], null, 'v1', null)).toBe('not_detected');
   });
 
   it('prioritizes a global recovery journal over target state', () => {
     const recovery = { required: true } as OptiScalerRecoveryState;
-    expect(getOptiScalerAggregateStatus(
-      [candidate],
-      [{ ...target, Status: 'drifted' }],
-      recovery,
-      'v2',
-      null,
-    )).toBe('recovery');
+    expect(
+      getOptiScalerAggregateStatus(
+        [candidate],
+        [{ ...target, Status: 'drifted' }],
+        recovery,
+        'v2',
+        null,
+      ),
+    ).toBe('recovery');
   });
 });

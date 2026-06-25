@@ -36,39 +36,42 @@ export const useAppliedProfile = (gameID: number | null) => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<AppliedProfileAction | null>(null);
 
-  const loadAppliedProfile = useCallback(async (isCurrent: () => boolean = () => true) => {
-    if (gameID === null) {
+  const loadAppliedProfile = useCallback(
+    async (isCurrent: () => boolean = () => true) => {
+      if (gameID === null) {
+        if (isCurrent()) {
+          setAppliedProfile(null);
+          setIsLoading(false);
+          setLoadError(null);
+        }
+        return null;
+      }
+
       if (isCurrent()) {
-        setAppliedProfile(null);
-        setIsLoading(false);
+        setIsLoading(true);
         setLoadError(null);
       }
-      return null;
-    }
 
-    if (isCurrent()) {
-      setIsLoading(true);
-      setLoadError(null);
-    }
-
-    try {
-      const loadedAppliedProfile = await GetAppliedProfileSummary(gameID);
-      if (isCurrent()) {
-        setAppliedProfile(loadedAppliedProfile);
+      try {
+        const loadedAppliedProfile = await GetAppliedProfileSummary(gameID);
+        if (isCurrent()) {
+          setAppliedProfile(loadedAppliedProfile);
+        }
+        return loadedAppliedProfile;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        if (isCurrent()) {
+          setLoadError(message);
+        }
+        throw error;
+      } finally {
+        if (isCurrent()) {
+          setIsLoading(false);
+        }
       }
-      return loadedAppliedProfile;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      if (isCurrent()) {
-        setLoadError(message);
-      }
-      throw error;
-    } finally {
-      if (isCurrent()) {
-        setIsLoading(false);
-      }
-    }
-  }, [gameID]);
+    },
+    [gameID],
+  );
 
   const refreshAppliedProfile = useCallback(() => loadAppliedProfile(), [loadAppliedProfile]);
 
@@ -85,7 +88,9 @@ export const useAppliedProfile = (gameID: number | null) => {
         await loadAppliedProfile();
       }
       addToast({
-        message: result.Success ? buildRestoreSuccessMessage(result) : buildRestoreFailureMessage(result),
+        message: result.Success
+          ? buildRestoreSuccessMessage(result)
+          : buildRestoreFailureMessage(result),
         tone: result.Success ? 'success' : 'error',
       });
       return result;

@@ -60,7 +60,10 @@ export const LogsToolbar = ({
 
       <div className="logs-toolbar-controls">
         <label className="logs-toolbar-field">
-          <select value={level} onChange={(event) => onLevelChange(event.target.value as LogLevelFilter)}>
+          <select
+            value={level}
+            onChange={(event) => onLevelChange(event.target.value as LogLevelFilter)}
+          >
             {levelOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -101,7 +104,12 @@ export const LogsToolbar = ({
           <button onClick={onClear} title="Clear visible logs" type="button">
             <Trash2 aria-hidden="true" />
           </button>
-          <button disabled={isExporting} onClick={onExport} title="Export visible logs" type="button">
+          <button
+            disabled={isExporting}
+            onClick={onExport}
+            title="Export visible logs"
+            type="button"
+          >
             <Download aria-hidden="true" />
           </button>
         </div>

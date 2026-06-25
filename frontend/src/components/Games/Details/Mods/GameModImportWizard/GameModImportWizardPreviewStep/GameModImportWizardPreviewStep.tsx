@@ -1,4 +1,7 @@
-import type { Preview, StrategyDescriptor } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  Preview,
+  StrategyDescriptor,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { formatModMetadataBytes } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 import type { ModTagSelection } from '@components/Games/Details/Mods/ModTags/ModTagEditor/ModTagEditor';
 import { ModTagChip } from '@components/Games/Details/Mods/ModTags/ModTagChip/ModTagChip';
@@ -22,7 +25,9 @@ export const GameModImportWizardPreviewStep = ({
   sourcePath,
   tags,
 }: GameModImportWizardPreviewStepProps) => {
-  const extraWarnings = preview.Warnings.filter((warning) => !warning.includes(`first ${preview.Cap}`));
+  const extraWarnings = preview.Warnings.filter(
+    (warning) => !warning.includes(`first ${preview.Cap}`),
+  );
 
   return (
     <div className="game-mod-import-wizard-preview-step">
@@ -37,39 +42,51 @@ export const GameModImportWizardPreviewStep = ({
           <span className="game-mod-import-wizard-preview-step-tags">
             {tags.length === 0 ? (
               <span className="game-mod-import-wizard-preview-step-value">None</span>
-            ) : tags.map((tag, index) => (
-              <ModTagChip
-                color={tag.Color}
-                key={tag.ID ?? `new-${tag.Name}-${index}`}
-                name={tag.Name}
-              />
-            ))}
+            ) : (
+              tags.map((tag, index) => (
+                <ModTagChip
+                  color={tag.Color}
+                  key={tag.ID ?? `new-${tag.Name}-${index}`}
+                  name={tag.Name}
+                />
+              ))
+            )}
           </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Install strategy</span>
-          <span className="game-mod-import-wizard-preview-step-value">{selectedStrategy?.Label ?? 'Not selected'}</span>
+          <span className="game-mod-import-wizard-preview-step-value">
+            {selectedStrategy?.Label ?? 'Not selected'}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Target path</span>
-          <span className="game-mod-import-wizard-preview-step-value">{preview.TargetDisplayPath}</span>
+          <span className="game-mod-import-wizard-preview-step-value">
+            {preview.TargetDisplayPath}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Number of files</span>
-          <span className="game-mod-import-wizard-preview-step-value">{preview.TotalFileCount}</span>
+          <span className="game-mod-import-wizard-preview-step-value">
+            {preview.TotalFileCount}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Number of folders</span>
-          <span className="game-mod-import-wizard-preview-step-value">{preview.TotalDirectoryCount}</span>
+          <span className="game-mod-import-wizard-preview-step-value">
+            {preview.TotalDirectoryCount}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">
           <span className="game-mod-import-wizard-preview-step-label">Size</span>
-          <span className="game-mod-import-wizard-preview-step-value">{formatModMetadataBytes(preview.TotalSizeBytes)}</span>
+          <span className="game-mod-import-wizard-preview-step-value">
+            {formatModMetadataBytes(preview.TotalSizeBytes)}
+          </span>
         </div>
 
         <div className="game-mod-import-wizard-preview-step-row">

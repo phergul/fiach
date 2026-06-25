@@ -12,11 +12,13 @@ describe('OptiScalerPreview', () => {
       configurationChanges: [],
       conflicts: ['Unknown proxy ownership'],
       drift: [{ actualHash: 'b', expectedHash: 'a', missing: false, relativePath: 'dxgi.dll' }],
-      operations: [{
-        backupPath: 'C:/Fiach/backups/dxgi.bak',
-        targetPath: 'C:/Game/dxgi.dll',
-        type: 'copy',
-      }],
+      operations: [
+        {
+          backupPath: 'C:/Fiach/backups/dxgi.bak',
+          targetPath: 'C:/Game/dxgi.dll',
+          type: 'copy',
+        },
+      ],
       request: { action: 'uninstall' },
       warnings: [],
     } as unknown as OptiScalerPreviewModel;

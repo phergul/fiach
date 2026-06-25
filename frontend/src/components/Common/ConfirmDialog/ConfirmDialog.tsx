@@ -37,9 +37,14 @@ export const ConfirmDialog = ({
       panelClassName="confirm-dialog"
       size="sm"
       title={title}
-      footer={(
+      footer={
         <>
-          <button className="confirm-dialog-button" disabled={isBusy} onClick={onCancel} type="button">
+          <button
+            className="confirm-dialog-button"
+            disabled={isBusy}
+            onClick={onCancel}
+            type="button"
+          >
             {cancelLabel}
           </button>
           <button
@@ -51,7 +56,7 @@ export const ConfirmDialog = ({
             {confirmLabel}
           </button>
         </>
-      )}
+      }
     >
       <p className="confirm-dialog-message" id="confirm-dialog-message">
         {message}

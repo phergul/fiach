@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { OS } from "@bindings/github.com/phergul/fiach/internal/appmode/runtime";
+import { useEffect, useState } from 'react';
+import { OS } from '@bindings/github.com/phergul/fiach/internal/appmode/runtime';
 
 export function useRuntime() {
   const [runtime, setRuntime] = useState<string>('unknown');

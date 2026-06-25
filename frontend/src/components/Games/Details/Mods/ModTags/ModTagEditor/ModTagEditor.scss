@@ -110,14 +110,30 @@ $mod-tag-editor-chip-height: calc(
   outline-offset: -($app-border-width * 2);
 }
 
-.mod-tag-editor-color-red { --mod-tag-editor-color: #{$color-tag-red}; }
-.mod-tag-editor-color-orange { --mod-tag-editor-color: #{$color-tag-orange}; }
-.mod-tag-editor-color-yellow { --mod-tag-editor-color: #{$color-tag-yellow}; }
-.mod-tag-editor-color-green { --mod-tag-editor-color: #{$color-tag-green}; }
-.mod-tag-editor-color-teal { --mod-tag-editor-color: #{$color-tag-teal}; }
-.mod-tag-editor-color-blue { --mod-tag-editor-color: #{$color-tag-blue}; }
-.mod-tag-editor-color-purple { --mod-tag-editor-color: #{$color-tag-purple}; }
-.mod-tag-editor-color-pink { --mod-tag-editor-color: #{$color-tag-pink}; }
+.mod-tag-editor-color-red {
+  --mod-tag-editor-color: #{$color-tag-red};
+}
+.mod-tag-editor-color-orange {
+  --mod-tag-editor-color: #{$color-tag-orange};
+}
+.mod-tag-editor-color-yellow {
+  --mod-tag-editor-color: #{$color-tag-yellow};
+}
+.mod-tag-editor-color-green {
+  --mod-tag-editor-color: #{$color-tag-green};
+}
+.mod-tag-editor-color-teal {
+  --mod-tag-editor-color: #{$color-tag-teal};
+}
+.mod-tag-editor-color-blue {
+  --mod-tag-editor-color: #{$color-tag-blue};
+}
+.mod-tag-editor-color-purple {
+  --mod-tag-editor-color: #{$color-tag-purple};
+}
+.mod-tag-editor-color-pink {
+  --mod-tag-editor-color: #{$color-tag-pink};
+}
 
 .mod-tag-editor-suggestions {
   display: flex;

@@ -24,7 +24,8 @@ export const useGameStorageOverride = ({
   updateStoredGame,
 }: UseGameStorageOverrideInput) => {
   const { addErrorToast, addToast } = useToast();
-  const [pendingStorageOverride, setPendingStorageOverride] = useState<PendingStorageOverride | null>(null);
+  const [pendingStorageOverride, setPendingStorageOverride] =
+    useState<PendingStorageOverride | null>(null);
   const [isApplyingStorageOverride, setIsApplyingStorageOverride] = useState(false);
 
   const requestSetStorageOverride = async () => {
@@ -83,7 +84,10 @@ export const useGameStorageOverride = ({
     setIsApplyingStorageOverride(true);
 
     try {
-      const updatedGame: StoredGame = await SetGameModStoragePathOverride(game.ID, pendingStorageOverride.path);
+      const updatedGame: StoredGame = await SetGameModStoragePathOverride(
+        game.ID,
+        pendingStorageOverride.path,
+      );
       updateStoredGame(updatedGame);
       addToast({
         message: pendingStorageOverride.successMessage,

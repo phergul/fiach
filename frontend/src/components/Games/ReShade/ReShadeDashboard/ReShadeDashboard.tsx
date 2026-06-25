@@ -8,7 +8,10 @@ import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/G
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
 import { ReShadePageHeader } from '@components/Games/ReShade/ReShadePageHeader/ReShadePageHeader';
 import { ReShadeRecoveryPanel } from '@components/Games/ReShade/ReShadeRecoveryPanel/ReShadeRecoveryPanel';
-import { ReShadeTargetTable, type ReShadeOperationSelection } from '@components/Games/ReShade/ReShadeTargetTable/ReShadeTargetTable';
+import {
+  ReShadeTargetTable,
+  type ReShadeOperationSelection,
+} from '@components/Games/ReShade/ReShadeTargetTable/ReShadeTargetTable';
 import { ReShadeWizard } from '@components/Games/ReShade/ReShadeWizard/ReShadeWizard';
 import { useGameArtwork, useGameReShade, useStoredGames } from '@hooks';
 
@@ -22,25 +25,24 @@ const parseGameID = (gameID: string | undefined) => {
 export const ReShadeDashboard = () => {
   const { gameId } = useParams();
   const { addErrorToast, addToast } = useToast();
-  const { games, isLoading: isLoadingGames, isScanning, loadError: gamesError, retryLoadGames } = useStoredGames();
+  const {
+    games,
+    isLoading: isLoadingGames,
+    isScanning,
+    loadError: gamesError,
+    retryLoadGames,
+  } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
-  const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
+  const game =
+    parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const reShade = useGameReShade(game?.ID ?? null);
-  const [operationSelection, setOperationSelection] = useState<ReShadeOperationSelection | null>(null);
-  const {
-    artworkSource: heroArtworkSource,
-    handleArtworkError: handleHeroArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'hero',
+  const [operationSelection, setOperationSelection] = useState<ReShadeOperationSelection | null>(
+    null,
   );
-  const {
-    artworkSource: logoArtworkSource,
-    handleArtworkError: handleLogoArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'logo',
-  );
+  const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
+  const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'logo');
   const isWaitingForGame = (isLoadingGames || isScanning) && game === undefined;
   const hasLoadError = gamesError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
@@ -60,9 +62,11 @@ export const ReShadeDashboard = () => {
 
   return (
     <section
-      className={heroArtworkSource === ''
-        ? 'reshade-dashboard'
-        : 'reshade-dashboard reshade-dashboard-with-backdrop'}
+      className={
+        heroArtworkSource === ''
+          ? 'reshade-dashboard'
+          : 'reshade-dashboard reshade-dashboard-with-backdrop'
+      }
       aria-label="ReShade management"
     >
       <div className="reshade-dashboard-toolbar">

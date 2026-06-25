@@ -6,8 +6,7 @@ import { ThemeSelectControl } from '@components/Settings/Appearance/ThemeSelectC
 import { SettingsRow } from '@components/Settings/Common/SettingsRow/SettingsRow';
 import { SettingsSection } from '@components/Settings/Common/SettingsSection/SettingsSection';
 
-const themeDescription =
-  'Select the theme for the application.';
+const themeDescription = 'Select the theme for the application.';
 
 export const ThemeSettings = () => {
   const { addErrorToast, addToast } = useToast();

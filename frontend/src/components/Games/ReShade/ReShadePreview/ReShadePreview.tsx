@@ -1,4 +1,8 @@
-import type { Operation as ReShadeOperation, PathImpact, Preview as ReShadePreviewModel } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
+import type {
+  Operation as ReShadeOperation,
+  PathImpact,
+  Preview as ReShadePreviewModel,
+} from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type { ReShadeChainTarget } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ReShadePreview.scss';
@@ -28,12 +32,19 @@ const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
     return null;
   }
   return (
-    <section className={tone === undefined
-      ? 'reshade-preview-group'
-      : `reshade-preview-group reshade-preview-group-${tone}`}
+    <section
+      className={
+        tone === undefined
+          ? 'reshade-preview-group'
+          : `reshade-preview-group reshade-preview-group-${tone}`
+      }
     >
       <h3>{title}</h3>
-      <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
     </section>
   );
 };
@@ -45,7 +56,10 @@ const filesToAdd = (operations: ReShadeOperation[]) =>
   operations.filter((operation) => operation.type === 'copy' || operation.type === 'adopt');
 
 const filesToRemove = (operations: ReShadeOperation[]) =>
-  operations.filter((operation) => operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore');
+  operations.filter(
+    (operation) =>
+      operation.type === 'delete' || operation.type === 'move' || operation.type === 'restore',
+  );
 
 const chainItems = (chainTarget: ReShadeChainTarget | null) => {
   if (chainTarget === null) {
@@ -53,8 +67,12 @@ const chainItems = (chainTarget: ReShadeChainTarget | null) => {
   }
   return [
     `${chainTarget.PrimaryOwner} owns ${chainTarget.PrimaryProxyFilename}`,
-    ...(chainTarget.OptiScaler !== null ? [`OptiScaler: ${chainTarget.OptiScaler.ProxyFilename}`] : []),
-    ...(chainTarget.ReShade !== null ? [`ReShade: ${chainTarget.ReShade.ActiveRuntimeFilename}`] : []),
+    ...(chainTarget.OptiScaler !== null
+      ? [`OptiScaler: ${chainTarget.OptiScaler.ProxyFilename}`]
+      : []),
+    ...(chainTarget.ReShade !== null
+      ? [`ReShade: ${chainTarget.ReShade.ActiveRuntimeFilename}`]
+      : []),
   ];
 };
 
@@ -74,20 +92,21 @@ export const ReShadePreview = ({ chainTarget, preview }: ReShadePreviewProps) =>
     <div className="reshade-preview">
       <PreviewGroup items={preview.conflicts} title="Blocking conflicts" tone="danger" />
       <PreviewGroup
-        items={preview.drift.map((drift) => `${drift.relativePath}${drift.missing ? ' is missing' : ' has changed'}`)}
+        items={preview.drift.map(
+          (drift) => `${drift.relativePath}${drift.missing ? ' is missing' : ' has changed'}`,
+        )}
         title="Managed file drift"
         tone="warning"
       />
       <PreviewGroup
-        items={preview.userContentDrift.map((drift) => `${drift.path}${drift.missing ? ' is missing' : ' has changed'}`)}
+        items={preview.userContentDrift.map(
+          (drift) => `${drift.path}${drift.missing ? ' is missing' : ' has changed'}`,
+        )}
         title="User content drift"
         tone="warning"
       />
       <PreviewGroup items={preview.warnings} title="Warnings" tone="warning" />
-      <PreviewGroup
-        items={runtimeImpacts.map(pathImpactLabel)}
-        title="Runtime files"
-      />
+      <PreviewGroup items={runtimeImpacts.map(pathImpactLabel)} title="Runtime files" />
       <PreviewGroup
         items={configurationImpacts.map(pathImpactLabel)}
         title="Configuration and presets"
@@ -96,21 +115,23 @@ export const ReShadePreview = ({ chainTarget, preview }: ReShadePreviewProps) =>
         items={contentImpacts.map(pathImpactLabel)}
         title="Effects, textures, and add-ons"
       />
-      <PreviewGroup
-        items={backupImpacts.map(pathImpactLabel)}
-        title="Backups"
-        tone="warning"
-      />
+      <PreviewGroup items={backupImpacts.map(pathImpactLabel)} title="Backups" tone="warning" />
       <PreviewGroup
         items={filesToAdd(preview.operations).map((operation) => (
-          <><span className="reshade-preview-symbol">+</span>{operationDescription(operation)}</>
+          <>
+            <span className="reshade-preview-symbol">+</span>
+            {operationDescription(operation)}
+          </>
         ))}
         title="Files to add or replace"
         tone="success"
       />
       <PreviewGroup
         items={filesToRemove(preview.operations).map((operation) => (
-          <><span className="reshade-preview-symbol">-</span>{operationDescription(operation)}</>
+          <>
+            <span className="reshade-preview-symbol">-</span>
+            {operationDescription(operation)}
+          </>
         ))}
         title="Files to remove or restore"
         tone="danger"

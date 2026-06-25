@@ -9,8 +9,10 @@ interface ReShadeWizardTargetStepProps {
 const filename = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
 export const ReShadeWizardTargetStep = ({ selection }: ReShadeWizardTargetStepProps) => {
-  const executable = selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
-  const targetPath = selection.candidate?.targetRelativePath ?? selection.target?.TargetRelativePath ?? '';
+  const executable =
+    selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
+  const targetPath =
+    selection.candidate?.targetRelativePath ?? selection.target?.TargetRelativePath ?? '';
   const evidence = selection.candidate?.proxyEvidence ?? [];
 
   return (
@@ -32,7 +34,7 @@ export const ReShadeWizardTargetStep = ({ selection }: ReShadeWizardTargetStepPr
             <ul>
               {evidence.map((item) => (
                 <li key={item.filename}>
-                  {item.filename}: {item.isReShade ? 'ReShade' : item.conflict ?? 'present'}
+                  {item.filename}: {item.isReShade ? 'ReShade' : (item.conflict ?? 'present')}
                 </li>
               ))}
             </ul>

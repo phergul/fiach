@@ -44,10 +44,14 @@ describe('OptiScalerWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), { target: { value: 'directx' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), {
+      target: { value: 'directx' },
+    });
     expect(screen.getByRole('combobox', { name: /Proxy filename/ })).toHaveValue('dxgi.dll');
     expect(screen.getByRole('textbox', { name: /Process filter/ })).toHaveValue('Game.exe');
-    fireEvent.change(screen.getByRole('combobox', { name: 'DXGI spoofing' }), { target: { value: 'false' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'DXGI spoofing' }), {
+      target: { value: 'false' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
@@ -107,8 +111,12 @@ describe('OptiScalerWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), { target: { value: 'directx' } });
-    fireEvent.change(screen.getByRole('combobox', { name: 'DXGI spoofing' }), { target: { value: 'false' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), {
+      target: { value: 'directx' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'DXGI spoofing' }), {
+      target: { value: 'false' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByLabelText(/I confirm that/));
     fireEvent.click(screen.getByLabelText(/I understand the online-game/));
@@ -180,7 +188,9 @@ describe('OptiScalerWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), { target: { value: 'directx' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Graphics API' }), {
+      target: { value: 'directx' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Close OptiScaler wizard' }));
     expect(screen.getByText('Discard OptiScaler changes?')).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();

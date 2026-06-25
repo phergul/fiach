@@ -103,9 +103,10 @@ const stepsFor = (action: Action, buildVariant: BuildVariant): WizardStep[] => {
   if (action === Action.ActionConfigureContent) {
     return ['content', 'preview', 'result'];
   }
-  const steps: WizardStep[] = action === Action.ActionInstall || action === Action.ActionAdopt
-    ? ['target', 'runtime', 'content']
-    : ['runtime', 'content'];
+  const steps: WizardStep[] =
+    action === Action.ActionInstall || action === Action.ActionAdopt
+      ? ['target', 'runtime', 'content']
+      : ['runtime', 'content'];
   if (buildVariant === BuildVariant.BuildVariantAddon) {
     steps.push('safety');
   }
@@ -130,7 +131,9 @@ export const ReShadeWizard = ({
   const targetRelativePath =
     selection.candidate?.targetRelativePath ?? selection.target?.TargetRelativePath ?? '';
   const architecture =
-    selection.candidate?.architecture ?? selection.target?.Architecture ?? Architecture.ArchitectureX64;
+    selection.candidate?.architecture ??
+    selection.target?.Architecture ??
+    Architecture.ArchitectureX64;
   const [values, setValues] = useState<WizardValues>(initial);
   const steps = useMemo(
     () => stepsFor(selection.action, values.buildVariant),
@@ -145,13 +148,18 @@ export const ReShadeWizard = ({
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [presetPath, setPresetPath] = useState('');
   const [inspection, setInspection] = useState<ReShadePresetInspectionResult | null>(null);
-  const [currentCatalogue, setCurrentCatalogue] = useState<ReShadeContentCatalogue | null>(catalogue);
+  const [currentCatalogue, setCurrentCatalogue] = useState<ReShadeContentCatalogue | null>(
+    catalogue,
+  );
   const currentStepIndex = steps.indexOf(step);
-  const chainTarget = chainTargets.find((target) => target.TargetRelativePath === targetRelativePath) ?? null;
-  const apiOptions = selection.candidate?.apiOptions ?? [{
-    renderingApi: selection.target?.RenderingAPI ?? RenderingAPI.RenderingAPID3D11,
-    proxies: [selection.target?.ProxyFilename ?? 'dxgi.dll'],
-  }];
+  const chainTarget =
+    chainTargets.find((target) => target.TargetRelativePath === targetRelativePath) ?? null;
+  const apiOptions = selection.candidate?.apiOptions ?? [
+    {
+      renderingApi: selection.target?.RenderingAPI ?? RenderingAPI.RenderingAPID3D11,
+      proxies: [selection.target?.ProxyFilename ?? 'dxgi.dll'],
+    },
+  ];
 
   useEffect(() => {
     setValues(initial);
@@ -310,13 +318,14 @@ export const ReShadeWizard = ({
     }
   };
 
-  const canContinue = step === 'runtime'
-    ? request !== null
-    : step === 'safety'
-      ? values.singlePlayerAcknowledged && values.antiCheatRiskAcknowledged
-      : step === 'preview'
-        ? preview?.canApply === true
-        : true;
+  const canContinue =
+    step === 'runtime'
+      ? request !== null
+      : step === 'safety'
+        ? values.singlePlayerAcknowledged && values.antiCheatRiskAcknowledged
+        : step === 'preview'
+          ? preview?.canApply === true
+          : true;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -345,26 +354,33 @@ export const ReShadeWizard = ({
     if (phase !== 'idle') {
       return;
     }
-    if (step !== 'result' && (preview !== null || hasContent(values.content) || backupAndContinue)) {
+    if (
+      step !== 'result' &&
+      (preview !== null || hasContent(values.content) || backupAndContinue)
+    ) {
       setIsDiscardOpen(true);
       return;
     }
     onClose();
   };
 
-  const primaryLabel = phase === 'previewing'
-    ? 'Building preview...'
-    : phase === 'applying'
-      ? 'Applying...'
-      : step === 'preview'
-        ? operationLabel[selection.action]
-        : steps[currentStepIndex + 1] === 'preview'
-          ? 'Preview'
-          : 'Next';
+  const primaryLabel =
+    phase === 'previewing'
+      ? 'Building preview...'
+      : phase === 'applying'
+        ? 'Applying...'
+        : step === 'preview'
+          ? operationLabel[selection.action]
+          : steps[currentStepIndex + 1] === 'preview'
+            ? 'Preview'
+            : 'Next';
 
   return (
     <>
-      <section className="reshade-wizard" aria-label={`${operationLabel[selection.action]} ReShade`}>
+      <section
+        className="reshade-wizard"
+        aria-label={`${operationLabel[selection.action]} ReShade`}
+      >
         <header className="reshade-wizard-header">
           <div>
             <h2>{operationLabel[selection.action]} ReShade</h2>
@@ -387,11 +403,13 @@ export const ReShadeWizard = ({
         >
           {steps.map((wizardStep, index) => (
             <li
-              className={index < currentStepIndex
-                ? 'reshade-wizard-step-complete'
-                : wizardStep === step
-                  ? 'reshade-wizard-step-active'
-                  : ''}
+              className={
+                index < currentStepIndex
+                  ? 'reshade-wizard-step-complete'
+                  : wizardStep === step
+                    ? 'reshade-wizard-step-active'
+                    : ''
+              }
               key={wizardStep}
             >
               {index + 1}. {stepLabels[wizardStep]}
@@ -407,9 +425,12 @@ export const ReShadeWizard = ({
               summary={error.summary}
             />
           )}
-          <div className={step === 'content'
-            ? 'reshade-wizard-scroll reshade-wizard-scroll-content-step'
-            : 'reshade-wizard-scroll'}
+          <div
+            className={
+              step === 'content'
+                ? 'reshade-wizard-scroll reshade-wizard-scroll-content-step'
+                : 'reshade-wizard-scroll'
+            }
           >
             {step === 'target' && <ReShadeWizardTargetStep selection={selection} />}
             {step === 'runtime' && (
@@ -440,23 +461,40 @@ export const ReShadeWizard = ({
             {step === 'safety' && (
               <ReShadeWizardSafetyStep
                 antiCheatRiskAcknowledged={values.antiCheatRiskAcknowledged}
-                onAntiCheatRiskAcknowledgedChange={(value) => updateValues({ antiCheatRiskAcknowledged: value })}
-                onSinglePlayerAcknowledgedChange={(value) => updateValues({ singlePlayerAcknowledged: value })}
+                onAntiCheatRiskAcknowledgedChange={(value) =>
+                  updateValues({ antiCheatRiskAcknowledged: value })
+                }
+                onSinglePlayerAcknowledgedChange={(value) =>
+                  updateValues({ singlePlayerAcknowledged: value })
+                }
                 singlePlayerAcknowledged={values.singlePlayerAcknowledged}
               />
             )}
             {step === 'preview' && preview !== null && (
               <div className="reshade-wizard-content">
                 <dl className="reshade-wizard-summary">
-                  <div><dt>Executable</dt><dd>{filename(executableRelativePath)}</dd></div>
-                  <div><dt>Proxy</dt><dd>{values.proxyFilename}</dd></div>
-                  <div><dt>Build</dt><dd>{values.buildVariant === 'addon' ? 'Full add-on' : 'Standard'}</dd></div>
+                  <div>
+                    <dt>Executable</dt>
+                    <dd>{filename(executableRelativePath)}</dd>
+                  </div>
+                  <div>
+                    <dt>Proxy</dt>
+                    <dd>{values.proxyFilename}</dd>
+                  </div>
+                  <div>
+                    <dt>Build</dt>
+                    <dd>{values.buildVariant === 'addon' ? 'Full add-on' : 'Standard'}</dd>
+                  </div>
                 </dl>
                 <ReShadePreview chainTarget={chainTarget} preview={preview} />
                 {preview.drift.length > 0 && !backupAndContinue && (
                   <div className="reshade-wizard-drift-actions">
                     <p>Drifted files can be cancelled or archived before continuing.</p>
-                    <button disabled={phase !== 'idle'} onClick={() => void rebuildPreviewWithBackup()} type="button">
+                    <button
+                      disabled={phase !== 'idle'}
+                      onClick={() => void rebuildPreviewWithBackup()}
+                      type="button"
+                    >
                       Back up drift and rebuild preview
                     </button>
                   </div>
@@ -465,9 +503,12 @@ export const ReShadeWizard = ({
             )}
             {step === 'result' && result !== null && (
               <div className="reshade-wizard-content">
-                <div className={result.success
-                  ? 'reshade-wizard-result reshade-wizard-result-success'
-                  : 'reshade-wizard-result reshade-wizard-result-error'}
+                <div
+                  className={
+                    result.success
+                      ? 'reshade-wizard-result reshade-wizard-result-success'
+                      : 'reshade-wizard-result reshade-wizard-result-error'
+                  }
                 >
                   <h3>
                     {result.success
@@ -485,14 +526,25 @@ export const ReShadeWizard = ({
 
           <footer className="reshade-wizard-footer">
             {currentStepIndex > 0 && step !== 'result' && (
-              <button disabled={phase !== 'idle'} onClick={goBack} type="button">Back</button>
+              <button disabled={phase !== 'idle'} onClick={goBack} type="button">
+                Back
+              </button>
             )}
             {step !== 'result' ? (
-              <button className="button-main" disabled={!canContinue || phase !== 'idle'} type="submit">
+              <button
+                className="button-main"
+                disabled={!canContinue || phase !== 'idle'}
+                type="submit"
+              >
                 {primaryLabel}
               </button>
             ) : (
-              <button className="button-main" disabled={phase !== 'idle'} onClick={onClose} type="button">
+              <button
+                className="button-main"
+                disabled={phase !== 'idle'}
+                onClick={onClose}
+                type="button"
+              >
                 Done
               </button>
             )}

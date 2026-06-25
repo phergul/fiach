@@ -34,7 +34,8 @@ export const OptiScalerWizardSafetyStep = ({
     </label>
     <div className="optiscaler-wizard-warning">
       <p>
-        OptiScaler can be incompatible with online games and anti-cheat systems. Compatibility reports do not guarantee that this game is safe or supported.
+        OptiScaler can be incompatible with online games and anti-cheat systems. Compatibility
+        reports do not guarantee that this game is safe or supported.
       </p>
       <a
         href="https://github.com/optiscaler/OptiScaler/wiki/Compatibility-List"

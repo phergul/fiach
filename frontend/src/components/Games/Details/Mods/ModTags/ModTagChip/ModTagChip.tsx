@@ -11,15 +11,8 @@ interface ModTagChipProps {
   onRemove?: () => void;
 }
 
-export const ModTagChip = ({
-  color,
-  name,
-  onClick,
-  onRemove,
-}: ModTagChipProps) => {
-  const content = (
-    <span className="mod-tag-chip-value">{name}</span>
-  );
+export const ModTagChip = ({ color, name, onClick, onRemove }: ModTagChipProps) => {
+  const content = <span className="mod-tag-chip-value">{name}</span>;
 
   return (
     <span className={`mod-tag-chip mod-tag-chip-${color}`}>

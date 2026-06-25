@@ -18,7 +18,12 @@ export const ReShadeRecoveryPanel = ({
       <h3>Recovery required</h3>
       <p>{recovery.error ?? 'A managed ReShade operation stopped before cleanup completed.'}</p>
     </div>
-    <button className="button-warning" disabled={isRollingBack || recovery.journalId === undefined} onClick={onRollback} type="button">
+    <button
+      className="button-warning"
+      disabled={isRollingBack || recovery.journalId === undefined}
+      onClick={onRollback}
+      type="button"
+    >
       {isRollingBack ? 'Rolling back' : 'Rollback'}
     </button>
   </section>

@@ -1,10 +1,12 @@
 import type { ThemeDefinition, ThemeTokens } from './themeTypes';
 
-const createThemeTokens = (tokens: Omit<ThemeTokens, 'backgroundRgb' | 'surfaceRgb' | 'dangerRgb'> & {
-  backgroundRgb?: string;
-  dangerRgb?: string;
-  surfaceRgb?: string;
-}): ThemeTokens => ({
+const createThemeTokens = (
+  tokens: Omit<ThemeTokens, 'backgroundRgb' | 'surfaceRgb' | 'dangerRgb'> & {
+    backgroundRgb?: string;
+    dangerRgb?: string;
+    surfaceRgb?: string;
+  },
+): ThemeTokens => ({
   ...tokens,
   backgroundRgb: tokens.backgroundRgb ?? toRGBChannels(tokens.background),
   dangerRgb: tokens.dangerRgb ?? toRGBChannels(tokens.danger),

@@ -13,7 +13,10 @@ export const Sidebar = ({ isPinned, onPinnedChange }: SidebarProps) => {
   const pinLabel = isPinned ? 'Unpin sidebar' : 'Pin sidebar';
 
   return (
-    <aside className={isPinned ? 'sidebar sidebar-pinned' : 'sidebar'} aria-label="Primary navigation">
+    <aside
+      className={isPinned ? 'sidebar sidebar-pinned' : 'sidebar'}
+      aria-label="Primary navigation"
+    >
       <div className="sidebar-surface">
         <Navigation />
         <div className="sidebar-pin-section">

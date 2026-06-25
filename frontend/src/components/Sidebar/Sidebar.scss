@@ -56,7 +56,9 @@
   inset: 0;
   background: $color-background;
   content: '';
-  transform: scaleX(calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2))));
+  transform: scaleX(
+    calc($app-sidebar-control-size / ($app-sidebar-collapsed-width - ($spacing-sm * 2)))
+  );
   transform-origin: left center;
   transition: transform $transition-duration-fast $transition-easing-standard;
 }

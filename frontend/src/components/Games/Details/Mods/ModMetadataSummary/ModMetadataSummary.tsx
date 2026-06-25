@@ -105,7 +105,9 @@ export const ModMetadataSummary = ({ items }: ModMetadataSummaryProps) => {
           className={[
             'mod-metadata-summary-item',
             item.tone === undefined ? undefined : `mod-metadata-summary-item-${item.tone}`,
-          ].filter(Boolean).join(' ')}
+          ]
+            .filter(Boolean)
+            .join(' ')}
           key={item.label}
         >
           <dt className="mod-metadata-summary-label">{item.label}</dt>

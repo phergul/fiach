@@ -1,8 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 
-import type {
-  ReShadeInstallerStatus,
-} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { ReShadeInstallerStatus } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import './ReShadePageHeader.scss';
 

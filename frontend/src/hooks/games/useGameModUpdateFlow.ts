@@ -5,7 +5,10 @@ import {
   type Mod,
   type UpdateModResult,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
-import { PreviewUpdateMod, UpdateMod } from '@bindings/github.com/phergul/fiach/internal/services/modservice';
+import {
+  PreviewUpdateMod,
+  UpdateMod,
+} from '@bindings/github.com/phergul/fiach/internal/services/modservice';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage, openArchive, openDirectory } from '@utils';
 
@@ -20,9 +23,7 @@ interface UseGameModUpdateFlowInput {
   refreshAfterUpdate: () => Promise<unknown>;
 }
 
-export const useGameModUpdateFlow = ({
-  refreshAfterUpdate,
-}: UseGameModUpdateFlowInput) => {
+export const useGameModUpdateFlow = ({ refreshAfterUpdate }: UseGameModUpdateFlowInput) => {
   const { addErrorToast, addToast } = useToast();
   const [updateReview, setUpdateReview] = useState<UpdateReviewState | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
@@ -76,21 +77,23 @@ export const useGameModUpdateFlow = ({
     }
   };
 
-  const startFolderUpdateFlow = (mod: Mod) => startUpdateFlow({
-    buttonText: 'Review Update',
-    mod,
-    selectPath: openDirectory,
-    sourceType: ModSourceType.ModSourceTypeFolder,
-    title: `Select replacement folder for ${mod.Name}`,
-  });
+  const startFolderUpdateFlow = (mod: Mod) =>
+    startUpdateFlow({
+      buttonText: 'Review Update',
+      mod,
+      selectPath: openDirectory,
+      sourceType: ModSourceType.ModSourceTypeFolder,
+      title: `Select replacement folder for ${mod.Name}`,
+    });
 
-  const startArchiveUpdateFlow = (mod: Mod) => startUpdateFlow({
-    buttonText: 'Review Update',
-    mod,
-    selectPath: openArchive,
-    sourceType: ModSourceType.ModSourceTypeArchive,
-    title: `Select replacement archive for ${mod.Name}`,
-  });
+  const startArchiveUpdateFlow = (mod: Mod) =>
+    startUpdateFlow({
+      buttonText: 'Review Update',
+      mod,
+      selectPath: openArchive,
+      sourceType: ModSourceType.ModSourceTypeArchive,
+      title: `Select replacement archive for ${mod.Name}`,
+    });
 
   const closeUpdateReview = () => {
     if (isUpdatingMod) {

@@ -62,16 +62,13 @@ export const GameModListItem = ({
   ];
 
   return (
-    <li className={isEditing
-      ? 'game-mod-list-item game-mod-list-item-editing'
-      : 'game-mod-list-item'}
+    <li
+      className={isEditing ? 'game-mod-list-item game-mod-list-item-editing' : 'game-mod-list-item'}
     >
       <div className="game-mod-list-item-identity">
         <span className="game-mod-list-item-name">{mod.Name}</span>
         {identityMetadata.length > 0 && (
-          <span className="game-mod-list-item-identity-metadata">
-            {identityMetadata.join(' ')}
-          </span>
+          <span className="game-mod-list-item-identity-metadata">{identityMetadata.join(' ')}</span>
         )}
         <span className="game-mod-list-item-path" title={sourceLabel(mod)}>
           {sourceLabel(mod)}
@@ -79,9 +76,11 @@ export const GameModListItem = ({
       </div>
 
       <div className="game-mod-list-item-tags">
-        {mod.Tags.length > 0
-          ? <ModTagList tags={mod.Tags} />
-          : <span className="game-mod-list-item-empty-value">No tags</span>}
+        {mod.Tags.length > 0 ? (
+          <ModTagList tags={mod.Tags} />
+        ) : (
+          <span className="game-mod-list-item-empty-value">No tags</span>
+        )}
       </div>
 
       <div className="game-mod-list-item-metadata">

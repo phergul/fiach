@@ -10,14 +10,16 @@ describe('OptiScalerRecoveryPanel', () => {
       <OptiScalerRecoveryPanel
         isRollingBack={false}
         onRollback={onRollback}
-        recovery={{
-          action: 'update',
-          error: 'Rollback verification failed',
-          gameId: 7,
-          journalId: 'journal-1',
-          required: true,
-          targetPath: 'Game/Binaries/Win64',
-        } as never}
+        recovery={
+          {
+            action: 'update',
+            error: 'Rollback verification failed',
+            gameId: 7,
+            journalId: 'journal-1',
+            required: true,
+            targetPath: 'Game/Binaries/Win64',
+          } as never
+        }
       />,
     );
 

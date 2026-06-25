@@ -29,7 +29,9 @@ export const ModTagFilter = ({
     candidateMods.forEach((mod) => mod.Tags.forEach((tag) => tagsByID.set(tag.ID, tag)));
     return Array.from(tagsByID.values()).sort((left, right) => left.Name.localeCompare(right.Name));
   }, [candidateMods]);
-  const filteredTags = tags.filter((tag) => tag.Name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const filteredTags = tags.filter((tag) =>
+    tag.Name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+  );
 
   const toggleTag = (tagID: number) => {
     onChange(
@@ -57,9 +59,11 @@ export const ModTagFilter = ({
       <div className="mod-tag-filter-control">
         <button
           aria-expanded={isOpen}
-          className={selectedTagIDs.length > 0
-            ? 'mod-tag-filter-button mod-tag-filter-button-active'
-            : 'mod-tag-filter-button'}
+          className={
+            selectedTagIDs.length > 0
+              ? 'mod-tag-filter-button mod-tag-filter-button-active'
+              : 'mod-tag-filter-button'
+          }
           disabled={tags.length === 0}
           onClick={() => setIsOpen((currentValue) => !currentValue)}
           title={tags.length === 0 ? 'No tags available' : 'Filter by tags'}
@@ -99,7 +103,6 @@ export const ModTagFilter = ({
           </div>
         )}
       </div>
-
     </div>
   );
 };

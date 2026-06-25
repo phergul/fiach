@@ -14,8 +14,17 @@ import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
 import { GameApplyReview } from '@components/Games/Apply/GameApplyReview/GameApplyReview';
-import { GameApplySummary, type GameApplySummaryItem } from '@components/Games/Apply/GameApplySummary/GameApplySummary';
-import { useAppliedProfile, useGameArtwork, useGameProfiles, useProfileOperationPlan, useStoredGames } from '@hooks';
+import {
+  GameApplySummary,
+  type GameApplySummaryItem,
+} from '@components/Games/Apply/GameApplySummary/GameApplySummary';
+import {
+  useAppliedProfile,
+  useGameArtwork,
+  useGameProfiles,
+  useProfileOperationPlan,
+  useStoredGames,
+} from '@hooks';
 
 import './GameApply.scss';
 
@@ -138,39 +147,32 @@ export const GameApply = () => {
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const parsedProfileID = parseProfileID(profileId);
-  const game = parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
+  const game =
+    parsedGameID === null ? undefined : games.find((storedGame) => storedGame.ID === parsedGameID);
   const profileManager = useGameProfiles(game?.ID ?? null);
   const appliedProfileManager = useAppliedProfile(game?.ID ?? null);
-  const selectedProfile = parsedProfileID === null
-    ? null
-    : profileManager.profiles.find((profile) => profile.ID === parsedProfileID) ?? null;
+  const selectedProfile =
+    parsedProfileID === null
+      ? null
+      : (profileManager.profiles.find((profile) => profile.ID === parsedProfileID) ?? null);
   const {
     isLoading: isPlanLoading,
     loadError: planLoadError,
     plan,
     refreshPlan,
   } = useProfileOperationPlan(selectedProfile?.ID ?? null);
-  const {
-    artworkSource: heroArtworkSource,
-    handleArtworkError: handleHeroArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'hero',
-  );
-  const {
-    artworkSource: logoArtworkSource,
-    handleArtworkError: handleLogoArtworkError,
-  } = useGameArtwork(
-    game?.Source === 'steam' && game.SourceID ? game.SourceID : '',
-    'logo',
-  );
+  const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
+  const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
+    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'logo');
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
   const summaryItems = buildSummaryItems(plan);
   const appliedProfileName = appliedProfileManager.appliedProfile?.ProfileName ?? null;
-  const canStartApply = selectedProfile !== null &&
+  const canStartApply =
+    selectedProfile !== null &&
     appliedProfileName === null &&
     !appliedProfileManager.isLoading &&
     appliedProfileManager.loadError === null &&
@@ -178,19 +180,21 @@ export const GameApply = () => {
     plan.CanApply &&
     !isPlanLoading &&
     !isApplyPending;
-  const applyTitle = selectedProfile === null
-    ? 'Select a profile before applying.'
-    : getApplyDisabledTitle(
-      appliedProfileName,
-      appliedProfileManager.isLoading,
-      appliedProfileManager.loadError,
-      plan,
-      isPlanLoading,
-      isApplyPending,
-    );
-  const confirmMessage = selectedProfile === null || plan === null
-    ? 'Review the operation plan before applying this profile.'
-    : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
+  const applyTitle =
+    selectedProfile === null
+      ? 'Select a profile before applying.'
+      : getApplyDisabledTitle(
+          appliedProfileName,
+          appliedProfileManager.isLoading,
+          appliedProfileManager.loadError,
+          plan,
+          isPlanLoading,
+          isApplyPending,
+        );
+  const confirmMessage =
+    selectedProfile === null || plan === null
+      ? 'Review the operation plan before applying this profile.'
+      : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
 
   const openApplyConfirm = () => {
     if (canStartApply) {
@@ -218,7 +222,9 @@ export const GameApply = () => {
       }
       setIsApplyConfirmOpen(false);
       addToast({
-        message: result.Success ? buildApplySuccessMessage(result) : buildApplyFailureMessage(result),
+        message: result.Success
+          ? buildApplySuccessMessage(result)
+          : buildApplyFailureMessage(result),
         tone: result.Success ? 'success' : 'error',
       });
       if (result.Success) {
@@ -329,21 +335,28 @@ export const GameApply = () => {
             />
           )}
 
-          {!profileManager.isLoading && profileManager.loadError === null && parsedProfileID === null && (
-            <GameDetailsState
-              message="Choose a profile from the game details screen before opening the apply preview."
-              title="No selected profile."
-            />
-          )}
+          {!profileManager.isLoading &&
+            profileManager.loadError === null &&
+            parsedProfileID === null && (
+              <GameDetailsState
+                message="Choose a profile from the game details screen before opening the apply preview."
+                title="No selected profile."
+              />
+            )}
 
-          {!profileManager.isLoading && profileManager.loadError === null && parsedProfileID !== null && selectedProfile === null && (
-            <GameDetailsState
-              message="This profile is not currently available for the selected game."
-              title="Profile not found."
-            />
-          )}
+          {!profileManager.isLoading &&
+            profileManager.loadError === null &&
+            parsedProfileID !== null &&
+            selectedProfile === null && (
+              <GameDetailsState
+                message="This profile is not currently available for the selected game."
+                title="Profile not found."
+              />
+            )}
 
-          {selectedProfile !== null && isPlanLoading && <GameDetailsState title="Building operation plan." />}
+          {selectedProfile !== null && isPlanLoading && (
+            <GameDetailsState title="Building operation plan." />
+          )}
 
           {selectedProfile !== null && !isPlanLoading && planLoadError !== null && (
             <GameDetailsState
@@ -356,9 +369,16 @@ export const GameApply = () => {
             />
           )}
 
-          {selectedProfile !== null && !isPlanLoading && planLoadError === null && plan !== null && (
-            <GameApplyReview gameInstallPath={game.InstallPath} gameName={game.Name} plan={plan} />
-          )}
+          {selectedProfile !== null &&
+            !isPlanLoading &&
+            planLoadError === null &&
+            plan !== null && (
+              <GameApplyReview
+                gameInstallPath={game.InstallPath}
+                gameName={game.Name}
+                plan={plan}
+              />
+            )}
         </>
       )}
     </section>

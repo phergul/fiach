@@ -1,18 +1,18 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 
-import '@fontsource/atkinson-hyperlegible'
+import '@fontsource/atkinson-hyperlegible';
 
-import { App } from '@app'
-import { applyThemeCSSVariables } from '@theme/themeCSSVariables'
-import { defaultTheme } from '@theme/themes'
+import { App } from '@app';
+import { applyThemeCSSVariables } from '@theme/themeCSSVariables';
+import { defaultTheme } from '@theme/themes';
 
-import './styles/_theme.scss'
+import './styles/_theme.scss';
 
-applyThemeCSSVariables(defaultTheme)
+applyThemeCSSVariables(defaultTheme);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-)
+);

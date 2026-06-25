@@ -1,4 +1,7 @@
-import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ModProfile,
+  ProfileMod,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 
 import { GameProfilesListItem } from '../GameProfilesListItem/GameProfilesListItem';
@@ -42,10 +45,15 @@ export const GameProfilesList = ({
 }: GameProfilesListProps) => {
   return (
     <div className="game-profiles-list-shell">
-      {isLoading && <StateBlock className="game-profiles-list-empty" message="Loading profiles..." />}
+      {isLoading && (
+        <StateBlock className="game-profiles-list-empty" message="Loading profiles..." />
+      )}
 
       {!isLoading && profiles.length === 0 && (
-        <StateBlock className="game-profiles-list-empty" message="No profiles have been created yet." />
+        <StateBlock
+          className="game-profiles-list-empty"
+          message="No profiles have been created yet."
+        />
       )}
 
       {!isLoading && profiles.length > 0 && (
@@ -54,7 +62,8 @@ export const GameProfilesList = ({
             <GameProfilesListItem
               editingProfileName={editingProfileName}
               enabledModCount={
-                profileModsByProfileID[profile.ID]?.filter((profileMod) => profileMod.Enabled).length ?? 0
+                profileModsByProfileID[profile.ID]?.filter((profileMod) => profileMod.Enabled)
+                  .length ?? 0
               }
               isBusy={isBusy}
               isEditing={editingProfileID === profile.ID}

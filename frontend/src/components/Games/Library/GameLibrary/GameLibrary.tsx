@@ -6,7 +6,8 @@ import { useGameSearch, useStoredGames } from '@hooks';
 import './GameLibrary.scss';
 
 export const GameLibrary = () => {
-  const { games, isLoading, isScanning, loadError, refreshGames, retryLoadGames } = useStoredGames();
+  const { games, isLoading, isScanning, loadError, refreshGames, retryLoadGames } =
+    useStoredGames();
   const { filteredGames, searchQuery, setSearchQuery } = useGameSearch(games);
 
   const hasGames = games.length > 0;
@@ -42,7 +43,11 @@ export const GameLibrary = () => {
       {isInitialLoading && <StateBlock className="game-library-state" message="Loading games..." />}
 
       {hasLoadError && (
-        <StateBlock className="game-library-state" title="Could not load games." message={loadError}>
+        <StateBlock
+          className="game-library-state"
+          title="Could not load games."
+          message={loadError}
+        >
           <button className="game-library-state-action" onClick={retryLoadGames} type="button">
             Retry
           </button>

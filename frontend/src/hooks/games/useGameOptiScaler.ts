@@ -42,9 +42,12 @@ export const getOptiScalerAggregateStatus = (
   }
   if (
     latestReleaseTag !== null &&
-    targets.some((target) =>
-      (target.ReleaseTag !== '' && target.ReleaseTag !== latestReleaseTag) ||
-      (latestReleaseDigest !== null && target.ReleaseDigest !== '' && target.ReleaseDigest !== latestReleaseDigest),
+    targets.some(
+      (target) =>
+        (target.ReleaseTag !== '' && target.ReleaseTag !== latestReleaseTag) ||
+        (latestReleaseDigest !== null &&
+          target.ReleaseDigest !== '' &&
+          target.ReleaseDigest !== latestReleaseDigest),
     )
   ) {
     return 'update';
@@ -128,7 +131,16 @@ export const useGameOptiScaler = (gameID: number | null) => {
       release?.tag ?? null,
       release?.digest ?? null,
     );
-  }, [candidates, isLoading, isReleaseLoading, loadError, recovery, release?.digest, release?.tag, targets]);
+  }, [
+    candidates,
+    isLoading,
+    isReleaseLoading,
+    loadError,
+    recovery,
+    release?.digest,
+    release?.tag,
+    targets,
+  ]);
 
   return {
     aggregateStatus,

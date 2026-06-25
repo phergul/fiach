@@ -3,7 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Clipboard, Events } from '@wailsio/runtime';
 import { ClipboardCopy, RotateCw, Trash2 } from 'lucide-react';
 
-import { ClearDevLogs, ListDevLogs } from '@bindings/github.com/phergul/fiach/internal/services/devservice';
+import {
+  ClearDevLogs,
+  ListDevLogs,
+} from '@bindings/github.com/phergul/fiach/internal/services/devservice';
 import { DevLogEntry } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { useToast } from '@components/Common/Toast/Toast';
@@ -104,13 +107,28 @@ export const DevLogsWindow = () => {
         </div>
 
         <div className="dev-logs-toolbar-actions">
-          <button disabled={isLoading} onClick={() => void loadLogs()} title="Refresh logs" type="button">
+          <button
+            disabled={isLoading}
+            onClick={() => void loadLogs()}
+            title="Refresh logs"
+            type="button"
+          >
             <RotateCw aria-hidden="true" />
           </button>
-          <button disabled={entries.length === 0} onClick={() => void copyLogs()} title="Copy logs" type="button">
+          <button
+            disabled={entries.length === 0}
+            onClick={() => void copyLogs()}
+            title="Copy logs"
+            type="button"
+          >
             <ClipboardCopy aria-hidden="true" />
           </button>
-          <button disabled={entries.length === 0} onClick={() => void clearLogs()} title="Clear logs" type="button">
+          <button
+            disabled={entries.length === 0}
+            onClick={() => void clearLogs()}
+            title="Clear logs"
+            type="button"
+          >
             <Trash2 aria-hidden="true" />
           </button>
         </div>

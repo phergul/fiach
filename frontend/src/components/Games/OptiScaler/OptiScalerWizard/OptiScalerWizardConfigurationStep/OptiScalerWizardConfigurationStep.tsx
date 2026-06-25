@@ -48,19 +48,23 @@ export const OptiScalerWizardConfigurationStep = ({
           value={proxyFilename}
         >
           {supportedProxyFilenames.map((filename) => (
-            <option key={filename} value={filename}>{filename}</option>
+            <option key={filename} value={filename}>
+              {filename}
+            </option>
           ))}
         </select>
         {graphicsAPI !== '' && (
-          <span>Recommended: {graphicsAPI === GraphicsAPI.GraphicsAPIDirectX ? 'dxgi.dll' : 'winmm.dll'}</span>
+          <span>
+            Recommended: {graphicsAPI === GraphicsAPI.GraphicsAPIDirectX ? 'dxgi.dll' : 'winmm.dll'}
+          </span>
         )}
       </label>
       <label>
         DXGI spoofing
         <select
-          onChange={(event) => onDXGISpoofingChange(
-            event.target.value === '' ? null : event.target.value === 'true',
-          )}
+          onChange={(event) =>
+            onDXGISpoofingChange(event.target.value === '' ? null : event.target.value === 'true')
+          }
           value={dxgiSpoofing === null ? '' : String(dxgiSpoofing)}
         >
           <option value="">Choose a setting</option>

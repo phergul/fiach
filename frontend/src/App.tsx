@@ -6,14 +6,25 @@ import { OptiScalerSessionProvider } from '@components/Games/OptiScaler/OptiScal
 import { Layout } from '@components/Layout/Layout';
 import { DevLogsWindow } from '@components/Dev/DevLogsWindow/DevLogsWindow';
 import { LogsWindow } from '@components/Logs/LogsWindow/LogsWindow';
-import { GameApply, GameDetails, GameOptiScaler, GameReShade, Library, Profiles, Settings } from '@pages';
+import {
+  GameApply,
+  GameDetails,
+  GameOptiScaler,
+  GameReShade,
+  Library,
+  Profiles,
+  Settings,
+} from '@pages';
 
 const providers = [ThemeProvider, ToastProvider, OptiScalerSessionProvider];
 
 const wrapWithProviders = (Component: React.FC) => {
-  return providers.reduce((AccumulatedComponent, Provider) => {
-    return <Provider>{AccumulatedComponent}</Provider>;
-  }, <Component />);
+  return providers.reduce(
+    (AccumulatedComponent, Provider) => {
+      return <Provider>{AccumulatedComponent}</Provider>;
+    },
+    <Component />,
+  );
 };
 
 export const App = () => {
@@ -27,7 +38,7 @@ export const App = () => {
     return wrapWithProviders(DevLogsWindow);
   }
 
-  return wrapWithProviders(() =>
+  return wrapWithProviders(() => (
     <HashRouter>
       <Routes>
         <Route element={<Layout />}>
@@ -44,5 +55,5 @@ export const App = () => {
         </Route>
       </Routes>
     </HashRouter>
-  );
+  ));
 };

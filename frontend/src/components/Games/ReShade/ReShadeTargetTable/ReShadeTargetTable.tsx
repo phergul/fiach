@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react';
 
-import { Ellipsis, PackagePlus, RefreshCw, ShieldCheck, SlidersHorizontal, Trash2, Wrench } from 'lucide-react';
+import {
+  Ellipsis,
+  PackagePlus,
+  RefreshCw,
+  ShieldCheck,
+  SlidersHorizontal,
+  Trash2,
+  Wrench,
+} from 'lucide-react';
 
 import { Action } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 import type {
@@ -62,10 +70,12 @@ const formatRuntimeVersion = (version: string | null | undefined) => {
 };
 
 const detectedRuntimeVersions = (candidate: ReShadeDiscoveryResult['candidates'][number]) => [
-  ...new Set(candidate.proxyEvidence
-    .filter((evidence) => evidence.isReShade)
-    .map((evidence) => formatRuntimeVersion(evidence.runtimeVersion))
-    .filter((version) => version !== '')),
+  ...new Set(
+    candidate.proxyEvidence
+      .filter((evidence) => evidence.isReShade)
+      .map((evidence) => formatRuntimeVersion(evidence.runtimeVersion))
+      .filter((version) => version !== ''),
+  ),
 ];
 
 const detectedProxyEvidence = (candidate: ReShadeDiscoveryResult['candidates'][number]) =>
@@ -79,11 +89,10 @@ const detectedProxyEvidence = (candidate: ReShadeDiscoveryResult['candidates'][n
       return evidence.conflict?.trim() ? `${evidence.filename} conflict` : evidence.filename;
     });
 
-const chainSummary = (
-  chainTargets: ReShadeChainTarget[],
-  targetRelativePath: string,
-) => {
-  const chain = chainTargets.find((item) => targetKey(item.TargetRelativePath) === targetKey(targetRelativePath));
+const chainSummary = (chainTargets: ReShadeChainTarget[], targetRelativePath: string) => {
+  const chain = chainTargets.find(
+    (item) => targetKey(item.TargetRelativePath) === targetKey(targetRelativePath),
+  );
   if (chain === undefined) {
     return 'No managed chain';
   }
@@ -93,13 +102,15 @@ const chainSummary = (
   return `${chain.PrimaryOwner} primary · ${chain.PrimaryProxyFilename}`;
 };
 
-const managedFacts = (
-  target: ReShadeTarget,
-  installerStatus: ReShadeInstallerStatus | null,
-) => {
+const managedFacts = (target: ReShadeTarget, installerStatus: ReShadeInstallerStatus | null) => {
   return [
-    { label: target.Status === 'drifted' ? 'Drift detected' : target.Status, tone: target.Status === 'drifted' ? 'warning' : 'success' },
-    ...(isReShadeUpdateAvailable(target, installerStatus) ? [{ label: 'Update available', tone: 'info' }] : []),
+    {
+      label: target.Status === 'drifted' ? 'Drift detected' : target.Status,
+      tone: target.Status === 'drifted' ? 'warning' : 'success',
+    },
+    ...(isReShadeUpdateAvailable(target, installerStatus)
+      ? [{ label: 'Update available', tone: 'info' }]
+      : []),
   ];
 };
 
@@ -112,10 +123,7 @@ const provenanceLabel = (target: ReShadeTarget) =>
 const activeRuntimeLabel = (target: ReShadeTarget) =>
   target.ActiveRuntimeFilename.trim() === '' ? target.ProxyFilename : target.ActiveRuntimeFilename;
 
-const managedDetailFacts = (
-  target: ReShadeTarget,
-  chainTargets: ReShadeChainTarget[],
-) => [
+const managedDetailFacts = (target: ReShadeTarget, chainTargets: ReShadeChainTarget[]) => [
   formatRenderingAPI(target.RenderingAPI),
   target.Architecture,
   variantLabel(target),
@@ -137,16 +145,14 @@ const ReShadeManagedActions = ({
   updateAvailable: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const primaryAction = target.Status === 'drifted'
-    ? Action.ActionRepair
-    : updateAvailable
-      ? Action.ActionUpdate
-      : Action.ActionConfigureContent;
-  const primaryLabel = target.Status === 'drifted'
-    ? 'Repair'
-    : updateAvailable
-      ? 'Update'
-      : 'Content';
+  const primaryAction =
+    target.Status === 'drifted'
+      ? Action.ActionRepair
+      : updateAvailable
+        ? Action.ActionUpdate
+        : Action.ActionConfigureContent;
+  const primaryLabel =
+    target.Status === 'drifted' ? 'Repair' : updateAvailable ? 'Update' : 'Content';
   const start = (action: Action) => {
     setIsOpen(false);
     onStartOperation({ action, candidate: null, target });
@@ -154,7 +160,12 @@ const ReShadeManagedActions = ({
 
   return (
     <div className="reshade-target-actions">
-      <button className="button-main" disabled={disabled} onClick={() => start(primaryAction)} type="button">
+      <button
+        className="button-main"
+        disabled={disabled}
+        onClick={() => start(primaryAction)}
+        type="button"
+      >
         {primaryLabel}
       </button>
       <div className="reshade-target-menu-anchor">
@@ -210,8 +221,10 @@ export const ReShadeTargetTable = ({
     () => new Set(targets.map((target) => targetKey(target.TargetRelativePath))),
     [targets],
   );
-  const detected = discovery?.candidates.filter((candidate) =>
-    !managedKeys.has(targetKey(candidate.targetRelativePath))) ?? [];
+  const detected =
+    discovery?.candidates.filter(
+      (candidate) => !managedKeys.has(targetKey(candidate.targetRelativePath)),
+    ) ?? [];
 
   return (
     <div className="reshade-target-table">
@@ -233,7 +246,9 @@ export const ReShadeTargetTable = ({
             <div className="reshade-target-row" key={`managed:${target.ID}`}>
               <div className="reshade-target-identity">
                 <strong>{filename(target.ExecutableRelativePath)}</strong>
-                <span>{target.TargetRelativePath === '.' ? 'Game Root' : target.TargetRelativePath}</span>
+                <span>
+                  {target.TargetRelativePath === '.' ? 'Game Root' : target.TargetRelativePath}
+                </span>
               </div>
               <div className="reshade-target-details">
                 {managedDetailFacts(target, chainTargets).map((fact) => (
@@ -244,7 +259,9 @@ export const ReShadeTargetTable = ({
                 <strong>{formatRuntimeVersion(target.RuntimeVersion) || 'Unknown runtime'}</strong>
                 <div className="reshade-target-status">
                   {managedFacts(target, installerStatus).map((fact) => (
-                    <span className={`reshade-target-status-${fact.tone}`} key={fact.label}>{fact.label}</span>
+                    <span className={`reshade-target-status-${fact.tone}`} key={fact.label}>
+                      {fact.label}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -262,7 +279,9 @@ export const ReShadeTargetTable = ({
       <section aria-labelledby="reshade-detected-heading">
         <h3 id="reshade-detected-heading">Detected - Not managed</h3>
         {detected.length === 0 && (
-          <p className="reshade-target-empty">No unmanaged ReShade executable targets were detected.</p>
+          <p className="reshade-target-empty">
+            No unmanaged ReShade executable targets were detected.
+          </p>
         )}
         {detected.map((candidate) => {
           const action = hasDetectedReShade(candidate) ? Action.ActionAdopt : Action.ActionInstall;
@@ -275,24 +294,34 @@ export const ReShadeTargetTable = ({
             >
               <div className="reshade-target-identity">
                 <strong>{filename(candidate.executableRelativePath)}</strong>
-                <span>{candidate.targetRelativePath === '.' ? 'Game Root' : candidate.targetRelativePath}</span>
+                <span>
+                  {candidate.targetRelativePath === '.'
+                    ? 'Game Root'
+                    : candidate.targetRelativePath}
+                </span>
               </div>
               <div className="reshade-target-details">
-                <span>{candidate.apiOptions.map((option) => formatRenderingAPI(option.renderingApi)).join(', ')}</span>
+                <span>
+                  {candidate.apiOptions
+                    .map((option) => formatRenderingAPI(option.renderingApi))
+                    .join(', ')}
+                </span>
                 <span>{candidate.architecture}</span>
-                {runtimeVersions.length === 0 ? (
-                  null
-                ) : runtimeVersions.map((version) => (
-                  <span key={version}>Runtime {version}</span>
-                ))}
+                {runtimeVersions.length === 0
+                  ? null
+                  : runtimeVersions.map((version) => <span key={version}>Runtime {version}</span>)}
                 {proxyEvidence.map((evidence) => (
                   <span key={evidence}>{evidence}</span>
                 ))}
               </div>
               <div className="reshade-target-state">
                 <div className="reshade-target-status">
-                  {candidate.conflicts.length > 0 && <span className="reshade-target-status-warning">Conflict</span>}
-                  {hasDetectedReShade(candidate) && <span className="reshade-target-status-info">ReShade</span>}
+                  {candidate.conflicts.length > 0 && (
+                    <span className="reshade-target-status-warning">Conflict</span>
+                  )}
+                  {hasDetectedReShade(candidate) && (
+                    <span className="reshade-target-status-info">ReShade</span>
+                  )}
                 </div>
               </div>
               <div className="reshade-target-actions">
@@ -302,7 +331,11 @@ export const ReShadeTargetTable = ({
                   onClick={() => onStartOperation({ action, candidate, target: null })}
                   type="button"
                 >
-                  {action === Action.ActionAdopt ? <ShieldCheck aria-hidden="true" /> : <PackagePlus aria-hidden="true" />}
+                  {action === Action.ActionAdopt ? (
+                    <ShieldCheck aria-hidden="true" />
+                  ) : (
+                    <PackagePlus aria-hidden="true" />
+                  )}
                   {action === Action.ActionAdopt ? 'Adopt' : 'Install'}
                 </button>
               </div>

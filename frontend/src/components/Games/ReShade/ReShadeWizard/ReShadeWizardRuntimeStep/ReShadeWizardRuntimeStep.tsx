@@ -1,4 +1,7 @@
-import { BuildVariant, RenderingAPI } from '@bindings/github.com/phergul/fiach/internal/reshade/models';
+import {
+  BuildVariant,
+  RenderingAPI,
+} from '@bindings/github.com/phergul/fiach/internal/reshade/models';
 
 import './ReShadeWizardRuntimeStep.scss';
 
@@ -74,7 +77,11 @@ export const ReShadeWizardRuntimeStep = ({
             value={proxyFilename}
           >
             <option value="">Select proxy</option>
-            {proxies.map((proxy) => <option key={proxy} value={proxy}>{proxy}</option>)}
+            {proxies.map((proxy) => (
+              <option key={proxy} value={proxy}>
+                {proxy}
+              </option>
+            ))}
           </select>
         </label>
 

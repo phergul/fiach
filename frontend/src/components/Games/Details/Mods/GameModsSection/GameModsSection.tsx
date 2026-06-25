@@ -48,10 +48,12 @@ const deleteSummaryMessage = (mod: Mod | null, summary: ModDeleteSummary | null)
     return `Preparing to delete "${mod.Name}"...`;
   }
 
-  const profileMessage = summary.ProfileUsageCount === 0
-    ? 'It is not assigned to any profiles.'
-    : `It will be removed from ${summary.ProfileUsageCount} ${summary.ProfileUsageCount === 1 ? 'profile' : 'profiles'
-    }.`;
+  const profileMessage =
+    summary.ProfileUsageCount === 0
+      ? 'It is not assigned to any profiles.'
+      : `It will be removed from ${summary.ProfileUsageCount} ${
+          summary.ProfileUsageCount === 1 ? 'profile' : 'profiles'
+        }.`;
   const appliedMessage = summary.IsInAppliedProfile
     ? ' This mod is part of the currently applied profile.'
     : '';
@@ -84,7 +86,8 @@ export const GameModsSection = ({
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredMods = useMemo(() => {
     return mods.filter((mod) => {
-      const matchesSearch = trimmedSearchQuery === '' || (
+      const matchesSearch =
+        trimmedSearchQuery === '' ||
         mod.Name.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourcePath.toLowerCase().includes(trimmedSearchQuery) ||
         mod.SourceType.toLowerCase().includes(trimmedSearchQuery) ||
@@ -93,9 +96,8 @@ export const GameModsSection = ({
         (mod.Metadata?.Version.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
         (mod.Metadata?.Author.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
         (mod.Metadata?.SourceURL.Effective ?? '').toLowerCase().includes(trimmedSearchQuery) ||
-        (mod.Metadata?.Notes ?? '').toLowerCase().includes(trimmedSearchQuery)
-        || mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery))
-      );
+        (mod.Metadata?.Notes ?? '').toLowerCase().includes(trimmedSearchQuery) ||
+        mod.Tags.some((tag) => tag.Name.toLowerCase().includes(trimmedSearchQuery));
       const matchesTags = selectedTagIDs.every((tagID) => mod.Tags.some((tag) => tag.ID === tagID));
       return matchesSearch && matchesTags;
     });
@@ -121,13 +123,16 @@ export const GameModsSection = ({
   ];
   const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
   const isRowBusy = isDeleteBusy || isSavingMetadata || isUpdateDisabled;
-  const selectedMetadataMod = editingMetadataModID === null
-    ? null
-    : mods.find((mod) => mod.ID === editingMetadataModID) ?? null;
+  const selectedMetadataMod =
+    editingMetadataModID === null
+      ? null
+      : (mods.find((mod) => mod.ID === editingMetadataModID) ?? null);
 
   useEffect(() => {
     const availableTagIDs = new Set(mods.flatMap((mod) => mod.Tags.map((tag) => tag.ID)));
-    setSelectedTagIDs((currentTagIDs) => currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)));
+    setSelectedTagIDs((currentTagIDs) =>
+      currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)),
+    );
   }, [mods]);
 
   const openMetadataEditor = (mod: Mod) => {
@@ -162,10 +167,10 @@ export const GameModsSection = ({
         ModID: input.modID,
         Name: input.name.trim(),
         Metadata: input.metadata,
-        TagIDs: input.tags.flatMap((tag) => tag.ID === null ? [] : [tag.ID]),
-        NewTags: input.tags.flatMap((tag) => tag.ID === null
-          ? [{ Name: tag.Name, Color: tag.Color }]
-          : []),
+        TagIDs: input.tags.flatMap((tag) => (tag.ID === null ? [] : [tag.ID])),
+        NewTags: input.tags.flatMap((tag) =>
+          tag.ID === null ? [{ Name: tag.Name, Color: tag.Color }] : [],
+        ),
       });
       addToast({
         message: 'Mod metadata saved.',
@@ -289,7 +294,11 @@ export const GameModsSection = ({
       </div>
 
       {loadError !== null && (
-        <StateBlock className="game-mods-section-state" title="Could not load mods." message={loadError}>
+        <StateBlock
+          className="game-mods-section-state"
+          title="Could not load mods."
+          message={loadError}
+        >
           <button className="game-mods-section-button" onClick={refreshMods} type="button">
             Retry
           </button>
@@ -301,15 +310,27 @@ export const GameModsSection = ({
       )}
 
       {loadError === null && !isLoading && mods.length === 0 && (
-        <StateBlock className="game-mods-section-empty" message="Imported mods for this game will appear here." />
+        <StateBlock
+          className="game-mods-section-empty"
+          message="Imported mods for this game will appear here."
+        />
       )}
 
       {loadError === null && !isLoading && mods.length > 0 && filteredMods.length === 0 && (
-        <StateBlock className="game-mods-section-empty" message="No imported mods match this search." />
+        <StateBlock
+          className="game-mods-section-empty"
+          message="No imported mods match this search."
+        />
       )}
 
       {loadError === null && !isLoading && filteredMods.length > 0 && (
-        <div className={selectedMetadataMod === null ? 'game-mods-section-content' : 'game-mods-section-content game-mods-section-content-with-panel'}>
+        <div
+          className={
+            selectedMetadataMod === null
+              ? 'game-mods-section-content'
+              : 'game-mods-section-content game-mods-section-content-with-panel'
+          }
+        >
           <div className="game-mods-section-list-shell">
             <GameModListHeader />
             <ul className="game-mods-section-list">

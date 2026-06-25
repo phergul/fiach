@@ -59,7 +59,9 @@ export const GameModImportWizardDetailsStep = ({
         </div>
 
         <div className="game-mod-import-wizard-details-step-path-row">
-          <span className="game-mod-import-wizard-details-step-label">Managed storage location</span>
+          <span className="game-mod-import-wizard-details-step-label">
+            Managed storage location
+          </span>
           <span className="game-mod-import-wizard-details-step-path">{targetPath}</span>
         </div>
       </div>

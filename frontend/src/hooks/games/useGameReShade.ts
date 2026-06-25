@@ -50,11 +50,13 @@ export const isReShadeUpdateAvailable = (
   installerStatus: ReShadeInstallerStatus | null,
 ) => {
   const release = releaseForTarget(target, installerStatus);
-  return release !== null &&
+  return (
+    release !== null &&
     release.error === '' &&
     release.version !== '' &&
     target.RuntimeVersion !== '' &&
-    target.RuntimeVersion !== release.version;
+    target.RuntimeVersion !== release.version
+  );
 };
 
 export const getReShadeAggregateStatus = (
@@ -72,7 +74,11 @@ export const getReShadeAggregateStatus = (
   if (discovery?.candidates.some((candidate) => candidate.conflicts.length > 0)) {
     return 'conflict';
   }
-  if (targets.some((target) => target.Status === 'drifted' || target.Status === 'incompatible_manifest')) {
+  if (
+    targets.some(
+      (target) => target.Status === 'drifted' || target.Status === 'incompatible_manifest',
+    )
+  ) {
     return 'drift';
   }
   if (targets.some((target) => isReShadeUpdateAvailable(target, installerStatus))) {
@@ -98,49 +104,52 @@ export const useGameReShade = (gameID: number | null) => {
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const refresh = useCallback(async (refreshRemote = false) => {
-    if (gameID === null) {
-      setDiscovery(null);
-      setTargets([]);
-      setRecovery(null);
-      setInstallerStatus(null);
-      setCatalogue(null);
-      setChainTargets([]);
-      setLoadError(null);
-      setIsLoading(false);
-      return;
-    }
+  const refresh = useCallback(
+    async (refreshRemote = false) => {
+      if (gameID === null) {
+        setDiscovery(null);
+        setTargets([]);
+        setRecovery(null);
+        setInstallerStatus(null);
+        setCatalogue(null);
+        setChainTargets([]);
+        setLoadError(null);
+        setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const [
-        loadedDiscovery,
-        loadedTargets,
-        loadedRecovery,
-        loadedInstallerStatus,
-        loadedCatalogue,
-        loadedChainTargets,
-      ] = await Promise.all([
-        DiscoverReShadeCandidates(gameID),
-        ListReShadeTargets(gameID),
-        GetReShadeRecoveryState(),
-        GetReShadeInstallerStatus(refreshRemote),
-        ListReShadeContentCatalogue(refreshRemote),
-        ListReShadeChainTargets(gameID),
-      ]);
-      setDiscovery(loadedDiscovery);
-      setTargets(loadedTargets);
-      setRecovery(loadedRecovery);
-      setInstallerStatus(loadedInstallerStatus);
-      setCatalogue(loadedCatalogue);
-      setChainTargets(loadedChainTargets);
-    } catch (error) {
-      setLoadError(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [gameID]);
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const [
+          loadedDiscovery,
+          loadedTargets,
+          loadedRecovery,
+          loadedInstallerStatus,
+          loadedCatalogue,
+          loadedChainTargets,
+        ] = await Promise.all([
+          DiscoverReShadeCandidates(gameID),
+          ListReShadeTargets(gameID),
+          GetReShadeRecoveryState(),
+          GetReShadeInstallerStatus(refreshRemote),
+          ListReShadeContentCatalogue(refreshRemote),
+          ListReShadeChainTargets(gameID),
+        ]);
+        setDiscovery(loadedDiscovery);
+        setTargets(loadedTargets);
+        setRecovery(loadedRecovery);
+        setInstallerStatus(loadedInstallerStatus);
+        setCatalogue(loadedCatalogue);
+        setChainTargets(loadedChainTargets);
+      } catch (error) {
+        setLoadError(getErrorMessage(error));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [gameID],
+  );
 
   useEffect(() => {
     void refresh();

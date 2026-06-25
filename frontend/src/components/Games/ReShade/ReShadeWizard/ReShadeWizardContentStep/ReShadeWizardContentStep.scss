@@ -136,10 +136,10 @@ $reshade-content-meta-label-width: 8rem;
   transform: translateY(-50%);
 }
 
-.reshade-wizard-content-search input:not([type=checkbox]):not([type=radio]) {
+.reshade-wizard-content-search input:not([type='checkbox']):not([type='radio']) {
   width: 100%;
   min-height: $input-height;
-  padding: 0 $spacing-sm 0 $spacing-xl ;
+  padding: 0 $spacing-sm 0 $spacing-xl;
   background: $color-background;
 }
 

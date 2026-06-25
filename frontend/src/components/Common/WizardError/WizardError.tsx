@@ -10,7 +10,7 @@ interface WizardErrorProps {
 
 export const WizardError = ({ details, onClose, summary }: WizardErrorProps) => (
   <div className="wizard-error" role="alert">
-    <div className='wizard-content'>
+    <div className="wizard-content">
       <div className="wizard-error-header">
         <p className="wizard-error-summary">{summary}</p>
       </div>
@@ -21,7 +21,12 @@ export const WizardError = ({ details, onClose, summary }: WizardErrorProps) => 
         </details>
       </div>
     </div>
-    <button aria-label="Dismiss error" className="wizard-error-close" onClick={onClose} type="button">
+    <button
+      aria-label="Dismiss error"
+      className="wizard-error-close"
+      onClick={onClose}
+      type="button"
+    >
       <X aria-hidden="true" />
     </button>
   </div>

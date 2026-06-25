@@ -1,6 +1,9 @@
 import { FormEvent } from 'react';
 
-import { ModSourceType, type UpdateModResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import {
+  ModSourceType,
+  type UpdateModResult,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { Modal } from '@components/Common/Modal/Modal';
 import { formatModMetadataBytes } from '@components/Games/Details/Mods/ModMetadataSummary/ModMetadataSummary';
 
@@ -25,9 +28,10 @@ const sourceName = (result: UpdateModResult) => {
   return result.After.OriginalSourceName ?? result.After.OriginalSourcePath;
 };
 
-const formatCount = (count: number | null) => count === null ? null : count.toLocaleString();
+const formatCount = (count: number | null) => (count === null ? null : count.toLocaleString());
 
-const formatSize = (bytes: number | null) => bytes === null ? null : formatModMetadataBytes(bytes);
+const formatSize = (bytes: number | null) =>
+  bytes === null ? null : formatModMetadataBytes(bytes);
 
 const formatValue = (value: SnapshotValue) => {
   if (value === null || value === '') {
@@ -153,17 +157,21 @@ export const GameModUpdateModal = ({
 
           {result.MetadataWarning !== null && (
             <p className="game-mod-update-modal-warning">
-              Metadata could not be read from the replacement package. Existing detected metadata will be kept.
+              Metadata could not be read from the replacement package. Existing detected metadata
+              will be kept.
             </p>
           )}
 
           {result.Warnings.map((warning) => (
-            <p className="game-mod-update-modal-warning" key={warning}>{warning}</p>
+            <p className="game-mod-update-modal-warning" key={warning}>
+              {warning}
+            </p>
           ))}
 
           {result.RequiresReapply && (
             <p className="game-mod-update-modal-warning">
-              This mod is part of the currently applied profile. Reapply that profile when you want the game files to use this update.
+              This mod is part of the currently applied profile. Reapply that profile when you want
+              the game files to use this update.
             </p>
           )}
         </div>

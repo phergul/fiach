@@ -45,7 +45,9 @@ export const GameProfilesAppliedSummary = ({
             {appliedProfile === null ? 'Vanilla' : appliedProfile.ProfileName}
           </strong>
           <span className="game-profiles-applied-summary-meta">
-            {appliedProfile === null ? 'No profile applied' : formatAppliedAt(appliedProfile.AppliedAt)}
+            {appliedProfile === null
+              ? 'No profile applied'
+              : formatAppliedAt(appliedProfile.AppliedAt)}
           </span>
         </div>
 
@@ -54,7 +56,10 @@ export const GameProfilesAppliedSummary = ({
             className="game-profiles-applied-summary-modified"
             title="Profile changed since it was applied."
           >
-            <CircleAlert className="game-profiles-applied-summary-modified-icon" aria-hidden="true" />
+            <CircleAlert
+              className="game-profiles-applied-summary-modified-icon"
+              aria-hidden="true"
+            />
             <span>Modified</span>
           </span>
         )}

@@ -12,7 +12,10 @@ import {
   ReorderProfileMods,
   SetProfileModEnabled,
 } from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
-import type { ModProfile, ProfileMod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ModProfile,
+  ProfileMod,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
 import { getErrorMessage } from '@utils';
 
@@ -39,7 +42,9 @@ const loadProfileModEntries = async (profiles: ModProfile[]) => {
 export const useGameProfiles = (gameID: number | null) => {
   const { addErrorToast, addToast } = useToast();
   const [profiles, setProfiles] = useState<ModProfile[]>([]);
-  const [profileModsByProfileID, setProfileModsByProfileID] = useState<Record<number, ProfileMod[]>>({});
+  const [profileModsByProfileID, setProfileModsByProfileID] = useState<
+    Record<number, ProfileMod[]>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<ProfileAction | null>(null);
@@ -53,47 +58,50 @@ export const useGameProfiles = (gameID: number | null) => {
     return loadedProfileMods;
   }, []);
 
-  const loadProfiles = useCallback(async (isCurrent: () => boolean = () => true) => {
-    if (gameID === null) {
+  const loadProfiles = useCallback(
+    async (isCurrent: () => boolean = () => true) => {
+      if (gameID === null) {
+        if (isCurrent()) {
+          setProfiles([]);
+          setProfileModsByProfileID({});
+          setIsLoading(false);
+          setLoadError(null);
+        }
+        return [];
+      }
+
       if (isCurrent()) {
-        setProfiles([]);
-        setProfileModsByProfileID({});
-        setIsLoading(false);
+        setIsLoading(true);
         setLoadError(null);
       }
-      return [];
-    }
 
-    if (isCurrent()) {
-      setIsLoading(true);
-      setLoadError(null);
-    }
-
-    try {
-      const loadedProfiles = await ListProfiles(gameID);
-      const profileModEntries = await loadProfileModEntries(loadedProfiles);
-      if (isCurrent()) {
-        setProfiles(loadedProfiles);
-        setProfileModsByProfileID(Object.fromEntries(profileModEntries));
+      try {
+        const loadedProfiles = await ListProfiles(gameID);
+        const profileModEntries = await loadProfileModEntries(loadedProfiles);
+        if (isCurrent()) {
+          setProfiles(loadedProfiles);
+          setProfileModsByProfileID(Object.fromEntries(profileModEntries));
+        }
+        return loadedProfiles;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        if (isCurrent()) {
+          setLoadError(message);
+        }
+        throw error;
+      } finally {
+        if (isCurrent()) {
+          setIsLoading(false);
+        }
       }
-      return loadedProfiles;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      if (isCurrent()) {
-        setLoadError(message);
-      }
-      throw error;
-    } finally {
-      if (isCurrent()) {
-        setIsLoading(false);
-      }
-    }
-  }, [gameID]);
+    },
+    [gameID],
+  );
 
   const refreshProfiles = useCallback(() => loadProfiles(), [loadProfiles]);
 
   const runProfileAction = useCallback(
-    async <T,>(action: ProfileAction, operation: () => Promise<T>, successMessage: string) => {
+    async <T>(action: ProfileAction, operation: () => Promise<T>, successMessage: string) => {
       setPendingAction(action);
 
       try {
@@ -131,7 +139,11 @@ export const useGameProfiles = (gameID: number | null) => {
         return Promise.reject(new Error('game is not selected'));
       }
 
-      return runProfileAction('duplicate', () => DuplicateProfile(profileID), 'Profile duplicated.');
+      return runProfileAction(
+        'duplicate',
+        () => DuplicateProfile(profileID),
+        'Profile duplicated.',
+      );
     },
     [gameID, runProfileAction],
   );

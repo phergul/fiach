@@ -180,7 +180,10 @@ export const getRawErrorMessage = (error: unknown) => {
       return jsonMessage;
     }
 
-    if (isRuntimeEnvelopeMessage(error.message) || isSerializedRuntimeEnvelopeMessage(error.message)) {
+    if (
+      isRuntimeEnvelopeMessage(error.message) ||
+      isSerializedRuntimeEnvelopeMessage(error.message)
+    ) {
       return fallbackErrorMessage;
     }
 

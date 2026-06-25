@@ -16,7 +16,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
-import type { ProfileMod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ProfileMod,
+  Tag,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { GameProfileAssignedModRow } from '@components/Games/Details/Profiles/GameProfileAssignedModRow/GameProfileAssignedModRow';
 
 import './GameProfileAssignedModsList.scss';
@@ -72,10 +75,7 @@ export const GameProfileAssignedModsList = ({
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
       <SortableContext items={activeModIDs} strategy={verticalListSortingStrategy}>
-        <ul
-          className={'game-profile-assigned-mods-list'}
-          aria-label="Assigned profile mods"
-        >
+        <ul className={'game-profile-assigned-mods-list'} aria-label="Assigned profile mods">
           {orderedMods.map((mod, index) => (
             <GameProfileAssignedModRow
               key={mod.ModID}
