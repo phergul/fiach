@@ -69,6 +69,7 @@ func main() {
 			application.NewService(services.NewDiagnosticsService(diagnosticsManager)),
 			application.NewService(services.NewDevService(store.Path())),
 			application.NewService(services.NewWindowService(&app)),
+			application.NewService(services.NewShellService(&app)),
 			application.NewService(appmode.NewRuntime(app)),
 		},
 		OnShutdown: func() {

@@ -9,6 +9,7 @@ import * as OptiScalerService from "./optiscalerservice.js";
 import * as ProfileService from "./profileservice.js";
 import * as ReshadeService from "./reshadeservice.js";
 import * as SettingsService from "./settingsservice.js";
+import * as ShellService from "./shellservice.js";
 import * as WindowService from "./windowservice.js";
 export {
     DevService,
@@ -19,5 +20,6 @@ export {
     ProfileService,
     ReshadeService,
     SettingsService,
+    ShellService,
     WindowService
 };

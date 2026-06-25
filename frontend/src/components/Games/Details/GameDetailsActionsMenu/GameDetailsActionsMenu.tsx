@@ -1,4 +1,4 @@
-import { FolderCog, Gauge, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { FolderCog, FolderOpen, Gauge, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu, type DropdownMenuItem } from '@components/Common/DropdownMenu/DropdownMenu';
@@ -12,6 +12,7 @@ interface GameDetailsActionsMenuProps {
   onOpenOptiScaler: () => void;
   onOpenReShade: () => void;
   onClearStorageOverride: () => void;
+  onOpenInstallDirectory: () => void;
   onSetStorageOverride: () => void;
 }
 
@@ -21,6 +22,7 @@ export const GameDetailsActionsMenu = ({
   onOpenOptiScaler,
   onOpenReShade,
   onClearStorageOverride,
+  onOpenInstallDirectory,
   onSetStorageOverride,
 }: GameDetailsActionsMenuProps) => {
   if (!isOpen) {
@@ -31,6 +33,11 @@ export const GameDetailsActionsMenu = ({
     game.ModStoragePathOverride !== null && game.ModStoragePathOverride.trim() !== '';
 
   const items: DropdownMenuItem[] = [
+    {
+      icon: FolderOpen,
+      label: 'Open install folder',
+      onSelect: onOpenInstallDirectory,
+    },
     {
       icon: FolderCog,
       label: 'Set mod storage override',

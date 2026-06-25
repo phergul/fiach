@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
 
 import { ModSourceType } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { OpenDirectory } from '@bindings/github.com/phergul/fiach/internal/services/shellservice';
+import { useToast } from '@components/Common/Toast/Toast';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
 import { GameDetailsActionsMenu } from '@components/Games/Details/GameDetailsActionsMenu/GameDetailsActionsMenu';
@@ -78,6 +80,7 @@ export const GameDetails = () => {
   const updateFlow = useGameModUpdateFlow({
     refreshAfterUpdate: refreshAfterModUpdated,
   });
+  const { addErrorToast } = useToast();
   const storageOverride = useGameStorageOverride({
     game,
     onMenuClose: () => setIsActionsMenuOpen(false),
@@ -119,6 +122,20 @@ export const GameDetails = () => {
       }
     } catch {
       setIsRestoreConfirmOpen(false);
+    }
+  };
+
+  const openInstallDirectory = async () => {
+    if (game === undefined) {
+      return;
+    }
+
+    setIsActionsMenuOpen(false);
+
+    try {
+      await OpenDirectory(game.InstallPath);
+    } catch (error) {
+      addErrorToast(error);
     }
   };
 
@@ -194,6 +211,7 @@ export const GameDetails = () => {
                 game={game}
                 isOpen={isActionsMenuOpen}
                 onClearStorageOverride={storageOverride.requestClearStorageOverride}
+                onOpenInstallDirectory={openInstallDirectory}
                 onOpenOptiScaler={() => {
                   setIsActionsMenuOpen(false);
                   navigate(`/library/${game.ID}/optiscaler`);
