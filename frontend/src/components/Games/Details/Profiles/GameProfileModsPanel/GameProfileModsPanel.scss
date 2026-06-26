@@ -22,6 +22,7 @@ $game-profile-mods-panel-icon-size: 1rem;
 .game-profile-mods-panel-body {
   min-height: 0;
   flex: 1 1 auto;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

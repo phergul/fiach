@@ -30,6 +30,10 @@ $game-profile-assigned-mod-row-toggle-knob-size: 0.875rem;
   outline-offset: -$app-border-width;
 }
 
+.game-profile-assigned-mod-row-overlay {
+  cursor: grabbing;
+}
+
 .game-profile-assigned-mod-row + .game-profile-assigned-mod-row {
   margin-top: $spacing-separator;
 }

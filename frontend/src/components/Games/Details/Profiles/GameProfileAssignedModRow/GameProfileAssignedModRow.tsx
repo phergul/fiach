@@ -17,6 +17,7 @@ interface GameProfileAssignedModRowProps {
   canMoveDown: boolean;
   canMoveUp: boolean;
   canReorder: boolean;
+  dragOverlay?: boolean;
   isBusy: boolean;
   mod: ProfileMod;
   tags: Tag[];
@@ -30,6 +31,7 @@ export const GameProfileAssignedModRow = ({
   canMoveDown,
   canMoveUp,
   canReorder,
+  dragOverlay = false,
   isBusy,
   mod,
   tags,
@@ -39,23 +41,27 @@ export const GameProfileAssignedModRow = ({
   onSetModEnabled,
 }: GameProfileAssignedModRowProps) => {
   const displayLoadOrder = mod.LoadOrder + 1;
+  const isSortable = !dragOverlay;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: mod.ModID,
-    disabled: isBusy || !canReorder,
+    disabled: isBusy || !canReorder || !isSortable,
   });
   const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform:
+      isSortable && transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
+    transition: isSortable ? transition : undefined,
+    opacity: isDragging && !dragOverlay ? 0 : undefined,
   };
+  const RowTag = dragOverlay ? 'div' : 'li';
+  const rowClassName = dragOverlay
+    ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging game-profile-assigned-mod-row-overlay'
+    : 'game-profile-assigned-mod-row';
 
   return (
-    <li
-      ref={setNodeRef}
-      className={
-        isDragging
-          ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging'
-          : 'game-profile-assigned-mod-row'
-      }
+    <RowTag
+      ref={isSortable ? setNodeRef : undefined}
+      aria-hidden={dragOverlay ? true : undefined}
+      className={rowClassName}
       style={style}
     >
       <div
@@ -69,10 +75,10 @@ export const GameProfileAssignedModRow = ({
         <button
           aria-label={`Drag ${mod.Name}`}
           className="game-profile-assigned-mod-row-handle-button"
-          disabled={isBusy || !canReorder}
+          disabled={isBusy || !canReorder || dragOverlay}
           type="button"
-          {...attributes}
-          {...listeners}
+          {...(isSortable ? attributes : undefined)}
+          {...(isSortable ? listeners : undefined)}
         >
           <GripVertical className="game-profile-assigned-mod-row-handle-icon" aria-hidden="true" />
         </button>
@@ -133,6 +139,6 @@ export const GameProfileAssignedModRow = ({
           <Trash2 className="game-profile-assigned-mod-row-icon" aria-hidden="true" />
         </button>
       </div>
-    </li>
+    </RowTag>
   );
 };

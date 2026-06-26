@@ -3,9 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   type DragEndEvent,
+  type DragStartEvent,
+  type Modifier,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -23,6 +26,50 @@ import type {
 import { GameProfileAssignedModRow } from '@components/Games/Details/Profiles/GameProfileAssignedModRow/GameProfileAssignedModRow';
 
 import './GameProfileAssignedModsList.scss';
+
+const restrictToVerticalDragBounds: Modifier = ({
+  containerNodeRect,
+  draggingNodeRect,
+  scrollableAncestorRects,
+  transform,
+}) => {
+  if (!draggingNodeRect) {
+    return { ...transform, x: 0 };
+  }
+
+  let y = transform.y;
+  const projectedTop = draggingNodeRect.top + y;
+  const projectedBottom = draggingNodeRect.bottom + y;
+  const bounds: Array<{ top: number; bottom: number }> = [];
+
+  if (containerNodeRect) {
+    bounds.push({
+      top: containerNodeRect.top,
+      bottom: containerNodeRect.bottom,
+    });
+  }
+
+  const scrollableRect = scrollableAncestorRects[0];
+  if (scrollableRect) {
+    bounds.push({
+      top: scrollableRect.top,
+      bottom: scrollableRect.bottom,
+    });
+  }
+
+  if (bounds.length > 0) {
+    const top = Math.max(...bounds.map((bound) => bound.top));
+    const bottom = Math.min(...bounds.map((bound) => bound.bottom));
+
+    if (projectedTop < top) {
+      y = top - draggingNodeRect.top;
+    } else if (projectedBottom > bottom) {
+      y = bottom - draggingNodeRect.bottom;
+    }
+  }
+
+  return { ...transform, x: 0, y };
+};
 
 interface GameProfileAssignedModsListProps {
   canReorder: boolean;
@@ -46,7 +93,14 @@ export const GameProfileAssignedModsList = ({
   onSetModEnabled,
 }: GameProfileAssignedModsListProps) => {
   const [orderedMods, setOrderedMods] = useState(mods);
+  const [activeModID, setActiveModID] = useState<number | null>(null);
+  const [activeRowWidth, setActiveRowWidth] = useState<number | undefined>();
   const activeModIDs = useMemo(() => orderedMods.map((mod) => mod.ModID), [orderedMods]);
+  const activeMod = useMemo(
+    () => orderedMods.find((mod) => mod.ModID === activeModID),
+    [activeModID, orderedMods],
+  );
+  const activeModIndex = activeModID === null ? -1 : activeModIDs.indexOf(activeModID);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -56,7 +110,19 @@ export const GameProfileAssignedModsList = ({
     setOrderedMods(mods);
   }, [mods]);
 
+  const clearActiveDrag = () => {
+    setActiveModID(null);
+    setActiveRowWidth(undefined);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveModID(Number(event.active.id));
+    setActiveRowWidth(event.active.rect.current?.initial?.width ?? undefined);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    clearActiveDrag();
+
     if (!canReorder || isBusy || event.over === null || event.active.id === event.over.id) {
       return;
     }
@@ -73,7 +139,15 @@ export const GameProfileAssignedModsList = ({
   };
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
+    <DndContext
+      autoScroll={{ threshold: { x: 0, y: 0.2 } }}
+      collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalDragBounds]}
+      onDragCancel={clearActiveDrag}
+      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+      sensors={sensors}
+    >
       <SortableContext items={activeModIDs} strategy={verticalListSortingStrategy}>
         <ul className={'game-profile-assigned-mods-list'} aria-label="Assigned profile mods">
           {orderedMods.map((mod, index) => (
@@ -93,6 +167,29 @@ export const GameProfileAssignedModsList = ({
           ))}
         </ul>
       </SortableContext>
+
+      <DragOverlay dropAnimation={null}>
+        {activeMod ? (
+          <div
+            className="game-profile-assigned-mods-list-overlay"
+            style={{ width: activeRowWidth }}
+          >
+            <GameProfileAssignedModRow
+              canMoveDown={activeModIndex < orderedMods.length - 1}
+              canMoveUp={activeModIndex > 0}
+              canReorder={canReorder}
+              dragOverlay
+              isBusy={isBusy}
+              mod={activeMod}
+              tags={tagsByModID[activeMod.ModID] ?? []}
+              onMoveDown={() => onMoveMod(activeMod.ModID, 1)}
+              onMoveUp={() => onMoveMod(activeMod.ModID, -1)}
+              onRemoveMod={onRemoveMod}
+              onSetModEnabled={onSetModEnabled}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 };

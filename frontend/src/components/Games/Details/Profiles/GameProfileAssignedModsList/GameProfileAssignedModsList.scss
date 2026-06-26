@@ -2,4 +2,9 @@
 
 .game-profile-assigned-mods-list {
   min-width: 0;
+  overflow: hidden;
+}
+
+.game-profile-assigned-mods-list-overlay {
+  pointer-events: none;
 }
