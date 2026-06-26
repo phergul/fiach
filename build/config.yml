@@ -9,7 +9,7 @@ info:
   productIdentifier: "com.phergul.fiach"
   description: "Fiach: A general-purpose mod manager"
   copyright: "(c) 2026, phergul"
-  version: "0.3.0"
+  version: "0.3.1"
 
 # Dev mode configuration
 dev_mode:
