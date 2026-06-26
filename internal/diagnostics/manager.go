@@ -46,9 +46,12 @@ const (
 	OperationRemoveProfileMod          = "remove_profile_mod"
 	OperationSetProfileModEnabled      = "set_profile_mod_enabled"
 	OperationReorderProfileMods        = "reorder_profile_mods"
-	OperationBuildProfilePlan          = "build_profile_plan"
-	OperationApplyProfile              = "apply_profile"
-	OperationRestoreVanilla            = "restore_vanilla"
+	OperationBuildProfilePlan              = "build_profile_plan"
+	OperationApplyProfile                    = "apply_profile"
+	OperationBuildDeploymentReviewPreview    = "build_deployment_review_preview"
+	OperationLoadDeploymentTreeChildren      = "load_deployment_tree_children"
+	OperationGetDeploymentFileDetail         = "get_deployment_file_detail"
+	OperationRestoreVanilla                  = "restore_vanilla"
 	OperationSetGlobalModStorageRoot   = "set_global_mod_storage_root"
 	OperationSetTheme                  = "set_theme"
 	OperationSetGameModStorageOverride = "set_game_mod_storage_override"
@@ -176,6 +179,9 @@ func Operations() []OperationDescriptor {
 		{Value: OperationReorderProfileMods, Label: "Reorder profile mods"},
 		{Value: OperationBuildProfilePlan, Label: "Build profile plan"},
 		{Value: OperationApplyProfile, Label: "Apply profile"},
+		{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
+		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
+		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
 		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
 		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
 		{Value: OperationSetTheme, Label: "Set theme"},

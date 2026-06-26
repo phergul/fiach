@@ -10,12 +10,18 @@ export {
     ApplyOperationResult,
     ApplyOperationStatus,
     CreateTagInput,
+    DeploymentFileDetail,
+    DeploymentReviewPreview,
+    DeploymentSummary,
+    DeploymentTreeNode,
     DetectedReShadeTarget,
     DevInfo,
     DevLogEntry,
     DiagnosticLogEntry,
     DiagnosticOperation,
     ExportDiagnosticLogsInput,
+    FileStateView,
+    FourStateView,
     ImportModInput,
     ImportModResult,
     ImportTargetDetectionResult,
@@ -81,5 +87,6 @@ export {
     UpdateModDetailsInput,
     UpdateModInput,
     UpdateModMetadataInput,
-    UpdateModResult
+    UpdateModResult,
+    WriterEntryDTO
 } from "./models.js";

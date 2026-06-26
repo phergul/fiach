@@ -19,7 +19,7 @@ type ConflictCategory string
 
 const (
 	ConflictExpectedOverwrite        ConflictCategory = "expected_overwrite"
-	ConflictAmbiguousOverwrite         ConflictCategory = "ambiguous_overwrite"
+	ConflictAmbiguousOverwrite       ConflictCategory = "ambiguous_overwrite"
 	ConflictDestructiveFileDirectory ConflictCategory = "destructive_file_directory"
 )
 

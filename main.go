@@ -61,6 +61,7 @@ func main() {
 		Services: []application.Service{
 			application.NewService(services.NewModService(store, logger)),
 			application.NewService(services.NewProfileService(store, logger)),
+			application.NewService(services.NewDeploymentReviewService(store, logger)),
 			application.NewService(services.NewSettingsService(store, logger)),
 			application.NewService(services.NewReshadeService(store, logger, injectionCoordinator)),
 			application.NewService(services.NewOptiScalerService(store, logger, injectionCoordinator)),
