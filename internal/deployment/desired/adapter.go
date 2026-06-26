@@ -1,0 +1,22 @@
+package desired
+
+import (
+	"github.com/phergul/fiach/internal/deployment"
+	"github.com/phergul/fiach/internal/operationplan"
+)
+
+type DesiredFileMapping struct {
+	SourcePath       string
+	GameRelativePath string
+	SHA256           string
+	SizeBytes        int64
+}
+
+type DesiredInventoryResult struct {
+	Mappings []DesiredFileMapping
+	Issues   []deployment.PlanIssue
+}
+
+type DesiredFileAdapter interface {
+	InventoryFiles(input operationplan.StrategyBuildInput) (DesiredInventoryResult, error)
+}
