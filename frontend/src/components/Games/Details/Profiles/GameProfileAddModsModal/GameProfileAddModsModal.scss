@@ -21,11 +21,19 @@ $game-profile-add-mods-modal-hidden-input-offset: -0.0625rem;
 .game-profile-add-mods-modal-panel .modal-header,
 .game-profile-add-mods-modal-panel .modal-footer {
   background: $color-surface;
+
+  button {
+    background: $color-background;
+  }
 }
 
 .game-profile-add-mods-modal-footer {
   display: flex;
   gap: $spacing-sm;
+
+  button {
+    background: $color-background;
+  }
 }
 
 .game-profile-add-mods-modal-controls {
