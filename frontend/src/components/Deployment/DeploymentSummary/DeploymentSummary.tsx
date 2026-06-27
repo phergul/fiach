@@ -2,8 +2,8 @@ import type { DeploymentSummary } from '@bindings/github.com/phergul/fiach/inter
 
 import {
   DEPLOYMENT_FILE_STATUSES,
-  deploymentStatusLabel,
-  deploymentSummaryTone,
+  resolveDeploymentActionLabel,
+  resolveDeploymentSummaryTone,
   type DeploymentToneChipTone,
 } from '../deploymentLabels';
 import { DeploymentToneChip } from '../DeploymentToneChip/DeploymentToneChip';
@@ -25,7 +25,7 @@ const statusItemLabel = (key: string) => {
     return 'Can apply';
   }
 
-  return deploymentStatusLabel[key] ?? key;
+  return resolveDeploymentActionLabel(key);
 };
 
 export const DeploymentSummaryBar = ({ summary }: DeploymentSummaryProps) => {
@@ -67,7 +67,7 @@ export const DeploymentSummaryBar = ({ summary }: DeploymentSummaryProps) => {
   return (
     <dl className="deployment-summary" aria-label="Deployment review summary">
       {items.map((item) => {
-        const tone = deploymentSummaryTone[item.key] as DeploymentToneChipTone | undefined;
+        const tone = resolveDeploymentSummaryTone(item.key) as DeploymentToneChipTone | undefined;
         const isCanApply = item.key === 'can_apply';
 
         return (

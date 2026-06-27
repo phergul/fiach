@@ -4,7 +4,7 @@ import {
   DEPLOYMENT_FILE_STATUSES,
   DEPLOYMENT_RISK_LEVELS,
   deploymentRiskLabel,
-  deploymentStatusLabel,
+  resolveDeploymentActionLabel,
 } from '../../deploymentLabels';
 
 import { DeploymentTreeFilterDropdown } from './DeploymentTreeFilterDropdown';
@@ -55,7 +55,7 @@ export const DeploymentFileTreeFilters = ({
           <DeploymentTreeFilterDropdown
             label="Status"
             options={DEPLOYMENT_FILE_STATUSES.map((status) => ({
-              label: deploymentStatusLabel[status],
+              label: resolveDeploymentActionLabel(status),
               value: status,
             }))}
             selectedValues={filters.statuses}

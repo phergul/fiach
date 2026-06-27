@@ -5,17 +5,9 @@ import { ChevronRight, File, Folder } from 'lucide-react';
 import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { formatDeploymentDisplayPath } from '@utils';
 
-import {
-  deploymentPlannedActionTone,
-  deploymentStatusTone,
-} from '../../deploymentLabels';
 import { DeploymentToneChip } from '../../DeploymentToneChip/DeploymentToneChip';
 import { deploymentTreeRowPaddingRem } from '../deploymentTreeLayout';
-import {
-  formatTreeNodeMeta,
-  formatTreeNodeStatus,
-  treeNodeShowsStatus,
-} from '../deploymentTreeMeta';
+import { formatTreeNodeActionTone, formatTreeNodeMeta } from '../deploymentTreeMeta';
 
 import './DeploymentFileTreeNode.scss';
 
@@ -43,12 +35,10 @@ export const DeploymentFileTreeNodeRow = ({
   onToggle,
 }: DeploymentFileTreeNodeProps) => {
   const displayPath = formatDeploymentDisplayPath(node.Path, gameInstallPath, gameName);
-  const statusTone = deploymentStatusTone[node.Status] ?? 'replace';
-  const plannedActionTone = deploymentPlannedActionTone[node.PlannedAction] ?? 'default';
+  const actionLabel = formatTreeNodeMeta(node);
+  const actionTone = formatTreeNodeActionTone(node);
   const canExpand = node.IsDirectory && node.HasChildren;
-  const metaLabel = formatTreeNodeMeta(node);
-  const showStatus = treeNodeShowsStatus(node);
-  const showActionChip = !node.IsDirectory && metaLabel !== '';
+  const showActionChip = !node.IsDirectory && actionLabel !== '';
   const rowPaddingRem = deploymentTreeRowPaddingRem(depth, node.IsDirectory);
   const rowStyle = {
     '--deployment-file-tree-row-padding': `${rowPaddingRem}rem`,
@@ -121,12 +111,9 @@ export const DeploymentFileTreeNodeRow = ({
         </span>
 
         <div className="deployment-file-tree-node-meta">
-          {showStatus && (
-            <DeploymentToneChip label={formatTreeNodeStatus(node)} tone={statusTone} />
-          )}
-          {showActionChip && <DeploymentToneChip label={metaLabel} tone={plannedActionTone} />}
-          {node.IsDirectory && metaLabel !== '' && (
-            <span className="deployment-file-tree-node-meta-label">{metaLabel}</span>
+          {showActionChip && <DeploymentToneChip label={actionLabel} tone={actionTone} />}
+          {node.IsDirectory && actionLabel !== '' && (
+            <span className="deployment-file-tree-node-meta-label">{actionLabel}</span>
           )}
         </div>
       </div>

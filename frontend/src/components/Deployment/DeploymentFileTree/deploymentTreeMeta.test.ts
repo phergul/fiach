@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
-import { formatTreeNodeMeta, treeNodeShowsStatus } from './deploymentTreeMeta';
+import { formatTreeNodeMeta } from './deploymentTreeMeta';
 
 const node = (overrides: Partial<DeploymentTreeNode> = {}): DeploymentTreeNode =>
   ({
@@ -29,9 +29,7 @@ describe('deploymentTreeMeta', () => {
     );
   });
 
-  it('only surfaces status text for blocking states', () => {
-    expect(treeNodeShowsStatus(node())).toBe(false);
-    expect(treeNodeShowsStatus(node({ Status: 'blocked' }))).toBe(true);
-    expect(treeNodeShowsStatus(node({ Status: 'conflict' }))).toBe(true);
+  it('uses conflict label when status is conflict', () => {
+    expect(formatTreeNodeMeta(node({ Status: 'conflict', PlannedAction: 'block' }))).toBe('Conflict');
   });
 });

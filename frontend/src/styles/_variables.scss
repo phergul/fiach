@@ -1,9 +1,11 @@
 @use 'sass:list';
 
-$color-background: var(--color-background, #252422ff);
-$color-background-rgb: var(--color-background-rgb, 37 36 34);
-$color-surface: var(--color-surface, #2f2d2aff);
-$color-surface-rgb: var(--color-surface-rgb, 47 45 42);
+$color-background: var(--color-background, #222120ff);
+$color-background-rgb: var(--color-background-rgb, 34 33 32);
+$color-background-elevated: var(--color-background-elevated, #2f2d2bff);
+$color-background-elevated-rgb: var(--color-background-elevated-rgb, 47 45 43);
+$color-surface: var(--color-surface, #272624ff);
+$color-surface-rgb: var(--color-surface-rgb, 39 38 36);
 $color-surface-elevated: var(--color-surface-elevated, #403d39ff);
 $color-text-muted: var(--color-text-muted, #8f897fff);
 $color-text-subtle: var(--color-text-subtle, #ccc5b9ff);

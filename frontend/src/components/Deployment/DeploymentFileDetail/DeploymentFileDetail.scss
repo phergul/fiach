@@ -5,10 +5,9 @@
   min-width: 0;
   height: 100%;
   flex-direction: column;
-  gap: $spacing-lg;
-  padding: $spacing-lg;
+  gap: 0;
   overflow: auto;
-  background: transparent;
+  background: $color-background;
 }
 
 .deployment-file-detail-empty {
@@ -16,6 +15,7 @@
   justify-content: center;
   gap: $spacing-md;
   padding: $spacing-xl;
+  background: $color-background;
 }
 
 .deployment-file-detail-empty-icon {
@@ -45,6 +45,14 @@
 .deployment-file-detail-retry {
   min-height: $table-control-height;
   padding: 0 $spacing-md;
+}
+
+.deployment-file-detail-header-area {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  background: $color-background;
 }
 
 .deployment-file-detail-header {
@@ -95,6 +103,15 @@
   line-height: $line-height-base;
 }
 
+.deployment-file-detail-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
+  background: $color-surface;
+}
+
 .deployment-file-detail-section {
   display: flex;
   flex-direction: column;
@@ -102,8 +119,9 @@
 }
 
 .deployment-file-detail-section-title {
-  color: $color-text-primary;
-  font-size: $font-size-base;
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
 }

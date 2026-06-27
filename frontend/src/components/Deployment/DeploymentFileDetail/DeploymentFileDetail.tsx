@@ -6,12 +6,10 @@ import { deploymentPathBaseName, formatDeploymentDisplayPath } from '@utils';
 
 import {
   deploymentConflictCategoryLabel,
-  deploymentPlannedActionLabel,
-  deploymentPlannedActionTone,
   deploymentRiskLabel,
   deploymentRiskTone,
-  deploymentStatusLabel,
-  deploymentStatusTone,
+  resolveDeploymentActionLabel,
+  resolveDeploymentActionTone,
 } from '../deploymentLabels';
 import { DeploymentToneChip } from '../DeploymentToneChip/DeploymentToneChip';
 import { DeploymentFourStateView } from './DeploymentFourStateView/DeploymentFourStateView';
@@ -76,54 +74,54 @@ export const DeploymentFileDetailPanel = ({
 
   const displayPath = formatDeploymentDisplayPath(detail.RelativePath, gameInstallPath, gameName);
   const fileName = deploymentPathBaseName(detail.RelativePath);
-  const statusTone = deploymentStatusTone[detail.FileStatus] ?? 'replace';
+  const actionLabel = resolveDeploymentActionLabel(detail.FileStatus, detail.PlannedAction);
+  const actionTone = resolveDeploymentActionTone(detail.FileStatus, detail.PlannedAction);
   const riskTone = deploymentRiskTone[detail.RiskLevel] ?? 'default';
-  const plannedActionTone = deploymentPlannedActionTone[detail.PlannedAction] ?? 'default';
 
   return (
     <section className="deployment-file-detail" aria-label="File detail">
-      <header className="deployment-file-detail-header">
-        <div className="deployment-file-detail-header-copy">
-          <h3 className="deployment-file-detail-title">{fileName}</h3>
-          <p className="deployment-file-detail-path">{displayPath}</p>
-        </div>
-        <div className="deployment-file-detail-badges">
-          <DeploymentToneChip
-            label={deploymentStatusLabel[detail.FileStatus] ?? detail.FileStatus}
-            tone={statusTone}
+      <div className="deployment-file-detail-header-area">
+        <header className="deployment-file-detail-header">
+          <div className="deployment-file-detail-header-copy">
+            <h3 className="deployment-file-detail-title">{fileName}</h3>
+            <p className="deployment-file-detail-path">{displayPath}</p>
+          </div>
+          <div className="deployment-file-detail-badges">
+            <DeploymentToneChip label={actionLabel} tone={actionTone} />
+            <DeploymentToneChip
+              label={deploymentRiskLabel[detail.RiskLevel] ?? detail.RiskLevel}
+              tone={riskTone}
+            />
+          </div>
+        </header>
+
+        {detail.ConflictCategory !== '' && (
+          <p className="deployment-file-detail-category">
+            {deploymentConflictCategoryLabel[detail.ConflictCategory] ?? detail.ConflictCategory}
+          </p>
+        )}
+
+        {detail.Explanation !== '' && (
+          <p className="deployment-file-detail-explanation">{detail.Explanation}</p>
+        )}
+      </div>
+
+      <div className="deployment-file-detail-body">
+        <section className="deployment-file-detail-section" aria-label="File versions">
+          <h4 className="deployment-file-detail-section-title">File versions</h4>
+          <DeploymentFourStateView
+            applied={detail.States.Applied}
+            baseline={detail.States.Baseline}
+            current={detail.States.Current}
+            desired={detail.States.Desired}
           />
-          <DeploymentToneChip
-            label={deploymentRiskLabel[detail.RiskLevel] ?? detail.RiskLevel}
-            tone={riskTone}
-          />
-          <DeploymentToneChip
-            label={deploymentPlannedActionLabel[detail.PlannedAction] ?? detail.PlannedAction}
-            tone={plannedActionTone}
-          />
-        </div>
-      </header>
+        </section>
 
-      {detail.ConflictCategory !== '' && (
-        <p className="deployment-file-detail-category">
-          {deploymentConflictCategoryLabel[detail.ConflictCategory] ?? detail.ConflictCategory}
-        </p>
-      )}
-
-      {detail.Explanation !== '' && (
-        <p className="deployment-file-detail-explanation">{detail.Explanation}</p>
-      )}
-
-      <DeploymentFourStateView
-        applied={detail.States.Applied}
-        baseline={detail.States.Baseline}
-        current={detail.States.Current}
-        desired={detail.States.Desired}
-      />
-
-      <section className="deployment-file-detail-section" aria-label="Writer stack">
-        <h4 className="deployment-file-detail-section-title">Writer stack</h4>
-        <DeploymentWriterStack writers={detail.WriterStack} />
-      </section>
+        <section className="deployment-file-detail-section" aria-label="Writer stack">
+          <h4 className="deployment-file-detail-section-title">Writer stack</h4>
+          <DeploymentWriterStack writers={detail.WriterStack} />
+        </section>
+      </div>
     </section>
   );
 };

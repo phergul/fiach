@@ -5,6 +5,8 @@ const themeTokenVariableEntries = (
 ): Array<[property: string, value: string]> => [
   ['--color-background', tokens.background],
   ['--color-background-rgb', tokens.backgroundRgb],
+  ['--color-background-elevated', tokens.backgroundElevated],
+  ['--color-background-elevated-rgb', tokens.backgroundElevatedRgb],
   ['--color-surface', tokens.surface],
   ['--color-surface-rgb', tokens.surfaceRgb],
   ['--color-surface-elevated', tokens.surfaceElevated],

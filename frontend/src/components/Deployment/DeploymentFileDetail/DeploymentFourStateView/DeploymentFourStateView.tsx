@@ -28,6 +28,18 @@ const isPhaseOneUnavailableState = (label: string, state: FileStateView | null) 
   return !state.Exists && state.Label === '' && state.SHA256 === '' && state.SizeBytes === 0;
 };
 
+const isEmptyColumnBody = (label: string, state: FileStateView | null) => {
+  if (isPhaseOneUnavailableState(label, state)) {
+    return true;
+  }
+
+  if (state === null) {
+    return true;
+  }
+
+  return !state.Exists;
+};
+
 const StateColumnBody = ({ label, state }: StateColumnProps) => {
   if (isPhaseOneUnavailableState(label, state)) {
     return <p className="deployment-four-state-view-placeholder">Not available yet</p>;
@@ -66,6 +78,8 @@ const StateColumnBody = ({ label, state }: StateColumnProps) => {
 };
 
 const StateColumn = ({ isDesired = false, label, state }: StateColumnProps) => {
+  const isEmpty = isEmptyColumnBody(label, state);
+
   return (
     <article
       className={
@@ -75,7 +89,13 @@ const StateColumn = ({ isDesired = false, label, state }: StateColumnProps) => {
       }
     >
       <header className="deployment-four-state-view-column-header">{label}</header>
-      <div className="deployment-four-state-view-column-body">
+      <div
+        className={
+          isEmpty
+            ? 'deployment-four-state-view-column-body deployment-four-state-view-column-body-empty'
+            : 'deployment-four-state-view-column-body deployment-four-state-view-column-body-populated'
+        }
+      >
         <StateColumnBody label={label} state={state} />
       </div>
     </article>

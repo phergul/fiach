@@ -17,29 +17,6 @@ $game-apply-toolbar-icon-size: 1.25rem;
   color: $color-text-primary;
 }
 
-.game-apply-deployment {
-  background: $color-background;
-}
-
-.game-apply-deployment .game-apply-toolbar,
-.game-apply-deployment .game-apply-page-header,
-.game-apply-deployment .deployment-summary,
-.game-apply-deployment .deployment-review-detail-pane {
-  background: $color-background;
-}
-
-.game-apply-deployment .deployment-review-tree-pane {
-  background: $color-surface;
-}
-
-.game-apply-deployment .game-apply-toolbar {
-  border-bottom: 0;
-}
-
-.game-apply-deployment .deployment-review {
-  margin-top: $spacing-separator;
-}
-
 .game-apply-toolbar {
   display: flex;
   flex: 0 0 auto;
@@ -49,7 +26,6 @@ $game-apply-toolbar-icon-size: 1.25rem;
   gap: $spacing-md;
   padding: 0 $spacing-md;
   background: $color-background;
-  border-bottom: $app-border-width solid $color-border-subtle;
 }
 
 .game-apply-toolbar-start {

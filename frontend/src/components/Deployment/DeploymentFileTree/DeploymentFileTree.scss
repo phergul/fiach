@@ -8,7 +8,7 @@ $deployment-file-tree-indent-width: 0.875rem;
   height: 100%;
   flex-direction: column;
   overflow: hidden;
-  background: $color-surface;
+  background: $color-background;
 }
 
 .deployment-file-tree-body {
@@ -31,7 +31,7 @@ $deployment-file-tree-indent-width: 0.875rem;
 .deployment-file-tree-item-selected > .deployment-file-tree-node > .deployment-file-tree-node-row,
 .deployment-file-tree-node-row:hover,
 .deployment-file-tree-node-row:focus-visible {
-  background: $color-surface-elevated;
+  background: $color-background-elevated;
 }
 
 .deployment-file-tree-empty {

@@ -1,10 +1,6 @@
 import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
-import { deploymentPlannedActionLabel, deploymentStatusLabel } from '../deploymentLabels';
-
-export const treeNodeShowsStatus = (node: DeploymentTreeNode) => {
-  return node.Status === 'blocked' || node.Status === 'conflict';
-};
+import { resolveDeploymentActionLabel, resolveDeploymentActionTone } from '../deploymentLabels';
 
 export const formatTreeNodeMeta = (node: DeploymentTreeNode) => {
   if (node.IsDirectory) {
@@ -15,9 +11,9 @@ export const formatTreeNodeMeta = (node: DeploymentTreeNode) => {
     return node.ChildCount === 1 ? '1 item' : `${node.ChildCount} items`;
   }
 
-  return deploymentPlannedActionLabel[node.PlannedAction] ?? node.PlannedAction;
+  return resolveDeploymentActionLabel(node.Status, node.PlannedAction);
 };
 
-export const formatTreeNodeStatus = (node: DeploymentTreeNode) => {
-  return deploymentStatusLabel[node.Status] ?? node.Status;
+export const formatTreeNodeActionTone = (node: DeploymentTreeNode) => {
+  return resolveDeploymentActionTone(node.Status, node.PlannedAction);
 };

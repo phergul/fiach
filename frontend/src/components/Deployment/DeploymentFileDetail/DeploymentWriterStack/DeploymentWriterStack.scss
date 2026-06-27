@@ -20,11 +20,11 @@
   flex-direction: column;
   gap: $spacing-xs;
   padding: $spacing-sm $spacing-md;
-  background: $color-surface;
+  background: $color-background-elevated;
 }
 
 .deployment-writer-stack-item-winner {
-  background: color-mix(in srgb, $color-accent 16%, $color-surface);
+  background: color-mix(in srgb, $color-accent 16%, $color-background-elevated);
 }
 
 .deployment-writer-stack-item-header {

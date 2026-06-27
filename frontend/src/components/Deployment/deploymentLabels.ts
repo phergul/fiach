@@ -6,10 +6,17 @@ export type DeploymentFileStatus = (typeof DEPLOYMENT_FILE_STATUSES)[number];
 
 export type DeploymentRiskLevel = (typeof DEPLOYMENT_RISK_LEVELS)[number];
 
-export const deploymentStatusLabel: Record<string, string> = {
-  added: 'Added',
-  replaced: 'Replaced',
-  blocked: 'Blocked',
+const deploymentStatusToAction: Record<DeploymentFileStatus, string> = {
+  added: 'create',
+  replaced: 'replace',
+  blocked: 'block',
+  conflict: 'conflict',
+};
+
+export const deploymentActionLabel: Record<string, string> = {
+  create: 'Create',
+  replace: 'Replace',
+  block: 'Block',
   conflict: 'Conflict',
 };
 
@@ -19,29 +26,10 @@ export const deploymentRiskLabel: Record<string, string> = {
   error: 'Error',
 };
 
-export const deploymentPlannedActionLabel: Record<string, string> = {
-  create: 'Create',
-  replace: 'Replace',
-  block: 'Block',
-};
-
 export const deploymentConflictCategoryLabel: Record<string, string> = {
   expected_overwrite: 'Expected overwrite',
   ambiguous_overwrite: 'Ambiguous overwrite',
   destructive_file_directory: 'Destructive file vs directory',
-};
-
-export const deploymentStatusTone: Record<string, 'add' | 'blocked' | 'conflict' | 'replace'> = {
-  added: 'add',
-  replaced: 'replace',
-  blocked: 'blocked',
-  conflict: 'conflict',
-};
-
-export const deploymentRiskTone: Record<string, 'default' | 'info' | 'error'> = {
-  none: 'default',
-  info: 'info',
-  error: 'error',
 };
 
 export const DEPLOYMENT_TONE_CHIP_TONES = [
@@ -57,17 +45,53 @@ export const DEPLOYMENT_TONE_CHIP_TONES = [
 
 export type DeploymentToneChipTone = (typeof DEPLOYMENT_TONE_CHIP_TONES)[number];
 
-export const deploymentPlannedActionTone: Record<string, DeploymentToneChipTone> = {
+export const deploymentActionTone: Record<string, DeploymentToneChipTone> = {
   create: 'add',
   replace: 'replace',
   block: 'blocked',
+  conflict: 'conflict',
 };
 
-export const deploymentSummaryTone: Record<string, DeploymentToneChipTone> = {
-  added: 'add',
-  replaced: 'replace',
-  blocked: 'blocked',
-  conflict: 'conflict',
+export const deploymentRiskTone: Record<string, 'default' | 'info' | 'error'> = {
+  none: 'default',
+  info: 'info',
+  error: 'error',
+};
+
+const deploymentSummaryOnlyTone: Record<string, DeploymentToneChipTone> = {
   blocking: 'blocked',
   warnings: 'warning',
+};
+
+const resolveDeploymentActionKey = (status: string, plannedAction = '') => {
+  if (status === 'conflict') {
+    return 'conflict';
+  }
+
+  if (plannedAction !== '') {
+    return plannedAction;
+  }
+
+  return deploymentStatusToAction[status as DeploymentFileStatus] ?? status;
+};
+
+export const resolveDeploymentActionLabel = (status: string, plannedAction = '') => {
+  const key = resolveDeploymentActionKey(status, plannedAction);
+  return deploymentActionLabel[key] ?? key;
+};
+
+export const resolveDeploymentActionTone = (
+  status: string,
+  plannedAction = '',
+): DeploymentToneChipTone => {
+  const key = resolveDeploymentActionKey(status, plannedAction);
+  return deploymentActionTone[key] ?? 'default';
+};
+
+export const resolveDeploymentSummaryTone = (key: string): DeploymentToneChipTone => {
+  if (key in deploymentSummaryOnlyTone) {
+    return deploymentSummaryOnlyTone[key];
+  }
+
+  return resolveDeploymentActionTone(key);
 };

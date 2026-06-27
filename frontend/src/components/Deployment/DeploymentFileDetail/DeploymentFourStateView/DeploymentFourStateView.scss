@@ -18,12 +18,16 @@
   min-height: $input-height;
   align-items: center;
   padding: 0 $spacing-md;
-  color: $color-text-muted;
+  color: $color-text-subtle;
   background: $color-surface-elevated;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
   text-transform: uppercase;
+}
+
+.deployment-four-state-view-column-desired .deployment-four-state-view-column-header {
+  color: $color-tag-blue;
 }
 
 .deployment-four-state-view-column-body {
@@ -32,11 +36,19 @@
   flex: 1;
   flex-direction: column;
   padding: $spacing-md;
-  background: $color-surface;
 }
 
-.deployment-four-state-view-column-desired .deployment-four-state-view-column-body {
-  background: color-mix(in srgb, $color-tag-blue 8%, $color-surface);
+.deployment-four-state-view-column-body-empty {
+  background: $color-background;
+}
+
+.deployment-four-state-view-column-body-populated {
+  background: $color-background-elevated;
+}
+
+.deployment-four-state-view-column-desired .deployment-four-state-view-column-body-populated {
+  // background: color-mix(in srgb, $color-tag-blue 14%, $color-background-elevated);
+  background: $color-background-elevated;
 }
 
 .deployment-four-state-view-placeholder,

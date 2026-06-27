@@ -12,7 +12,6 @@ $deployment-review-pane-min-width: 20rem;
       $deployment-review-pane-min-width,
       1fr
     );
-  gap: $spacing-separator;
   overflow: hidden;
 }
 
@@ -21,12 +20,4 @@ $deployment-review-pane-min-width: 20rem;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-}
-
-.deployment-review-tree-pane {
-  background: $color-surface;
-}
-
-.deployment-review-detail-pane {
-  background: transparent;
 }

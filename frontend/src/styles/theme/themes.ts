@@ -1,14 +1,20 @@
 import type { ThemeDefinition, ThemeTokens } from './themeTypes';
 
 const createThemeTokens = (
-  tokens: Omit<ThemeTokens, 'backgroundRgb' | 'surfaceRgb' | 'dangerRgb'> & {
+  tokens: Omit<
+    ThemeTokens,
+    'backgroundRgb' | 'backgroundElevatedRgb' | 'surfaceRgb' | 'dangerRgb'
+  > & {
     backgroundRgb?: string;
+    backgroundElevatedRgb?: string;
     dangerRgb?: string;
     surfaceRgb?: string;
   },
 ): ThemeTokens => ({
   ...tokens,
   backgroundRgb: tokens.backgroundRgb ?? toRGBChannels(tokens.background),
+  backgroundElevatedRgb:
+    tokens.backgroundElevatedRgb ?? toRGBChannels(tokens.backgroundElevated),
   dangerRgb: tokens.dangerRgb ?? toRGBChannels(tokens.danger),
   surfaceRgb: tokens.surfaceRgb ?? toRGBChannels(tokens.surface),
 });
@@ -31,8 +37,9 @@ export const themes: ThemeDefinition[] = [
     id: 'ash',
     label: 'Ash',
     tokens: createThemeTokens({
-      background: '#252422ff',
-      surface: '#2f2d2aff',
+      background: '#222120ff',
+      backgroundElevated: '#2f2d2bff',
+      surface: '#272624ff',
       surfaceElevated: '#403d39ff',
       textMuted: '#8f897fff',
       textSubtle: '#ccc5b9ff',
@@ -60,8 +67,9 @@ export const themes: ThemeDefinition[] = [
     id: 'spruce',
     label: 'Spruce',
     tokens: createThemeTokens({
-      background: '#1e2421ff',
-      surface: '#27302cff',
+      background: '#1b211eff',
+      backgroundElevated: '#262f2bff',
+      surface: '#212824ff',
       surfaceElevated: '#33403bff',
       textMuted: '#95a39bff',
       textSubtle: '#c8d5ceff',
@@ -89,8 +97,9 @@ export const themes: ThemeDefinition[] = [
     id: 'midnight',
     label: 'Midnight',
     tokens: createThemeTokens({
-      background: '#151a24ff',
-      surface: '#1d2431ff',
+      background: '#121720ff',
+      backgroundElevated: '#1c2331ff',
+      surface: '#171c27ff',
       surfaceElevated: '#283244ff',
       textMuted: '#7f8ba3ff',
       textSubtle: '#bcc7deff',
@@ -118,8 +127,9 @@ export const themes: ThemeDefinition[] = [
     id: 'catppuccin-mocha',
     label: 'Catppuccin Mocha',
     tokens: createThemeTokens({
-      background: '#1e1e2eff',
-      surface: '#313244ff',
+      background: '#1b1b29ff',
+      backgroundElevated: '#2e2f41ff',
+      surface: '#242435ff',
       surfaceElevated: '#45475aff',
       textMuted: '#7f849cff',
       textSubtle: '#bac2deff',
@@ -147,8 +157,9 @@ export const themes: ThemeDefinition[] = [
     id: 'dracula',
     label: 'Dracula',
     tokens: createThemeTokens({
-      background: '#282a36ff',
-      surface: '#343746ff',
+      background: '#252731ff',
+      backgroundElevated: '#333644ff',
+      surface: '#2c2e3bff',
       surfaceElevated: '#44475aff',
       textMuted: '#8b8faeff',
       textSubtle: '#c5c8e8ff',
@@ -176,8 +187,9 @@ export const themes: ThemeDefinition[] = [
     id: 'nord',
     label: 'Nord',
     tokens: createThemeTokens({
-      background: '#2e3440ff',
-      surface: '#3b4252ff',
+      background: '#2b303bff',
+      backgroundElevated: '#383e4eff',
+      surface: '#323846ff',
       surfaceElevated: '#434c5eff',
       textMuted: '#8f9aaeff',
       textSubtle: '#d8dee9ff',

@@ -1,6 +1,8 @@
 export interface ThemeTokens {
   background: string;
   backgroundRgb: string;
+  backgroundElevated: string;
+  backgroundElevatedRgb: string;
   surface: string;
   surfaceRgb: string;
   surfaceElevated: string;
