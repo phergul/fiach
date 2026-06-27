@@ -1,0 +1,32 @@
+@use '@styles' as *;
+
+$deployment-review-pane-min-width: 20rem;
+
+.deployment-review {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax($deployment-review-pane-min-width, 1.1fr) minmax(
+      $deployment-review-pane-min-width,
+      1fr
+    );
+  gap: $spacing-separator;
+  overflow: hidden;
+}
+
+.deployment-review-tree-pane,
+.deployment-review-detail-pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.deployment-review-tree-pane {
+  background: $color-surface;
+}
+
+.deployment-review-detail-pane {
+  background: transparent;
+}

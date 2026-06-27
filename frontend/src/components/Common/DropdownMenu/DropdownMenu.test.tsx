@@ -27,4 +27,26 @@ describe('DropdownMenu', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'OptiScaler' }));
     expect(onSelect).toHaveBeenCalledOnce();
   });
+
+  it('renders checkbox options', () => {
+    const onToggle = vi.fn();
+    render(
+      <DropdownMenu
+        ariaLabel="Status filter"
+        isOpen
+        items={[
+          {
+            checked: true,
+            label: 'Added',
+            onSelect: onToggle,
+            type: 'checkbox',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: 'Added' })).toBeChecked();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Added' }));
+    expect(onToggle).toHaveBeenCalledOnce();
+  });
 });

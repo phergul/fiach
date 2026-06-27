@@ -31,16 +31,16 @@ func ToDTODeploymentSummary(summary review.Summary, previewHash string) dto.Depl
 	}
 
 	return dto.DeploymentSummary{
-		GameID:        summary.GameID,
-		ProfileID:     summary.ProfileID,
-		ProfileName:   summary.ProfileName,
-		AppliedAt:     nil,
-		PlanMode:      summary.PlanMode,
-		StatusCounts:  statusCounts,
-		CanApply:      summary.CanApply,
-		PreviewHash:   previewHash,
-		BlockingCount: summary.BlockingCount,
-		WarningCount:  summary.WarningCount,
+		GameID:          summary.GameID,
+		ProfileID:       summary.ProfileID,
+		ProfileName:     summary.ProfileName,
+		AppliedAt:       nil,
+		PlanMode:        summary.PlanMode,
+		StatusCounts:    statusCounts,
+		CanApply:        summary.CanApply,
+		PreviewHash:     previewHash,
+		BlockingCount:   summary.BlockingCount,
+		WarningCount:    summary.WarningCount,
 		PreviousApplyAt: nil,
 	}
 }

@@ -6,14 +6,14 @@ import (
 )
 
 type Summary struct {
-	GameID         int64
-	ProfileID      int64
-	ProfileName    string
-	PlanMode       string
-	StatusCounts   map[string]int
-	CanApply       bool
-	BlockingCount  int
-	WarningCount   int
+	GameID        int64
+	ProfileID     int64
+	ProfileName   string
+	PlanMode      string
+	StatusCounts  map[string]int
+	CanApply      bool
+	BlockingCount int
+	WarningCount  int
 }
 
 func BuildSummary(entry CachedPreview) Summary {

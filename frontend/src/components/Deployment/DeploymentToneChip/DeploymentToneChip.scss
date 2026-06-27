@@ -1,0 +1,41 @@
+@use '@styles' as *;
+
+.deployment-tone-chip {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  white-space: nowrap;
+}
+
+.deployment-tone-chip-add {
+  color: $color-success;
+  background: color-mix(in srgb, $color-success 12%, $color-surface-elevated);
+}
+
+.deployment-tone-chip-replace {
+  color: $color-tag-blue;
+  background: color-mix(in srgb, $color-tag-blue 12%, $color-surface-elevated);
+}
+
+.deployment-tone-chip-blocked,
+.deployment-tone-chip-error {
+  color: $color-danger;
+  background: color-mix(in srgb, $color-danger 12%, $color-surface-elevated);
+}
+
+.deployment-tone-chip-conflict,
+.deployment-tone-chip-warning {
+  color: $color-warning;
+  background: color-mix(in srgb, $color-warning 12%, $color-surface-elevated);
+}
+
+.deployment-tone-chip-info {
+  color: $color-info;
+  background: color-mix(in srgb, $color-info 12%, $color-surface-elevated);
+}

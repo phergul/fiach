@@ -17,15 +17,75 @@ $game-apply-toolbar-icon-size: 1.25rem;
   color: $color-text-primary;
 }
 
+.game-apply-deployment {
+  background: $color-background;
+}
+
+.game-apply-deployment .game-apply-toolbar,
+.game-apply-deployment .game-apply-page-header,
+.game-apply-deployment .deployment-summary,
+.game-apply-deployment .deployment-review-detail-pane {
+  background: $color-background;
+}
+
+.game-apply-deployment .deployment-review-tree-pane {
+  background: $color-surface;
+}
+
+.game-apply-deployment .game-apply-toolbar {
+  border-bottom: 0;
+}
+
+.game-apply-deployment .deployment-review {
+  margin-top: $spacing-separator;
+}
+
 .game-apply-toolbar {
   display: flex;
   flex: 0 0 auto;
   min-height: $game-apply-toolbar-height;
   align-items: center;
   justify-content: space-between;
+  gap: $spacing-md;
   padding: 0 $spacing-md;
   background: $color-background;
-  margin-bottom: $spacing-separator;
+  border-bottom: $app-border-width solid $color-border-subtle;
+}
+
+.game-apply-toolbar-start {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-apply-context {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-apply-context-title {
+  margin: 0;
+  overflow: hidden;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-apply-context-description {
+  margin: 0;
+  overflow: hidden;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-apply-back-link {
@@ -34,8 +94,9 @@ $game-apply-toolbar-icon-size: 1.25rem;
   align-items: center;
   gap: $spacing-xs;
   width: fit-content;
+  flex: 0 0 auto;
   color: $color-text-subtle;
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   line-height: $line-height-heading;
   text-decoration: none;
@@ -49,6 +110,7 @@ $game-apply-toolbar-icon-size: 1.25rem;
 .game-apply-toolbar-button {
   width: $game-apply-toolbar-button-width;
   min-height: $game-apply-toolbar-button-height;
+  flex: 0 0 auto;
   color: $color-text-primary;
   font-size: $font-size-base;
   font-weight: $font-weight-semibold;
@@ -107,13 +169,44 @@ $game-apply-toolbar-icon-size: 1.25rem;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $spacing-xs;
   padding: $spacing-xl;
   background: rgb(#{$color-background-rgb} / 40%);
   backdrop-filter: blur(12px);
 }
 
+.game-apply-page-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-md $spacing-md $spacing-sm;
+  background: $color-background;
+}
+
+.game-apply-page-header .game-apply-heading {
+  gap: $spacing-xs;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.game-apply-breadcrumbs {
+  min-height: 0;
+}
+
+.game-apply-page-header .game-apply-title {
+  font-size: $font-size-xl;
+}
+
+.game-apply-page-header .game-apply-description {
+  font-size: $font-size-sm;
+}
+
 .game-apply-title {
+  margin: 0;
   color: $color-text-primary;
   font-size: 2rem;
   font-weight: $font-weight-semibold;
@@ -121,7 +214,16 @@ $game-apply-toolbar-icon-size: 1.25rem;
 }
 
 .game-apply-description {
+  margin: 0;
   color: $color-text-subtle;
   font-size: $font-size-lg;
   line-height: $line-height-base;
+}
+
+.game-apply-with-backdrop .deployment-review {
+  min-height: 24rem;
+}
+
+.game-apply-deployment .deployment-review {
+  min-height: 0;
 }

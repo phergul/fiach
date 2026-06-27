@@ -2,6 +2,14 @@
 
 $dropdown-menu-width: 16rem;
 $dropdown-menu-icon-size: 1rem;
+$dropdown-menu-checkbox-size: 1.25rem;
+$dropdown-menu-checkbox-offset: 0.125rem;
+$dropdown-menu-checkbox-check-top: 0.1875rem;
+$dropdown-menu-checkbox-check-left: 0.375rem;
+$dropdown-menu-checkbox-check-width: 0.375rem;
+$dropdown-menu-checkbox-check-height: 0.625rem;
+$dropdown-menu-hidden-input-size: 0.0625rem;
+$dropdown-menu-hidden-input-offset: -0.0625rem;
 
 .dropdown-menu {
   position: absolute;
@@ -68,4 +76,72 @@ $dropdown-menu-icon-size: 1rem;
   flex: 0 0 $dropdown-menu-icon-size;
   color: $color-text-subtle;
   stroke-width: 1.8;
+}
+
+.dropdown-menu-checkbox-option {
+  display: grid;
+  grid-template-columns: $dropdown-menu-checkbox-size minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-sm;
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  background: $color-surface;
+  cursor: pointer;
+}
+
+.dropdown-menu-checkbox-option:hover {
+  background: $color-surface-elevated;
+}
+
+.dropdown-menu-checkbox-option input {
+  position: absolute;
+  width: $dropdown-menu-hidden-input-size;
+  height: $dropdown-menu-hidden-input-size;
+  margin: $dropdown-menu-hidden-input-offset;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.dropdown-menu-checkbox-control {
+  position: relative;
+  width: $dropdown-menu-checkbox-size;
+  height: $dropdown-menu-checkbox-size;
+  margin-top: $dropdown-menu-checkbox-offset;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: 0;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
+}
+
+.dropdown-menu-checkbox-control::after {
+  position: absolute;
+  top: $dropdown-menu-checkbox-check-top;
+  left: $dropdown-menu-checkbox-check-left;
+  width: $dropdown-menu-checkbox-check-width;
+  height: $dropdown-menu-checkbox-check-height;
+  border-right: $app-border-width solid $color-background;
+  border-bottom: $app-border-width solid $color-background;
+  content: '';
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+.dropdown-menu-checkbox-option input:checked + .dropdown-menu-checkbox-control {
+  background: $color-success;
+  border-color: $color-success;
+}
+
+.dropdown-menu-checkbox-option input:checked + .dropdown-menu-checkbox-control::after {
+  opacity: 1;
+}
+
+.dropdown-menu-checkbox-option:has(input:focus-visible) .dropdown-menu-checkbox-control {
+  border-color: $color-border-strong;
+}
+
+.dropdown-menu-checkbox-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
 }

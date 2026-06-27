@@ -1,0 +1,63 @@
+@use '@styles' as *;
+
+.deployment-writer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deployment-writer-stack-empty {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-writer-stack-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  background: $color-surface;
+}
+
+.deployment-writer-stack-item-winner {
+  background: color-mix(in srgb, $color-accent 16%, $color-surface);
+}
+
+.deployment-writer-stack-item-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.deployment-writer-stack-order {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  font-family: $font-family-monospace;
+}
+
+.deployment-writer-stack-name {
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.deployment-writer-stack-badge {
+  padding: $spacing-xs $spacing-sm;
+  background: rgb(#{$color-accent} / 20%);
+  color: $color-accent;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.deployment-writer-stack-meta {
+  margin: 0;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}

@@ -1,0 +1,78 @@
+@use '@styles' as *;
+
+.deployment-four-state-view {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $spacing-separator;
+}
+
+.deployment-four-state-view-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.deployment-four-state-view-column-header {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  padding: 0 $spacing-md;
+  color: $color-text-muted;
+  background: $color-surface-elevated;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-transform: uppercase;
+}
+
+.deployment-four-state-view-column-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: $spacing-md;
+  background: $color-surface;
+}
+
+.deployment-four-state-view-column-desired .deployment-four-state-view-column-body {
+  background: color-mix(in srgb, $color-tag-blue 8%, $color-surface);
+}
+
+.deployment-four-state-view-placeholder,
+.deployment-four-state-view-empty {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-four-state-view-details {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  margin: 0;
+}
+
+.deployment-four-state-view-detail {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.deployment-four-state-view-detail dt {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  line-height: $line-height-base;
+}
+
+.deployment-four-state-view-detail dd {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-four-state-view-hash {
+  font-family: $font-family-monospace;
+}

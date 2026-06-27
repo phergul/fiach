@@ -1,0 +1,113 @@
+@use '@styles' as *;
+
+$deployment-file-tree-node-icon-size: 1rem;
+$deployment-file-tree-node-toggle-size: 1.75rem;
+$deployment-file-tree-node-meta-width: 5.5rem;
+$deployment-file-tree-node-row-height: 2rem;
+
+.deployment-file-tree-node-row {
+  display: flex;
+  width: 100%;
+  min-height: $deployment-file-tree-node-row-height;
+  align-items: center;
+  gap: $spacing-xs;
+  padding-right: $spacing-sm;
+  padding-left: var(--deployment-file-tree-row-padding, 0);
+  background: transparent;
+  cursor: pointer;
+}
+
+.deployment-file-tree-node-toggle {
+  display: inline-flex;
+  width: $deployment-file-tree-node-toggle-size;
+  height: $deployment-file-tree-node-toggle-size;
+  flex: 0 0 $deployment-file-tree-node-toggle-size;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: $color-text-subtle;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.deployment-file-tree-node-toggle:hover:not(:disabled),
+.deployment-file-tree-node-toggle:focus-visible:not(:disabled) {
+  color: $color-text-primary;
+  background: transparent;
+}
+
+.deployment-file-tree-node-toggle-icon {
+  display: block;
+  width: $deployment-file-tree-node-icon-size;
+  height: $deployment-file-tree-node-icon-size;
+  flex: 0 0 $deployment-file-tree-node-icon-size;
+  stroke-width: 2;
+  transition: transform $transition-duration-fast $transition-easing-standard;
+}
+
+.deployment-file-tree-node-toggle-icon-expanded {
+  transform: rotate(90deg);
+}
+
+.deployment-file-tree-node-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
+}
+
+.deployment-file-tree-node-icon {
+  width: $deployment-file-tree-node-icon-size;
+  height: $deployment-file-tree-node-icon-size;
+  flex: 0 0 $deployment-file-tree-node-icon-size;
+  color: $color-text-muted;
+  stroke-width: 1.8;
+}
+
+.deployment-file-tree-node-name {
+  overflow: hidden;
+  flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deployment-file-tree-node-name-dir {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.deployment-file-tree-node-name-file {
+  color: $color-text-subtle;
+}
+
+.deployment-file-tree-node-meta {
+  display: flex;
+  width: $deployment-file-tree-node-meta-width;
+  flex: 0 0 $deployment-file-tree-node-meta-width;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: $spacing-xs;
+}
+
+.deployment-file-tree-node-meta-label {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  line-height: $line-height-heading;
+  text-align: right;
+}
+
+.deployment-file-tree-node-message {
+  margin: 0;
+  padding: 0 $spacing-sm $spacing-xs
+    calc(var(--deployment-file-tree-row-padding, 0rem) + $deployment-file-tree-node-toggle-size);
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+}
+
+.deployment-file-tree-node-message-error {
+  color: $color-danger;
+}

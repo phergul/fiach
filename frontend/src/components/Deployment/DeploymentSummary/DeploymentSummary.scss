@@ -1,0 +1,48 @@
+@use '@styles' as *;
+
+.deployment-summary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: transparent;
+}
+
+.deployment-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 0;
+  background: transparent;
+}
+
+.deployment-summary-label {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.deployment-summary-value {
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  font-variant-numeric: tabular-nums;
+}
+
+.deployment-summary-value-ready {
+  color: $color-success;
+}
+
+.deployment-summary-value-blocked {
+  color: $color-danger;
+}
+
+.deployment-summary-item-can-apply {
+  margin-left: auto;
+}

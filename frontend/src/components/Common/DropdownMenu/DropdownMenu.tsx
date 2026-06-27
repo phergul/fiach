@@ -6,11 +6,13 @@ import { ChevronRight, type LucideProps } from 'lucide-react';
 import './DropdownMenu.scss';
 
 export interface DropdownMenuItem {
+  checked?: boolean;
   children?: DropdownMenuItem[];
   disabled?: boolean;
   icon?: ComponentType<LucideProps>;
   label: string;
   onSelect?: () => void;
+  type?: 'action' | 'checkbox';
 }
 
 interface DropdownMenuProps {
@@ -36,6 +38,21 @@ export const DropdownMenu = ({ align = 'right', ariaLabel, isOpen, items }: Drop
   return (
     <div className={`dropdown-menu dropdown-menu-${align}`} role="menu" aria-label={ariaLabel}>
       {items.map((item) => {
+        if (item.type === 'checkbox') {
+          return (
+            <label className="dropdown-menu-checkbox-option" key={item.label}>
+              <input
+                checked={item.checked ?? false}
+                disabled={item.disabled}
+                onChange={() => item.onSelect?.()}
+                type="checkbox"
+              />
+              <span className="dropdown-menu-checkbox-control" aria-hidden="true" />
+              <span className="dropdown-menu-item-label">{item.label}</span>
+            </label>
+          );
+        }
+
         const Icon = item.icon;
         const hasSubmenu = item.children !== undefined && item.children.length > 0;
         const isSubmenuOpen = hasSubmenu && openSubmenuLabel === item.label;

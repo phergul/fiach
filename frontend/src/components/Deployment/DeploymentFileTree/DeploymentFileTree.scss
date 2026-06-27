@@ -1,0 +1,43 @@
+@use '@styles' as *;
+
+$deployment-file-tree-indent-width: 0.875rem;
+
+.deployment-file-tree {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: $color-surface;
+}
+
+.deployment-file-tree-body {
+  flex: 1;
+  padding: $spacing-xs 0 $spacing-sm;
+  overflow: auto;
+}
+
+.deployment-file-tree-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deployment-file-tree-item {
+  width: 100%;
+  list-style: none;
+}
+
+.deployment-file-tree-item-selected > .deployment-file-tree-node > .deployment-file-tree-node-row,
+.deployment-file-tree-node-row:hover,
+.deployment-file-tree-node-row:focus-visible {
+  background: $color-surface-elevated;
+}
+
+.deployment-file-tree-empty {
+  margin: 0;
+  padding: $spacing-lg;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+}

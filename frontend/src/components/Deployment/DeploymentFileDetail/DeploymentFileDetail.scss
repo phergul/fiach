@@ -1,0 +1,109 @@
+@use '@styles' as *;
+
+.deployment-file-detail {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
+  overflow: auto;
+  background: transparent;
+}
+
+.deployment-file-detail-empty {
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  padding: $spacing-xl;
+}
+
+.deployment-file-detail-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $color-text-muted;
+  stroke-width: 1.6;
+}
+
+.deployment-file-detail-empty-copy {
+  align-items: center;
+  text-align: center;
+}
+
+.deployment-file-detail-placeholder,
+.deployment-file-detail-error {
+  margin: 0;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+}
+
+.deployment-file-detail-error {
+  color: $color-danger;
+}
+
+.deployment-file-detail-retry {
+  min-height: $table-control-height;
+  padding: 0 $spacing-md;
+}
+
+.deployment-file-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+}
+
+.deployment-file-detail-header-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.deployment-file-detail-title {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  word-break: break-word;
+}
+
+.deployment-file-detail-path {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+  word-break: break-word;
+}
+
+.deployment-file-detail-badges {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.deployment-file-detail-category,
+.deployment-file-detail-explanation {
+  margin: 0;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-file-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.deployment-file-detail-section-title {
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}

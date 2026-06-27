@@ -1,28 +1,22 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
-import { ApplyProfileOperationPlan } from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
 import {
-  OperationType,
-  PlanIssueSeverity,
-  type ApplyOperationPlanResult,
-  type OperationPlan,
-} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+  ApplyProfileOperationPlan,
+  BuildProfileOperationPlan,
+} from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
+import type { ApplyOperationPlanResult, OperationPlan } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
-import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
+import { DeploymentReview } from '@components/Deployment/DeploymentReview/DeploymentReview';
+import { DeploymentSummaryBar } from '@components/Deployment/DeploymentSummary/DeploymentSummary';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
-import { GameApplyReview } from '@components/Games/Apply/GameApplyReview/GameApplyReview';
-import {
-  GameApplySummary,
-  type GameApplySummaryItem,
-} from '@components/Games/Apply/GameApplySummary/GameApplySummary';
 import {
   useAppliedProfile,
+  useDeploymentReviewPreview,
   useGameArtwork,
   useGameProfiles,
-  useProfileOperationPlan,
   useStoredGames,
 } from '@hooks';
 
@@ -54,46 +48,15 @@ const parseProfileID = (profileID: string | undefined) => {
   return parsedProfileID;
 };
 
-const countOperations = (plan: OperationPlan, type: OperationType) => {
-  return plan.Operations.filter((operation) => operation.Type === type).length;
-};
-
-const countIssues = (plan: OperationPlan, severity: PlanIssueSeverity) => {
-  return plan.Issues.filter((issue) => issue.Severity === severity).length;
-};
-
-const buildSummaryItems = (plan: OperationPlan | null): GameApplySummaryItem[] => {
-  return [
-    {
-      label: 'Files to add',
-      value: plan === null ? 0 : countOperations(plan, OperationType.OperationTypeCopy),
-    },
-    {
-      label: 'Files to replace',
-      value: plan === null ? 0 : countOperations(plan, OperationType.OperationTypeReplace),
-    },
-    {
-      label: 'Folders to create',
-      value: plan === null ? 0 : countOperations(plan, OperationType.OperationTypeCreateDirectory),
-    },
-    {
-      label: 'Blocking issues',
-      value: plan === null ? 0 : countIssues(plan, PlanIssueSeverity.PlanIssueSeverityError),
-    },
-    {
-      label: 'Warnings',
-      value: plan === null ? 0 : countIssues(plan, PlanIssueSeverity.PlanIssueSeverityWarning),
-    },
-  ];
-};
-
 const getApplyDisabledTitle = (
   appliedProfileName: string | null,
+  canApply: boolean,
   isAppliedProfileLoading: boolean,
   appliedProfileLoadError: string | null,
-  plan: OperationPlan | null,
-  isPlanLoading: boolean,
+  isPreviewLoading: boolean,
   isApplyPending: boolean,
+  isPlanLoading: boolean,
+  previewAvailable: boolean,
 ) => {
   if (isApplyPending) {
     return 'Apply is already in progress.';
@@ -107,14 +70,17 @@ const getApplyDisabledTitle = (
   if (appliedProfileLoadError !== null) {
     return 'Applied profile state could not be loaded.';
   }
-  if (isPlanLoading) {
-    return 'Operation plan is loading.';
+  if (isPreviewLoading) {
+    return 'Deployment preview is loading.';
   }
-  if (plan !== null && !plan.CanApply) {
+  if (!previewAvailable) {
+    return 'Deployment preview is not ready yet.';
+  }
+  if (!canApply) {
     return 'Resolve blocking issues before applying this profile.';
   }
-  if (plan === null) {
-    return 'Operation plan is not ready yet.';
+  if (isPlanLoading) {
+    return 'Preparing apply plan.';
   }
 
   return 'Confirm before applying this profile.';
@@ -144,6 +110,7 @@ export const GameApply = () => {
   const { addErrorToast, addToast } = useToast();
   const [isApplyConfirmOpen, setIsApplyConfirmOpen] = useState(false);
   const [isApplyPending, setIsApplyPending] = useState(false);
+  const [isPlanLoading, setIsPlanLoading] = useState(false);
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const parsedProfileID = parseProfileID(profileId);
@@ -156,45 +123,52 @@ export const GameApply = () => {
       ? null
       : (profileManager.profiles.find((profile) => profile.ID === parsedProfileID) ?? null);
   const {
-    isLoading: isPlanLoading,
-    loadError: planLoadError,
-    plan,
-    refreshPlan,
-  } = useProfileOperationPlan(selectedProfile?.ID ?? null);
+    isLoading: isPreviewLoading,
+    loadError: previewLoadError,
+    previewHash,
+    refreshPreview,
+    rootChildren,
+    summary,
+  } = useDeploymentReviewPreview(selectedProfile?.ID ?? null);
   const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
     useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
-  const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
-    useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'logo');
   const isWaitingForGame = (isLoading || isScanning) && game === undefined;
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
-  const summaryItems = buildSummaryItems(plan);
   const appliedProfileName = appliedProfileManager.appliedProfile?.ProfileName ?? null;
+  const previewAvailable = summary !== null && previewHash !== '';
   const canStartApply =
     selectedProfile !== null &&
     appliedProfileName === null &&
     !appliedProfileManager.isLoading &&
     appliedProfileManager.loadError === null &&
-    plan !== null &&
-    plan.CanApply &&
-    !isPlanLoading &&
-    !isApplyPending;
+    previewAvailable &&
+    summary.CanApply &&
+    !isPreviewLoading &&
+    !isApplyPending &&
+    !isPlanLoading;
   const applyTitle =
     selectedProfile === null
       ? 'Select a profile before applying.'
       : getApplyDisabledTitle(
           appliedProfileName,
+          summary?.CanApply ?? false,
           appliedProfileManager.isLoading,
           appliedProfileManager.loadError,
-          plan,
-          isPlanLoading,
+          isPreviewLoading,
           isApplyPending,
+          isPlanLoading,
+          previewAvailable,
         );
   const confirmMessage =
-    selectedProfile === null || plan === null
-      ? 'Review the operation plan before applying this profile.'
+    selectedProfile === null
+      ? 'Review the deployment preview before applying this profile.'
       : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
+
+  const handlePreviewRefreshNeeded = useCallback(() => {
+    refreshPreview().catch(() => undefined);
+  }, [refreshPreview]);
 
   const openApplyConfirm = () => {
     if (canStartApply) {
@@ -203,13 +177,30 @@ export const GameApply = () => {
   };
 
   const closeApplyConfirm = () => {
-    if (!isApplyPending) {
+    if (!isApplyPending && !isPlanLoading) {
       setIsApplyConfirmOpen(false);
     }
   };
 
   const confirmApply = async () => {
-    if (selectedProfile === null || plan === null || isApplyPending) {
+    if (selectedProfile === null || isApplyPending || isPlanLoading) {
+      return;
+    }
+
+    setIsPlanLoading(true);
+
+    let plan: OperationPlan;
+    try {
+      plan = await BuildProfileOperationPlan(selectedProfile.ID);
+    } catch (error) {
+      setIsPlanLoading(false);
+      addErrorToast(error);
+      return;
+    }
+
+    if (!plan.CanApply) {
+      setIsPlanLoading(false);
+      addErrorToast(new Error('The apply plan has blocking issues. Refresh the preview and try again.'));
       return;
     }
 
@@ -235,19 +226,49 @@ export const GameApply = () => {
       addErrorToast(error);
     } finally {
       setIsApplyPending(false);
+      setIsPlanLoading(false);
     }
   };
 
+  const showDeploymentReview =
+    selectedProfile !== null &&
+    !isPreviewLoading &&
+    previewLoadError === null &&
+    previewHash !== '';
+
+  const hasBackdrop = heroArtworkSource !== '' && !showDeploymentReview;
+
   return (
     <section
-      className={heroArtworkSource === '' ? 'game-apply' : 'game-apply game-apply-with-backdrop'}
+      className={
+        showDeploymentReview
+          ? 'game-apply game-apply-deployment'
+          : hasBackdrop
+            ? 'game-apply game-apply-with-backdrop'
+            : 'game-apply'
+      }
       aria-label="Apply profile"
     >
       <div className="game-apply-toolbar">
-        <Link className="game-apply-back-link" to={gameDetailsPath}>
-          <ArrowLeft className="game-apply-toolbar-icon" aria-hidden="true" />
-          Back
-        </Link>
+        <div className="game-apply-toolbar-start">
+          <Link className="game-apply-back-link" to={gameDetailsPath}>
+            <ArrowLeft className="game-apply-toolbar-icon" aria-hidden="true" />
+            Back
+          </Link>
+
+          {game !== undefined && selectedProfile !== null && !showDeploymentReview && (
+            <div className="game-apply-context">
+              <p className="game-apply-context-title">
+                {game.Name} · Apply {selectedProfile.Name}
+              </p>
+              <p className="game-apply-context-description">
+                {appliedProfileName === null
+                  ? 'Review planned file changes in the deployment tree.'
+                  : `Restore vanilla before applying. ${appliedProfileName} is currently applied.`}
+              </p>
+            </div>
+          )}
+        </div>
 
         <button
           className="game-apply-toolbar-button"
@@ -257,7 +278,7 @@ export const GameApply = () => {
           type="button"
         >
           <CheckCircle2 className="game-apply-toolbar-icon" aria-hidden="true" />
-          <span>{isApplyPending ? 'Applying' : 'Apply'}</span>
+          <span>{isApplyPending || isPlanLoading ? 'Applying' : 'Apply'}</span>
         </button>
       </div>
 
@@ -265,7 +286,7 @@ export const GameApply = () => {
         cancelLabel="Cancel"
         confirmLabel="Confirm apply"
         confirmTone="default"
-        isBusy={isApplyPending}
+        isBusy={isApplyPending || isPlanLoading}
         isOpen={isApplyConfirmOpen}
         message={confirmMessage}
         onCancel={closeApplyConfirm}
@@ -273,7 +294,7 @@ export const GameApply = () => {
         title="Confirm apply"
       />
 
-      {heroArtworkSource !== '' && (
+      {hasBackdrop && (
         <div className="game-apply-backdrop" aria-hidden="true">
           <img
             className="game-apply-backdrop-image"
@@ -305,24 +326,34 @@ export const GameApply = () => {
 
       {game !== undefined && (
         <>
-          <GameDetailsHeader
-            game={game}
-            logoArtworkSource={logoArtworkSource}
-            onLogoArtworkError={handleLogoArtworkError}
-          />
+          {!showDeploymentReview && (
+            <div className="game-apply-heading">
+              <h2 className="game-apply-title">
+                {selectedProfile === null ? 'Apply profile' : `Apply ${selectedProfile.Name}`}
+              </h2>
+              <p className="game-apply-description">
+                {appliedProfileName === null
+                  ? 'Review the virtual file tree and planned operations before applying.'
+                  : `Restore vanilla before applying another profile. ${appliedProfileName} is currently applied.`}
+              </p>
+            </div>
+          )}
 
-          <div className="game-apply-heading">
-            <h2 className="game-apply-title">
-              {selectedProfile === null ? 'Apply profile' : `Apply ${selectedProfile.Name}`}
-            </h2>
-            <p className="game-apply-description">
-              {appliedProfileName === null
-                ? 'Review planned file and folder changes before applying.'
-                : `Restore vanilla before applying another profile. ${appliedProfileName} is currently applied.`}
-            </p>
-          </div>
+          {showDeploymentReview && (
+            <header className="game-apply-page-header">
+              <div className="game-apply-breadcrumbs" aria-hidden="true" />
+              <div className="game-apply-heading">
+                <h2 className="game-apply-title">Deployment preview</h2>
+                <p className="game-apply-description">
+                  {appliedProfileName === null
+                    ? 'Review planned file changes in the deployment tree.'
+                    : `Restore vanilla before applying. ${appliedProfileName} is currently applied.`}
+                </p>
+              </div>
+            </header>
+          )}
 
-          <GameApplySummary items={summaryItems} />
+          {showDeploymentReview && summary !== null && <DeploymentSummaryBar summary={summary} />}
 
           {profileManager.isLoading && <GameDetailsState title="Loading selected profile." />}
 
@@ -339,7 +370,7 @@ export const GameApply = () => {
             profileManager.loadError === null &&
             parsedProfileID === null && (
               <GameDetailsState
-                message="Choose a profile from the game details screen before opening the apply preview."
+                message="Choose a profile from the game details screen before opening the deployment review."
                 title="No selected profile."
               />
             )}
@@ -354,29 +385,28 @@ export const GameApply = () => {
               />
             )}
 
-          {selectedProfile !== null && isPlanLoading && (
-            <GameDetailsState title="Building operation plan." />
+          {selectedProfile !== null && isPreviewLoading && (
+            <GameDetailsState title="Building deployment preview." />
           )}
 
-          {selectedProfile !== null && !isPlanLoading && planLoadError !== null && (
+          {selectedProfile !== null && !isPreviewLoading && previewLoadError !== null && (
             <GameDetailsState
               actionLabel="Retry"
-              message={planLoadError}
+              message={previewLoadError}
               onAction={() => {
-                refreshPlan().catch(() => undefined);
+                refreshPreview().catch(() => undefined);
               }}
-              title="Could not build operation plan."
+              title="Could not build deployment preview."
             />
           )}
 
-          {selectedProfile !== null &&
-            !isPlanLoading &&
-            planLoadError === null &&
-            plan !== null && (
-              <GameApplyReview
+          {showDeploymentReview && (
+              <DeploymentReview
                 gameInstallPath={game.InstallPath}
                 gameName={game.Name}
-                plan={plan}
+                onPreviewRefreshNeeded={handlePreviewRefreshNeeded}
+                previewHash={previewHash}
+                rootChildren={rootChildren}
               />
             )}
         </>

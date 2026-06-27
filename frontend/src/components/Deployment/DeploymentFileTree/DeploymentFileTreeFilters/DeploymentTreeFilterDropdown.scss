@@ -1,0 +1,40 @@
+@use '@styles' as *;
+
+$deployment-tree-filter-dropdown-height: 2.5rem;
+$deployment-tree-filter-dropdown-icon-size: 1rem;
+
+.deployment-tree-filter-dropdown {
+  min-width: 0;
+}
+
+.deployment-tree-filter-dropdown-control {
+  position: relative;
+}
+
+.deployment-tree-filter-dropdown-button {
+  display: inline-flex;
+  min-height: $deployment-tree-filter-dropdown-height;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 0 $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface;
+  white-space: nowrap;
+}
+
+.deployment-tree-filter-dropdown-button-active {
+  color: $color-success;
+  background: $color-surface-elevated;
+}
+
+.deployment-tree-filter-dropdown-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.deployment-tree-filter-dropdown-chevron {
+  width: $deployment-tree-filter-dropdown-icon-size;
+  height: $deployment-tree-filter-dropdown-icon-size;
+  flex: 0 0 $deployment-tree-filter-dropdown-icon-size;
+  color: $color-text-muted;
+  stroke-width: 1.8;
+}

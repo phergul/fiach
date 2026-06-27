@@ -1,0 +1,64 @@
+@use '@styles' as *;
+
+$deployment-file-tree-filters-search-height: 2.5rem;
+$deployment-file-tree-filters-icon-size: 1rem;
+
+.deployment-file-tree-filters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-surface-elevated;
+}
+
+.deployment-file-tree-filters-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.deployment-file-tree-filters-search {
+  position: relative;
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+.deployment-file-tree-filters-search-icon {
+  position: absolute;
+  top: 50%;
+  left: $spacing-md;
+  width: $deployment-file-tree-filters-icon-size;
+  height: $deployment-file-tree-filters-icon-size;
+  color: $color-text-muted;
+  transform: translateY(-50%);
+  pointer-events: none;
+  stroke-width: 1.8;
+}
+
+.deployment-file-tree-filters-input {
+  width: 100%;
+  height: $deployment-file-tree-filters-search-height;
+  padding: 0 $spacing-md 0 calc($spacing-xl + $spacing-xs);
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.deployment-file-tree-filters-dropdowns {
+  display: flex;
+  flex: 0 0 auto;
+  gap: $spacing-sm;
+}
+
+.deployment-file-tree-filters-status {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  line-height: $line-height-base;
+}
+
+.deployment-file-tree-filters-status-warning {
+  color: $color-warning;
+}
