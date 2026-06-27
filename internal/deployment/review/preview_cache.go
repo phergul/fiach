@@ -13,8 +13,9 @@ type CachedPreview struct {
 	ProfileID   int64
 	GameID      int64
 	ProfileName string
-	Plan        planner.FirstApplyPlan
+	Plan        planner.DeploymentPlan
 	Desired     deployment.DesiredState
+	AppliedAt   *time.Time
 	BuiltAt     time.Time
 }
 

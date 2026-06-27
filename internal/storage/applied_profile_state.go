@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
@@ -31,6 +32,8 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 			return err
 		}
 
+		appliedAt := FormatAppliedTimestamp(time.Now().UTC())
+
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO applied_profile_states (
 				game_id,
@@ -39,9 +42,10 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 				profile_snapshot_json,
 				profile_snapshot_hash,
 				profile_composition_snapshot_json,
-				profile_composition_snapshot_hash
+				profile_composition_snapshot_hash,
+				applied_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(game_id) DO UPDATE SET
 				profile_id = excluded.profile_id,
 				manifest_json = excluded.manifest_json,
@@ -49,8 +53,8 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 				profile_snapshot_hash = excluded.profile_snapshot_hash,
 				profile_composition_snapshot_json = excluded.profile_composition_snapshot_json,
 				profile_composition_snapshot_hash = excluded.profile_composition_snapshot_hash,
-				applied_at = CURRENT_TIMESTAMP
-		`, input.GameID, input.ProfileID, strings.TrimSpace(input.ManifestJSON), strings.TrimSpace(input.ProfileSnapshotJSON), strings.TrimSpace(input.ProfileSnapshotHash), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotJSON)), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotHash))); err != nil {
+				applied_at = excluded.applied_at
+		`, input.GameID, input.ProfileID, strings.TrimSpace(input.ManifestJSON), strings.TrimSpace(input.ProfileSnapshotJSON), strings.TrimSpace(input.ProfileSnapshotHash), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotJSON)), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotHash)), appliedAt); err != nil {
 			return err
 		}
 

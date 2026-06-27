@@ -1,8 +1,9 @@
 package review
 
 import (
+	"time"
+
 	"github.com/phergul/fiach/internal/deployment"
-	"github.com/phergul/fiach/internal/deployment/planner"
 )
 
 type Summary struct {
@@ -14,6 +15,7 @@ type Summary struct {
 	CanApply      bool
 	BlockingCount int
 	WarningCount  int
+	AppliedAt     *time.Time
 }
 
 func BuildSummary(entry CachedPreview) Summary {
@@ -26,26 +28,31 @@ func BuildSummary(entry CachedPreview) Summary {
 		GameID:        entry.GameID,
 		ProfileID:     entry.ProfileID,
 		ProfileName:   entry.ProfileName,
-		PlanMode:      string(planner.PlanModeFirstApply),
+		PlanMode:      string(entry.Plan.Mode),
 		StatusCounts:  statusCounts,
 		CanApply:      entry.Plan.CanApply(),
 		BlockingCount: entry.Plan.BlockingCount(),
 		WarningCount:  entry.Plan.WarningCount(),
+		AppliedAt:     entry.AppliedAt,
 	}
 }
 
 func StatusPriority(status deployment.FileStatus) int {
 	switch status {
 	case deployment.FileStatusBlocked:
+		return 6
+	case deployment.FileStatusDrifted:
 		return 5
 	case deployment.FileStatusConflict:
 		return 4
-	case deployment.FileStatusReplaced:
+	case deployment.FileStatusExternal:
 		return 3
-	case deployment.FileStatusAdded:
+	case deployment.FileStatusReplaced:
 		return 2
-	default:
+	case deployment.FileStatusAdded:
 		return 1
+	default:
+		return 0
 	}
 }
 

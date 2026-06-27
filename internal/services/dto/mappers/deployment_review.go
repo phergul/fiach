@@ -34,14 +34,14 @@ func ToDTODeploymentSummary(summary review.Summary, previewHash string) dto.Depl
 		GameID:          summary.GameID,
 		ProfileID:       summary.ProfileID,
 		ProfileName:     summary.ProfileName,
-		AppliedAt:       nil,
+		AppliedAt:       summary.AppliedAt,
 		PlanMode:        summary.PlanMode,
 		StatusCounts:    statusCounts,
 		CanApply:        summary.CanApply,
 		PreviewHash:     previewHash,
 		BlockingCount:   summary.BlockingCount,
 		WarningCount:    summary.WarningCount,
-		PreviousApplyAt: nil,
+		PreviousApplyAt: summary.AppliedAt,
 	}
 }
 

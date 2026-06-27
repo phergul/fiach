@@ -2,12 +2,20 @@ package services
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
+	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
+
+func newDeploymentReviewTestService(store *storage.Store) *DeploymentReviewService {
+	profileService := NewProfileService(store, testLogger())
+	return NewDeploymentReviewService(store, profileService, testLogger())
+}
 
 func TestDeploymentReviewServiceBuildsPreview(t *testing.T) {
 	t.Parallel()
@@ -26,7 +34,7 @@ func TestDeploymentReviewServiceBuildsPreview(t *testing.T) {
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
 	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
 
-	service := NewDeploymentReviewService(store, testLogger())
+	service := newDeploymentReviewTestService(store)
 	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
 	if err != nil {
 		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
@@ -78,7 +86,7 @@ func TestDeploymentReviewServiceBuildsPreview(t *testing.T) {
 	}
 }
 
-func TestDeploymentReviewServiceBlocksWhenProfileAlreadyApplied(t *testing.T) {
+func TestDeploymentReviewServiceSameProfileIncrementalPreviewDetectsDrift(t *testing.T) {
 	t.Parallel()
 
 	store := openMigratedStore(t)
@@ -87,10 +95,94 @@ func TestDeploymentReviewServiceBlocksWhenProfileAlreadyApplied(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"Data/SkyUI.esp": "plugin",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
 
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Mods/SkyUI", nil)
+
+	targetPath := filepath.Join(gameRoot, "Mods", "SkyUI", "Data", "SkyUI.esp")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("external-edit"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	appliedSHA256 := "0000000000000000000000000000000000000000000000000000000000000000"
+	appliedSize := int64(1)
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:              gameID,
 		ProfileID:           profileID,
+		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{"Mods/SkyUI/Data/SkyUI.esp":{"gameRelativePath":"Mods/SkyUI/Data/SkyUI.esp","outputKind":"copied","appliedExists":true,"appliedSHA256":"0000000000000000000000000000000000000000000000000000000000000000","appliedSizeBytes":1}}}`,
+		ProfileSnapshotJSON: `{"version":2}`,
+		ProfileSnapshotHash: "snapshot",
+		FileStates: []dbtypes.AppliedFileStateRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Mods/SkyUI/Data/SkyUI.esp",
+				ProfileID:        profileID,
+				AppliedExists:    true,
+				AppliedSHA256:    &appliedSHA256,
+				AppliedSizeBytes: &appliedSize,
+				OutputKind:       "copied",
+				LastAppliedAt:    "2026-06-27T00:00:00Z",
+			},
+		},
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	if preview.Summary.PlanMode != "incremental" {
+		t.Fatalf("BuildDeploymentReviewPreview() plan mode = %q, want incremental", preview.Summary.PlanMode)
+	}
+	if preview.Summary.CanApply {
+		t.Fatal("BuildDeploymentReviewPreview() CanApply = true, want false for incremental preview")
+	}
+	if preview.Summary.StatusCounts["drifted"] != 1 {
+		t.Fatalf("BuildDeploymentReviewPreview() status counts = %+v, want one drifted path", preview.Summary.StatusCounts)
+	}
+	if preview.Summary.AppliedAt == nil {
+		t.Fatal("BuildDeploymentReviewPreview() AppliedAt = nil, want populated applied timestamp")
+	}
+
+	detail, err := service.GetDeploymentFileDetail(context.Background(), preview.PreviewHash, "Mods/SkyUI/Data/SkyUI.esp")
+	if err != nil {
+		t.Fatalf("GetDeploymentFileDetail() error = %v", err)
+	}
+	if detail.PlannedAction != "require_decision" || detail.FileStatus != "drifted" {
+		t.Fatalf("GetDeploymentFileDetail() = %+v, want drifted require_decision", detail)
+	}
+	if detail.States.Applied == nil || !detail.States.Applied.Exists {
+		t.Fatalf("GetDeploymentFileDetail() applied = %+v, want last-applied state", detail.States.Applied)
+	}
+	if detail.States.Current == nil || !detail.States.Current.Exists {
+		t.Fatalf("GetDeploymentFileDetail() current = %+v, want current disk state", detail.States.Current)
+	}
+}
+
+func TestDeploymentReviewServiceBlocksDifferentAppliedProfile(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	appliedProfileID := insertServiceProfileTestProfile(t, store, gameID, "Applied")
+	otherProfileID := insertServiceProfileTestProfile(t, store, gameID, "Other")
+
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           appliedProfileID,
 		ManifestJSON:        `{"version":1}`,
 		ProfileSnapshotJSON: `{"version":1}`,
 		ProfileSnapshotHash: "snapshot",
@@ -98,10 +190,10 @@ func TestDeploymentReviewServiceBlocksWhenProfileAlreadyApplied(t *testing.T) {
 		t.Fatalf("SaveAppliedProfileState() error = %v", err)
 	}
 
-	service := NewDeploymentReviewService(store, testLogger())
-	_, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	service := newDeploymentReviewTestService(store)
+	_, err := service.BuildDeploymentReviewPreview(context.Background(), otherProfileID)
 	if err == nil {
-		t.Fatal("BuildDeploymentReviewPreview() error = nil, want applied profile gate")
+		t.Fatal("BuildDeploymentReviewPreview() error = nil, want different applied profile gate")
 	}
 	if err.Error() != "Restore vanilla before applying another profile." {
 		t.Fatalf("BuildDeploymentReviewPreview() error = %q, want applied profile gate", err.Error())
@@ -125,7 +217,7 @@ func TestDeploymentReviewServiceRejectsStalePreviewHash(t *testing.T) {
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
 	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "plugin.txt", nil)
 
-	service := NewDeploymentReviewService(store, testLogger())
+	service := newDeploymentReviewTestService(store)
 	if _, err := service.BuildDeploymentReviewPreview(context.Background(), profileID); err != nil {
 		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
 	}

@@ -42,7 +42,7 @@ func TestPreviewCacheEvictsPreviousProfilePreview(t *testing.T) {
 func TestBuildTreeChildrenLazyLoadsDirectChildren(t *testing.T) {
 	t.Parallel()
 
-	plan := planner.FirstApplyPlan{
+	plan := planner.DeploymentPlan{
 		Paths: map[string]planner.PathPlan{
 			"data/skyui.esp": {
 				GameRelativePath: "Data/SkyUI.esp",
@@ -87,7 +87,7 @@ func TestBuildTreeChildrenLazyLoadsDirectChildren(t *testing.T) {
 func TestBuildTreeChildrenSortsDirectoriesBeforeFiles(t *testing.T) {
 	t.Parallel()
 
-	plan := planner.FirstApplyPlan{
+	plan := planner.DeploymentPlan{
 		Paths: map[string]planner.PathPlan{
 			"alpha.txt": {
 				GameRelativePath: "alpha.txt",
@@ -135,7 +135,7 @@ func TestPreviewHashIsDeterministic(t *testing.T) {
 	entry := review.CachedPreview{
 		ProfileID: 1,
 		GameID:    10,
-		Plan: planner.FirstApplyPlan{
+		Plan: planner.DeploymentPlan{
 			Paths: map[string]planner.PathPlan{
 				"data/a.esp": {
 					GameRelativePath: "Data/a.esp",

@@ -4,9 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/deployment/desired"
+	"github.com/phergul/fiach/internal/deployment/drift"
 	"github.com/phergul/fiach/internal/deployment/planner"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/diagnostics"
@@ -17,20 +19,22 @@ import (
 )
 
 type DeploymentReviewService struct {
-	store  *storage.Store
-	logger *slog.Logger
-	cache  *review.PreviewCache
+	store          *storage.Store
+	profileService *ProfileService
+	logger         *slog.Logger
+	cache          *review.PreviewCache
 }
 
-func NewDeploymentReviewService(store *storage.Store, logger *slog.Logger) *DeploymentReviewService {
+func NewDeploymentReviewService(store *storage.Store, profileService *ProfileService, logger *slog.Logger) *DeploymentReviewService {
 	if logger == nil {
 		logger = slog.Default()
 	}
 
 	return &DeploymentReviewService{
-		store:  store,
-		logger: logger,
-		cache:  review.NewPreviewCache(),
+		store:          store,
+		profileService: profileService,
+		logger:         logger,
+		cache:          review.NewPreviewCache(),
 	}
 }
 
@@ -56,9 +60,11 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 		return dto.DeploymentReviewPreview{}, apperror.New("Profile was not found.")
 	}
 
-	if _, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID); err != nil {
+	appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID)
+	if err != nil {
 		return dto.DeploymentReviewPreview{}, err
-	} else if appliedFound {
+	}
+	if appliedFound && appliedState.ProfileID != profileID {
 		return dto.DeploymentReviewPreview{}, apperror.New("Restore vanilla before applying another profile.")
 	}
 
@@ -72,17 +78,42 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 		return dto.DeploymentReviewPreview{}, err
 	}
 
-	firstApplyPlan, err := planner.PlanFirstApply(desiredState, resolved.GameInstallPath)
-	if err != nil {
-		return dto.DeploymentReviewPreview{}, err
+	var plan planner.DeploymentPlan
+	var appliedAt *time.Time
+
+	if appliedFound && appliedState.ProfileID == profileID {
+		appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, profile.GameID)
+		if err != nil {
+			return dto.DeploymentReviewPreview{}, err
+		}
+
+		driftResults, err := drift.DetectAll(resolved.GameInstallPath, appliedFileStates)
+		if err != nil {
+			return dto.DeploymentReviewPreview{}, err
+		}
+
+		plan, err = planner.PlanIncrementalPreview(desiredState, appliedFileStates, driftResults, resolved.GameInstallPath)
+		if err != nil {
+			return dto.DeploymentReviewPreview{}, err
+		}
+
+		if parsed, ok := storage.ParseAppliedTimestamp(appliedState.AppliedAt); ok {
+			appliedAt = &parsed
+		}
+	} else {
+		plan, err = planner.PlanFirstApply(desiredState, resolved.GameInstallPath)
+		if err != nil {
+			return dto.DeploymentReviewPreview{}, err
+		}
 	}
 
 	entry := review.CachedPreview{
 		ProfileID:   profileID,
 		GameID:      profile.GameID,
 		ProfileName: profile.Name,
-		Plan:        firstApplyPlan,
+		Plan:        plan,
 		Desired:     desiredState,
+		AppliedAt:   appliedAt,
 	}
 
 	previewHash, err := review.PreviewHash(entry)
@@ -93,12 +124,12 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 
 	s.cache.Store(entry)
 
-	rootNodes := review.BuildTreeChildren(firstApplyPlan, "")
+	rootNodes := review.BuildTreeChildren(plan, "")
 	preview = mappers.ToDTODeploymentReviewPreview(entry, rootNodes)
 
 	diag.complete("Deployment review preview build completed",
 		slog.Bool("can_apply", preview.Summary.CanApply),
-		slog.Int("path_count", len(firstApplyPlan.Paths)),
+		slog.Int("path_count", len(plan.Paths)),
 		slog.Int("blocking_count", preview.Summary.BlockingCount),
 	)
 

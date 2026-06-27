@@ -6,13 +6,25 @@ const (
 	OutputCopied OutputKind = "copied"
 )
 
+type DriftKind string
+
+const (
+	DriftNone     DriftKind = "none"
+	DriftMissing  DriftKind = "missing"
+	DriftModified DriftKind = "modified"
+	DriftExternal DriftKind = "external"
+)
+
 type FileStatus string
 
 const (
-	FileStatusAdded    FileStatus = "added"
-	FileStatusReplaced FileStatus = "replaced"
-	FileStatusBlocked  FileStatus = "blocked"
-	FileStatusConflict FileStatus = "conflict"
+	FileStatusAdded     FileStatus = "added"
+	FileStatusReplaced  FileStatus = "replaced"
+	FileStatusBlocked   FileStatus = "blocked"
+	FileStatusConflict  FileStatus = "conflict"
+	FileStatusDrifted   FileStatus = "drifted"
+	FileStatusExternal  FileStatus = "external"
+	FileStatusUnchanged FileStatus = "unchanged"
 )
 
 type ConflictCategory string

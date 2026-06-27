@@ -39,12 +39,16 @@ type FileStateView struct {
 type previewHashInput struct {
 	ProfileID int64
 	GameID    int64
+	PlanMode  string
 	Paths     []previewHashPath
 }
 
 type previewHashPath struct {
 	Path          string
 	DesiredSHA256 string
+	AppliedSHA256 string
+	CurrentSHA256 string
+	DriftKind     string
 	PlannedAction string
 	FileStatus    string
 }
@@ -64,8 +68,8 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 	return FileDetail{
 		RelativePath: desiredFile.GameRelativePath,
 		States: FourStateView{
-			Baseline: FileStateView{Exists: false},
-			Applied:  FileStateView{Exists: false},
+			Baseline: toFileStateView(pathPlan.Baseline),
+			Applied:  toFileStateView(pathPlan.Applied),
 			Current:  toFileStateView(pathPlan.Current),
 			Desired:  toFileStateView(pathPlan.Desired),
 		},
@@ -75,7 +79,7 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		PlannedAction:    pathPlan.PlannedAction,
 		RiskLevel:        pathPlan.RiskLevel,
 		Explanation:      desiredFile.Explanation,
-		BackupAvailable:  false,
+		BackupAvailable:  pathPlan.BaselineBackupPath != "",
 		AvailableActions: nil,
 	}, nil
 }
@@ -84,6 +88,7 @@ func PreviewHash(entry CachedPreview) (string, error) {
 	input := previewHashInput{
 		ProfileID: entry.ProfileID,
 		GameID:    entry.GameID,
+		PlanMode:  string(entry.Plan.Mode),
 	}
 
 	canonicalPaths := make([]string, 0, len(entry.Plan.Paths))
@@ -99,6 +104,9 @@ func PreviewHash(entry CachedPreview) (string, error) {
 		input.Paths = append(input.Paths, previewHashPath{
 			Path:          canonicalPath,
 			DesiredSHA256: desiredFile.SHA256,
+			AppliedSHA256: pathPlan.Applied.SHA256,
+			CurrentSHA256: pathPlan.Current.SHA256,
+			DriftKind:     string(pathPlan.DriftKind),
 			PlannedAction: string(pathPlan.PlannedAction),
 			FileStatus:    string(pathPlan.FileStatus),
 		})

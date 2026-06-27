@@ -9,14 +9,14 @@ import (
 	"github.com/phergul/fiach/internal/fileops"
 )
 
-func PlanFirstApply(state deployment.DesiredState, gameInstallPath string) (plan FirstApplyPlan, err error) {
+func PlanFirstApply(state deployment.DesiredState, gameInstallPath string) (plan DeploymentPlan, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("plan first apply: %w", err)
 		}
 	}()
 
-	plan = FirstApplyPlan{
+	plan = DeploymentPlan{
 		Mode:   PlanModeFirstApply,
 		Paths:  map[string]PathPlan{},
 		Issues: append([]deployment.PlanIssue(nil), state.Issues...),
@@ -51,7 +51,7 @@ func PlanFirstApply(state deployment.DesiredState, gameInstallPath string) (plan
 			targetPath := filepath.Join(gameInstallPath, filepath.FromSlash(file.GameRelativePath))
 			hash, size, integrityErr := fileops.FileIntegrity(targetPath)
 			if integrityErr != nil {
-				return FirstApplyPlan{}, fmt.Errorf("hash current file %q: %w", file.GameRelativePath, integrityErr)
+				return DeploymentPlan{}, fmt.Errorf("hash current file %q: %w", file.GameRelativePath, integrityErr)
 			}
 			pathPlan.PlannedAction = ReapplyReplace
 			pathPlan.Current = FileStateSnapshot{

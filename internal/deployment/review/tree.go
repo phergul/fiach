@@ -30,7 +30,7 @@ type childAccumulator struct {
 	childCount    int
 }
 
-func BuildTreeChildren(plan planner.FirstApplyPlan, parentPath string) []TreeNode {
+func BuildTreeChildren(plan planner.DeploymentPlan, parentPath string) []TreeNode {
 	children := map[string]*childAccumulator{}
 	parentSlash := normalizeTreePath(parentPath)
 
@@ -116,7 +116,7 @@ func BuildTreeChildren(plan planner.FirstApplyPlan, parentPath string) []TreeNod
 	return nodes
 }
 
-func countDirectChildren(plan planner.FirstApplyPlan, parentPath string) int {
+func countDirectChildren(plan planner.DeploymentPlan, parentPath string) int {
 	seen := map[string]struct{}{}
 	parentSlash := normalizeTreePath(parentPath)
 
@@ -185,6 +185,8 @@ func riskLevelPriority(level deployment.RiskLevel) int {
 func plannedActionPriority(action planner.ReapplyAction) int {
 	switch action {
 	case planner.ReapplyBlock:
+		return 4
+	case planner.ReapplyRequireDecision:
 		return 3
 	case planner.ReapplyReplace:
 		return 2
