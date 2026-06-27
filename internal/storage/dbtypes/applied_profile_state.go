@@ -19,4 +19,5 @@ type SaveAppliedProfileStateInput struct {
 	ProfileSnapshotHash            string
 	ProfileCompositionSnapshotJSON *string
 	ProfileCompositionSnapshotHash *string
+	FileStates                     []AppliedFileStateRow
 }

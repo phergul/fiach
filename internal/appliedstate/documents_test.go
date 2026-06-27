@@ -85,14 +85,22 @@ func TestDecodeManifestValidatesVersionAndNormalizesSlices(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DecodeManifest() error = %v", err)
 	}
-	if document.Version != DocumentVersion {
-		t.Fatalf("DecodeManifest() version = %d, want %d", document.Version, DocumentVersion)
+	if document.Version != DocumentVersionV1 {
+		t.Fatalf("DecodeManifest() version = %d, want %d", document.Version, DocumentVersionV1)
 	}
 	if document.AddedFiles == nil || document.ReplacedFiles == nil || document.CreatedDirectories == nil {
 		t.Fatalf("DecodeManifest() = %+v, want non-nil slices", document)
 	}
 
-	if _, err := DecodeManifest(`{"version":2}`); err == nil {
+	v2Document, err := DecodeManifest(`{"version":2,"files":{}}`)
+	if err != nil {
+		t.Fatalf("DecodeManifest() v2 error = %v", err)
+	}
+	if v2Document.Version != DocumentVersionV2 || v2Document.Files == nil {
+		t.Fatalf("DecodeManifest() v2 = %+v, want normalized files map", v2Document)
+	}
+
+	if _, err := DecodeManifest(`{"version":3}`); err == nil {
 		t.Fatal("DecodeManifest() error = nil, want unsupported version error")
 	}
 }

@@ -59,12 +59,17 @@ func TestProfileServiceRestoreVanillaStateRestoresFilesClearsStateAndDeletesBack
 	assertServicePathMissing(t, backupPath)
 	assertServicePathMissing(t, createdDirectory)
 
-	_, found, err := store.GetAppliedProfileState(context.Background(), gameID)
-	if err != nil {
+	if _, found, err := store.GetAppliedProfileState(context.Background(), gameID); err != nil {
 		t.Fatalf("GetAppliedProfileState() error = %v", err)
-	}
-	if found {
+	} else if found {
 		t.Fatal("GetAppliedProfileState() found = true, want cleared state")
+	}
+	hasFileStates, err := store.HasAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("HasAppliedFileStates() error = %v", err)
+	}
+	if hasFileStates {
+		t.Fatal("HasAppliedFileStates() found = true, want cleared file states")
 	}
 }
 

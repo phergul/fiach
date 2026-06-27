@@ -64,6 +64,21 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 			return sql.ErrNoRows
 		}
 
+		if len(input.FileStates) > 0 {
+			fileStates := make([]dbtypes.AppliedFileStateRow, len(input.FileStates))
+			copy(fileStates, input.FileStates)
+			for index := range fileStates {
+				fileStates[index].LastAppliedAt = state.AppliedAt
+			}
+			if err := replaceAppliedFileStates(ctx, tx, dbtypes.ReplaceAppliedFileStatesInput{
+				GameID:     input.GameID,
+				ProfileID:  input.ProfileID,
+				FileStates: fileStates,
+			}); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 	if err != nil {

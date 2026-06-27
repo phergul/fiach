@@ -11,13 +11,32 @@ import (
 	"github.com/phergul/fiach/internal/operationplan"
 )
 
-const DocumentVersion = 1
+const (
+	DocumentVersionV1 = 1
+	DocumentVersionV2 = 2
+	DocumentVersion   = DocumentVersionV2
+)
 
 type ManifestDocument struct {
-	Version            int                `json:"version"`
-	AddedFiles         []AddedFile        `json:"addedFiles"`
-	ReplacedFiles      []ReplacedFile     `json:"replacedFiles"`
-	CreatedDirectories []CreatedDirectory `json:"createdDirectories"`
+	Version            int                         `json:"version"`
+	AddedFiles         []AddedFile                 `json:"addedFiles"`
+	ReplacedFiles      []ReplacedFile              `json:"replacedFiles"`
+	CreatedDirectories []CreatedDirectory          `json:"createdDirectories"`
+	Files              map[string]ManifestFileEntry `json:"files,omitempty"`
+}
+
+type ManifestFileEntry struct {
+	GameRelativePath   string `json:"gameRelativePath"`
+	OutputKind         string `json:"outputKind"`
+	BaselineExists     bool   `json:"baselineExists"`
+	BaselineSHA256     string `json:"baselineSha256,omitempty"`
+	BaselineSizeBytes  int64  `json:"baselineSizeBytes,omitempty"`
+	BaselineBackupPath string `json:"baselineBackupPath,omitempty"`
+	AppliedExists      bool   `json:"appliedExists"`
+	AppliedSHA256      string `json:"appliedSha256,omitempty"`
+	AppliedSizeBytes   int64  `json:"appliedSizeBytes,omitempty"`
+	WinningModID       *int64 `json:"winningModId,omitempty"`
+	WinningLoadOrder   *int64 `json:"winningLoadOrder,omitempty"`
 }
 
 type AddedFile struct {
@@ -186,7 +205,7 @@ func DecodeManifest(documentJSON string) (ManifestDocument, error) {
 	if err := json.Unmarshal([]byte(documentJSON), &document); err != nil {
 		return ManifestDocument{}, fmt.Errorf("decode manifest JSON: %w", err)
 	}
-	if document.Version != DocumentVersion {
+	if document.Version != DocumentVersionV1 && document.Version != DocumentVersionV2 {
 		return ManifestDocument{}, fmt.Errorf("unsupported manifest version %d", document.Version)
 	}
 
@@ -198,6 +217,9 @@ func DecodeManifest(documentJSON string) (ManifestDocument, error) {
 	}
 	if document.CreatedDirectories == nil {
 		document.CreatedDirectories = []CreatedDirectory{}
+	}
+	if document.Files == nil {
+		document.Files = map[string]ManifestFileEntry{}
 	}
 
 	return document, nil

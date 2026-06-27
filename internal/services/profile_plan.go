@@ -111,7 +111,7 @@ func (s *ProfileService) ApplyProfileOperationPlan(ctx context.Context, profileI
 		return result, nil
 	}
 
-	if err := s.saveAppliedProfileState(ctx, game.ID, profileID, internalPlan, applyResult.Manifest); err != nil {
+	if err := s.saveAppliedProfileState(ctx, game.ID, profileID, game.InstallPath, internalPlan, applyResult.Manifest); err != nil {
 		return result, err
 	}
 
@@ -217,8 +217,74 @@ func restoreFailureSummary(result restoreplan.RestoreResult) string {
 	return ""
 }
 
-func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int64, profileID int64, plan operationplan.OperationPlan, manifest operationplan.AppliedOperationManifest) error {
-	manifestJSON, err := appliedstate.EncodeManifest(appliedstate.BuildManifestDocument(manifest))
+func (s *ProfileService) LoadAppliedFileStates(ctx context.Context, gameID int64) (states []appliedstate.PersistedFileState, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("load applied file states: %w", err)
+		}
+	}()
+
+	if gameID <= 0 {
+		return nil, apperror.New("A valid game must be selected.")
+	}
+
+	appliedState, found, err := s.store.GetAppliedProfileState(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return []appliedstate.PersistedFileState{}, nil
+	}
+
+	hasRows, err := s.store.HasAppliedFileStates(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+	if hasRows {
+		rows, err := s.store.ListAppliedFileStates(ctx, gameID)
+		if err != nil {
+			return nil, err
+		}
+
+		return fromDBAppliedFileStateRows(rows), nil
+	}
+
+	game, err := s.store.GetStoredGame(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+
+	fileStates, err := appliedstate.FileStatesFromStoredManifest(
+		appliedState.ManifestJSON,
+		game.InstallPath,
+		appliedState.ProfileID,
+		appliedState.AppliedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	dbRows := toDBAppliedFileStateRows(gameID, fileStates, appliedState.AppliedAt)
+	if err := s.store.ReplaceAppliedFileStates(ctx, dbtypes.ReplaceAppliedFileStatesInput{
+		GameID:     gameID,
+		ProfileID:  appliedState.ProfileID,
+		FileStates: dbRows,
+	}); err != nil {
+		return nil, err
+	}
+
+	return withAppliedAt(fileStates, appliedState.AppliedAt), nil
+}
+
+func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int64, profileID int64, installPath string, plan operationplan.OperationPlan, manifest operationplan.AppliedOperationManifest) error {
+	manifestDocument := appliedstate.BuildManifestDocument(manifest)
+	fileStates, err := appliedstate.BuildFileStatesFromManifest(manifestDocument, installPath, profileID, "")
+	if err != nil {
+		return fmt.Errorf("build applied file states: %w", err)
+	}
+	appliedstate.AttachManifestFiles(&manifestDocument, fileStates)
+
+	manifestJSON, err := appliedstate.EncodeManifest(manifestDocument)
 	if err != nil {
 		return fmt.Errorf("encode applied manifest: %w", err)
 	}
@@ -245,10 +311,86 @@ func (s *ProfileService) saveAppliedProfileState(ctx context.Context, gameID int
 		ProfileSnapshotHash:            snapshot.Hash,
 		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
 		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
+		FileStates:                     toDBAppliedFileStateRows(gameID, fileStates, ""),
 	})
 	if err != nil {
 		return fmt.Errorf("save applied profile state: %w", err)
 	}
 
 	return nil
+}
+
+func toDBAppliedFileStateRows(gameID int64, states []appliedstate.PersistedFileState, appliedAt string) []dbtypes.AppliedFileStateRow {
+	rows := make([]dbtypes.AppliedFileStateRow, len(states))
+	for index, state := range states {
+		lastAppliedAt := state.LastAppliedAt
+		if lastAppliedAt == "" {
+			lastAppliedAt = appliedAt
+		}
+
+		rows[index] = dbtypes.AppliedFileStateRow{
+			GameID:             gameID,
+			GameRelativePath:   state.GameRelativePath,
+			ProfileID:          state.ProfileID,
+			BaselineExists:     state.BaselineExists,
+			BaselineSHA256:     state.BaselineSHA256,
+			BaselineSizeBytes:  state.BaselineSizeBytes,
+			BaselineBackupPath: state.BaselineBackupPath,
+			AppliedExists:      state.AppliedExists,
+			AppliedSHA256:      state.AppliedSHA256,
+			AppliedSizeBytes:   state.AppliedSizeBytes,
+			WinningSourceKind:  state.WinningSourceKind,
+			WinningSourceID:    state.WinningSourceID,
+			WinningModID:       state.WinningModID,
+			WinningLoadOrder:   state.WinningLoadOrder,
+			OutputKind:         state.OutputKind,
+			UserDecision:       state.UserDecision,
+			LastAppliedAt:      lastAppliedAt,
+		}
+	}
+
+	return rows
+}
+
+func fromDBAppliedFileStateRows(rows []dbtypes.AppliedFileStateRow) []appliedstate.PersistedFileState {
+	states := make([]appliedstate.PersistedFileState, len(rows))
+	for index, row := range rows {
+		states[index] = appliedstate.PersistedFileState{
+			GameID:             row.GameID,
+			GameRelativePath:   row.GameRelativePath,
+			ProfileID:          row.ProfileID,
+			BaselineExists:     row.BaselineExists,
+			BaselineSHA256:     row.BaselineSHA256,
+			BaselineSizeBytes:  row.BaselineSizeBytes,
+			BaselineBackupPath: row.BaselineBackupPath,
+			AppliedExists:      row.AppliedExists,
+			AppliedSHA256:      row.AppliedSHA256,
+			AppliedSizeBytes:   row.AppliedSizeBytes,
+			WinningSourceKind:  row.WinningSourceKind,
+			WinningSourceID:    row.WinningSourceID,
+			WinningModID:       row.WinningModID,
+			WinningLoadOrder:   row.WinningLoadOrder,
+			OutputKind:         row.OutputKind,
+			UserDecision:       row.UserDecision,
+			LastAppliedAt:      row.LastAppliedAt,
+		}
+	}
+
+	return states
+}
+
+func withAppliedAt(states []appliedstate.PersistedFileState, appliedAt string) []appliedstate.PersistedFileState {
+	if appliedAt == "" {
+		return states
+	}
+
+	copied := make([]appliedstate.PersistedFileState, len(states))
+	copy(copied, states)
+	for index := range copied {
+		if copied[index].LastAppliedAt == "" {
+			copied[index].LastAppliedAt = appliedAt
+		}
+	}
+
+	return copied
 }

@@ -68,8 +68,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 3 {
-		t.Fatalf("goose version = %d, want 3", version)
+	if version != 4 {
+		t.Fatalf("goose version = %d, want 4", version)
 	}
 
 	for _, table := range []string{
@@ -80,6 +80,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"profiles",
 		"profile_mods",
 		"applied_profile_states",
+		"applied_file_states",
 		"settings",
 		"tags",
 		"mod_tags",
@@ -91,7 +92,7 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 			t.Fatalf("expected table %q to exist", table)
 		}
 	}
-	for _, index := range []string{"idx_tags_game_id", "idx_mod_tags_tag_id", "idx_injection_targets_game_id"} {
+	for _, index := range []string{"idx_tags_game_id", "idx_mod_tags_tag_id", "idx_injection_targets_game_id", "idx_applied_file_states_profile_id"} {
 		if !indexExists(t, store, index) {
 			t.Fatalf("expected index %q to exist", index)
 		}
@@ -518,8 +519,8 @@ func TestMigrateUpCanReopenWithoutReapplying(t *testing.T) {
 		t.Fatalf("gooseVersion() error = %v", err)
 	}
 
-	if version != 3 {
-		t.Fatalf("goose version = %d, want 3", version)
+	if version != 4 {
+		t.Fatalf("goose version = %d, want 4", version)
 	}
 }
 

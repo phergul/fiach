@@ -161,8 +161,19 @@ func TestProfileServiceApplyProfileOperationPlanExecutesPreviewedPlan(t *testing
 	if err := json.Unmarshal([]byte(state.ManifestJSON), &manifest); err != nil {
 		t.Fatalf("unmarshal manifest JSON: %v", err)
 	}
-	if manifest.Version != appliedstate.DocumentVersion || len(manifest.CreatedDirectories) != 1 || len(manifest.AddedFiles) != 1 {
-		t.Fatalf("manifest JSON = %+v, want created directory and added file", manifest)
+	if manifest.Version != appliedstate.DocumentVersionV2 || len(manifest.CreatedDirectories) != 1 || len(manifest.AddedFiles) != 1 {
+		t.Fatalf("manifest JSON = %+v, want v2 created directory and added file", manifest)
+	}
+	if len(manifest.Files) != 1 {
+		t.Fatalf("manifest files map = %+v, want one v2 file entry", manifest.Files)
+	}
+
+	fileStates, err := store.ListAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListAppliedFileStates() error = %v", err)
+	}
+	if len(fileStates) != 1 || fileStates[0].GameRelativePath != "Data/modded.txt" || fileStates[0].AppliedSHA256 == nil || *fileStates[0].AppliedSHA256 == "" {
+		t.Fatalf("ListAppliedFileStates() = %+v, want persisted added file state", fileStates)
 	}
 	if manifest.AddedFiles[0].TargetPath != targetPath || manifest.AddedFiles[0].SHA256 == "" || manifest.AddedFiles[0].SizeBytes != int64(len("modded")) {
 		t.Fatalf("manifest added file = %+v, want target integrity", manifest.AddedFiles[0])
@@ -454,6 +465,74 @@ func servicePlanHasIssueKind(issues []dto.PlanIssue, kind dto.PlanIssueKind) boo
 func sha256Hex(value string) string {
 	sum := sha256.Sum256([]byte(value))
 	return hex.EncodeToString(sum[:])
+}
+
+func TestProfileServiceLoadAppliedFileStatesLazilyMigratesV1Manifest(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	targetPath := filepath.Join(gameRoot, "Data", "modded.txt")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("create target directory: %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("modded"), 0o644); err != nil {
+		t.Fatalf("write target file: %v", err)
+	}
+
+	manifestJSON, err := appliedstate.EncodeManifest(appliedstate.ManifestDocument{
+		Version: appliedstate.DocumentVersionV1,
+		AddedFiles: []appliedstate.AddedFile{
+			{
+				OperationIndex: 0,
+				Mod:            appliedstate.Mod{ID: 10, Name: "SkyUI"},
+				TargetPath:     targetPath,
+				SHA256:         "added-sha",
+				SizeBytes:      6,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("EncodeManifest() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        manifestJSON,
+		ProfileSnapshotJSON: `{"version":1}`,
+		ProfileSnapshotHash: "hash",
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := NewProfileService(store, testLogger())
+	states, err := service.LoadAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("LoadAppliedFileStates() error = %v", err)
+	}
+	if len(states) != 1 || states[0].GameRelativePath != "Data/modded.txt" || states[0].AppliedSHA256 == nil || *states[0].AppliedSHA256 != "added-sha" {
+		t.Fatalf("LoadAppliedFileStates() = %+v, want migrated added file state", states)
+	}
+
+	found, err := store.HasAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("HasAppliedFileStates() error = %v", err)
+	}
+	if !found {
+		t.Fatal("HasAppliedFileStates() found = false, want lazy migration persisted rows")
+	}
+
+	statesAgain, err := service.LoadAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("LoadAppliedFileStates() second error = %v", err)
+	}
+	if len(statesAgain) != 1 {
+		t.Fatalf("LoadAppliedFileStates() second = %+v, want idempotent load", statesAgain)
+	}
 }
 
 func assertServiceFileContents(t *testing.T, path string, want string) {
