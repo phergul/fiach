@@ -34,6 +34,7 @@ describe('DeploymentFileTree', () => {
       <DeploymentFileTree
         expandedPaths={{}}
         filters={{ risks: [], searchQuery: '', statuses: [] }}
+        treeFilters={{ risks: [], searchQuery: '', statuses: [] }}
         gameInstallPath="/Games/Test"
         gameName="Test"
         getChildren={() => []}
@@ -61,6 +62,7 @@ describe('DeploymentFileTree', () => {
       <DeploymentFileTree
         expandedPaths={{}}
         filters={{ risks: [], searchQuery: 'dll', statuses: ['added'] }}
+        treeFilters={{ risks: [], searchQuery: 'dll', statuses: ['added'] }}
         gameInstallPath="/Games/Test"
         gameName="Test"
         getChildren={() => []}

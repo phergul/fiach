@@ -44,18 +44,18 @@ export const DeploymentReview = ({
     };
   }, [filters.searchQuery]);
 
-  const effectiveFilters = useMemo(
+  const treeFilters = useMemo(
     () => ({
       ...filters,
       searchQuery: debouncedSearchQuery,
     }),
-    [debouncedSearchQuery, filters],
+    [debouncedSearchQuery, filters.risks, filters.statuses],
   );
 
   const treeManager: UseDeploymentTreeResult = useDeploymentTree(
     previewHash,
     rootChildren,
-    effectiveFilters,
+    treeFilters,
   );
 
   const { detail, isLoading, loadError, refreshDetail } = useDeploymentFileDetail(
@@ -90,7 +90,8 @@ export const DeploymentReview = ({
       <div className="deployment-review-tree-pane">
         <DeploymentFileTree
           expandedPaths={treeManager.expandedPaths}
-          filters={effectiveFilters}
+          filters={filters}
+          treeFilters={treeFilters}
           gameInstallPath={gameInstallPath}
           gameName={gameName}
           getChildren={treeManager.getChildren}

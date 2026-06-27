@@ -89,7 +89,14 @@ func BuildTreeChildren(plan planner.FirstApplyPlan, parentPath string) []TreeNod
 	for key := range children {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	sort.Slice(keys, func(i, j int) bool {
+		a := children[keys[i]]
+		b := children[keys[j]]
+		if a.isDirectory != b.isDirectory {
+			return a.isDirectory
+		}
+		return strings.ToLower(a.name) < strings.ToLower(b.name)
+	})
 
 	nodes := make([]TreeNode, 0, len(keys))
 	for _, key := range keys {

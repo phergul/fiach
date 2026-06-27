@@ -84,6 +84,51 @@ func TestBuildTreeChildrenLazyLoadsDirectChildren(t *testing.T) {
 	}
 }
 
+func TestBuildTreeChildrenSortsDirectoriesBeforeFiles(t *testing.T) {
+	t.Parallel()
+
+	plan := planner.FirstApplyPlan{
+		Paths: map[string]planner.PathPlan{
+			"alpha.txt": {
+				GameRelativePath: "alpha.txt",
+				PlannedAction:    planner.ReapplyCreate,
+				FileStatus:       deployment.FileStatusAdded,
+				RiskLevel:        deployment.RiskNone,
+			},
+			"alpha/nested.txt": {
+				GameRelativePath: "Alpha/nested.txt",
+				PlannedAction:    planner.ReapplyCreate,
+				FileStatus:       deployment.FileStatusAdded,
+				RiskLevel:        deployment.RiskNone,
+			},
+			"beta/nested.txt": {
+				GameRelativePath: "Beta/nested.txt",
+				PlannedAction:    planner.ReapplyCreate,
+				FileStatus:       deployment.FileStatusAdded,
+				RiskLevel:        deployment.RiskNone,
+			},
+			"charlie.txt": {
+				GameRelativePath: "charlie.txt",
+				PlannedAction:    planner.ReapplyCreate,
+				FileStatus:       deployment.FileStatusAdded,
+				RiskLevel:        deployment.RiskNone,
+			},
+		},
+	}
+
+	rootNodes := review.BuildTreeChildren(plan, "")
+	if len(rootNodes) != 4 {
+		t.Fatalf("BuildTreeChildren(root) len = %d, want 4", len(rootNodes))
+	}
+
+	wantOrder := []string{"Alpha", "Beta", "alpha.txt", "charlie.txt"}
+	for index, wantName := range wantOrder {
+		if rootNodes[index].Name != wantName {
+			t.Fatalf("rootNodes[%d].Name = %q, want %q", index, rootNodes[index].Name, wantName)
+		}
+	}
+}
+
 func TestPreviewHashIsDeterministic(t *testing.T) {
 	t.Parallel()
 

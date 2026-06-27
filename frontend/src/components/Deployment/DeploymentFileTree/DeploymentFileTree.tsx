@@ -16,6 +16,7 @@ import './DeploymentFileTree.scss';
 interface DeploymentFileTreeProps {
   expandedPaths: Record<string, boolean>;
   filters: DeploymentTreeFilters;
+  treeFilters: DeploymentTreeFilters;
   gameInstallPath: string;
   gameName: string;
   getChildren: (parentPath: string) => DeploymentTreeNode[];
@@ -141,6 +142,7 @@ const TreeBranch = ({
 export const DeploymentFileTree = ({
   expandedPaths,
   filters,
+  treeFilters,
   gameInstallPath,
   gameName,
   getChildren,
@@ -174,7 +176,7 @@ export const DeploymentFileTree = ({
           <TreeBranch
             depth={0}
             expandedPaths={expandedPaths}
-            filters={filters}
+            filters={treeFilters}
             gameInstallPath={gameInstallPath}
             gameName={gameName}
             getChildren={getChildren}
