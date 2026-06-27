@@ -32,6 +32,7 @@ $game-details-toolbar-icon-size: 1.25rem;
   display: inline-flex;
   min-height: $game-details-toolbar-button-height;
   align-items: center;
+  line-height: 0;
   gap: $spacing-xs;
   width: fit-content;
   color: $color-text-subtle;

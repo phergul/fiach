@@ -70,11 +70,10 @@ $game-apply-toolbar-icon-size: 1.25rem;
   align-items: center;
   gap: $spacing-xs;
   width: fit-content;
-  flex: 0 0 auto;
   color: $color-text-subtle;
-  font-size: $font-size-base;
+  font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
-  line-height: $line-height-heading;
+  line-height: 0;
   text-decoration: none;
 }
 
