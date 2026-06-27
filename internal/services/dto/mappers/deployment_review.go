@@ -86,6 +86,14 @@ func ToDTODeploymentFileDetail(detail review.FileDetail) dto.DeploymentFileDetai
 		Explanation:      detail.Explanation,
 		BackupAvailable:  detail.BackupAvailable,
 		AvailableActions: availableActions,
+		DriftKind:        string(detail.DriftKind),
+		LastAppliedAt:    detail.LastAppliedAt,
+		DriftExplanation: detail.DriftExplanation,
+		Comparison: dto.StateComparison{
+			AppliedMatchesCurrent: detail.Comparison.AppliedMatchesCurrent,
+			AppliedMatchesDesired: detail.Comparison.AppliedMatchesDesired,
+			CurrentMatchesDesired: detail.Comparison.CurrentMatchesDesired,
+		},
 	}
 }
 

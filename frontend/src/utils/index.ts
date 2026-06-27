@@ -19,3 +19,4 @@ export {
   normalizeDeploymentPath,
   truncateDeploymentHash,
 } from './deploymentPaths';
+export { formatAppliedAt, formatAppliedAtFromDate } from './formatAppliedAt';

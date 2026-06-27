@@ -17,6 +17,7 @@ interface DeploymentReviewProps {
   gameInstallPath: string;
   gameName: string;
   onPreviewRefreshNeeded: () => void;
+  planMode: string;
   previewHash: string;
   rootChildren: DeploymentTreeNode[];
 }
@@ -27,6 +28,7 @@ export const DeploymentReview = ({
   gameInstallPath,
   gameName,
   onPreviewRefreshNeeded,
+  planMode,
   previewHash,
   rootChildren,
 }: DeploymentReviewProps) => {
@@ -117,6 +119,7 @@ export const DeploymentReview = ({
           onRetry={() => {
             refreshDetail().catch(() => undefined);
           }}
+          planMode={planMode}
           selectedPath={selectedPath}
         />
       </div>

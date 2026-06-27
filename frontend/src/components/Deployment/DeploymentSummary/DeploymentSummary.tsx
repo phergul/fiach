@@ -1,7 +1,8 @@
 import type { DeploymentSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { formatAppliedAtFromDate } from '@utils';
 
 import {
-  DEPLOYMENT_FILE_STATUSES,
+  DEPLOYMENT_SUMMARY_STATUSES,
   resolveDeploymentActionLabel,
   resolveDeploymentSummaryTone,
   type DeploymentToneChipTone,
@@ -24,6 +25,9 @@ const statusItemLabel = (key: string) => {
   if (key === 'can_apply') {
     return 'Can apply';
   }
+  if (key === 'applied_at') {
+    return 'Last applied';
+  }
 
   return resolveDeploymentActionLabel(key);
 };
@@ -31,7 +35,18 @@ const statusItemLabel = (key: string) => {
 export const DeploymentSummaryBar = ({ summary }: DeploymentSummaryProps) => {
   const items: Array<{ key: string; label: string; value: string | number }> = [];
 
-  for (const status of DEPLOYMENT_FILE_STATUSES) {
+  if (summary.PlanMode === 'incremental' && summary.AppliedAt !== null) {
+    const appliedAtLabel = formatAppliedAtFromDate(summary.AppliedAt);
+    if (appliedAtLabel !== 'Applied time unknown') {
+      items.push({
+        key: 'applied_at',
+        label: statusItemLabel('applied_at'),
+        value: appliedAtLabel.replace(/^Applied /, ''),
+      });
+    }
+  }
+
+  for (const status of DEPLOYMENT_SUMMARY_STATUSES) {
     const count = summary.StatusCounts[status] ?? 0;
     if (count > 0) {
       items.push({
@@ -69,13 +84,16 @@ export const DeploymentSummaryBar = ({ summary }: DeploymentSummaryProps) => {
       {items.map((item) => {
         const tone = resolveDeploymentSummaryTone(item.key) as DeploymentToneChipTone | undefined;
         const isCanApply = item.key === 'can_apply';
+        const isAppliedAt = item.key === 'applied_at';
 
         return (
           <div
             className={
               isCanApply
                 ? 'deployment-summary-item deployment-summary-item-can-apply'
-                : 'deployment-summary-item'
+                : isAppliedAt
+                  ? 'deployment-summary-item deployment-summary-item-applied-at'
+                  : 'deployment-summary-item'
             }
             key={item.key}
           >
@@ -87,6 +105,11 @@ export const DeploymentSummaryBar = ({ summary }: DeploymentSummaryProps) => {
                 >
                   {item.value}
                 </dd>
+              </>
+            ) : isAppliedAt ? (
+              <>
+                <dt className="deployment-summary-label">{item.label}</dt>
+                <dd className="deployment-summary-value">{item.value}</dd>
               </>
             ) : (
               <DeploymentToneChip label={`${item.label} ${item.value}`} tone={tone ?? 'default'} />

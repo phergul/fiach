@@ -1,6 +1,7 @@
 import { CircleAlert } from 'lucide-react';
 
 import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { formatAppliedAt } from '@utils';
 
 import './GameProfilesAppliedSummary.scss';
 
@@ -9,25 +10,6 @@ interface GameProfilesAppliedSummaryProps {
   isBusy: boolean;
   onRestoreVanilla: () => void;
 }
-
-const formatAppliedAt = (appliedAt: string) => {
-  if (appliedAt.trim() === '') {
-    return 'Applied time unknown';
-  }
-
-  const normalizedAppliedAt = appliedAt.includes('T')
-    ? appliedAt
-    : `${appliedAt.replace(' ', 'T')}Z`;
-  const date = new Date(normalizedAppliedAt);
-  if (Number.isNaN(date.getTime())) {
-    return 'Applied time unknown';
-  }
-
-  return `Applied ${new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)}`;
-};
 
 export const GameProfilesAppliedSummary = ({
   appliedProfile,

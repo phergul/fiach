@@ -3,10 +3,12 @@ package review
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/planner"
 	"github.com/phergul/fiach/internal/fileops"
+	"github.com/phergul/fiach/internal/storage"
 )
 
 type FileDetail struct {
@@ -20,6 +22,10 @@ type FileDetail struct {
 	Explanation      string
 	BackupAvailable  bool
 	AvailableActions []string
+	DriftKind        deployment.DriftKind
+	DriftExplanation string
+	Comparison       StateComparison
+	LastAppliedAt    *time.Time
 }
 
 type FourStateView struct {
@@ -65,6 +71,15 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		return FileDetail{}, fmt.Errorf("desired file %q was not found in preview", relativePath)
 	}
 
+	comparison := buildStateComparison(pathPlan.Applied, pathPlan.Current, pathPlan.Desired)
+
+	var lastAppliedAt *time.Time
+	if pathPlan.LastAppliedAt != "" {
+		if parsed, ok := storage.ParseAppliedTimestamp(pathPlan.LastAppliedAt); ok {
+			lastAppliedAt = &parsed
+		}
+	}
+
 	return FileDetail{
 		RelativePath: desiredFile.GameRelativePath,
 		States: FourStateView{
@@ -81,6 +96,10 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		Explanation:      desiredFile.Explanation,
 		BackupAvailable:  pathPlan.BaselineBackupPath != "",
 		AvailableActions: nil,
+		DriftKind:        pathPlan.DriftKind,
+		LastAppliedAt:    lastAppliedAt,
+		DriftExplanation: buildDriftExplanation(pathPlan.DriftKind, comparison, pathPlan.FileStatus),
+		Comparison:       comparison,
 	}, nil
 }
 

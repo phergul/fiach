@@ -1,6 +1,12 @@
 @use '@styles' as *;
 
 .deployment-four-state-view {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.deployment-four-state-view-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: $spacing-separator;
@@ -46,11 +52,6 @@
   background: $color-background-elevated;
 }
 
-.deployment-four-state-view-column-desired .deployment-four-state-view-column-body-populated {
-  // background: color-mix(in srgb, $color-tag-blue 14%, $color-background-elevated);
-  background: $color-background-elevated;
-}
-
 .deployment-four-state-view-placeholder,
 .deployment-four-state-view-empty {
   margin: 0;
@@ -87,4 +88,30 @@
 
 .deployment-four-state-view-hash {
   font-family: $font-family-monospace;
+}
+
+.deployment-four-state-view-column-drift .deployment-four-state-view-column-header,
+.deployment-four-state-view-column-missing .deployment-four-state-view-column-header {
+  color: $color-warning;
+}
+
+.deployment-four-state-view-column-info .deployment-four-state-view-column-header {
+  color: $color-info;
+}
+
+.deployment-four-state-view-column-changed .deployment-four-state-view-column-header {
+  color: $color-tag-blue;
+}
+
+.deployment-four-state-view-column-reference .deployment-four-state-view-column-header {
+  color: $color-text-subtle;
+}
+
+.deployment-four-state-view-drift-explanation {
+  margin: 0;
+  padding: $spacing-sm $spacing-md;
+  color: $color-text-primary;
+  background: color-mix(in srgb, $color-warning 12%, $color-surface-elevated);
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
 }

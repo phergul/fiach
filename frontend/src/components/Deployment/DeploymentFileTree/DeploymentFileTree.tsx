@@ -35,6 +35,7 @@ interface TreeBranchProps {
   depth: number;
   expandedPaths: Record<string, boolean>;
   filters: DeploymentTreeFilters;
+  guideContinuations: boolean[];
   gameInstallPath: string;
   gameName: string;
   getChildren: (parentPath: string) => DeploymentTreeNode[];
@@ -50,6 +51,7 @@ const TreeBranch = ({
   depth,
   expandedPaths,
   filters,
+  guideContinuations,
   gameInstallPath,
   gameName,
   getChildren,
@@ -81,7 +83,10 @@ const TreeBranch = ({
 
   return (
     <ul className="deployment-file-tree-list">
-      {visibleNodes.map((node) => {
+      {visibleNodes.map((node, nodeIndex) => {
+        const isLastSibling = nodeIndex === visibleNodes.length - 1;
+        const nodeGuideContinuations =
+          depth === 0 ? [] : [...guideContinuations, !isLastSibling];
         const isExpanded = expandedPaths[node.Path] === true;
         const children = node.IsDirectory ? getChildren(node.Path) : [];
         const visibleChildren =
@@ -108,6 +113,7 @@ const TreeBranch = ({
               depth={depth}
               gameInstallPath={gameInstallPath}
               gameName={gameName}
+              guideContinuations={nodeGuideContinuations}
               isExpanded={isExpanded}
               isLoading={loadingPaths[node.Path] === true}
               loadError={loadErrors[node.Path] ?? null}
@@ -121,6 +127,7 @@ const TreeBranch = ({
                 depth={depth + 1}
                 expandedPaths={expandedPaths}
                 filters={filters}
+                guideContinuations={nodeGuideContinuations}
                 gameInstallPath={gameInstallPath}
                 gameName={gameName}
                 getChildren={getChildren}
@@ -177,6 +184,7 @@ export const DeploymentFileTree = ({
             depth={0}
             expandedPaths={expandedPaths}
             filters={treeFilters}
+            guideContinuations={[]}
             gameInstallPath={gameInstallPath}
             gameName={gameName}
             getChildren={getChildren}

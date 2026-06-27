@@ -36,7 +36,7 @@ func PlanFirstApply(state deployment.DesiredState, gameInstallPath string) (plan
 				Exists:    true,
 				SHA256:    file.SHA256,
 				SizeBytes: file.SizeBytes,
-				Label:     "Desired profile content",
+				Label:     "Desired content",
 			},
 		}
 

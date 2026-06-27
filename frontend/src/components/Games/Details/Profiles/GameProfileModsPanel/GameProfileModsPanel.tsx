@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Plus, RotateCcw } from 'lucide-react';
+import { CheckCircle2, FileSearch, Plus } from 'lucide-react';
 
 import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import type {
@@ -29,7 +29,6 @@ interface GameProfileModsPanelProps {
   onAddModsToProfile: (profileID: number, modIDs: number[]) => Promise<void> | void;
   onRemoveModFromProfile: (profileID: number, modID: number) => void;
   onReorderProfileMods: (profileID: number, orderedModIDs: number[]) => void;
-  onRestoreVanilla: () => void;
   onSetProfileModEnabled: (profileID: number, modID: number, enabled: boolean) => void;
 }
 
@@ -45,7 +44,6 @@ export const GameProfileModsPanel = ({
   onAddModsToProfile,
   onRemoveModFromProfile,
   onReorderProfileMods,
-  onRestoreVanilla,
   onSetProfileModEnabled,
 }: GameProfileModsPanelProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -234,45 +232,55 @@ export const GameProfileModsPanel = ({
           )}
         </div>
 
-        {isSelectedProfileApplied ? (
-          <button
-            className="game-profile-mods-panel-restore-button"
-            disabled={isBusy}
-            onClick={onRestoreVanilla}
-            type="button"
-          >
-            <RotateCcw className="game-profile-mods-panel-icon" aria-hidden="true" />
-            <span>Restore Vanilla</span>
-          </button>
-        ) : isAnotherProfileApplied ? (
-          <button
-            className="game-profile-mods-panel-apply-button button-main"
-            disabled
-            title={blockedApplyTitle}
-            type="button"
-          >
-            <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
-            <span>Another Profile Applied</span>
-          </button>
-        ) : (
-          <Link
-            className={
-              isBusy
-                ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled'
-                : 'game-profile-mods-panel-apply-button button-main'
-            }
-            to={`${applyProfilePath}/${profile.ID}`}
-            onClick={(event) => {
-              if (isBusy) {
-                event.preventDefault();
+        <div className="game-profile-mods-panel-footer-primary">
+          {isSelectedProfileApplied ? (
+            <Link
+              className={
+                isBusy
+                  ? 'game-profile-mods-panel-review-button button-main game-profile-mods-panel-link-disabled'
+                  : 'game-profile-mods-panel-review-button button-main'
               }
-            }}
-            aria-disabled={isBusy}
-          >
-            <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
-            <span>Apply Profile</span>
-          </Link>
-        )}
+              to={`${applyProfilePath}/${profile.ID}`}
+              onClick={(event) => {
+                if (isBusy) {
+                  event.preventDefault();
+                }
+              }}
+              aria-disabled={isBusy}
+            >
+              <FileSearch className="game-profile-mods-panel-icon" aria-hidden="true" />
+              <span>Review deployment</span>
+            </Link>
+          ) : isAnotherProfileApplied ? (
+            <button
+              className="game-profile-mods-panel-apply-button button-main"
+              disabled
+              title={blockedApplyTitle}
+              type="button"
+            >
+              <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
+              <span>Another Profile Applied</span>
+            </button>
+          ) : (
+            <Link
+              className={
+                isBusy
+                  ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled'
+                  : 'game-profile-mods-panel-apply-button button-main'
+              }
+              to={`${applyProfilePath}/${profile.ID}`}
+              onClick={(event) => {
+                if (isBusy) {
+                  event.preventDefault();
+                }
+              }}
+              aria-disabled={isBusy}
+            >
+              <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
+              <span>Apply Profile</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       <GameProfileAddModsModal

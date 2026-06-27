@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage"
@@ -166,6 +167,100 @@ func TestDeploymentReviewServiceSameProfileIncrementalPreviewDetectsDrift(t *tes
 	}
 	if detail.States.Current == nil || !detail.States.Current.Exists {
 		t.Fatalf("GetDeploymentFileDetail() current = %+v, want current disk state", detail.States.Current)
+	}
+	if detail.DriftKind != "modified" {
+		t.Fatalf("GetDeploymentFileDetail() DriftKind = %q, want modified", detail.DriftKind)
+	}
+	if detail.LastAppliedAt == nil {
+		t.Fatal("GetDeploymentFileDetail() LastAppliedAt = nil, want populated")
+	}
+	if detail.Comparison.AppliedMatchesCurrent {
+		t.Fatal("GetDeploymentFileDetail() AppliedMatchesCurrent = true, want false")
+	}
+	if detail.Comparison.CurrentMatchesDesired {
+		t.Fatal("GetDeploymentFileDetail() CurrentMatchesDesired = true, want false")
+	}
+	if detail.DriftExplanation == "" {
+		t.Fatal("GetDeploymentFileDetail() DriftExplanation = empty, want populated")
+	}
+	for _, writer := range detail.WriterStack {
+		if writer.SourceKind == "base_game" {
+			t.Fatalf("GetDeploymentFileDetail() writer stack = %+v, want no base_game writer for mod-added path", detail.WriterStack)
+		}
+	}
+}
+
+func TestDeploymentReviewServiceIncrementalModAddedPathOmitsBaseGameWriter(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"recording.mov": "mod-content",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "Screenshots", sourcePath)
+
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Screenshots", nil)
+
+	targetPath := filepath.Join(gameRoot, "Screenshots", "recording.mov")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("mod-content"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	appliedSHA256, appliedSize, err := fileops.FileIntegrity(targetPath)
+	if err != nil {
+		t.Fatalf("FileIntegrity() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
+		ProfileSnapshotJSON: `{"version":2}`,
+		ProfileSnapshotHash: "snapshot",
+		FileStates: []dbtypes.AppliedFileStateRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Screenshots/recording.mov",
+				ProfileID:        profileID,
+				AppliedExists:    true,
+				AppliedSHA256:    &appliedSHA256,
+				AppliedSizeBytes: &appliedSize,
+				OutputKind:       "copied",
+			},
+		},
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	detail, err := service.GetDeploymentFileDetail(context.Background(), preview.PreviewHash, "Screenshots/recording.mov")
+	if err != nil {
+		t.Fatalf("GetDeploymentFileDetail() error = %v", err)
+	}
+	if detail.FileStatus != "unchanged" {
+		t.Fatalf("GetDeploymentFileDetail() status = %q, want unchanged", detail.FileStatus)
+	}
+	if detail.States.Baseline != nil && detail.States.Baseline.Exists {
+		t.Fatalf("GetDeploymentFileDetail() baseline = %+v, want absent baseline", detail.States.Baseline)
+	}
+	if len(detail.WriterStack) != 1 {
+		t.Fatalf("GetDeploymentFileDetail() writer stack = %+v, want single mod writer", detail.WriterStack)
+	}
+	if detail.WriterStack[0].SourceKind == "base_game" || detail.WriterStack[0].ModName != "Screenshots" {
+		t.Fatalf("GetDeploymentFileDetail() writer stack = %+v, want Screenshots mod writer only", detail.WriterStack)
 	}
 }
 

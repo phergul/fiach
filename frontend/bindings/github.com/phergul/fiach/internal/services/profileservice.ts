@@ -7,6 +7,9 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as appliedstate$0 from "../appliedstate/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
 export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<dto$0.ProfileMod> {
@@ -61,6 +64,12 @@ export function ListProfiles(gameID: number): $CancellablePromise<dto$0.ModProfi
     });
 }
 
+export function LoadAppliedFileStates(gameID: number): $CancellablePromise<appliedstate$0.PersistedFileState[]> {
+    return $Call.ByID(2694248031, gameID).then(($result: any) => {
+        return $$createType9($result);
+    });
+}
+
 export function RemoveModFromProfile(profileID: number, modID: number): $CancellablePromise<void> {
     return $Call.ByID(3265852827, profileID, modID);
 }
@@ -79,7 +88,7 @@ export function ReorderProfileMods(profileID: number, modIDs: number[]): $Cancel
 
 export function RestoreVanillaState(gameID: number): $CancellablePromise<dto$0.RestoreResult> {
     return $Call.ByID(1179292680, gameID).then(($result: any) => {
-        return $$createType8($result);
+        return $$createType10($result);
     });
 }
 
@@ -98,4 +107,6 @@ const $$createType4 = dto$0.AppliedProfileSummary.createFrom;
 const $$createType5 = $Create.Nullable($$createType4);
 const $$createType6 = $Create.Array($$createType0);
 const $$createType7 = $Create.Array($$createType3);
-const $$createType8 = dto$0.RestoreResult.createFrom;
+const $$createType8 = appliedstate$0.PersistedFileState.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = dto$0.RestoreResult.createFrom;

@@ -78,6 +78,7 @@ export {
     RestoreOperationType,
     RestoreResult,
     SourceScanResult,
+    StateComparison,
     StoredGame,
     StrategyDescriptor,
     StrategyType,

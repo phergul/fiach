@@ -1,5 +1,6 @@
 @use '@styles' as *;
 
+$deployment-file-tree-indent-width: 0.875rem;
 $deployment-file-tree-node-icon-size: 1rem;
 $deployment-file-tree-node-toggle-size: 1.75rem;
 $deployment-file-tree-node-meta-width: 5.5rem;
@@ -12,9 +13,52 @@ $deployment-file-tree-node-row-height: 2rem;
   align-items: center;
   gap: $spacing-xs;
   padding-right: $spacing-sm;
-  padding-left: var(--deployment-file-tree-row-padding, 0);
   background: transparent;
   cursor: pointer;
+}
+
+.deployment-file-tree-node-guides {
+  display: flex;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.deployment-file-tree-node-guide {
+  position: relative;
+  width: $deployment-file-tree-indent-width;
+  flex: 0 0 $deployment-file-tree-indent-width;
+}
+
+.deployment-file-tree-node-guide-continue::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - #{$app-border-width} / 2);
+  border-left: $app-border-width solid $color-border-subtle;
+  content: '';
+}
+
+.deployment-file-tree-node-toggle-spacer {
+  flex: 0 0 $deployment-file-tree-node-toggle-size;
+  align-self: stretch;
+  width: $deployment-file-tree-node-toggle-size;
+}
+
+.deployment-file-tree-node-toggle-spacer-compact {
+  flex-basis: calc(
+    #{$deployment-file-tree-node-toggle-size} - #{$deployment-file-tree-indent-width}
+  );
+  width: calc(#{$deployment-file-tree-node-toggle-size} - #{$deployment-file-tree-indent-width});
+}
+
+.deployment-file-tree-node-row-drifted {
+  background: color-mix(in srgb, $color-warning 10%, transparent);
+  border-left: $app-border-width solid $color-warning;
+}
+
+.deployment-file-tree-node-row-external {
+  background: color-mix(in srgb, $color-info 10%, transparent);
+  border-left: $app-border-width solid $color-info;
 }
 
 .deployment-file-tree-node-toggle {

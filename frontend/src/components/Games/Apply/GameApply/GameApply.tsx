@@ -21,6 +21,7 @@ import {
 } from '@hooks';
 
 import './GameApply.scss';
+import { getApplyDisabledTitle, getDeploymentReviewDescription } from './gameApplyCopy';
 
 const parseGameID = (gameID: string | undefined) => {
   if (gameID === undefined || gameID.trim() === '') {
@@ -46,44 +47,6 @@ const parseProfileID = (profileID: string | undefined) => {
   }
 
   return parsedProfileID;
-};
-
-const getApplyDisabledTitle = (
-  appliedProfileName: string | null,
-  canApply: boolean,
-  isAppliedProfileLoading: boolean,
-  appliedProfileLoadError: string | null,
-  isPreviewLoading: boolean,
-  isApplyPending: boolean,
-  isPlanLoading: boolean,
-  previewAvailable: boolean,
-) => {
-  if (isApplyPending) {
-    return 'Apply is already in progress.';
-  }
-  if (appliedProfileName !== null) {
-    return `${appliedProfileName} is applied. Restore vanilla before applying another profile.`;
-  }
-  if (isAppliedProfileLoading) {
-    return 'Applied profile state is loading.';
-  }
-  if (appliedProfileLoadError !== null) {
-    return 'Applied profile state could not be loaded.';
-  }
-  if (isPreviewLoading) {
-    return 'Deployment preview is loading.';
-  }
-  if (!previewAvailable) {
-    return 'Deployment preview is not ready yet.';
-  }
-  if (!canApply) {
-    return 'Resolve blocking issues before applying this profile.';
-  }
-  if (isPlanLoading) {
-    return 'Preparing apply plan.';
-  }
-
-  return 'Confirm before applying this profile.';
 };
 
 const buildApplySuccessMessage = (result: ApplyOperationPlanResult) => {
@@ -137,6 +100,11 @@ export const GameApply = () => {
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
   const appliedProfileName = appliedProfileManager.appliedProfile?.ProfileName ?? null;
+  const isSameProfileApplied =
+    selectedProfile !== null &&
+    appliedProfileManager.appliedProfile?.ProfileID === selectedProfile.ID;
+  const isAnotherProfileApplied =
+    appliedProfileName !== null && !isSameProfileApplied;
   const previewAvailable = summary !== null && previewHash !== '';
   const canStartApply =
     selectedProfile !== null &&
@@ -152,6 +120,8 @@ export const GameApply = () => {
     selectedProfile === null
       ? 'Select a profile before applying.'
       : getApplyDisabledTitle(
+          isSameProfileApplied,
+          isAnotherProfileApplied,
           appliedProfileName,
           summary?.CanApply ?? false,
           appliedProfileManager.isLoading,
@@ -262,9 +232,11 @@ export const GameApply = () => {
                 {game.Name} · Apply {selectedProfile.Name}
               </p>
               <p className="game-apply-context-description">
-                {appliedProfileName === null
-                  ? 'Review planned file changes in the deployment tree.'
-                  : `Restore vanilla before applying. ${appliedProfileName} is currently applied.`}
+                {getDeploymentReviewDescription(
+                  isSameProfileApplied,
+                  isAnotherProfileApplied,
+                  appliedProfileName,
+                )}
               </p>
             </div>
           )}
@@ -332,9 +304,11 @@ export const GameApply = () => {
                 {selectedProfile === null ? 'Apply profile' : `Apply ${selectedProfile.Name}`}
               </h2>
               <p className="game-apply-description">
-                {appliedProfileName === null
-                  ? 'Review the virtual file tree and planned operations before applying.'
-                  : `Restore vanilla before applying another profile. ${appliedProfileName} is currently applied.`}
+                {getDeploymentReviewDescription(
+                  isSameProfileApplied,
+                  isAnotherProfileApplied,
+                  appliedProfileName,
+                )}
               </p>
             </div>
           )}
@@ -345,9 +319,11 @@ export const GameApply = () => {
               <div className="game-apply-heading">
                 <h2 className="game-apply-title">Deployment preview</h2>
                 <p className="game-apply-description">
-                  {appliedProfileName === null
-                    ? 'Review planned file changes in the deployment tree.'
-                    : `Restore vanilla before applying. ${appliedProfileName} is currently applied.`}
+                  {getDeploymentReviewDescription(
+                    isSameProfileApplied,
+                    isAnotherProfileApplied,
+                    appliedProfileName,
+                  )}
                 </p>
               </div>
             </header>
@@ -405,6 +381,7 @@ export const GameApply = () => {
                 gameInstallPath={game.InstallPath}
                 gameName={game.Name}
                 onPreviewRefreshNeeded={handlePreviewRefreshNeeded}
+                planMode={summary?.PlanMode ?? 'first_apply'}
                 previewHash={previewHash}
                 rootChildren={rootChildren}
               />

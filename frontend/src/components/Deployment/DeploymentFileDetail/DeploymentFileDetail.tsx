@@ -2,7 +2,7 @@ import { FileSearch } from 'lucide-react';
 
 import type { DeploymentFileDetail } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
-import { deploymentPathBaseName, formatDeploymentDisplayPath } from '@utils';
+import { deploymentPathBaseName, formatAppliedAtFromDate, formatDeploymentDisplayPath } from '@utils';
 
 import {
   deploymentConflictCategoryLabel,
@@ -24,6 +24,7 @@ interface DeploymentFileDetailPanelProps {
   isLoading: boolean;
   loadError: string | null;
   onRetry: () => void;
+  planMode: string;
   selectedPath: string | null;
 }
 
@@ -34,6 +35,7 @@ export const DeploymentFileDetailPanel = ({
   isLoading,
   loadError,
   onRetry,
+  planMode,
   selectedPath,
 }: DeploymentFileDetailPanelProps) => {
   if (selectedPath === null) {
@@ -104,6 +106,18 @@ export const DeploymentFileDetailPanel = ({
         {detail.Explanation !== '' && (
           <p className="deployment-file-detail-explanation">{detail.Explanation}</p>
         )}
+
+        {detail.LastAppliedAt !== null && (
+          <p className="deployment-file-detail-applied-at">
+            {formatAppliedAtFromDate(detail.LastAppliedAt)}
+          </p>
+        )}
+
+        {detail.PlannedAction === 'require_decision' && (
+          <p className="deployment-file-detail-decision-note">
+            A decision will be required before re-applying this file.
+          </p>
+        )}
       </div>
 
       <div className="deployment-file-detail-body">
@@ -112,8 +126,12 @@ export const DeploymentFileDetailPanel = ({
           <DeploymentFourStateView
             applied={detail.States.Applied}
             baseline={detail.States.Baseline}
+            comparison={detail.Comparison}
             current={detail.States.Current}
             desired={detail.States.Desired}
+            driftExplanation={detail.DriftExplanation}
+            driftKind={detail.DriftKind}
+            planMode={planMode}
           />
         </section>
 

@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 
 import {
-  DEPLOYMENT_FILE_STATUSES,
+  DEPLOYMENT_FILTER_STATUSES,
   DEPLOYMENT_RISK_LEVELS,
   deploymentRiskLabel,
   resolveDeploymentActionLabel,
@@ -54,7 +54,7 @@ export const DeploymentFileTreeFilters = ({
         <div className="deployment-file-tree-filters-dropdowns">
           <DeploymentTreeFilterDropdown
             label="Status"
-            options={DEPLOYMENT_FILE_STATUSES.map((status) => ({
+            options={DEPLOYMENT_FILTER_STATUSES.map((status) => ({
               label: resolveDeploymentActionLabel(status),
               value: status,
             }))}

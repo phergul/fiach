@@ -38,8 +38,9 @@ $game-profile-mods-panel-icon-size: 1rem;
 }
 
 .game-profile-mods-panel-footer {
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: $spacing-sm;
   padding: $spacing-sm;
@@ -50,16 +51,25 @@ $game-profile-mods-panel-icon-size: 1rem;
 .game-profile-mods-panel-footer-actions {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   gap: $spacing-sm;
 }
 
+.game-profile-mods-panel-footer-primary {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .game-profile-mods-panel-add-button,
 .game-profile-mods-panel-apply-button,
-.game-profile-mods-panel-restore-button {
-  width: 100%;
+.game-profile-mods-panel-review-button {
+  width: auto;
   min-height: $game-profile-mods-panel-control-height;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .game-profile-mods-panel-add-button {
@@ -71,22 +81,30 @@ $game-profile-mods-panel-icon-size: 1rem;
 }
 
 .game-profile-mods-panel-apply-button,
-.game-profile-mods-panel-restore-button {
+.game-profile-mods-panel-review-button {
   font-weight: $font-weight-semibold;
 }
 
-.game-profile-mods-panel-restore-button {
-  background: color-mix(in srgb, $color-warning 18%, transparent);
-  border: $app-border-width solid color-mix(in srgb, $color-warning 54%, transparent);
-  border-color: color-mix(in srgb, $color-warning 54%, transparent);
-}
 
-.game-profile-mods-panel-restore-button:hover:not(:disabled),
-.game-profile-mods-panel-restore-button:focus-visible:not(:disabled) {
-  border-color: $color-warning;
-}
 
 .game-profile-mods-panel-link-disabled {
   cursor: not-allowed;
   opacity: 0.58;
+}
+
+@container (max-width: 28rem) {
+  .game-profile-mods-panel-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .game-profile-mods-panel-footer-actions .mod-tag-filter {
+    width: 100%;
+  }
+
+  .game-profile-mods-panel-footer-actions .game-profile-mods-panel-add-button,
+  .game-profile-mods-panel-footer-actions .game-profile-mods-filter,
+  .game-profile-mods-panel-footer-actions .mod-tag-filter-profile-footer .mod-tag-filter-button {
+    width: 100%;
+  }
 }

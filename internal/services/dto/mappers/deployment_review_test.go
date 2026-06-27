@@ -22,7 +22,7 @@ func TestToDTODeploymentFileDetailIncludesNullFourStateSlots(t *testing.T) {
 				Exists:    true,
 				SHA256:    "desired",
 				SizeBytes: 7,
-				Label:     "Desired profile content",
+				Label:     "Desired content",
 			},
 		},
 		WriterStack: []deployment.WriterEntry{

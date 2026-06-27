@@ -10,6 +10,7 @@ import (
 	"github.com/phergul/fiach/internal/deployment/desired"
 	"github.com/phergul/fiach/internal/deployment/drift"
 	"github.com/phergul/fiach/internal/deployment/planner"
+	"github.com/phergul/fiach/internal/deployment/provenance"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/operationplan"
@@ -86,6 +87,8 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 		if err != nil {
 			return dto.DeploymentReviewPreview{}, err
 		}
+
+		provenance.ReconcileModAddedPaths(&desiredState, appliedFileStates)
 
 		driftResults, err := drift.DetectAll(resolved.GameInstallPath, appliedFileStates)
 		if err != nil {

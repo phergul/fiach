@@ -53,6 +53,12 @@ type WriterEntryDTO struct {
 	WouldWrite bool
 }
 
+type StateComparison struct {
+	AppliedMatchesCurrent bool
+	AppliedMatchesDesired bool
+	CurrentMatchesDesired bool
+}
+
 type DeploymentFileDetail struct {
 	RelativePath     string
 	States           FourStateView
@@ -64,6 +70,10 @@ type DeploymentFileDetail struct {
 	Explanation      string
 	BackupAvailable  bool
 	AvailableActions []string
+	DriftKind        string
+	DriftExplanation string
+	Comparison       StateComparison
+	LastAppliedAt    *time.Time
 }
 
 type DeploymentReviewPreview struct {

@@ -6,7 +6,7 @@ import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/inte
 import { formatDeploymentDisplayPath } from '@utils';
 
 import { DeploymentToneChip } from '../../DeploymentToneChip/DeploymentToneChip';
-import { deploymentTreeRowPaddingRem } from '../deploymentTreeLayout';
+import { deploymentTreeNodeGuideLayout, deploymentTreeRowPaddingRem } from '../deploymentTreeLayout';
 import { formatTreeNodeActionTone, formatTreeNodeMeta } from '../deploymentTreeMeta';
 
 import './DeploymentFileTreeNode.scss';
@@ -15,6 +15,7 @@ interface DeploymentFileTreeNodeProps {
   depth: number;
   gameInstallPath: string;
   gameName: string;
+  guideContinuations: boolean[];
   isExpanded: boolean;
   isLoading: boolean;
   loadError: string | null;
@@ -27,6 +28,7 @@ export const DeploymentFileTreeNodeRow = ({
   depth,
   gameInstallPath,
   gameName,
+  guideContinuations,
   isExpanded,
   isLoading,
   loadError,
@@ -39,6 +41,15 @@ export const DeploymentFileTreeNodeRow = ({
   const actionTone = formatTreeNodeActionTone(node);
   const canExpand = node.IsDirectory && node.HasChildren;
   const showActionChip = !node.IsDirectory && actionLabel !== '';
+  const { ancestorContinuations, leafContinuation } = deploymentTreeNodeGuideLayout(guideContinuations);
+  const showLeafGuideColumn = leafContinuation !== null;
+  const useCompactToggleSpacer = !node.IsDirectory && showLeafGuideColumn;
+  const rowStatusClass =
+    node.Status === 'drifted'
+      ? 'deployment-file-tree-node-row-drifted'
+      : node.Status === 'external'
+        ? 'deployment-file-tree-node-row-external'
+        : '';
   const rowPaddingRem = deploymentTreeRowPaddingRem(depth, node.IsDirectory);
   const rowStyle = {
     '--deployment-file-tree-row-padding': `${rowPaddingRem}rem`,
@@ -61,7 +72,7 @@ export const DeploymentFileTreeNodeRow = ({
   return (
     <div className="deployment-file-tree-node">
       <div
-        className="deployment-file-tree-node-row"
+        className={['deployment-file-tree-node-row', rowStatusClass].filter(Boolean).join(' ')}
         onClick={handleRowClick}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -73,6 +84,24 @@ export const DeploymentFileTreeNodeRow = ({
         style={rowStyle}
         tabIndex={0}
       >
+        {(ancestorContinuations.length > 0 || showLeafGuideColumn) && (
+          <span className="deployment-file-tree-node-guides" aria-hidden="true">
+            {ancestorContinuations.map((continues, guideIndex) => (
+              <span
+                key={guideIndex}
+                className={
+                  continues
+                    ? 'deployment-file-tree-node-guide deployment-file-tree-node-guide-continue'
+                    : 'deployment-file-tree-node-guide'
+                }
+              />
+            ))}
+            {showLeafGuideColumn && (
+              <span className="deployment-file-tree-node-guide deployment-file-tree-node-guide-continue" />
+            )}
+          </span>
+        )}
+
         {canExpand ? (
           <button
             aria-expanded={isExpanded}
@@ -90,7 +119,16 @@ export const DeploymentFileTreeNodeRow = ({
               aria-hidden="true"
             />
           </button>
-        ) : null}
+        ) : (
+          <span
+            className={
+              useCompactToggleSpacer
+                ? 'deployment-file-tree-node-toggle-spacer deployment-file-tree-node-toggle-spacer-compact'
+                : 'deployment-file-tree-node-toggle-spacer'
+            }
+            aria-hidden="true"
+          />
+        )}
 
         <span className="deployment-file-tree-node-content">
           {node.IsDirectory ? (

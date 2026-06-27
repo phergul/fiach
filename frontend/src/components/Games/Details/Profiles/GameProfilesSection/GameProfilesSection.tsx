@@ -256,7 +256,6 @@ export const GameProfilesSection = ({
               onAddModsToProfile={handleAddModsToProfile}
               onRemoveModFromProfile={handleRemoveModFromProfile}
               onReorderProfileMods={handleReorderProfileMods}
-              onRestoreVanilla={onRestoreVanilla}
               onSetProfileModEnabled={handleSetProfileModEnabled}
             />
           </div>

@@ -38,6 +38,7 @@ type PathPlan struct {
 	Current            FileStateSnapshot
 	Desired            FileStateSnapshot
 	BaselineBackupPath string
+	LastAppliedAt      string
 }
 
 type DeploymentPlan struct {

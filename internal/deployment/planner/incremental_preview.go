@@ -60,6 +60,9 @@ func PlanIncrementalPreview(
 		pathPlan.Baseline = baselineSnapshot(appliedState, hasApplied)
 		pathPlan.Applied = appliedSnapshot(appliedState, hasApplied)
 		pathPlan.BaselineBackupPath = baselineBackupPath(appliedState, hasApplied)
+		if hasApplied {
+			pathPlan.LastAppliedAt = appliedState.LastAppliedAt
+		}
 
 		if driftResult, found := driftByPath[canonicalPath]; found {
 			pathPlan.DriftKind = driftResult.Kind
@@ -105,7 +108,7 @@ func baselineSnapshot(state appliedstate.PersistedFileState, hasApplied bool) Fi
 
 	snapshot := FileStateSnapshot{
 		Exists: true,
-		Label:  "Original game install",
+		Label:  "Original content",
 	}
 	if state.BaselineSHA256 != nil {
 		snapshot.SHA256 = *state.BaselineSHA256
@@ -124,7 +127,7 @@ func appliedSnapshot(state appliedstate.PersistedFileState, hasApplied bool) Fil
 
 	snapshot := FileStateSnapshot{
 		Exists: true,
-		Label:  "Last Fiach apply",
+		Label:  "Previously applied",
 	}
 	if state.AppliedSHA256 != nil {
 		snapshot.SHA256 = *state.AppliedSHA256
@@ -148,7 +151,7 @@ func currentSnapshotFromDrift(result drift.Result) FileStateSnapshot {
 	if !result.CurrentExists {
 		return FileStateSnapshot{
 			Exists: false,
-			Label:  "Current game install",
+			Label:  "Current on disk",
 		}
 	}
 
@@ -156,7 +159,7 @@ func currentSnapshotFromDrift(result drift.Result) FileStateSnapshot {
 		Exists:    true,
 		SHA256:    result.CurrentSHA256,
 		SizeBytes: result.CurrentSizeBytes,
-		Label:     "Current game install",
+		Label:     "Current on disk",
 	}
 }
 
@@ -166,7 +169,7 @@ func readCurrentSnapshot(gameInstallPath string, gameRelativePath string) (FileS
 	if errors.Is(err, os.ErrNotExist) {
 		return FileStateSnapshot{
 			Exists: false,
-			Label:  "Current game install",
+			Label:  "Current on disk",
 		}, nil
 	}
 	if err != nil {
@@ -177,6 +180,6 @@ func readCurrentSnapshot(gameInstallPath string, gameRelativePath string) (FileS
 		Exists:    true,
 		SHA256:    hash,
 		SizeBytes: size,
-		Label:     "Current game install",
+		Label:     "Current on disk",
 	}, nil
 }

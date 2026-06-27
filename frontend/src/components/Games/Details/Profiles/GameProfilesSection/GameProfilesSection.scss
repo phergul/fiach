@@ -1,6 +1,7 @@
 @use '@styles' as *;
 
-$game-profiles-section-sidebar-width: 30rem;
+$game-profiles-section-sidebar-min-width: 18rem;
+$game-profiles-section-sidebar-max-width: 30rem;
 
 .game-profiles-section {
   display: flex;
@@ -15,7 +16,9 @@ $game-profiles-section-sidebar-width: 30rem;
   display: grid;
   min-height: 32rem;
   flex: 1 1 auto;
-  grid-template-columns: $game-profiles-section-sidebar-width minmax(0, 1fr);
+  grid-template-columns:
+    minmax($game-profiles-section-sidebar-min-width, $game-profiles-section-sidebar-max-width)
+    minmax(0, 1fr);
 }
 
 .game-profiles-section-sidebar,
