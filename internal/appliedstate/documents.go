@@ -18,10 +18,10 @@ const (
 )
 
 type ManifestDocument struct {
-	Version            int                         `json:"version"`
-	AddedFiles         []AddedFile                 `json:"addedFiles"`
-	ReplacedFiles      []ReplacedFile              `json:"replacedFiles"`
-	CreatedDirectories []CreatedDirectory          `json:"createdDirectories"`
+	Version            int                          `json:"version"`
+	AddedFiles         []AddedFile                  `json:"addedFiles"`
+	ReplacedFiles      []ReplacedFile               `json:"replacedFiles"`
+	CreatedDirectories []CreatedDirectory           `json:"createdDirectories"`
 	Files              map[string]ManifestFileEntry `json:"files,omitempty"`
 }
 
