@@ -12,10 +12,11 @@
 
 ## Features
 
-- **Library** - Scan Steam libraries and browse installed games
+- **Library** - Scans your Steam libraries, browse installed games
 - **Mods** - Import from archives (zip, 7z, rar) or plain folders
 - **Profiles** - Per-game profiles with enable/disable and load order
-- **Apply** - Preview and apply a profile, or restore vanilla state
+- **Deployment** - Review planned file changes from mods with a tree view before applying or restoring. Inspect files, resolve drift and conflicts
+- **Incremental apply** - Re-apply an already active profile when you change mods or load order
 - **ReShade** - Detection, preset and content management, apply per game
 - **OptiScaler** - Detection, management, apply per game
 
@@ -31,18 +32,19 @@ Pre-built binaries are published to [GitHub Releases](https://github.com/phergul
 ## Usage
 
 1. **Library** - Scan your Steam games.
-2. **Game details** - Import mods and manage them using tags and metadata.
-3. **Profiles** - Create a profile, add mods, set load order and enabled/disable.
-4. **Apply** - Preview planned changes (files/directories created/replaced), apply the profile to the game install, later restore files to vanilla to remove mods.
-5. **ReShade / OptiScaler** - Select the correct executable, run the wizard to manage.
+2. **Game details** - Import mods, manage tags and metadata, and see which profile is applied.
+3. **Profiles** - Create a profile, add mods, set load order and enabled state.
+4. **Deployment** - Open deployment preview for a profile. Browse the file tree, inspect changes, and resolve any drift or conflicts. Apply when ready. Open it again later to incrementally update an already-applied profile with more changes.
+5. **Restore** - From game details, restore vanilla to remove applied mods and return the game files back to default.
+6. **ReShade / OptiScaler** - Select the correct executable, run the wizard to manage.
 
 ## Platform support
 
 | Platform | Mod Management | ReShade / OptiScaler |
-|----------|------------------|----------------------|
-| Windows | ✅ | ✅ |
-| Linux | ✅ | ❌ |
-| macOS | ✅ | ❌ |
+| -------- | -------------- | -------------------- |
+| Windows  | ✅             | ✅                   |
+| Linux    | ✅             | ❌                   |
+| macOS    | ✅             | ❌                   |
 
 ## Development
 
