@@ -200,7 +200,7 @@ func (s *DeploymentReviewService) GetDeploymentFileDetail(ctx context.Context, p
 		return dto.DeploymentFileDetail{}, err
 	}
 
-	detail = mappers.ToDTODeploymentFileDetail(fileDetail)
+	detail = mappers.ToDTODeploymentFileDetail(fileDetail, entry.GameID)
 
 	diag.complete("Deployment review file detail load completed",
 		slog.String("relative_path", detail.RelativePath),

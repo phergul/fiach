@@ -42,7 +42,7 @@ func TestToDTODeploymentFileDetailIncludesNullFourStateSlots(t *testing.T) {
 		Explanation:   "Will add file.",
 	}
 
-	dtoDetail := mappers.ToDTODeploymentFileDetail(detail)
+	dtoDetail := mappers.ToDTODeploymentFileDetail(detail, 42)
 
 	if dtoDetail.States.Baseline == nil || dtoDetail.States.Applied == nil || dtoDetail.States.Current == nil || dtoDetail.States.Desired == nil {
 		t.Fatalf("ToDTODeploymentFileDetail() states = %+v, want all four slots populated", dtoDetail.States)
@@ -55,5 +55,8 @@ func TestToDTODeploymentFileDetailIncludesNullFourStateSlots(t *testing.T) {
 	}
 	if len(dtoDetail.WriterStack) != 1 || dtoDetail.WriterStack[0].ModName != "SkyUI" {
 		t.Fatalf("writer stack = %+v, want SkyUI winner", dtoDetail.WriterStack)
+	}
+	if dtoDetail.WriterStack[0].DisplayLoadOrder != 1 {
+		t.Fatalf("DisplayLoadOrder = %d, want 1", dtoDetail.WriterStack[0].DisplayLoadOrder)
 	}
 }

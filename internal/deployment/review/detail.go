@@ -7,27 +7,31 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/planner"
+	"github.com/phergul/fiach/internal/deployment/rules"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/storage"
 )
 
 type FileDetail struct {
-	RelativePath      string
-	States            FourStateView
-	WriterStack       []deployment.WriterEntry
-	ConflictCategory  deployment.ConflictCategory
-	FileStatus        deployment.FileStatus
-	PlannedAction     planner.ReapplyAction
-	RiskLevel         deployment.RiskLevel
-	Explanation       string
-	BackupAvailable   bool
-	AvailableActions  []string
-	UserDecision      string
-	UserDecisionLabel string
-	DriftKind         deployment.DriftKind
-	DriftExplanation  string
-	Comparison        StateComparison
-	LastAppliedAt     *time.Time
+	RelativePath             string
+	States                   FourStateView
+	WriterStack              []deployment.WriterEntry
+	ConflictCategory         deployment.ConflictCategory
+	FileStatus               deployment.FileStatus
+	PlannedAction            planner.ReapplyAction
+	RiskLevel                deployment.RiskLevel
+	Explanation              string
+	BackupAvailable          bool
+	AvailableActions         []string
+	ConflictAvailableActions []string
+	SavedConflictRuleModID   *int64
+	SavedConflictRuleModName string
+	UserDecision             string
+	UserDecisionLabel        string
+	DriftKind                deployment.DriftKind
+	DriftExplanation         string
+	Comparison               StateComparison
+	LastAppliedAt            *time.Time
 }
 
 type FourStateView struct {
@@ -52,13 +56,14 @@ type previewHashInput struct {
 }
 
 type previewHashPath struct {
-	Path          string
-	DesiredSHA256 string
-	AppliedSHA256 string
-	CurrentSHA256 string
-	DriftKind     string
-	PlannedAction string
-	FileStatus    string
+	Path                    string
+	DesiredSHA256           string
+	AppliedSHA256           string
+	CurrentSHA256           string
+	DriftKind               string
+	PlannedAction           string
+	FileStatus              string
+	ConflictRuleWinnerModID int64
 }
 
 func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, error) {
@@ -87,6 +92,9 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 	var writerStack []deployment.WriterEntry
 	var explanation string
 	var conflictCategory deployment.ConflictCategory
+	var conflictAvailableActions []string
+	var savedConflictRuleModID *int64
+	var savedConflictRuleModName string
 	if hasDesired {
 		writerStack = append([]deployment.WriterEntry(nil), desiredFile.Writers...)
 		explanation = desiredFile.Explanation
@@ -94,6 +102,17 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		if conflictCategory == "" {
 			conflictCategory = desiredFile.ConflictCategory
 		}
+
+		var savedRule *rules.DeploymentRule
+		if rule, found := entry.PerFileWinnerRules[canonicalPath]; found {
+			ruleCopy := rule
+			savedRule = &ruleCopy
+			modID := rule.WinnerModID
+			savedConflictRuleModID = &modID
+			savedConflictRuleModName = SavedConflictRuleModName(desiredFile, savedRule)
+		}
+
+		conflictAvailableActions = BuildAvailableConflictActions(desiredFile, conflictCategory, savedRule)
 	}
 
 	return FileDetail{
@@ -104,20 +123,23 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 			Current:  toFileStateView(pathPlan.Current),
 			Desired:  toFileStateView(pathPlan.Desired),
 		},
-		WriterStack:       writerStack,
-		ConflictCategory:  conflictCategory,
-		FileStatus:        pathPlan.FileStatus,
-		PlannedAction:     pathPlan.PlannedAction,
-		RiskLevel:         pathPlan.RiskLevel,
-		Explanation:       explanation,
-		BackupAvailable:   pathPlan.BaselineBackupPath != "",
-		AvailableActions:  buildAvailableDriftActions(pathPlan, hasDesired),
-		UserDecision:      persistedDecisionValue(pathPlan.UserDecision),
-		UserDecisionLabel: buildUserDecisionLabel(pathPlan),
-		DriftKind:         pathPlan.DriftKind,
-		LastAppliedAt:     lastAppliedAt,
-		DriftExplanation:  buildDriftExplanation(pathPlan.DriftKind, comparison, pathPlan.FileStatus),
-		Comparison:        comparison,
+		WriterStack:              writerStack,
+		ConflictCategory:         conflictCategory,
+		FileStatus:               pathPlan.FileStatus,
+		PlannedAction:            pathPlan.PlannedAction,
+		RiskLevel:                pathPlan.RiskLevel,
+		Explanation:              explanation,
+		BackupAvailable:          pathPlan.BaselineBackupPath != "",
+		AvailableActions:         buildAvailableDriftActions(pathPlan, hasDesired),
+		ConflictAvailableActions: conflictAvailableActions,
+		SavedConflictRuleModID:   savedConflictRuleModID,
+		SavedConflictRuleModName: savedConflictRuleModName,
+		UserDecision:             persistedDecisionValue(pathPlan.UserDecision),
+		UserDecisionLabel:        buildUserDecisionLabel(pathPlan),
+		DriftKind:                pathPlan.DriftKind,
+		LastAppliedAt:            lastAppliedAt,
+		DriftExplanation:         buildDriftExplanation(pathPlan.DriftKind, comparison, pathPlan.FileStatus),
+		Comparison:               comparison,
 	}, nil
 }
 
@@ -144,17 +166,26 @@ func PreviewHash(entry CachedPreview) (string, error) {
 			desiredSHA256 = pathPlan.Desired.SHA256
 		}
 		input.Paths = append(input.Paths, previewHashPath{
-			Path:          canonicalPath,
-			DesiredSHA256: desiredSHA256,
-			AppliedSHA256: pathPlan.Applied.SHA256,
-			CurrentSHA256: pathPlan.Current.SHA256,
-			DriftKind:     string(pathPlan.DriftKind),
-			PlannedAction: string(pathPlan.PlannedAction),
-			FileStatus:    string(pathPlan.FileStatus),
+			Path:                    canonicalPath,
+			DesiredSHA256:           desiredSHA256,
+			AppliedSHA256:           pathPlan.Applied.SHA256,
+			CurrentSHA256:           pathPlan.Current.SHA256,
+			DriftKind:               string(pathPlan.DriftKind),
+			PlannedAction:           string(pathPlan.PlannedAction),
+			FileStatus:              string(pathPlan.FileStatus),
+			ConflictRuleWinnerModID: conflictRuleWinnerModID(entry, canonicalPath),
 		})
 	}
 
 	return fileops.HashJSON(input)
+}
+
+func conflictRuleWinnerModID(entry CachedPreview, canonicalPath string) int64 {
+	if rule, found := entry.PerFileWinnerRules[canonicalPath]; found {
+		return rule.WinnerModID
+	}
+
+	return 0
 }
 
 func toFileStateView(snapshot planner.FileStateSnapshot) FileStateView {

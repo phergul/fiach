@@ -8,6 +8,7 @@ export {
     DriftKind,
     FileStatus,
     ModContext,
+    ModFileContent,
     OutputKind,
     PlanIssue,
     PlanIssueKind,

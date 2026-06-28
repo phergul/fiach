@@ -24,6 +24,8 @@ export class DesiredFile {
     "OutputKind": OutputKind;
     "Winner": WriterEntry;
     "Writers": WriterEntry[];
+    "ModContentByID": { [_ in `${number}`]?: ModFileContent };
+    "PerFileRuleModID": number | null;
     "ConflictCategory": ConflictCategory;
     "FileStatus": FileStatus;
     "RiskLevel": RiskLevel;
@@ -52,6 +54,12 @@ export class DesiredFile {
         if (!("Writers" in $$source)) {
             this["Writers"] = [];
         }
+        if (!("ModContentByID" in $$source)) {
+            this["ModContentByID"] = {};
+        }
+        if (!("PerFileRuleModID" in $$source)) {
+            this["PerFileRuleModID"] = null;
+        }
         if (!("ConflictCategory" in $$source)) {
             this["ConflictCategory"] = ConflictCategory.$zero;
         }
@@ -74,12 +82,16 @@ export class DesiredFile {
     static createFrom($$source: any = {}): DesiredFile {
         const $$createField5_0 = $$createType0;
         const $$createField6_0 = $$createType1;
+        const $$createField7_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Winner" in $$parsedSource) {
             $$parsedSource["Winner"] = $$createField5_0($$parsedSource["Winner"]);
         }
         if ("Writers" in $$parsedSource) {
             $$parsedSource["Writers"] = $$createField6_0($$parsedSource["Writers"]);
+        }
+        if ("ModContentByID" in $$parsedSource) {
+            $$parsedSource["ModContentByID"] = $$createField7_0($$parsedSource["ModContentByID"]);
         }
         return new DesiredFile($$parsedSource as Partial<DesiredFile>);
     }
@@ -113,8 +125,8 @@ export class DesiredState {
      * Creates a new DesiredState instance from a string or object.
      */
     static createFrom($$source: any = {}): DesiredState {
-        const $$createField2_0 = $$createType3;
-        const $$createField3_0 = $$createType5;
+        const $$createField2_0 = $$createType5;
+        const $$createField3_0 = $$createType7;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Files" in $$parsedSource) {
             $$parsedSource["Files"] = $$createField2_0($$parsedSource["Files"]);
@@ -181,6 +193,35 @@ export class ModContext {
     }
 }
 
+export class ModFileContent {
+    "SourcePath": string;
+    "SHA256": string;
+    "SizeBytes": number;
+
+    /** Creates a new ModFileContent instance. */
+    constructor($$source: Partial<ModFileContent> = {}) {
+        if (!("SourcePath" in $$source)) {
+            this["SourcePath"] = "";
+        }
+        if (!("SHA256" in $$source)) {
+            this["SHA256"] = "";
+        }
+        if (!("SizeBytes" in $$source)) {
+            this["SizeBytes"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ModFileContent instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ModFileContent {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ModFileContent($$parsedSource as Partial<ModFileContent>);
+    }
+}
+
 export enum OutputKind {
     /**
      * The Go zero value for the underlying type of the enum.
@@ -230,7 +271,7 @@ export class PlanIssue {
      * Creates a new PlanIssue instance from a string or object.
      */
     static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType7;
+        const $$createField6_0 = $$createType9;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
@@ -337,9 +378,11 @@ export class WriterEntry {
 // Private type creation functions
 const $$createType0 = WriterEntry.createFrom;
 const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = DesiredFile.createFrom;
+const $$createType2 = ModFileContent.createFrom;
 const $$createType3 = $Create.Map($Create.Any, $$createType2);
-const $$createType4 = PlanIssue.createFrom;
-const $$createType5 = $Create.Array($$createType4);
-const $$createType6 = ModContext.createFrom;
-const $$createType7 = $Create.Nullable($$createType6);
+const $$createType4 = DesiredFile.createFrom;
+const $$createType5 = $Create.Map($Create.Any, $$createType4);
+const $$createType6 = PlanIssue.createFrom;
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = ModContext.createFrom;
+const $$createType9 = $Create.Nullable($$createType8);

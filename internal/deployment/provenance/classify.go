@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/phergul/fiach/internal/deployment"
+	"github.com/phergul/fiach/internal/deployment/rules"
 )
 
 type pathConflict struct {
@@ -15,13 +16,14 @@ type pathConflict struct {
 	message  string
 }
 
-func EnrichState(state *deployment.DesiredState, gameInstallPath string) error {
+func EnrichState(state *deployment.DesiredState, gameInstallPath string, deploymentRules []rules.DeploymentRule) error {
 	if state == nil {
 		return errors.New("desired state is not configured")
 	}
 
 	pathConflicts := detectPathSetConflicts(state.Files)
 	gameInstallPath = filepath.Clean(gameInstallPath)
+	perFileWinnerRules := rules.IndexPerFileWinnerRules(deploymentRules)
 
 	canonicalPaths := sortedCanonicalPaths(state.Files)
 	for _, canonicalPath := range canonicalPaths {
@@ -34,14 +36,28 @@ func EnrichState(state *deployment.DesiredState, gameInstallPath string) error {
 			continue
 		}
 
+		ruleApplied := false
+		if rule, found := perFileWinnerRules[canonicalPath]; found {
+			ruleApplied = rules.ApplyPerFileWinner(&file, rule)
+		}
+
+		if !ruleApplied {
+			winner, hasWinner := findModWinner(file.Writers)
+			if !hasWinner {
+				applyBlockedFile(&file, deployment.ConflictAmbiguousOverwrite, ExplainWinner(deployment.ConflictAmbiguousOverwrite, file.Writers, deployment.WriterEntry{}, false))
+				state.Files[canonicalPath] = file
+				continue
+			}
+
+			file.Winner = winner
+		}
+
 		winner, hasWinner := findModWinner(file.Writers)
 		if !hasWinner {
-			applyBlockedFile(&file, deployment.ConflictAmbiguousOverwrite, ExplainWinner(deployment.ConflictAmbiguousOverwrite, file.Writers, deployment.WriterEntry{}))
+			applyBlockedFile(&file, deployment.ConflictAmbiguousOverwrite, ExplainWinner(deployment.ConflictAmbiguousOverwrite, file.Writers, deployment.WriterEntry{}, false))
 			state.Files[canonicalPath] = file
 			continue
 		}
-
-		file.Winner = winner
 		if len(modWriters(file.Writers)) > 1 {
 			file.ConflictCategory = deployment.ConflictExpectedOverwrite
 			file.RiskLevel = deployment.RiskInfo
@@ -54,7 +70,12 @@ func EnrichState(state *deployment.DesiredState, gameInstallPath string) error {
 			return err
 		}
 
-		file.Explanation = ExplainWinner(file.ConflictCategory, file.Writers, winner)
+		if file.FileStatus == deployment.FileStatusBlocked {
+			state.Files[canonicalPath] = file
+			continue
+		}
+
+		file.Explanation = ExplainWinner(file.ConflictCategory, file.Writers, winner, ruleApplied)
 		state.Files[canonicalPath] = file
 	}
 

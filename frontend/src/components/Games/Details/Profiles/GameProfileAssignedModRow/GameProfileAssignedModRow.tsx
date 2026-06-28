@@ -40,7 +40,7 @@ export const GameProfileAssignedModRow = ({
   onRemoveMod,
   onSetModEnabled,
 }: GameProfileAssignedModRowProps) => {
-  const displayLoadOrder = mod.LoadOrder + 1;
+  const displayLoadOrder = mod.DisplayLoadOrder;
   const isSortable = !dragOverlay;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: mod.ModID,

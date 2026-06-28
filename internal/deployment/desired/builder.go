@@ -7,6 +7,7 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/provenance"
+	"github.com/phergul/fiach/internal/deployment/rules"
 	"github.com/phergul/fiach/internal/operationplan"
 )
 
@@ -16,11 +17,13 @@ type pathAccumulator struct {
 	sha256           string
 	sizeBytes        int64
 	writers          []deployment.WriterEntry
+	contentByModID   map[int64]deployment.ModFileContent
 }
 
 func BuildDesiredState(
 	ctx context.Context,
 	resolved operationplan.ResolveProfilePlanResult,
+	deploymentRules []rules.DeploymentRule,
 ) (state deployment.DesiredState, err error) {
 	defer func() {
 		if err != nil {
@@ -72,6 +75,13 @@ func BuildDesiredState(
 					sha256:           mapping.SHA256,
 					sizeBytes:        mapping.SizeBytes,
 					writers:          []deployment.WriterEntry{writer},
+					contentByModID: map[int64]deployment.ModFileContent{
+						mod.ModID: {
+							SourcePath: mapping.SourcePath,
+							SHA256:     mapping.SHA256,
+							SizeBytes:  mapping.SizeBytes,
+						},
+					},
 				}
 				continue
 			}
@@ -81,10 +91,23 @@ func BuildDesiredState(
 			existing.sizeBytes = mapping.SizeBytes
 			existing.gameRelativePath = mapping.GameRelativePath
 			existing.writers = append(existing.writers, writer)
+			if existing.contentByModID == nil {
+				existing.contentByModID = map[int64]deployment.ModFileContent{}
+			}
+			existing.contentByModID[mod.ModID] = deployment.ModFileContent{
+				SourcePath: mapping.SourcePath,
+				SHA256:     mapping.SHA256,
+				SizeBytes:  mapping.SizeBytes,
+			}
 		}
 	}
 
 	for key, accumulated := range accumulators {
+		modContentByID := map[int64]deployment.ModFileContent{}
+		for modID, content := range accumulated.contentByModID {
+			modContentByID[modID] = content
+		}
+
 		state.Files[key] = deployment.DesiredFile{
 			GameRelativePath: accumulated.gameRelativePath,
 			SourcePath:       accumulated.sourcePath,
@@ -92,10 +115,11 @@ func BuildDesiredState(
 			SizeBytes:        accumulated.sizeBytes,
 			OutputKind:       deployment.OutputCopied,
 			Writers:          append([]deployment.WriterEntry{}, accumulated.writers...),
+			ModContentByID:   modContentByID,
 		}
 	}
 
-	if err := provenance.EnrichState(&state, resolved.GameInstallPath); err != nil {
+	if err := provenance.EnrichState(&state, resolved.GameInstallPath, deploymentRules); err != nil {
 		return deployment.DesiredState{}, err
 	}
 

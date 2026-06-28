@@ -43,14 +43,15 @@ type FourStateView struct {
 }
 
 type WriterEntryDTO struct {
-	Order      int
-	SourceKind string
-	SourceID   string
-	ModID      *int64
-	ModName    string
-	LoadOrder  int64
-	IsWinner   bool
-	WouldWrite bool
+	Order            int
+	SourceKind       string
+	SourceID         string
+	ModID            *int64
+	ModName          string
+	LoadOrder        int64
+	DisplayLoadOrder int64
+	IsWinner         bool
+	WouldWrite       bool
 }
 
 type StateComparison struct {
@@ -60,22 +61,26 @@ type StateComparison struct {
 }
 
 type DeploymentFileDetail struct {
-	RelativePath      string
-	States            FourStateView
-	WriterStack       []WriterEntryDTO
-	ConflictCategory  string
-	FileStatus        string
-	PlannedAction     string
-	RiskLevel         string
-	Explanation       string
-	BackupAvailable   bool
-	AvailableActions  []string
-	UserDecision      string
-	UserDecisionLabel string
-	DriftKind         string
-	DriftExplanation  string
-	Comparison        StateComparison
-	LastAppliedAt     *time.Time
+	RelativePath             string
+	States                   FourStateView
+	WriterStack              []WriterEntryDTO
+	ConflictCategory         string
+	FileStatus               string
+	PlannedAction            string
+	RiskLevel                string
+	Explanation              string
+	BackupAvailable          bool
+	AvailableActions         []string
+	ConflictAvailableActions []string
+	SavedConflictRuleModID   *int64
+	SavedConflictRuleModName string
+	ProfileModsURL           string
+	UserDecision             string
+	UserDecisionLabel        string
+	DriftKind                string
+	DriftExplanation         string
+	Comparison               StateComparison
+	LastAppliedAt            *time.Time
 }
 
 type DeploymentReviewPreview struct {

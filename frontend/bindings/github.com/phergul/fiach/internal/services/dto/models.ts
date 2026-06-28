@@ -348,6 +348,10 @@ export class DeploymentFileDetail {
     "Explanation": string;
     "BackupAvailable": boolean;
     "AvailableActions": string[];
+    "ConflictAvailableActions": string[];
+    "SavedConflictRuleModID": number | null;
+    "SavedConflictRuleModName": string;
+    "ProfileModsURL": string;
     "UserDecision": string;
     "UserDecisionLabel": string;
     "DriftKind": string;
@@ -387,6 +391,18 @@ export class DeploymentFileDetail {
         if (!("AvailableActions" in $$source)) {
             this["AvailableActions"] = [];
         }
+        if (!("ConflictAvailableActions" in $$source)) {
+            this["ConflictAvailableActions"] = [];
+        }
+        if (!("SavedConflictRuleModID" in $$source)) {
+            this["SavedConflictRuleModID"] = null;
+        }
+        if (!("SavedConflictRuleModName" in $$source)) {
+            this["SavedConflictRuleModName"] = "";
+        }
+        if (!("ProfileModsURL" in $$source)) {
+            this["ProfileModsURL"] = "";
+        }
         if (!("UserDecision" in $$source)) {
             this["UserDecision"] = "";
         }
@@ -416,7 +432,8 @@ export class DeploymentFileDetail {
         const $$createField1_0 = $$createType11;
         const $$createField2_0 = $$createType13;
         const $$createField9_0 = $$createType14;
-        const $$createField14_0 = $$createType15;
+        const $$createField10_0 = $$createType14;
+        const $$createField18_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("States" in $$parsedSource) {
             $$parsedSource["States"] = $$createField1_0($$parsedSource["States"]);
@@ -427,8 +444,11 @@ export class DeploymentFileDetail {
         if ("AvailableActions" in $$parsedSource) {
             $$parsedSource["AvailableActions"] = $$createField9_0($$parsedSource["AvailableActions"]);
         }
+        if ("ConflictAvailableActions" in $$parsedSource) {
+            $$parsedSource["ConflictAvailableActions"] = $$createField10_0($$parsedSource["ConflictAvailableActions"]);
+        }
         if ("Comparison" in $$parsedSource) {
-            $$parsedSource["Comparison"] = $$createField14_0($$parsedSource["Comparison"]);
+            $$parsedSource["Comparison"] = $$createField18_0($$parsedSource["Comparison"]);
         }
         return new DeploymentFileDetail($$parsedSource as Partial<DeploymentFileDetail>);
     }
@@ -1934,6 +1954,7 @@ export class ProfileMod {
     "ModUpdatedAt": string;
     "Enabled": boolean;
     "LoadOrder": number;
+    "DisplayLoadOrder": number;
     "CreatedAt": string;
     "UpdatedAt": string;
 
@@ -1959,6 +1980,9 @@ export class ProfileMod {
         }
         if (!("LoadOrder" in $$source)) {
             this["LoadOrder"] = 0;
+        }
+        if (!("DisplayLoadOrder" in $$source)) {
+            this["DisplayLoadOrder"] = 0;
         }
         if (!("CreatedAt" in $$source)) {
             this["CreatedAt"] = "";
@@ -2827,6 +2851,7 @@ export class WriterEntryDTO {
     "ModID": number | null;
     "ModName": string;
     "LoadOrder": number;
+    "DisplayLoadOrder": number;
     "IsWinner": boolean;
     "WouldWrite": boolean;
 
@@ -2849,6 +2874,9 @@ export class WriterEntryDTO {
         }
         if (!("LoadOrder" in $$source)) {
             this["LoadOrder"] = 0;
+        }
+        if (!("DisplayLoadOrder" in $$source)) {
+            this["DisplayLoadOrder"] = 0;
         }
         if (!("IsWinner" in $$source)) {
             this["IsWinner"] = false;

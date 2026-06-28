@@ -33,6 +33,12 @@ export function LoadDeploymentTreeChildren(previewHash: string, parentPath: stri
     });
 }
 
+export function SetDeploymentConflictRule(profileID: number, previewHash: string, relativePath: string, action: string): $CancellablePromise<dto$0.DeploymentReviewPreview> {
+    return $Call.ByID(2976885627, profileID, previewHash, relativePath, action).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 export function SetDeploymentDriftDecision(profileID: number, previewHash: string, relativePath: string, decision: string): $CancellablePromise<dto$0.DeploymentReviewPreview> {
     return $Call.ByID(1910886776, profileID, previewHash, relativePath, decision).then(($result: any) => {
         return $$createType1($result);

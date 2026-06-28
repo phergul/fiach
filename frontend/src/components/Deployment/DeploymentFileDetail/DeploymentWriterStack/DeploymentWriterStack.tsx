@@ -32,8 +32,15 @@ export const DeploymentWriterStack = ({ writers }: DeploymentWriterStackProps) =
             )}
           </div>
           <p className="deployment-writer-stack-meta">
-            Load order {writer.LoadOrder}
-            {writer.WouldWrite ? ' · Would write' : ' · Overwritten'}
+            {writer.SourceKind === 'mod' && (
+              <>
+                Load order {writer.DisplayLoadOrder}
+                {writer.WouldWrite ? ' · Would write' : ' · Overwritten'}
+              </>
+            )}
+            {writer.SourceKind !== 'mod' && (
+              <>{writer.WouldWrite ? 'Would write' : 'Overwritten'}</>
+            )}
           </p>
         </li>
       ))}

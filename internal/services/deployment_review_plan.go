@@ -12,18 +12,21 @@ import (
 	"github.com/phergul/fiach/internal/deployment/planner"
 	"github.com/phergul/fiach/internal/deployment/provenance"
 	"github.com/phergul/fiach/internal/deployment/review"
+	"github.com/phergul/fiach/internal/deployment/rules"
 	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type deploymentPlanBuildResult struct {
-	Profile      dbtypes.ModProfile
-	Resolved     operationplan.ResolveProfilePlanResult
-	Desired      deployment.DesiredState
-	Plan         planner.DeploymentPlan
-	AppliedAt    *time.Time
-	AppliedFound bool
+	Profile            dbtypes.ModProfile
+	Resolved           operationplan.ResolveProfilePlanResult
+	Desired            deployment.DesiredState
+	Plan               planner.DeploymentPlan
+	DeploymentRules    []rules.DeploymentRule
+	PerFileWinnerRules map[string]rules.DeploymentRule
+	AppliedAt          *time.Time
+	AppliedFound       bool
 }
 
 func (s *DeploymentReviewService) buildDeploymentPlan(
@@ -61,7 +64,12 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 		return deploymentPlanBuildResult{}, err
 	}
 
-	desiredState, err := desired.BuildDesiredState(ctx, resolved)
+	deploymentRules, err := s.loadDeploymentRules(ctx, profileID)
+	if err != nil {
+		return deploymentPlanBuildResult{}, err
+	}
+
+	desiredState, err := desired.BuildDesiredState(ctx, resolved, deploymentRules)
 	if err != nil {
 		return deploymentPlanBuildResult{}, err
 	}
@@ -98,23 +106,52 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 	}
 
 	return deploymentPlanBuildResult{
-		Profile:      profile,
-		Resolved:     resolved,
-		Desired:      desiredState,
-		Plan:         plan,
-		AppliedAt:    appliedAt,
-		AppliedFound: appliedFound && appliedState.ProfileID == profileID,
+		Profile:            profile,
+		Resolved:           resolved,
+		Desired:            desiredState,
+		Plan:               plan,
+		DeploymentRules:    deploymentRules,
+		PerFileWinnerRules: rules.IndexPerFileWinnerRules(deploymentRules),
+		AppliedAt:          appliedAt,
+		AppliedFound:       appliedFound && appliedState.ProfileID == profileID,
 	}, nil
+}
+
+func (s *DeploymentReviewService) loadDeploymentRules(
+	ctx context.Context,
+	profileID int64,
+) ([]rules.DeploymentRule, error) {
+	rows, err := s.store.ListDeploymentRulesByProfileID(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
+
+	deploymentRules := make([]rules.DeploymentRule, 0, len(rows))
+	for _, row := range rows {
+		if row.WinnerModID == nil || *row.WinnerModID <= 0 {
+			continue
+		}
+		deploymentRules = append(deploymentRules, rules.DeploymentRule{
+			ProfileID:        row.ProfileID,
+			GameRelativePath: row.GameRelativePath,
+			RuleKind:         row.RuleKind,
+			WinnerModID:      *row.WinnerModID,
+		})
+	}
+
+	return deploymentRules, nil
 }
 
 func deploymentPlanPreviewEntry(result deploymentPlanBuildResult) (review.CachedPreview, error) {
 	entry := review.CachedPreview{
-		ProfileID:   result.Profile.ID,
-		GameID:      result.Profile.GameID,
-		ProfileName: result.Profile.Name,
-		Plan:        result.Plan,
-		Desired:     result.Desired,
-		AppliedAt:   result.AppliedAt,
+		PreviewHash:        "",
+		ProfileID:          result.Profile.ID,
+		GameID:             result.Profile.GameID,
+		ProfileName:        result.Profile.Name,
+		Plan:               result.Plan,
+		Desired:            result.Desired,
+		PerFileWinnerRules: result.PerFileWinnerRules,
+		AppliedAt:          result.AppliedAt,
 	}
 
 	previewHash, err := review.PreviewHash(entry)

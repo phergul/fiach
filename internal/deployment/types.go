@@ -98,6 +98,12 @@ type WriterEntry struct {
 	WouldWrite bool
 }
 
+type ModFileContent struct {
+	SourcePath string
+	SHA256     string
+	SizeBytes  int64
+}
+
 type DesiredFile struct {
 	GameRelativePath string
 	SourcePath       string
@@ -106,6 +112,8 @@ type DesiredFile struct {
 	OutputKind       OutputKind
 	Winner           WriterEntry
 	Writers          []WriterEntry
+	ModContentByID   map[int64]ModFileContent
+	PerFileRuleModID *int64
 	ConflictCategory ConflictCategory
 	FileStatus       FileStatus
 	RiskLevel        RiskLevel

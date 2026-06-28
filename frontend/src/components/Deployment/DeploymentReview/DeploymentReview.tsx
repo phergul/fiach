@@ -64,10 +64,8 @@ export const DeploymentReview = ({
     treeFilters,
   );
 
-  const { detail, isLoading, loadError, refreshDetail } = useDeploymentFileDetail(
-    previewHash,
-    selectedPath,
-  );
+  const { detail, isLoading, loadError, refreshDetail, syncDetailWithPreview } =
+    useDeploymentFileDetail(previewHash, selectedPath);
 
   useEffect(() => {
     setSelectedPath(null);
@@ -81,6 +79,10 @@ export const DeploymentReview = ({
 
   const handlePreviewUpdated = (preview: DeploymentReviewPreview) => {
     onPreviewUpdated(preview);
+
+    if (selectedPath !== null && preview.PreviewHash !== '') {
+      syncDetailWithPreview(preview.PreviewHash, selectedPath).catch(() => undefined);
+    }
   };
 
   const handleSelectNode = (node: DeploymentTreeNode) => {

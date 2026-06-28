@@ -3,9 +3,12 @@ package mappers
 import (
 	"maps"
 
+	"fmt"
+
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/deployment/review"
+	"github.com/phergul/fiach/internal/loadorder"
 	"github.com/phergul/fiach/internal/services/dto"
 )
 
@@ -68,30 +71,40 @@ func ToDTODeploymentTreeNode(node review.TreeNode) dto.DeploymentTreeNode {
 	}
 }
 
-func ToDTODeploymentFileDetail(detail review.FileDetail) dto.DeploymentFileDetail {
+func ToDTODeploymentFileDetail(detail review.FileDetail, gameID int64) dto.DeploymentFileDetail {
 	writerStack := make([]dto.WriterEntryDTO, 0, len(detail.WriterStack))
 	for _, writer := range detail.WriterStack {
 		writerStack = append(writerStack, ToDTOWriterEntryDTO(writer))
 	}
 
 	availableActions := append([]string(nil), detail.AvailableActions...)
+	conflictAvailableActions := append([]string(nil), detail.ConflictAvailableActions...)
+
+	profileModsURL := ""
+	if gameID > 0 {
+		profileModsURL = fmt.Sprintf("/library/%d", gameID)
+	}
 
 	return dto.DeploymentFileDetail{
-		RelativePath:      detail.RelativePath,
-		States:            ToDTOFourStateView(detail.States),
-		WriterStack:       writerStack,
-		ConflictCategory:  string(detail.ConflictCategory),
-		FileStatus:        string(detail.FileStatus),
-		PlannedAction:     string(detail.PlannedAction),
-		RiskLevel:         string(detail.RiskLevel),
-		Explanation:       detail.Explanation,
-		BackupAvailable:   detail.BackupAvailable,
-		AvailableActions:  availableActions,
-		UserDecision:      detail.UserDecision,
-		UserDecisionLabel: detail.UserDecisionLabel,
-		DriftKind:         string(detail.DriftKind),
-		LastAppliedAt:     detail.LastAppliedAt,
-		DriftExplanation:  detail.DriftExplanation,
+		RelativePath:             detail.RelativePath,
+		States:                   ToDTOFourStateView(detail.States),
+		WriterStack:              writerStack,
+		ConflictCategory:         string(detail.ConflictCategory),
+		FileStatus:               string(detail.FileStatus),
+		PlannedAction:            string(detail.PlannedAction),
+		RiskLevel:                string(detail.RiskLevel),
+		Explanation:              detail.Explanation,
+		BackupAvailable:          detail.BackupAvailable,
+		AvailableActions:         availableActions,
+		ConflictAvailableActions: conflictAvailableActions,
+		SavedConflictRuleModID:   detail.SavedConflictRuleModID,
+		SavedConflictRuleModName: detail.SavedConflictRuleModName,
+		ProfileModsURL:           profileModsURL,
+		UserDecision:             detail.UserDecision,
+		UserDecisionLabel:        detail.UserDecisionLabel,
+		DriftKind:                string(detail.DriftKind),
+		LastAppliedAt:            detail.LastAppliedAt,
+		DriftExplanation:         detail.DriftExplanation,
 		Comparison: dto.StateComparison{
 			AppliedMatchesCurrent: detail.Comparison.AppliedMatchesCurrent,
 			AppliedMatchesDesired: detail.Comparison.AppliedMatchesDesired,
@@ -101,15 +114,21 @@ func ToDTODeploymentFileDetail(detail review.FileDetail) dto.DeploymentFileDetai
 }
 
 func ToDTOWriterEntryDTO(writer deployment.WriterEntry) dto.WriterEntryDTO {
+	displayLoadOrder := int64(0)
+	if writer.SourceKind == deployment.SourceKindMod {
+		displayLoadOrder = loadorder.DisplayIndex(writer.LoadOrder)
+	}
+
 	return dto.WriterEntryDTO{
-		Order:      writer.Order,
-		SourceKind: string(writer.SourceKind),
-		SourceID:   writer.SourceID,
-		ModID:      writer.ModID,
-		ModName:    writer.ModName,
-		LoadOrder:  writer.LoadOrder,
-		IsWinner:   writer.IsWinner,
-		WouldWrite: writer.WouldWrite,
+		Order:            writer.Order,
+		SourceKind:       string(writer.SourceKind),
+		SourceID:         writer.SourceID,
+		ModID:            writer.ModID,
+		ModName:          writer.ModName,
+		LoadOrder:        writer.LoadOrder,
+		DisplayLoadOrder: displayLoadOrder,
+		IsWinner:         writer.IsWinner,
+		WouldWrite:       writer.WouldWrite,
 	}
 }
 

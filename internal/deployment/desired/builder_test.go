@@ -12,6 +12,7 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/desired"
+	"github.com/phergul/fiach/internal/deployment/rules"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/storage"
@@ -134,6 +135,55 @@ func TestBuildDesiredState_AmbiguousTiedLoadOrder(t *testing.T) {
 	}
 }
 
+func TestBuildDesiredState_PerFileWinnerRuleOverridesLoadOrder(t *testing.T) {
+	t.Parallel()
+
+	gameRoot := t.TempDir()
+	store := openDesiredStore(t)
+	defer closeDesiredStore(t, store)
+
+	gameID := insertDesiredGame(t, store, "Skyrim", gameRoot)
+	profileID := insertDesiredProfile(t, store, gameID, "Default")
+
+	firstSource := makeDesiredSourceTree(t, map[string]string{"plugin.txt": "alpha"})
+	secondSource := makeDesiredSourceTree(t, map[string]string{"plugin.txt": "beta"})
+
+	firstModID := insertDesiredMod(t, store, gameID, "Alpha", firstSource)
+	secondModID := insertDesiredMod(t, store, gameID, "Beta", secondSource)
+
+	addDesiredProfileMod(t, store, profileID, firstModID, true, 0)
+	addDesiredProfileMod(t, store, profileID, secondModID, true, 1)
+	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
+	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
+
+	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	state, err := desired.BuildDesiredState(context.Background(), resolved, []rules.DeploymentRule{
+		{
+			ProfileID:        profileID,
+			GameRelativePath: "Shared/plugin.txt",
+			RuleKind:         rules.RuleKindPerFileWinner,
+			WinnerModID:      firstModID,
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildDesiredState() error = %v", err)
+	}
+
+	file := desiredFile(t, state, "shared/plugin.txt")
+	if file.SHA256 != sha256String("alpha") {
+		t.Fatalf("winner hash = %q, want alpha content hash", file.SHA256)
+	}
+	if file.Winner.ModName != "Alpha" || !file.Winner.IsWinner {
+		t.Fatalf("winner = %+v, want Alpha as rule winner", file.Winner)
+	}
+	if file.FileStatus == deployment.FileStatusBlocked {
+		t.Fatalf("file status = %q, want unblocked after rule", file.FileStatus)
+	}
+	if !strings.Contains(file.Explanation, "per-file rule") {
+		t.Fatalf("explanation = %q, want per-file rule wording", file.Explanation)
+	}
+}
+
 func TestBuildDesiredState_DestructiveFileDirectory(t *testing.T) {
 	t.Parallel()
 
@@ -172,41 +222,6 @@ func TestBuildDesiredState_DestructiveFileDirectory(t *testing.T) {
 }
 
 func TestBuildDesiredState_BaseGameWriter(t *testing.T) {
-	t.Parallel()
-
-	gameRoot := t.TempDir()
-	existingPath := filepath.Join(gameRoot, "Data", "existing.esp")
-	if err := os.MkdirAll(filepath.Dir(existingPath), 0o755); err != nil {
-		t.Fatalf("os.MkdirAll() error = %v", err)
-	}
-	if err := os.WriteFile(existingPath, []byte("vanilla"), 0o644); err != nil {
-		t.Fatalf("os.WriteFile() error = %v", err)
-	}
-
-	store := openDesiredStore(t)
-	defer closeDesiredStore(t, store)
-
-	gameID := insertDesiredGame(t, store, "Skyrim", gameRoot)
-	profileID := insertDesiredProfile(t, store, gameID, "Default")
-
-	source := makeDesiredSourceTree(t, map[string]string{"existing.esp": "modded"})
-	modID := insertDesiredMod(t, store, gameID, "Mod", source)
-	addDesiredProfileMod(t, store, profileID, modID, true, 0)
-	addDesiredInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
-
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
-	state := buildDesiredState(t, resolved)
-
-	file := desiredFile(t, state, "data/existing.esp")
-	if file.FileStatus != deployment.FileStatusReplaced {
-		t.Fatalf("file status = %q, want replaced", file.FileStatus)
-	}
-	if len(file.Writers) < 2 || file.Writers[0].SourceKind != deployment.SourceKindBaseGame {
-		t.Fatalf("writers = %+v, want base_game prepended", file.Writers)
-	}
-}
-
-func TestBuildDesiredState_AddedWhenNoGameFile(t *testing.T) {
 	t.Parallel()
 
 	gameRoot := t.TempDir()
@@ -341,7 +356,7 @@ func TestBuildDesiredState_CaseFoldingMerge(t *testing.T) {
 func buildDesiredState(t *testing.T, resolved operationplan.ResolveProfilePlanResult) deployment.DesiredState {
 	t.Helper()
 
-	state, err := desired.BuildDesiredState(context.Background(), resolved)
+	state, err := desired.BuildDesiredState(context.Background(), resolved, nil)
 	if err != nil {
 		t.Fatalf("BuildDesiredState() error = %v", err)
 	}

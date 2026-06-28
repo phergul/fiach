@@ -1,6 +1,7 @@
 package mappers
 
 import (
+	"github.com/phergul/fiach/internal/loadorder"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -18,7 +19,18 @@ func ToDTOModProfiles(profiles []dbtypes.ModProfile) []dto.ModProfile {
 }
 
 func ToDTOProfileMod(profileMod dbtypes.ProfileMod) dto.ProfileMod {
-	return dto.ProfileMod(profileMod)
+	return dto.ProfileMod{
+		ProfileID:        profileMod.ProfileID,
+		ModID:            profileMod.ModID,
+		Name:             profileMod.Name,
+		SourcePath:       profileMod.SourcePath,
+		ModUpdatedAt:     profileMod.ModUpdatedAt,
+		Enabled:          profileMod.Enabled,
+		LoadOrder:        profileMod.LoadOrder,
+		DisplayLoadOrder: loadorder.DisplayIndex(profileMod.LoadOrder),
+		CreatedAt:        profileMod.CreatedAt,
+		UpdatedAt:        profileMod.UpdatedAt,
+	}
 }
 
 func ToDTOProfileMods(profileMods []dbtypes.ProfileMod) []dto.ProfileMod {

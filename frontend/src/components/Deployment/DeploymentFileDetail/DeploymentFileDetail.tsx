@@ -13,6 +13,7 @@ import {
 } from '../deploymentLabels';
 import { DeploymentToneChip } from '../DeploymentToneChip/DeploymentToneChip';
 import { DeploymentFourStateView } from './DeploymentFourStateView/DeploymentFourStateView';
+import { DeploymentConflictDecision } from './DeploymentConflictDecision/DeploymentConflictDecision';
 import { DeploymentDriftDecision } from './DeploymentDriftDecision/DeploymentDriftDecision';
 import { DeploymentWriterStack } from './DeploymentWriterStack/DeploymentWriterStack';
 
@@ -124,6 +125,15 @@ export const DeploymentFileDetailPanel = ({
           <p className="deployment-file-detail-decision-note">
             A decision will be required before re-applying this file.
           </p>
+        )}
+
+        {detail !== null && profileID !== null && (
+          <DeploymentConflictDecision
+            detail={detail}
+            onPreviewUpdated={onPreviewUpdated}
+            previewHash={previewHash}
+            profileID={profileID}
+          />
         )}
 
         {detail !== null && profileID !== null && (

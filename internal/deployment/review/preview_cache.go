@@ -6,17 +6,19 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/planner"
+	"github.com/phergul/fiach/internal/deployment/rules"
 )
 
 type CachedPreview struct {
-	PreviewHash string
-	ProfileID   int64
-	GameID      int64
-	ProfileName string
-	Plan        planner.DeploymentPlan
-	Desired     deployment.DesiredState
-	AppliedAt   *time.Time
-	BuiltAt     time.Time
+	PreviewHash        string
+	ProfileID          int64
+	GameID             int64
+	ProfileName        string
+	Plan               planner.DeploymentPlan
+	Desired            deployment.DesiredState
+	PerFileWinnerRules map[string]rules.DeploymentRule
+	AppliedAt          *time.Time
+	BuiltAt            time.Time
 }
 
 type PreviewCache struct {

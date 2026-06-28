@@ -34,6 +34,28 @@ export const useDeploymentFileDetail = (previewHash: string, selectedPath: strin
     }
   }, [previewHash, selectedPath]);
 
+  const syncDetailWithPreview = useCallback(async (nextPreviewHash: string, path: string) => {
+    if (nextPreviewHash === '' || path === '') {
+      return null;
+    }
+
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      const loadedDetail = await GetDeploymentFileDetail(nextPreviewHash, path);
+      setDetail(loadedDetail);
+      return loadedDetail;
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setLoadError(message);
+      setDetail(null);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -77,6 +99,7 @@ export const useDeploymentFileDetail = (previewHash: string, selectedPath: strin
     isLoading,
     loadError,
     refreshDetail: loadDetail,
+    syncDetailWithPreview,
   };
 };
 
