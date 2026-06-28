@@ -88,3 +88,61 @@ type DeploymentReviewPreview struct {
 	Root        DeploymentTreeNode
 	PreviewHash string
 }
+
+type InspectionSideMetadata struct {
+	StateKind         string
+	Label             string
+	Available         bool
+	UnavailableReason string
+	SHA256            string
+	SizeBytes         int64
+}
+
+type TextDiffLine struct {
+	Kind   string
+	Line   string
+	LineNo int
+}
+
+type PEMetadata struct {
+	Machine         string
+	SectionCount    int
+	Characteristics string
+	IsDLL           bool
+	IsEXE           bool
+	SHA256          string
+	SizeBytes       int64
+}
+
+type ImageMetadata struct {
+	Format    string
+	Width     int
+	Height    int
+	SHA256    string
+	SizeBytes int64
+}
+
+type ArchiveEntry struct {
+	Path        string
+	SizeBytes   int64
+	IsDirectory bool
+}
+
+type DeploymentFileInspection struct {
+	RelativePath        string
+	Kind                string
+	LeftState           string
+	RightState          string
+	Left                InspectionSideMetadata
+	Right               InspectionSideMetadata
+	TextLines           []TextDiffLine
+	PEMetadataLeft      *PEMetadata
+	PEMetadataRight     *PEMetadata
+	ImageMetadataLeft   *ImageMetadata
+	ImageMetadataRight  *ImageMetadata
+	ArchiveEntriesLeft  []ArchiveEntry
+	ArchiveEntriesRight []ArchiveEntry
+	LimitReached        bool
+	LimitReason         string
+	FallbackReason      string
+}

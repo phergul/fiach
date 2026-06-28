@@ -1,6 +1,6 @@
 import { FileSearch } from 'lucide-react';
 
-import type { DeploymentFileDetail, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { DeploymentFileDetail, DeploymentFileInspection, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { deploymentPathBaseName, formatAppliedAtFromDate, formatDeploymentDisplayPath } from '@utils';
 
@@ -15,6 +15,7 @@ import { DeploymentToneChip } from '../DeploymentToneChip/DeploymentToneChip';
 import { DeploymentFourStateView } from './DeploymentFourStateView/DeploymentFourStateView';
 import { DeploymentConflictDecision } from './DeploymentConflictDecision/DeploymentConflictDecision';
 import { DeploymentDriftDecision } from './DeploymentDriftDecision/DeploymentDriftDecision';
+import { DeploymentFileInspector } from './DeploymentFileInspector/DeploymentFileInspector';
 import { DeploymentWriterStack } from './DeploymentWriterStack/DeploymentWriterStack';
 
 import './DeploymentFileDetail.scss';
@@ -23,10 +24,14 @@ interface DeploymentFileDetailPanelProps {
   detail: DeploymentFileDetail | null;
   gameInstallPath: string;
   gameName: string;
+  inspection: DeploymentFileInspection | null;
+  inspectionError: string | null;
+  isInspectionLoading: boolean;
   isLoading: boolean;
   loadError: string | null;
   onPreviewUpdated: (preview: DeploymentReviewPreview) => void;
   onRetry: () => void;
+  onRetryInspection: () => void;
   planMode: string;
   previewHash: string;
   profileID: number | null;
@@ -37,10 +42,14 @@ export const DeploymentFileDetailPanel = ({
   detail,
   gameInstallPath,
   gameName,
+  inspection,
+  inspectionError,
+  isInspectionLoading,
   isLoading,
   loadError,
   onPreviewUpdated,
   onRetry,
+  onRetryInspection,
   planMode,
   previewHash,
   profileID,
@@ -159,6 +168,18 @@ export const DeploymentFileDetailPanel = ({
             driftExplanation={detail.DriftExplanation}
             driftKind={detail.DriftKind}
             planMode={planMode}
+          />
+        </section>
+
+        <section className="deployment-file-detail-section" aria-label="File comparison">
+          <h4 className="deployment-file-detail-section-title">File comparison</h4>
+          <DeploymentFileInspector
+            inspection={inspection}
+            isLoading={isInspectionLoading}
+            loadError={inspectionError}
+            onRetry={() => {
+              onRetryInspection();
+            }}
           />
         </section>
 

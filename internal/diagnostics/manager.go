@@ -51,6 +51,7 @@ const (
 	OperationBuildDeploymentReviewPreview = "build_deployment_review_preview"
 	OperationLoadDeploymentTreeChildren   = "load_deployment_tree_children"
 	OperationGetDeploymentFileDetail      = "get_deployment_file_detail"
+	OperationGetDeploymentFileInspection  = "get_deployment_file_inspection"
 	OperationApplyIncrementalDeployment   = "apply_incremental_deployment"
 	OperationSetDeploymentDriftDecision   = "set_deployment_drift_decision"
 	OperationSetDeploymentConflictRule    = "set_deployment_conflict_rule"
@@ -185,6 +186,7 @@ func Operations() []OperationDescriptor {
 		{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
 		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
 		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
+		{Value: OperationGetDeploymentFileInspection, Label: "Get deployment file inspection"},
 		{Value: OperationApplyIncrementalDeployment, Label: "Apply incremental deployment"},
 		{Value: OperationSetDeploymentDriftDecision, Label: "Set deployment drift decision"},
 		{Value: OperationSetDeploymentConflictRule, Label: "Set deployment conflict rule"},

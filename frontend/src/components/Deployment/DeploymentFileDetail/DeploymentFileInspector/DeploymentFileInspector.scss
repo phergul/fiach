@@ -1,0 +1,51 @@
+@use '@styles' as *;
+
+.deployment-file-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.deployment-file-inspector-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $spacing-md;
+}
+
+.deployment-file-inspector-kind,
+.deployment-file-inspector-pair,
+.deployment-file-inspector-fallback,
+.deployment-file-inspector-limit {
+  margin: 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-file-inspector-kind {
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.deployment-file-inspector-pair {
+  color: $color-text-muted;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.deployment-file-inspector-fallback,
+.deployment-file-inspector-limit {
+  color: $color-text-subtle;
+}
+
+.deployment-file-inspector-error {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.deployment-file-inspector-retry {
+  align-self: flex-start;
+  min-height: $table-control-height;
+  padding: 0 $spacing-md;
+}

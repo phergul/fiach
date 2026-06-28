@@ -13,6 +13,7 @@ type CachedPreview struct {
 	PreviewHash        string
 	ProfileID          int64
 	GameID             int64
+	GameInstallPath    string
 	ProfileName        string
 	Plan               planner.DeploymentPlan
 	Desired            deployment.DesiredState

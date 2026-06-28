@@ -7,6 +7,7 @@ import (
 
 	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/deployment/execute"
+	"github.com/phergul/fiach/internal/deployment/inspect"
 	"github.com/phergul/fiach/internal/deployment/planner"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/diagnostics"
@@ -207,6 +208,41 @@ func (s *DeploymentReviewService) GetDeploymentFileDetail(ctx context.Context, p
 	)
 
 	return detail, nil
+}
+
+func (s *DeploymentReviewService) GetDeploymentFileInspection(
+	ctx context.Context,
+	previewHash string,
+	relativePath string,
+) (inspection dto.DeploymentFileInspection, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationGetDeploymentFileInspection, "Deployment review file inspection started",
+		slog.Bool("preview_hash_provided", strings.TrimSpace(previewHash) != ""),
+		slog.String("relative_path", relativePath),
+	)
+	defer func() {
+		if err != nil {
+			err = diag.failWithMappedError("Deployment review file inspection failed", err, deploymentReviewUserError)
+		}
+	}()
+
+	entry, err := s.requireCachedPreview(previewHash)
+	if err != nil {
+		return dto.DeploymentFileInspection{}, err
+	}
+
+	inspectionResult, err := inspect.Inspect(entry, entry.GameInstallPath, relativePath)
+	if err != nil {
+		return dto.DeploymentFileInspection{}, err
+	}
+
+	inspection = mappers.ToDTODeploymentFileInspection(inspectionResult)
+
+	diag.complete("Deployment review file inspection completed",
+		slog.String("relative_path", inspection.RelativePath),
+		slog.String("kind", inspection.Kind),
+	)
+
+	return inspection, nil
 }
 
 func (s *DeploymentReviewService) requireCachedPreview(previewHash string) (review.CachedPreview, error) {

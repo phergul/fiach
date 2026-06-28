@@ -1,0 +1,47 @@
+@use '@styles' as *;
+
+.deployment-text-diff {
+  display: flex;
+  max-height: 16rem;
+  flex-direction: column;
+  gap: $spacing-xs;
+  overflow: auto;
+  padding: $spacing-sm;
+  background: $color-background-elevated;
+}
+
+.deployment-text-diff-empty {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.deployment-text-diff-line {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  font-family: $font-family-monospace;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-text-diff-line-insert {
+  background: color-mix(in srgb, $color-success 12%, transparent);
+}
+
+.deployment-text-diff-line-delete {
+  background: color-mix(in srgb, $color-danger 12%, transparent);
+}
+
+.deployment-text-diff-prefix {
+  flex: 0 0 auto;
+  color: $color-text-muted;
+}
+
+.deployment-text-diff-content {
+  min-width: 0;
+  flex: 1;
+  color: $color-text-primary;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

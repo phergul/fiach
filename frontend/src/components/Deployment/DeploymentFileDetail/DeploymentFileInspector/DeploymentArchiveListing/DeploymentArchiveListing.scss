@@ -1,0 +1,30 @@
+@use '@styles' as *;
+
+.deployment-archive-listing-entries {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deployment-archive-listing-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  font-size: $font-size-sm;
+}
+
+.deployment-archive-listing-path {
+  min-width: 0;
+  color: $color-text-primary;
+  font-family: $font-family-monospace;
+  word-break: break-word;
+}
+
+.deployment-archive-listing-meta {
+  flex: 0 0 auto;
+  color: $color-text-muted;
+}

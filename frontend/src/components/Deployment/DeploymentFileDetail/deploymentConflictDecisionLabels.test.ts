@@ -57,6 +57,7 @@ describe('deploymentConflictDecisionLabels', () => {
               ModID: 1,
               ModName: 'Alpha',
               LoadOrder: 0,
+              DisplayLoadOrder: 1,
               IsWinner: true,
               WouldWrite: false,
               SourceID: 'mod:1',

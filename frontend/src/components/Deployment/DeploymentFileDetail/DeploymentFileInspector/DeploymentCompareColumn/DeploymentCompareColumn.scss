@@ -1,0 +1,84 @@
+@use '@styles' as *;
+
+.deployment-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-separator;
+}
+
+.deployment-compare-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.deployment-compare-column-header {
+  display: flex;
+  min-height: $input-height;
+  align-items: center;
+  padding: 0 $spacing-md;
+  color: $color-text-subtle;
+  background: $color-surface-elevated;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+  text-transform: uppercase;
+}
+
+.deployment-compare-column-desired .deployment-compare-column-header {
+  color: $color-tag-blue;
+}
+
+.deployment-compare-column-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: $spacing-md;
+}
+
+.deployment-compare-column-body-empty {
+  background: $color-background;
+}
+
+.deployment-compare-column-body-populated {
+  background: $color-background-elevated;
+}
+
+.deployment-compare-column-placeholder {
+  margin: 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-compare-column-details {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  margin: 0;
+}
+
+.deployment-compare-column-detail {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.deployment-compare-column-detail dt {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  line-height: $line-height-base;
+}
+
+.deployment-compare-column-detail dd {
+  margin: 0;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-compare-column-hash {
+  font-family: $font-family-monospace;
+}

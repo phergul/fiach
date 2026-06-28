@@ -533,3 +533,62 @@ func TestDeploymentReviewServiceApplyIncrementalDeploymentRejectsStalePreviewHas
 		t.Fatalf("ApplyIncrementalDeployment() error = %q, want stale preview hash", err.Error())
 	}
 }
+
+func TestDeploymentReviewServiceGetDeploymentFileInspectionTextDiff(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"config/settings.ini": "enabled=1\n",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "Config Mod", sourcePath)
+
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Config", nil)
+
+	currentPath := filepath.Join(gameRoot, "Config", "config", "settings.ini")
+	if err := os.MkdirAll(filepath.Dir(currentPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(currentPath, []byte("enabled=0\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	inspection, err := service.GetDeploymentFileInspection(context.Background(), preview.PreviewHash, "Config/config/settings.ini")
+	if err != nil {
+		t.Fatalf("GetDeploymentFileInspection() error = %v", err)
+	}
+	if inspection.Kind != "text_diff" {
+		t.Fatalf("GetDeploymentFileInspection() kind = %q, want text_diff", inspection.Kind)
+	}
+	if len(inspection.TextLines) == 0 {
+		t.Fatal("GetDeploymentFileInspection() text lines = 0, want populated diff")
+	}
+	if inspection.LeftState != "current" || inspection.RightState != "desired" {
+		t.Fatalf("GetDeploymentFileInspection() states = %q / %q, want current / desired", inspection.LeftState, inspection.RightState)
+	}
+}
+
+func TestDeploymentReviewServiceGetDeploymentFileInspectionRequiresPreview(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	service := newDeploymentReviewTestService(store)
+	_, err := service.GetDeploymentFileInspection(context.Background(), "", "Config/settings.ini")
+	if err == nil {
+		t.Fatal("GetDeploymentFileInspection() error = nil, want preview required error")
+	}
+}

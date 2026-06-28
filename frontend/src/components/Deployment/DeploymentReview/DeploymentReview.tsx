@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { DeploymentReviewPreview, DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   useDeploymentFileDetail,
+  useDeploymentFileInspection,
   useDeploymentTree,
   type UseDeploymentTreeResult,
 } from '@hooks';
@@ -67,6 +68,13 @@ export const DeploymentReview = ({
   const { detail, isLoading, loadError, refreshDetail, syncDetailWithPreview } =
     useDeploymentFileDetail(previewHash, selectedPath);
 
+  const {
+    inspection,
+    isLoading: isInspectionLoading,
+    loadError: inspectionError,
+    refreshInspection,
+  } = useDeploymentFileInspection(previewHash, selectedPath);
+
   useEffect(() => {
     setSelectedPath(null);
   }, [profileID]);
@@ -124,11 +132,17 @@ export const DeploymentReview = ({
           detail={detail}
           gameInstallPath={gameInstallPath}
           gameName={gameName}
+          inspection={inspection}
+          inspectionError={inspectionError}
+          isInspectionLoading={isInspectionLoading}
           isLoading={isLoading}
           loadError={loadError}
           onPreviewUpdated={handlePreviewUpdated}
           onRetry={() => {
             refreshDetail().catch(() => undefined);
+          }}
+          onRetryInspection={() => {
+            refreshInspection().catch(() => undefined);
           }}
           planMode={planMode}
           previewHash={previewHash}

@@ -147,6 +147,7 @@ func deploymentPlanPreviewEntry(result deploymentPlanBuildResult) (review.Cached
 		PreviewHash:        "",
 		ProfileID:          result.Profile.ID,
 		GameID:             result.Profile.GameID,
+		GameInstallPath:    result.Resolved.GameInstallPath,
 		ProfileName:        result.Profile.Name,
 		Plan:               result.Plan,
 		Desired:            result.Desired,

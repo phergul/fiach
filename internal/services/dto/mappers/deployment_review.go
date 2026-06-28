@@ -7,6 +7,7 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/execute"
+	"github.com/phergul/fiach/internal/deployment/inspect"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/loadorder"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -162,4 +163,88 @@ func ToDTOApplyIncrementalDeploymentResult(result execute.Result) dto.ApplyIncre
 		Message:        result.Message,
 		RolledBack:     result.RolledBack,
 	}
+}
+
+func ToDTODeploymentFileInspection(result inspect.InspectionResult) dto.DeploymentFileInspection {
+	textLines := make([]dto.TextDiffLine, 0, len(result.TextLines))
+	for _, line := range result.TextLines {
+		textLines = append(textLines, dto.TextDiffLine{
+			Kind:   line.Kind,
+			Line:   line.Line,
+			LineNo: line.LineNo,
+		})
+	}
+
+	return dto.DeploymentFileInspection{
+		RelativePath:        result.RelativePath,
+		Kind:                string(result.Kind),
+		LeftState:           string(result.LeftState),
+		RightState:          string(result.RightState),
+		Left:                toDTOInspectionSideMetadata(result.Left),
+		Right:               toDTOInspectionSideMetadata(result.Right),
+		TextLines:           textLines,
+		PEMetadataLeft:      toOptionalPEMetadataDTO(result.PEMetadataLeft),
+		PEMetadataRight:     toOptionalPEMetadataDTO(result.PEMetadataRight),
+		ImageMetadataLeft:   toOptionalImageMetadataDTO(result.ImageMetadataLeft),
+		ImageMetadataRight:  toOptionalImageMetadataDTO(result.ImageMetadataRight),
+		ArchiveEntriesLeft:  toDTOArchiveEntries(result.ArchiveEntriesLeft),
+		ArchiveEntriesRight: toDTOArchiveEntries(result.ArchiveEntriesRight),
+		LimitReached:        result.LimitReached,
+		LimitReason:         result.LimitReason,
+		FallbackReason:      result.FallbackReason,
+	}
+}
+
+func toDTOInspectionSideMetadata(side inspect.SideMetadata) dto.InspectionSideMetadata {
+	return dto.InspectionSideMetadata{
+		StateKind:         string(side.StateKind),
+		Label:             side.Label,
+		Available:         side.Available,
+		UnavailableReason: side.UnavailableReason,
+		SHA256:            side.SHA256,
+		SizeBytes:         side.SizeBytes,
+	}
+}
+
+func toOptionalPEMetadataDTO(metadata *inspect.PEMetadata) *dto.PEMetadata {
+	if metadata == nil {
+		return nil
+	}
+
+	return &dto.PEMetadata{
+		Machine:         metadata.Machine,
+		SectionCount:    metadata.SectionCount,
+		Characteristics: metadata.Characteristics,
+		IsDLL:           metadata.IsDLL,
+		IsEXE:           metadata.IsEXE,
+		SHA256:          metadata.SHA256,
+		SizeBytes:       metadata.SizeBytes,
+	}
+}
+
+func toOptionalImageMetadataDTO(metadata *inspect.ImageMetadata) *dto.ImageMetadata {
+	if metadata == nil {
+		return nil
+	}
+
+	return &dto.ImageMetadata{
+		Format:    metadata.Format,
+		Width:     metadata.Width,
+		Height:    metadata.Height,
+		SHA256:    metadata.SHA256,
+		SizeBytes: metadata.SizeBytes,
+	}
+}
+
+func toDTOArchiveEntries(entries []inspect.ArchiveEntry) []dto.ArchiveEntry {
+	result := make([]dto.ArchiveEntry, 0, len(entries))
+	for _, entry := range entries {
+		result = append(result, dto.ArchiveEntry{
+			Path:        entry.Path,
+			SizeBytes:   entry.SizeBytes,
+			IsDirectory: entry.IsDirectory,
+		})
+	}
+
+	return result
 }

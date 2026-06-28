@@ -14,6 +14,8 @@ export { useDeploymentTree } from './useDeploymentTree';
 export type { UseDeploymentTreeResult } from './useDeploymentTree';
 export { useDeploymentFileDetail } from './useDeploymentFileDetail';
 export type { UseDeploymentFileDetailResult } from './useDeploymentFileDetail';
+export { useDeploymentFileInspection } from './useDeploymentFileInspection';
+export type { UseDeploymentFileInspectionResult } from './useDeploymentFileInspection';
 export { useStoredGames } from './useStoredGames';
 
 //games

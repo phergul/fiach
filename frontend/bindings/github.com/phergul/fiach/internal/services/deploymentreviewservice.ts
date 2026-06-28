@@ -27,9 +27,15 @@ export function GetDeploymentFileDetail(previewHash: string, relativePath: strin
     });
 }
 
+export function GetDeploymentFileInspection(previewHash: string, relativePath: string): $CancellablePromise<dto$0.DeploymentFileInspection> {
+    return $Call.ByID(1144306851, previewHash, relativePath).then(($result: any) => {
+        return $$createType3($result);
+    });
+}
+
 export function LoadDeploymentTreeChildren(previewHash: string, parentPath: string): $CancellablePromise<dto$0.DeploymentTreeNode[]> {
     return $Call.ByID(3992299200, previewHash, parentPath).then(($result: any) => {
-        return $$createType4($result);
+        return $$createType5($result);
     });
 }
 
@@ -49,5 +55,6 @@ export function SetDeploymentDriftDecision(profileID: number, previewHash: strin
 const $$createType0 = dto$0.ApplyIncrementalDeploymentResult.createFrom;
 const $$createType1 = dto$0.DeploymentReviewPreview.createFrom;
 const $$createType2 = dto$0.DeploymentFileDetail.createFrom;
-const $$createType3 = dto$0.DeploymentTreeNode.createFrom;
-const $$createType4 = $Create.Array($$createType3);
+const $$createType3 = dto$0.DeploymentFileInspection.createFrom;
+const $$createType4 = dto$0.DeploymentTreeNode.createFrom;
+const $$createType5 = $Create.Array($$createType4);
