@@ -47,6 +47,8 @@ func StatusPriority(status deployment.FileStatus) int {
 		return 4
 	case deployment.FileStatusExternal:
 		return 3
+	case deployment.FileStatusSkipped:
+		return 3
 	case deployment.FileStatusDeleted:
 		return 3
 	case deployment.FileStatusRestored:

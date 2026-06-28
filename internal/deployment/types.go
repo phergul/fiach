@@ -26,6 +26,7 @@ const (
 	FileStatusConflict  FileStatus = "conflict"
 	FileStatusDrifted   FileStatus = "drifted"
 	FileStatusExternal  FileStatus = "external"
+	FileStatusSkipped   FileStatus = "skipped"
 	FileStatusUnchanged FileStatus = "unchanged"
 )
 

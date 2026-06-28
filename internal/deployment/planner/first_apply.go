@@ -1,7 +1,9 @@
 package planner
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -50,6 +52,14 @@ func PlanFirstApply(state deployment.DesiredState, gameInstallPath string) (plan
 		case deployment.FileStatusReplaced:
 			targetPath := filepath.Join(gameInstallPath, filepath.FromSlash(file.GameRelativePath))
 			hash, size, integrityErr := fileops.FileIntegrity(targetPath)
+			if errors.Is(integrityErr, os.ErrNotExist) {
+				pathPlan.PlannedAction = ReapplyReplace
+				pathPlan.Current = FileStateSnapshot{
+					Exists: false,
+					Label:  "Current game install",
+				}
+				break
+			}
 			if integrityErr != nil {
 				return DeploymentPlan{}, fmt.Errorf("hash current file %q: %w", file.GameRelativePath, integrityErr)
 			}

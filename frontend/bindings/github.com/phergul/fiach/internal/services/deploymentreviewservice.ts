@@ -33,6 +33,12 @@ export function LoadDeploymentTreeChildren(previewHash: string, parentPath: stri
     });
 }
 
+export function SetDeploymentDriftDecision(profileID: number, previewHash: string, relativePath: string, decision: string): $CancellablePromise<dto$0.DeploymentReviewPreview> {
+    return $Call.ByID(1910886776, profileID, previewHash, relativePath, decision).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = dto$0.ApplyIncrementalDeploymentResult.createFrom;
 const $$createType1 = dto$0.DeploymentReviewPreview.createFrom;

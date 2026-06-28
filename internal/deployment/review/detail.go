@@ -12,20 +12,22 @@ import (
 )
 
 type FileDetail struct {
-	RelativePath     string
-	States           FourStateView
-	WriterStack      []deployment.WriterEntry
-	ConflictCategory deployment.ConflictCategory
-	FileStatus       deployment.FileStatus
-	PlannedAction    planner.ReapplyAction
-	RiskLevel        deployment.RiskLevel
-	Explanation      string
-	BackupAvailable  bool
-	AvailableActions []string
-	DriftKind        deployment.DriftKind
-	DriftExplanation string
-	Comparison       StateComparison
-	LastAppliedAt    *time.Time
+	RelativePath      string
+	States            FourStateView
+	WriterStack       []deployment.WriterEntry
+	ConflictCategory  deployment.ConflictCategory
+	FileStatus        deployment.FileStatus
+	PlannedAction     planner.ReapplyAction
+	RiskLevel         deployment.RiskLevel
+	Explanation       string
+	BackupAvailable   bool
+	AvailableActions  []string
+	UserDecision      string
+	UserDecisionLabel string
+	DriftKind         deployment.DriftKind
+	DriftExplanation  string
+	Comparison        StateComparison
+	LastAppliedAt     *time.Time
 }
 
 type FourStateView struct {
@@ -102,18 +104,20 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 			Current:  toFileStateView(pathPlan.Current),
 			Desired:  toFileStateView(pathPlan.Desired),
 		},
-		WriterStack:      writerStack,
-		ConflictCategory: conflictCategory,
-		FileStatus:       pathPlan.FileStatus,
-		PlannedAction:    pathPlan.PlannedAction,
-		RiskLevel:        pathPlan.RiskLevel,
-		Explanation:      explanation,
-		BackupAvailable:  pathPlan.BaselineBackupPath != "",
-		AvailableActions: nil,
-		DriftKind:        pathPlan.DriftKind,
-		LastAppliedAt:    lastAppliedAt,
-		DriftExplanation: buildDriftExplanation(pathPlan.DriftKind, comparison, pathPlan.FileStatus),
-		Comparison:       comparison,
+		WriterStack:       writerStack,
+		ConflictCategory:  conflictCategory,
+		FileStatus:        pathPlan.FileStatus,
+		PlannedAction:     pathPlan.PlannedAction,
+		RiskLevel:         pathPlan.RiskLevel,
+		Explanation:       explanation,
+		BackupAvailable:   pathPlan.BaselineBackupPath != "",
+		AvailableActions:  buildAvailableDriftActions(pathPlan, hasDesired),
+		UserDecision:      persistedDecisionValue(pathPlan.UserDecision),
+		UserDecisionLabel: buildUserDecisionLabel(pathPlan),
+		DriftKind:         pathPlan.DriftKind,
+		LastAppliedAt:     lastAppliedAt,
+		DriftExplanation:  buildDriftExplanation(pathPlan.DriftKind, comparison, pathPlan.FileStatus),
+		Comparison:        comparison,
 	}, nil
 }
 

@@ -92,6 +92,8 @@ export class PathPlan {
     "Desired": FileStateSnapshot;
     "BaselineBackupPath": string;
     "LastAppliedAt": string;
+    "UserDecision": string | null;
+    "RequiresDriftArchive": boolean;
 
     /** Creates a new PathPlan instance. */
     constructor($$source: Partial<PathPlan> = {}) {
@@ -130,6 +132,12 @@ export class PathPlan {
         }
         if (!("LastAppliedAt" in $$source)) {
             this["LastAppliedAt"] = "";
+        }
+        if (!("UserDecision" in $$source)) {
+            this["UserDecision"] = null;
+        }
+        if (!("RequiresDriftArchive" in $$source)) {
+            this["RequiresDriftArchive"] = false;
         }
 
         Object.assign(this, $$source);
@@ -182,6 +190,9 @@ export enum ReapplyAction {
     ReapplyDelete = "delete",
     ReapplyRestoreBaseline = "restore_baseline",
     ReapplyRepair = "repair",
+    ReapplyBackupThenReplace = "backup_then_replace",
+    ReapplyBackupThenDelete = "backup_then_delete",
+    ReapplyBackupThenRestore = "backup_then_restore",
     ReapplyRequireDecision = "require_decision",
     ReapplyBlock = "block",
 };

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
@@ -73,6 +74,54 @@ func (s *Store) ListAppliedFileStates(ctx context.Context, gameID int64) (states
 	}
 
 	return states, nil
+}
+
+func (s *Store) UpdateAppliedFileStateUserDecision(
+	ctx context.Context,
+	gameID int64,
+	profileID int64,
+	gameRelativePath string,
+	decision *string,
+) (err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("update applied file state user decision: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return errors.New("store is not open")
+	}
+	if gameID <= 0 {
+		return errors.New("game ID must be positive")
+	}
+	if profileID <= 0 {
+		return errors.New("profile ID must be positive")
+	}
+	if strings.TrimSpace(gameRelativePath) == "" {
+		return errors.New("game relative path is required")
+	}
+
+	result, err := s.db.ExecContext(ctx, `
+		UPDATE applied_file_states
+		SET user_decision = ?
+		WHERE game_id = ?
+			AND profile_id = ?
+			AND game_relative_path = ?
+	`, nullableText(stringValue(decision)), gameID, profileID, gameRelativePath)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("applied file state %q was not found", gameRelativePath)
+	}
+
+	return nil
 }
 
 func (s *Store) HasAppliedFileStates(ctx context.Context, gameID int64) (found bool, err error) {

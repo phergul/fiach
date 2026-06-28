@@ -12,8 +12,6 @@ import (
 	"github.com/phergul/fiach/internal/fileops"
 )
 
-const UserDecisionKeepExternal = "keep_external"
-
 func DetectForPaths(
 	installPath string,
 	applied []appliedstate.PersistedFileState,
@@ -73,7 +71,19 @@ func detectPath(installPath string, state appliedstate.PersistedFileState) (Resu
 		result.AppliedSizeBytes = *state.AppliedSizeBytes
 	}
 
-	if isKeepExternalDecision(state.UserDecision) {
+	if IsSkippedDecision(state.UserDecision) {
+		current, currentErr := readCurrentState(installPath, state.GameRelativePath)
+		if currentErr != nil {
+			return Result{}, currentErr
+		}
+		result.CurrentExists = current.Exists
+		result.CurrentSHA256 = current.SHA256
+		result.CurrentSizeBytes = current.SizeBytes
+		result.Kind = deployment.DriftNone
+		return result, nil
+	}
+
+	if IsKeepExternalDecision(state.UserDecision) {
 		result.Kind = deployment.DriftExternal
 		current, currentErr := readCurrentState(installPath, state.GameRelativePath)
 		if currentErr != nil {
@@ -142,12 +152,4 @@ func matchesAppliedIntegrity(appliedSHA256 string, appliedSizeBytes int64, curre
 	}
 
 	return strings.EqualFold(appliedSHA256, currentSHA256) && appliedSizeBytes == currentSizeBytes
-}
-
-func isKeepExternalDecision(decision *string) bool {
-	if decision == nil {
-		return false
-	}
-
-	return *decision == UserDecisionKeepExternal
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { DeploymentReviewPreview, DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   useDeploymentFileDetail,
   useDeploymentTree,
@@ -17,8 +17,10 @@ interface DeploymentReviewProps {
   gameInstallPath: string;
   gameName: string;
   onPreviewRefreshNeeded: () => void;
+  onPreviewUpdated: (preview: DeploymentReviewPreview) => void;
   planMode: string;
   previewHash: string;
+  profileID: number | null;
   rootChildren: DeploymentTreeNode[];
 }
 
@@ -28,8 +30,10 @@ export const DeploymentReview = ({
   gameInstallPath,
   gameName,
   onPreviewRefreshNeeded,
+  onPreviewUpdated,
   planMode,
   previewHash,
+  profileID,
   rootChildren,
 }: DeploymentReviewProps) => {
   const [filters, setFilters] = useState<DeploymentTreeFilters>(emptyDeploymentTreeFilters());
@@ -67,13 +71,17 @@ export const DeploymentReview = ({
 
   useEffect(() => {
     setSelectedPath(null);
-  }, [previewHash]);
+  }, [profileID]);
 
   useEffect(() => {
     if (loadError !== null && loadError.includes('preview is no longer available')) {
       onPreviewRefreshNeeded();
     }
   }, [loadError, onPreviewRefreshNeeded]);
+
+  const handlePreviewUpdated = (preview: DeploymentReviewPreview) => {
+    onPreviewUpdated(preview);
+  };
 
   const handleSelectNode = (node: DeploymentTreeNode) => {
     if (node.IsDirectory) {
@@ -116,10 +124,13 @@ export const DeploymentReview = ({
           gameName={gameName}
           isLoading={isLoading}
           loadError={loadError}
+          onPreviewUpdated={handlePreviewUpdated}
           onRetry={() => {
             refreshDetail().catch(() => undefined);
           }}
           planMode={planMode}
+          previewHash={previewHash}
+          profileID={profileID}
           selectedPath={selectedPath}
         />
       </div>

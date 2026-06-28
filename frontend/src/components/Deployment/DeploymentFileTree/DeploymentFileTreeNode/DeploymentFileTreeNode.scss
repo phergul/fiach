@@ -61,6 +61,11 @@ $deployment-file-tree-node-row-height: 2rem;
   border-left: $app-border-width solid $color-info;
 }
 
+.deployment-file-tree-node-row-skipped {
+  background: color-mix(in srgb, $color-warning 8%, transparent);
+  border-left: $app-border-width solid $color-warning;
+}
+
 .deployment-file-tree-node-toggle {
   display: inline-flex;
   width: $deployment-file-tree-node-toggle-size;

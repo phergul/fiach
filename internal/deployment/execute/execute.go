@@ -56,7 +56,18 @@ func Execute(ctx context.Context, execContext Context, saver AppliedStateSaver) 
 		now = time.Now
 	}
 
-	journalID := fmt.Sprintf("%d-%x", now().UnixNano(), []byte(execContext.PreviewHash[:min(6, len(execContext.PreviewHash))]))
+	archiveTimestamp := now()
+	if _, err := archiveDriftedFiles(
+		execContext.GameInstallPath,
+		execContext.GameModStoragePath,
+		execContext.GameID,
+		execContext.Plan,
+		archiveTimestamp,
+	); err != nil {
+		return Result{}, err
+	}
+
+	journalID := fmt.Sprintf("%d-%x", archiveTimestamp.UnixNano(), []byte(execContext.PreviewHash[:min(6, len(execContext.PreviewHash))]))
 	journalRoot := filepath.Join(execContext.GameModStoragePath, "deployment-journals", journalID)
 	journalPath := filepath.Join(execContext.GameModStoragePath, "deployment-journals", journalID+".json")
 
@@ -64,7 +75,7 @@ func Execute(ctx context.Context, execContext Context, saver AppliedStateSaver) 
 		Version:   journalVersion,
 		ID:        journalID,
 		GameID:    execContext.GameID,
-		StartedAt: now(),
+		StartedAt: archiveTimestamp,
 		Action:    journalActionIncrementalApply,
 	}
 

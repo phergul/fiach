@@ -12,14 +12,17 @@ const (
 type ReapplyAction string
 
 const (
-	ReapplyNoOp            ReapplyAction = "noop"
-	ReapplyCreate          ReapplyAction = "create"
-	ReapplyReplace         ReapplyAction = "replace"
-	ReapplyDelete          ReapplyAction = "delete"
-	ReapplyRestoreBaseline ReapplyAction = "restore_baseline"
-	ReapplyRepair          ReapplyAction = "repair"
-	ReapplyRequireDecision ReapplyAction = "require_decision"
-	ReapplyBlock           ReapplyAction = "block"
+	ReapplyNoOp              ReapplyAction = "noop"
+	ReapplyCreate            ReapplyAction = "create"
+	ReapplyReplace           ReapplyAction = "replace"
+	ReapplyDelete            ReapplyAction = "delete"
+	ReapplyRestoreBaseline   ReapplyAction = "restore_baseline"
+	ReapplyRepair            ReapplyAction = "repair"
+	ReapplyBackupThenReplace ReapplyAction = "backup_then_replace"
+	ReapplyBackupThenDelete  ReapplyAction = "backup_then_delete"
+	ReapplyBackupThenRestore ReapplyAction = "backup_then_restore"
+	ReapplyRequireDecision   ReapplyAction = "require_decision"
+	ReapplyBlock             ReapplyAction = "block"
 )
 
 type FileStateSnapshot struct {
@@ -30,18 +33,20 @@ type FileStateSnapshot struct {
 }
 
 type PathPlan struct {
-	GameRelativePath   string
-	PlannedAction      ReapplyAction
-	FileStatus         deployment.FileStatus
-	RiskLevel          deployment.RiskLevel
-	ConflictCategory   deployment.ConflictCategory
-	DriftKind          deployment.DriftKind
-	Baseline           FileStateSnapshot
-	Applied            FileStateSnapshot
-	Current            FileStateSnapshot
-	Desired            FileStateSnapshot
-	BaselineBackupPath string
-	LastAppliedAt      string
+	GameRelativePath     string
+	PlannedAction        ReapplyAction
+	FileStatus           deployment.FileStatus
+	RiskLevel            deployment.RiskLevel
+	ConflictCategory     deployment.ConflictCategory
+	DriftKind            deployment.DriftKind
+	Baseline             FileStateSnapshot
+	Applied              FileStateSnapshot
+	Current              FileStateSnapshot
+	Desired              FileStateSnapshot
+	BaselineBackupPath   string
+	LastAppliedAt        string
+	UserDecision         *string
+	RequiresDriftArchive bool
 }
 
 type DeploymentPlan struct {

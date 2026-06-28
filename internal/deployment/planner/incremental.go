@@ -99,6 +99,7 @@ func planIncrementalPath(
 		pathPlan.Applied = appliedSnapshot(appliedState, true)
 		pathPlan.BaselineBackupPath = baselineBackupPath(appliedState, true)
 		pathPlan.LastAppliedAt = appliedState.LastAppliedAt
+		pathPlan.UserDecision = appliedState.UserDecision
 	}
 
 	gameRelativePath := pathPlan.GameRelativePath
@@ -123,10 +124,6 @@ func planIncrementalPath(
 		return pathPlan, nil
 	}
 
-	if hasDesired && !hasApplied {
-		return pathPlan, nil
-	}
-
 	if hasDesired && hasApplied {
 		classifyIncrementalDelta(&pathPlan, desiredFile, appliedState)
 	}
@@ -138,6 +135,24 @@ func classifyProfileRemoval(pathPlan *PathPlan, appliedState appliedstate.Persis
 	pathPlan.Desired = FileStateSnapshot{
 		Exists: false,
 		Label:  "Desired content",
+	}
+
+	if applyPersistedUserDecision(pathPlan, appliedState) {
+		return
+	}
+
+	if pathRequiresDriftDecision(*pathPlan) {
+		if applyBackupAndApplyDecision(pathPlan, deployment.DesiredFile{}, appliedState, false) {
+			return
+		}
+
+		pathPlan.PlannedAction = ReapplyRequireDecision
+		pathPlan.FileStatus = deployment.FileStatusDrifted
+		pathPlan.RiskLevel = deployment.RiskError
+		if pathPlan.DriftKind == deployment.DriftNone {
+			pathPlan.DriftKind = deployment.DriftModified
+		}
+		return
 	}
 
 	if !appliedState.BaselineExists {
@@ -170,7 +185,7 @@ func classifyIncrementalDelta(
 
 	wantHash := desiredFile.SHA256
 	wasHash := appliedHash(appliedState)
-	diskHash := snapshotHash(pathPlan.Current)
+	diskHash := SnapshotHash(pathPlan.Current)
 
 	if wantHash != "" && wasHash != "" && diskHash != "" &&
 		strings.EqualFold(wantHash, wasHash) &&
@@ -192,12 +207,8 @@ func classifyIncrementalDelta(
 		return
 	}
 
-	if wasHash != "" && !diskMatchesApplied(wasHash, pathPlan.Current) {
-		if isKeepExternalDecision(appliedState.UserDecision) {
-			pathPlan.PlannedAction = ReapplyNoOp
-			pathPlan.FileStatus = deployment.FileStatusExternal
-			pathPlan.RiskLevel = deployment.RiskInfo
-			pathPlan.DriftKind = deployment.DriftExternal
+	if wasHash != "" && !DiskMatchesApplied(wasHash, pathPlan.Current) {
+		if applyPersistedUserDecision(pathPlan, appliedState) {
 			return
 		}
 
@@ -210,11 +221,19 @@ func classifyIncrementalDelta(
 			return
 		}
 
+		if applyBackupAndApplyDecision(pathPlan, desiredFile, appliedState, true) {
+			return
+		}
+
 		pathPlan.PlannedAction = ReapplyRequireDecision
 		pathPlan.FileStatus = deployment.FileStatusDrifted
 		pathPlan.RiskLevel = deployment.RiskError
 		if pathPlan.DriftKind == deployment.DriftNone {
-			pathPlan.DriftKind = deployment.DriftModified
+			if !pathPlan.Current.Exists {
+				pathPlan.DriftKind = deployment.DriftMissing
+			} else {
+				pathPlan.DriftKind = deployment.DriftModified
+			}
 		}
 	}
 }
@@ -247,23 +266,6 @@ func appliedHash(state appliedstate.PersistedFileState) string {
 	return *state.AppliedSHA256
 }
 
-func snapshotHash(snapshot FileStateSnapshot) string {
-	if !snapshot.Exists {
-		return ""
-	}
-	return snapshot.SHA256
-}
-
-func diskMatchesApplied(appliedHash string, current FileStateSnapshot) bool {
-	if appliedHash == "" {
-		return false
-	}
-	if !current.Exists {
-		return false
-	}
-	return strings.EqualFold(appliedHash, current.SHA256)
-}
-
 func singleModWriter(writers []deployment.WriterEntry) bool {
 	count := 0
 	for _, writer := range writers {
@@ -272,11 +274,4 @@ func singleModWriter(writers []deployment.WriterEntry) bool {
 		}
 	}
 	return count == 1
-}
-
-func isKeepExternalDecision(decision *string) bool {
-	if decision == nil {
-		return false
-	}
-	return *decision == drift.UserDecisionKeepExternal
 }

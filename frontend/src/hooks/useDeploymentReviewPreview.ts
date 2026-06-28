@@ -79,6 +79,9 @@ export const useDeploymentReviewPreview = (profileID: number | null) => {
   const previewHash = preview?.PreviewHash ?? '';
 
   return {
+    applyPreview: (updatedPreview: DeploymentReviewPreview) => {
+      setPreview(updatedPreview);
+    },
     isLoading,
     loadError,
     preview,

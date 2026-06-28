@@ -113,6 +113,7 @@ export const GameApply = () => {
       ? null
       : (profileManager.profiles.find((profile) => profile.ID === parsedProfileID) ?? null);
   const {
+    applyPreview,
     isLoading: isPreviewLoading,
     loadError: previewLoadError,
     previewHash,
@@ -460,8 +461,10 @@ export const GameApply = () => {
                 gameInstallPath={game.InstallPath}
                 gameName={game.Name}
                 onPreviewRefreshNeeded={handlePreviewRefreshNeeded}
+                onPreviewUpdated={applyPreview}
                 planMode={summary?.PlanMode ?? 'first_apply'}
                 previewHash={previewHash}
+                profileID={selectedProfile?.ID ?? null}
                 rootChildren={rootChildren}
               />
             )}

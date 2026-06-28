@@ -18,8 +18,10 @@ describe('deploymentLabels', () => {
   it('maps incremental tones', () => {
     expect(resolveDeploymentActionTone('drifted', 'require_decision')).toBe('warning');
     expect(resolveDeploymentActionTone('external', 'noop')).toBe('info');
+    expect(resolveDeploymentActionTone('skipped', 'noop')).toBe('warning');
     expect(resolveDeploymentActionTone('unchanged', 'noop')).toBe('default');
     expect(resolveDeploymentSummaryTone('drifted')).toBe('warning');
     expect(resolveDeploymentSummaryTone('external')).toBe('info');
+    expect(resolveDeploymentSummaryTone('skipped')).toBe('warning');
   });
 });

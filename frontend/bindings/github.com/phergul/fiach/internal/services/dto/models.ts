@@ -348,6 +348,8 @@ export class DeploymentFileDetail {
     "Explanation": string;
     "BackupAvailable": boolean;
     "AvailableActions": string[];
+    "UserDecision": string;
+    "UserDecisionLabel": string;
     "DriftKind": string;
     "DriftExplanation": string;
     "Comparison": StateComparison;
@@ -385,6 +387,12 @@ export class DeploymentFileDetail {
         if (!("AvailableActions" in $$source)) {
             this["AvailableActions"] = [];
         }
+        if (!("UserDecision" in $$source)) {
+            this["UserDecision"] = "";
+        }
+        if (!("UserDecisionLabel" in $$source)) {
+            this["UserDecisionLabel"] = "";
+        }
         if (!("DriftKind" in $$source)) {
             this["DriftKind"] = "";
         }
@@ -408,7 +416,7 @@ export class DeploymentFileDetail {
         const $$createField1_0 = $$createType11;
         const $$createField2_0 = $$createType13;
         const $$createField9_0 = $$createType14;
-        const $$createField12_0 = $$createType15;
+        const $$createField14_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("States" in $$parsedSource) {
             $$parsedSource["States"] = $$createField1_0($$parsedSource["States"]);
@@ -420,7 +428,7 @@ export class DeploymentFileDetail {
             $$parsedSource["AvailableActions"] = $$createField9_0($$parsedSource["AvailableActions"]);
         }
         if ("Comparison" in $$parsedSource) {
-            $$parsedSource["Comparison"] = $$createField12_0($$parsedSource["Comparison"]);
+            $$parsedSource["Comparison"] = $$createField14_0($$parsedSource["Comparison"]);
         }
         return new DeploymentFileDetail($$parsedSource as Partial<DeploymentFileDetail>);
     }

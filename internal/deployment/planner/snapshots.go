@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/deployment/drift"
@@ -92,4 +93,34 @@ func readCurrentSnapshot(gameInstallPath string, gameRelativePath string) (FileS
 		SizeBytes: size,
 		Label:     "Current on disk",
 	}, nil
+}
+
+func SnapshotsMatch(left FileStateSnapshot, right FileStateSnapshot) bool {
+	if left.Exists != right.Exists {
+		return false
+	}
+	if !left.Exists {
+		return true
+	}
+
+	return strings.EqualFold(left.SHA256, right.SHA256)
+}
+
+func SnapshotHash(snapshot FileStateSnapshot) string {
+	if !snapshot.Exists {
+		return ""
+	}
+
+	return snapshot.SHA256
+}
+
+func DiskMatchesApplied(appliedHash string, current FileStateSnapshot) bool {
+	if appliedHash == "" {
+		return false
+	}
+	if !current.Exists {
+		return false
+	}
+
+	return strings.EqualFold(appliedHash, current.SHA256)
 }

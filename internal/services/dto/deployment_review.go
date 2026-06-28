@@ -60,20 +60,22 @@ type StateComparison struct {
 }
 
 type DeploymentFileDetail struct {
-	RelativePath     string
-	States           FourStateView
-	WriterStack      []WriterEntryDTO
-	ConflictCategory string
-	FileStatus       string
-	PlannedAction    string
-	RiskLevel        string
-	Explanation      string
-	BackupAvailable  bool
-	AvailableActions []string
-	DriftKind        string
-	DriftExplanation string
-	Comparison       StateComparison
-	LastAppliedAt    *time.Time
+	RelativePath      string
+	States            FourStateView
+	WriterStack       []WriterEntryDTO
+	ConflictCategory  string
+	FileStatus        string
+	PlannedAction     string
+	RiskLevel         string
+	Explanation       string
+	BackupAvailable   bool
+	AvailableActions  []string
+	UserDecision      string
+	UserDecisionLabel string
+	DriftKind         string
+	DriftExplanation  string
+	Comparison        StateComparison
+	LastAppliedAt     *time.Time
 }
 
 type DeploymentReviewPreview struct {

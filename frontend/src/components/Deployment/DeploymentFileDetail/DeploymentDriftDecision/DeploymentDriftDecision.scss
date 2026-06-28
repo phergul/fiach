@@ -1,0 +1,83 @@
+@use '@styles' as *;
+
+.deployment-drift-decision {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: $app-border-width solid $color-border-subtle;
+}
+
+.deployment-drift-decision-note {
+  margin: 0;
+  color: $color-warning;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-drift-decision-current {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.deployment-drift-decision-current-label {
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.deployment-drift-decision-error {
+  margin: 0;
+  color: $color-danger;
+  font-size: $font-size-sm;
+  line-height: $line-height-base;
+}
+
+.deployment-drift-decision-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.deployment-drift-decision-action {
+  display: flex;
+  min-height: $table-control-height;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  text-align: left;
+  background: $color-surface-elevated;
+  border: $app-border-width solid $color-border-subtle;
+  cursor: pointer;
+}
+
+.deployment-drift-decision-action:hover:not(:disabled),
+.deployment-drift-decision-action:focus-visible:not(:disabled) {
+  border-color: $color-border-strong;
+}
+
+.deployment-drift-decision-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.deployment-drift-decision-action-clear {
+  color: $color-text-muted;
+  background: transparent;
+}
+
+.deployment-drift-decision-action-label {
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.deployment-drift-decision-action-description {
+  color: $color-text-subtle;
+  font-size: $font-size-xs;
+  line-height: $line-height-base;
+}

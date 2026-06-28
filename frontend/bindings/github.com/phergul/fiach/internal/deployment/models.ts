@@ -152,6 +152,7 @@ export enum FileStatus {
     FileStatusConflict = "conflict",
     FileStatusDrifted = "drifted",
     FileStatusExternal = "external",
+    FileStatusSkipped = "skipped",
     FileStatusUnchanged = "unchanged",
 };
 

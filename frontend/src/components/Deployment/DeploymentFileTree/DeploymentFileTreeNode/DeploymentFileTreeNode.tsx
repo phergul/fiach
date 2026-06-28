@@ -49,7 +49,9 @@ export const DeploymentFileTreeNodeRow = ({
       ? 'deployment-file-tree-node-row-drifted'
       : node.Status === 'external'
         ? 'deployment-file-tree-node-row-external'
-        : '';
+        : node.Status === 'skipped'
+          ? 'deployment-file-tree-node-row-skipped'
+          : '';
   const rowPaddingRem = deploymentTreeRowPaddingRem(depth, node.IsDirectory);
   const rowStyle = {
     '--deployment-file-tree-row-padding': `${rowPaddingRem}rem`,

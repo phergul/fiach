@@ -1,6 +1,13 @@
 export const DEPLOYMENT_FILE_STATUSES = ['added', 'replaced', 'blocked', 'conflict'] as const;
 
-export const DEPLOYMENT_INCREMENTAL_STATUSES = ['drifted', 'external', 'unchanged', 'deleted', 'restored'] as const;
+export const DEPLOYMENT_INCREMENTAL_STATUSES = [
+  'drifted',
+  'external',
+  'skipped',
+  'unchanged',
+  'deleted',
+  'restored',
+] as const;
 
 export const DEPLOYMENT_SUMMARY_STATUSES = [
   ...DEPLOYMENT_FILE_STATUSES,
@@ -32,6 +39,7 @@ export const deploymentStatusLabel: Record<string, string> = {
   conflict: 'Conflict',
   drifted: 'Drifted',
   external: 'External',
+  skipped: 'Skipped',
   unchanged: 'Unchanged',
   deleted: 'Deleted',
   restored: 'Restored',
@@ -46,6 +54,9 @@ export const deploymentActionLabel: Record<string, string> = {
   block: 'Block',
   conflict: 'Conflict',
   require_decision: 'Decision required',
+  backup_then_replace: 'Backup and apply',
+  backup_then_delete: 'Backup and delete',
+  backup_then_restore: 'Backup and restore',
   noop: 'No change',
 };
 
@@ -83,9 +94,13 @@ export const deploymentActionTone: Record<string, DeploymentToneChipTone> = {
   block: 'blocked',
   conflict: 'conflict',
   require_decision: 'warning',
+  backup_then_replace: 'replace',
+  backup_then_delete: 'replace',
+  backup_then_restore: 'replace',
   noop: 'default',
   drifted: 'warning',
   external: 'info',
+  skipped: 'warning',
   unchanged: 'default',
   deleted: 'replace',
   restored: 'replace',
@@ -102,6 +117,7 @@ const deploymentSummaryOnlyTone: Record<string, DeploymentToneChipTone> = {
   warnings: 'warning',
   drifted: 'warning',
   external: 'info',
+  skipped: 'warning',
   unchanged: 'default',
   deleted: 'replace',
   restored: 'replace',
@@ -112,7 +128,7 @@ const resolveDeploymentActionKey = (status: string, plannedAction = '') => {
     return 'conflict';
   }
 
-  if (status === 'drifted' || status === 'external' || status === 'unchanged') {
+  if (status === 'drifted' || status === 'external' || status === 'skipped' || status === 'unchanged') {
     return status;
   }
 

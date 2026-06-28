@@ -11,27 +11,15 @@ type StateComparison struct {
 	CurrentMatchesDesired bool
 }
 
-func snapshotsMatch(left planner.FileStateSnapshot, right planner.FileStateSnapshot) bool {
-	if left.Exists != right.Exists {
-		return false
-	}
-
-	if !left.Exists {
-		return true
-	}
-
-	return left.SHA256 == right.SHA256
-}
-
 func buildStateComparison(
 	applied planner.FileStateSnapshot,
 	current planner.FileStateSnapshot,
 	desired planner.FileStateSnapshot,
 ) StateComparison {
 	return StateComparison{
-		AppliedMatchesCurrent: snapshotsMatch(applied, current),
-		AppliedMatchesDesired: snapshotsMatch(applied, desired),
-		CurrentMatchesDesired: snapshotsMatch(current, desired),
+		AppliedMatchesCurrent: planner.SnapshotsMatch(applied, current),
+		AppliedMatchesDesired: planner.SnapshotsMatch(applied, desired),
+		CurrentMatchesDesired: planner.SnapshotsMatch(current, desired),
 	}
 }
 
@@ -40,6 +28,14 @@ func buildDriftExplanation(
 	comparison StateComparison,
 	fileStatus deployment.FileStatus,
 ) string {
+	if fileStatus == deployment.FileStatusSkipped {
+		return "This file was skipped and will not be changed until the decision is cleared."
+	}
+
+	if fileStatus == deployment.FileStatusExternal {
+		return "This file was kept as an external edit and will not be overwritten automatically."
+	}
+
 	switch driftKind {
 	case deployment.DriftModified:
 		return "This file was modified on disk since the last apply."

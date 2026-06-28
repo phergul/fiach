@@ -7,6 +7,7 @@ import (
 
 	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/deployment"
+	"github.com/phergul/fiach/internal/deployment/drift"
 	"github.com/phergul/fiach/internal/deployment/planner"
 )
 
@@ -32,10 +33,13 @@ func MergeAppliedFileStates(
 
 		switch pathPlan.PlannedAction {
 		case planner.ReapplyNoOp:
+			if planner.ShouldRemoveFromAppliedState(pathPlan, desired.Files, canonicalPath) {
+				delete(updatedByPath, canonicalPath)
+			}
 			continue
-		case planner.ReapplyDelete, planner.ReapplyRestoreBaseline:
+		case planner.ReapplyDelete, planner.ReapplyRestoreBaseline, planner.ReapplyBackupThenDelete, planner.ReapplyBackupThenRestore:
 			delete(updatedByPath, canonicalPath)
-		case planner.ReapplyCreate, planner.ReapplyReplace, planner.ReapplyRepair:
+		case planner.ReapplyCreate, planner.ReapplyReplace, planner.ReapplyRepair, planner.ReapplyBackupThenReplace:
 			desiredFile, found := desired.Files[canonicalPath]
 			if !found {
 				return nil, fmt.Errorf("desired state missing for path %q", pathPlan.GameRelativePath)
@@ -79,7 +83,7 @@ func fileStateAfterApply(
 		AppliedSHA256:    &appliedSHA256,
 		AppliedSizeBytes: &appliedSizeBytes,
 		OutputKind:       appliedstate.OutputKindCopied,
-		UserDecision:     existing.UserDecision,
+		UserDecision:     preservedUserDecision(existing.UserDecision, action),
 	}
 
 	if desiredFile.Winner.ModID != nil {
@@ -103,4 +107,20 @@ func fileStateAfterApply(
 	state.BaselineBackupPath = existing.BaselineBackupPath
 
 	return state, nil
+}
+
+func preservedUserDecision(existing *string, action planner.ReapplyAction) *string {
+	if existing == nil {
+		return nil
+	}
+
+	if action == planner.ReapplyBackupThenReplace ||
+		action == planner.ReapplyBackupThenDelete ||
+		action == planner.ReapplyBackupThenRestore {
+		if *existing == drift.UserDecisionBackupAndApply {
+			return nil
+		}
+	}
+
+	return existing
 }

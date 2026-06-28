@@ -52,6 +52,7 @@ const (
 	OperationLoadDeploymentTreeChildren   = "load_deployment_tree_children"
 	OperationGetDeploymentFileDetail      = "get_deployment_file_detail"
 	OperationApplyIncrementalDeployment   = "apply_incremental_deployment"
+	OperationSetDeploymentDriftDecision   = "set_deployment_drift_decision"
 	OperationRestoreVanilla               = "restore_vanilla"
 	OperationSetGlobalModStorageRoot      = "set_global_mod_storage_root"
 	OperationSetTheme                     = "set_theme"
@@ -184,6 +185,7 @@ func Operations() []OperationDescriptor {
 		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
 		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
 		{Value: OperationApplyIncrementalDeployment, Label: "Apply incremental deployment"},
+		{Value: OperationSetDeploymentDriftDecision, Label: "Set deployment drift decision"},
 		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
 		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
 		{Value: OperationSetTheme, Label: "Set theme"},

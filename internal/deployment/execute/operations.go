@@ -77,7 +77,7 @@ func buildPathOperation(
 	}
 
 	switch pathPlan.PlannedAction {
-	case planner.ReapplyCreate, planner.ReapplyReplace:
+	case planner.ReapplyCreate, planner.ReapplyReplace, planner.ReapplyBackupThenReplace:
 		desiredFile, found := desired.Files[canonicalPath]
 		if !found {
 			return filetxn.Operation{}, false, fmt.Errorf("desired state missing for path %q", pathPlan.GameRelativePath)
@@ -94,13 +94,13 @@ func buildPathOperation(
 			SizeBytes:  desiredFile.SizeBytes,
 		}, true, nil
 
-	case planner.ReapplyDelete:
+	case planner.ReapplyDelete, planner.ReapplyBackupThenDelete:
 		return filetxn.Operation{
 			Type:       "delete",
 			TargetPath: targetPath,
 		}, true, nil
 
-	case planner.ReapplyRestoreBaseline:
+	case planner.ReapplyRestoreBaseline, planner.ReapplyBackupThenRestore:
 		if strings.TrimSpace(pathPlan.BaselineBackupPath) == "" {
 			return filetxn.Operation{}, false, fmt.Errorf("baseline backup path missing for %q", pathPlan.GameRelativePath)
 		}

@@ -1,6 +1,6 @@
 import { FileSearch } from 'lucide-react';
 
-import type { DeploymentFileDetail } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type { DeploymentFileDetail, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
 import { deploymentPathBaseName, formatAppliedAtFromDate, formatDeploymentDisplayPath } from '@utils';
 
@@ -13,6 +13,7 @@ import {
 } from '../deploymentLabels';
 import { DeploymentToneChip } from '../DeploymentToneChip/DeploymentToneChip';
 import { DeploymentFourStateView } from './DeploymentFourStateView/DeploymentFourStateView';
+import { DeploymentDriftDecision } from './DeploymentDriftDecision/DeploymentDriftDecision';
 import { DeploymentWriterStack } from './DeploymentWriterStack/DeploymentWriterStack';
 
 import './DeploymentFileDetail.scss';
@@ -23,8 +24,11 @@ interface DeploymentFileDetailPanelProps {
   gameName: string;
   isLoading: boolean;
   loadError: string | null;
+  onPreviewUpdated: (preview: DeploymentReviewPreview) => void;
   onRetry: () => void;
   planMode: string;
+  previewHash: string;
+  profileID: number | null;
   selectedPath: string | null;
 }
 
@@ -34,8 +38,11 @@ export const DeploymentFileDetailPanel = ({
   gameName,
   isLoading,
   loadError,
+  onPreviewUpdated,
   onRetry,
   planMode,
+  previewHash,
+  profileID,
   selectedPath,
 }: DeploymentFileDetailPanelProps) => {
   if (selectedPath === null) {
@@ -113,10 +120,20 @@ export const DeploymentFileDetailPanel = ({
           </p>
         )}
 
-        {detail.PlannedAction === 'require_decision' && (
+        {detail.PlannedAction === 'require_decision' && detail.AvailableActions.length === 0 && (
           <p className="deployment-file-detail-decision-note">
             A decision will be required before re-applying this file.
           </p>
+        )}
+
+        {detail !== null && profileID !== null && (
+          <DeploymentDriftDecision
+            detail={detail}
+            onPreviewUpdated={onPreviewUpdated}
+            planMode={planMode}
+            previewHash={previewHash}
+            profileID={profileID}
+          />
         )}
       </div>
 
