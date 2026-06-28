@@ -3,6 +3,7 @@ export const getApplyDisabledTitle = (
   isAnotherProfileApplied: boolean,
   appliedProfileName: string | null,
   canApply: boolean,
+  isIncrementalApply: boolean,
   isAppliedProfileLoading: boolean,
   appliedProfileLoadError: string | null,
   isPreviewLoading: boolean,
@@ -13,8 +14,11 @@ export const getApplyDisabledTitle = (
   if (isApplyPending) {
     return 'Apply is already in progress.';
   }
-  if (isSameProfileApplied) {
-    return 'Incremental deployment preview is read-only until drift decisions and re-apply are available.';
+  if (isSameProfileApplied && isIncrementalApply && !canApply) {
+    return 'Resolve blocking drift or deployment issues before re-applying this profile.';
+  }
+  if (isSameProfileApplied && !isIncrementalApply) {
+    return 'Incremental deployment preview is loading.';
   }
   if (isAnotherProfileApplied && appliedProfileName !== null) {
     return `${appliedProfileName} is applied. Restore vanilla before applying another profile.`;

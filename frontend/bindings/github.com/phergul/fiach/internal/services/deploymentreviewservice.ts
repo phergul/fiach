@@ -9,26 +9,33 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
+export function ApplyIncrementalDeployment(profileID: number, previewHash: string): $CancellablePromise<dto$0.ApplyIncrementalDeploymentResult> {
+    return $Call.ByID(3425224667, profileID, previewHash).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function BuildDeploymentReviewPreview(profileID: number): $CancellablePromise<dto$0.DeploymentReviewPreview> {
     return $Call.ByID(1391596289, profileID).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType1($result);
     });
 }
 
 export function GetDeploymentFileDetail(previewHash: string, relativePath: string): $CancellablePromise<dto$0.DeploymentFileDetail> {
     return $Call.ByID(3871491748, previewHash, relativePath).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 export function LoadDeploymentTreeChildren(previewHash: string, parentPath: string): $CancellablePromise<dto$0.DeploymentTreeNode[]> {
     return $Call.ByID(3992299200, previewHash, parentPath).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
     });
 }
 
 // Private type creation functions
-const $$createType0 = dto$0.DeploymentReviewPreview.createFrom;
-const $$createType1 = dto$0.DeploymentFileDetail.createFrom;
-const $$createType2 = dto$0.DeploymentTreeNode.createFrom;
-const $$createType3 = $Create.Array($$createType2);
+const $$createType0 = dto$0.ApplyIncrementalDeploymentResult.createFrom;
+const $$createType1 = dto$0.DeploymentReviewPreview.createFrom;
+const $$createType2 = dto$0.DeploymentFileDetail.createFrom;
+const $$createType3 = dto$0.DeploymentTreeNode.createFrom;
+const $$createType4 = $Create.Array($$createType3);

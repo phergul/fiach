@@ -20,4 +20,5 @@ type SaveAppliedProfileStateInput struct {
 	ProfileCompositionSnapshotJSON *string
 	ProfileCompositionSnapshotHash *string
 	FileStates                     []AppliedFileStateRow
+	ReplaceFileStates              bool
 }

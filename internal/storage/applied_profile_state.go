@@ -68,7 +68,7 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 			return sql.ErrNoRows
 		}
 
-		if len(input.FileStates) > 0 {
+		if input.ReplaceFileStates || len(input.FileStates) > 0 {
 			fileStates := make([]dbtypes.AppliedFileStateRow, len(input.FileStates))
 			copy(fileStates, input.FileStates)
 			for index := range fileStates {

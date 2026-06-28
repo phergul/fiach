@@ -2,11 +2,16 @@ import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
+import { ApplyIncrementalDeployment } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
 import {
   ApplyProfileOperationPlan,
   BuildProfileOperationPlan,
 } from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
-import type { ApplyOperationPlanResult, OperationPlan } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  ApplyIncrementalDeploymentResult,
+  ApplyOperationPlanResult,
+  OperationPlan,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
 import { DeploymentReview } from '@components/Deployment/DeploymentReview/DeploymentReview';
@@ -60,6 +65,28 @@ const buildApplySuccessMessage = (result: ApplyOperationPlanResult) => {
   return `Applied ${result.CompletedCount} operations.`;
 };
 
+const buildIncrementalApplySuccessMessage = (result: ApplyIncrementalDeploymentResult) => {
+  if (result.Message.trim() !== '') {
+    return result.Message;
+  }
+  if (result.CompletedCount === 0) {
+    return 'No file changes were needed.';
+  }
+  if (result.CompletedCount === 1) {
+    return 'Applied 1 file change.';
+  }
+
+  return `Applied ${result.CompletedCount} file changes.`;
+};
+
+const buildIncrementalApplyFailureMessage = (result: ApplyIncrementalDeploymentResult) => {
+  if (result.Message.trim() !== '') {
+    return result.Message;
+  }
+
+  return 'Re-apply stopped before all file changes completed.';
+};
+
 const buildApplyFailureMessage = (result: ApplyOperationPlanResult) => {
   const failedResult = result.Results.find((operationResult) => operationResult.Error !== null);
   const failure = failedResult?.Error ?? 'Apply stopped before all operations completed.';
@@ -106,16 +133,31 @@ export const GameApply = () => {
   const isAnotherProfileApplied =
     appliedProfileName !== null && !isSameProfileApplied;
   const previewAvailable = summary !== null && previewHash !== '';
-  const canStartApply =
+  const isIncrementalApply = summary?.PlanMode === 'incremental';
+  const canStartFirstApply =
     selectedProfile !== null &&
     appliedProfileName === null &&
     !appliedProfileManager.isLoading &&
     appliedProfileManager.loadError === null &&
     previewAvailable &&
+    summary !== null &&
     summary.CanApply &&
     !isPreviewLoading &&
     !isApplyPending &&
     !isPlanLoading;
+  const canStartIncrementalApply =
+    selectedProfile !== null &&
+    isSameProfileApplied &&
+    isIncrementalApply &&
+    !appliedProfileManager.isLoading &&
+    appliedProfileManager.loadError === null &&
+    previewAvailable &&
+    summary !== null &&
+    summary.CanApply &&
+    !isPreviewLoading &&
+    !isApplyPending &&
+    !isPlanLoading;
+  const canStartApply = canStartFirstApply || canStartIncrementalApply;
   const applyTitle =
     selectedProfile === null
       ? 'Select a profile before applying.'
@@ -124,6 +166,7 @@ export const GameApply = () => {
           isAnotherProfileApplied,
           appliedProfileName,
           summary?.CanApply ?? false,
+          isIncrementalApply,
           appliedProfileManager.isLoading,
           appliedProfileManager.loadError,
           isPreviewLoading,
@@ -134,7 +177,9 @@ export const GameApply = () => {
   const confirmMessage =
     selectedProfile === null
       ? 'Review the deployment preview before applying this profile.'
-      : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
+      : isIncrementalApply && isSameProfileApplied
+        ? `Re-apply changes for ${selectedProfile.Name}? This will update installed game files directly.`
+        : `Apply ${selectedProfile.Name}? This will change the installed game files directly. Replaced files will be backed up for restore.`;
 
   const handlePreviewRefreshNeeded = useCallback(() => {
     refreshPreview().catch(() => undefined);
@@ -154,6 +199,40 @@ export const GameApply = () => {
 
   const confirmApply = async () => {
     if (selectedProfile === null || isApplyPending || isPlanLoading) {
+      return;
+    }
+
+    if (isIncrementalApply && isSameProfileApplied) {
+      if (previewHash === '') {
+        addErrorToast(new Error('Refresh the deployment preview and try again.'));
+        return;
+      }
+
+      setIsApplyPending(true);
+
+      try {
+        const result = await ApplyIncrementalDeployment(selectedProfile.ID, previewHash);
+        if (result.Success) {
+          await appliedProfileManager.refreshAppliedProfile();
+          await refreshPreview();
+        }
+        setIsApplyConfirmOpen(false);
+        addToast({
+          message: result.Success
+            ? buildIncrementalApplySuccessMessage(result)
+            : buildIncrementalApplyFailureMessage(result),
+          tone: result.Success ? 'success' : 'error',
+        });
+        if (result.Success) {
+          navigate(gameDetailsPath);
+        }
+      } catch (error) {
+        setIsApplyConfirmOpen(false);
+        addErrorToast(error);
+      } finally {
+        setIsApplyPending(false);
+      }
+
       return;
     }
 

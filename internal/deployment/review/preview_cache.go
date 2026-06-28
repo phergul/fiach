@@ -58,3 +58,14 @@ func (c *PreviewCache) Get(previewHash string) (CachedPreview, bool) {
 	entry, found := c.entries[previewHash]
 	return entry, found
 }
+
+func (c *PreviewCache) Delete(previewHash string) {
+	if c == nil {
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	delete(c.entries, previewHash)
+}

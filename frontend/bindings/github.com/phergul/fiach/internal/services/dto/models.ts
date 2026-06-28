@@ -174,6 +174,43 @@ export class AppliedProfileSummary {
     }
 }
 
+export class ApplyIncrementalDeploymentResult {
+    "Success": boolean;
+    "CompletedCount": number;
+    "SkippedCount": number;
+    "Message": string;
+    "RolledBack": boolean;
+
+    /** Creates a new ApplyIncrementalDeploymentResult instance. */
+    constructor($$source: Partial<ApplyIncrementalDeploymentResult> = {}) {
+        if (!("Success" in $$source)) {
+            this["Success"] = false;
+        }
+        if (!("CompletedCount" in $$source)) {
+            this["CompletedCount"] = 0;
+        }
+        if (!("SkippedCount" in $$source)) {
+            this["SkippedCount"] = 0;
+        }
+        if (!("Message" in $$source)) {
+            this["Message"] = "";
+        }
+        if (!("RolledBack" in $$source)) {
+            this["RolledBack"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ApplyIncrementalDeploymentResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ApplyIncrementalDeploymentResult {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ApplyIncrementalDeploymentResult($$parsedSource as Partial<ApplyIncrementalDeploymentResult>);
+    }
+}
+
 export class ApplyOperationPlanResult {
     "Success": boolean;
     "CompletedCount": number;

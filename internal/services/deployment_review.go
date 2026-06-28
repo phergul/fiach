@@ -4,16 +4,12 @@ import (
 	"context"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/phergul/fiach/internal/apperror"
-	"github.com/phergul/fiach/internal/deployment/desired"
-	"github.com/phergul/fiach/internal/deployment/drift"
+	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/deployment/planner"
-	"github.com/phergul/fiach/internal/deployment/provenance"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/diagnostics"
-	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
@@ -49,94 +45,112 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 		}
 	}()
 
-	if profileID <= 0 {
-		return dto.DeploymentReviewPreview{}, apperror.New("A valid profile must be selected.")
-	}
-
-	profile, found, err := s.store.GetProfile(ctx, profileID)
-	if err != nil {
-		return dto.DeploymentReviewPreview{}, err
-	}
-	if !found {
-		return dto.DeploymentReviewPreview{}, apperror.New("Profile was not found.")
-	}
-
-	appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID)
-	if err != nil {
-		return dto.DeploymentReviewPreview{}, err
-	}
-	if appliedFound && appliedState.ProfileID != profileID {
-		return dto.DeploymentReviewPreview{}, apperror.New("Restore vanilla before applying another profile.")
-	}
-
-	resolved, err := operationplan.ResolveProfilePlan(ctx, s.store, profileID)
+	buildResult, err := s.buildDeploymentPlan(ctx, profileID)
 	if err != nil {
 		return dto.DeploymentReviewPreview{}, err
 	}
 
-	desiredState, err := desired.BuildDesiredState(ctx, resolved)
+	entry, err := deploymentPlanPreviewEntry(buildResult)
 	if err != nil {
 		return dto.DeploymentReviewPreview{}, err
 	}
-
-	var plan planner.DeploymentPlan
-	var appliedAt *time.Time
-
-	if appliedFound && appliedState.ProfileID == profileID {
-		appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, profile.GameID)
-		if err != nil {
-			return dto.DeploymentReviewPreview{}, err
-		}
-
-		provenance.ReconcileModAddedPaths(&desiredState, appliedFileStates)
-
-		driftResults, err := drift.DetectAll(resolved.GameInstallPath, appliedFileStates)
-		if err != nil {
-			return dto.DeploymentReviewPreview{}, err
-		}
-
-		plan, err = planner.PlanIncrementalPreview(desiredState, appliedFileStates, driftResults, resolved.GameInstallPath)
-		if err != nil {
-			return dto.DeploymentReviewPreview{}, err
-		}
-
-		if parsed, ok := storage.ParseAppliedTimestamp(appliedState.AppliedAt); ok {
-			appliedAt = &parsed
-		}
-	} else {
-		plan, err = planner.PlanFirstApply(desiredState, resolved.GameInstallPath)
-		if err != nil {
-			return dto.DeploymentReviewPreview{}, err
-		}
-	}
-
-	entry := review.CachedPreview{
-		ProfileID:   profileID,
-		GameID:      profile.GameID,
-		ProfileName: profile.Name,
-		Plan:        plan,
-		Desired:     desiredState,
-		AppliedAt:   appliedAt,
-	}
-
-	previewHash, err := review.PreviewHash(entry)
-	if err != nil {
-		return dto.DeploymentReviewPreview{}, err
-	}
-	entry.PreviewHash = previewHash
 
 	s.cache.Store(entry)
 
-	rootNodes := review.BuildTreeChildren(plan, "")
+	rootNodes := review.BuildTreeChildren(buildResult.Plan, "")
 	preview = mappers.ToDTODeploymentReviewPreview(entry, rootNodes)
 
 	diag.complete("Deployment review preview build completed",
 		slog.Bool("can_apply", preview.Summary.CanApply),
-		slog.Int("path_count", len(plan.Paths)),
+		slog.Int("path_count", len(buildResult.Plan.Paths)),
 		slog.Int("blocking_count", preview.Summary.BlockingCount),
 	)
 
 	return preview, nil
+}
+
+func (s *DeploymentReviewService) ApplyIncrementalDeployment(
+	ctx context.Context,
+	profileID int64,
+	previewHash string,
+) (result dto.ApplyIncrementalDeploymentResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationApplyIncrementalDeployment, "Incremental deployment apply started",
+		slog.Int64("profile_id", profileID),
+		slog.Bool("preview_hash_provided", strings.TrimSpace(previewHash) != ""),
+	)
+	defer func() {
+		if err != nil {
+			err = diag.failWithMappedError("Incremental deployment apply failed", err, deploymentReviewUserError)
+		}
+	}()
+
+	if strings.TrimSpace(previewHash) == "" {
+		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Refresh the deployment preview and try again.")
+	}
+
+	buildResult, err := s.buildDeploymentPlan(ctx, profileID)
+	if err != nil {
+		return dto.ApplyIncrementalDeploymentResult{}, err
+	}
+
+	if !buildResult.AppliedFound {
+		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("No profile is currently applied for this game.")
+	}
+	if buildResult.Plan.Mode != planner.PlanModeIncremental {
+		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Incremental deployment apply is only available for an already applied profile.")
+	}
+
+	entry, err := deploymentPlanPreviewEntry(buildResult)
+	if err != nil {
+		return dto.ApplyIncrementalDeploymentResult{}, err
+	}
+	if !strings.EqualFold(entry.PreviewHash, previewHash) {
+		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("The deployment preview is stale. Refresh the preview and try again.")
+	}
+	if !buildResult.Plan.CanApply() {
+		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Resolve blocking issues before applying this profile.")
+	}
+
+	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, buildResult.Profile.GameID, "")
+	if err != nil {
+		return dto.ApplyIncrementalDeploymentResult{}, err
+	}
+
+	appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, buildResult.Profile.GameID)
+	if err != nil {
+		return dto.ApplyIncrementalDeploymentResult{}, err
+	}
+
+	applyResult, err := execute.Execute(ctx, execute.Context{
+		GameID:             buildResult.Profile.GameID,
+		ProfileID:          profileID,
+		GameInstallPath:    buildResult.Resolved.GameInstallPath,
+		GameModStoragePath: gameModStoragePath,
+		PreviewHash:        previewHash,
+		Plan:               buildResult.Plan,
+		Desired:            buildResult.Desired,
+		AppliedFileStates:  appliedFileStates,
+	}, s.profileService)
+	if err != nil {
+		result = mappers.ToDTOApplyIncrementalDeploymentResult(applyResult)
+		diag.warn("Incremental deployment apply completed with failures",
+			slog.Bool("success", false),
+			slog.Int("completed_count", applyResult.CompletedCount),
+			slog.Bool("rolled_back", applyResult.RolledBack),
+		)
+		return result, err
+	}
+
+	s.cache.Delete(previewHash)
+
+	result = mappers.ToDTOApplyIncrementalDeploymentResult(applyResult)
+	diag.complete("Incremental deployment apply completed",
+		slog.Bool("success", true),
+		slog.Int("completed_count", applyResult.CompletedCount),
+		slog.Int("skipped_count", applyResult.SkippedCount),
+	)
+
+	return result, nil
 }
 
 func (s *DeploymentReviewService) LoadDeploymentTreeChildren(ctx context.Context, previewHash string, parentPath string) (nodes []dto.DeploymentTreeNode, err error) {
@@ -222,10 +236,12 @@ func deploymentReviewUserError(err error) error {
 		return apperror.Wrap("A valid profile must be selected.", err)
 	case strings.Contains(message, "was not found") && strings.Contains(message, "profile"):
 		return apperror.Wrap("Profile was not found.", err)
-	case strings.Contains(message, "restore vanilla before applying another profile"):
+	case strings.Contains(strings.ToLower(message), "restore vanilla before applying another profile"):
 		return apperror.Wrap("Restore vanilla before applying another profile.", err)
 	case strings.Contains(message, "was not found in preview"):
 		return apperror.Wrap("The selected file was not found in the deployment preview.", err)
+	case strings.Contains(message, "preview is stale"):
+		return apperror.Wrap("The deployment preview is stale. Refresh the preview and try again.", err)
 	default:
 		return err
 	}

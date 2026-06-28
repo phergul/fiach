@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/phergul/fiach/internal/apperror"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -317,6 +318,9 @@ func TestDeploymentReviewServiceIncrementalRemovedModPathDeletes(t *testing.T) {
 	if preview.Summary.PlanMode != "incremental" {
 		t.Fatalf("BuildDeploymentReviewPreview() plan mode = %q, want incremental", preview.Summary.PlanMode)
 	}
+	if !preview.Summary.CanApply {
+		t.Fatal("BuildDeploymentReviewPreview() CanApply = false, want true for actionable delete preview")
+	}
 	if preview.Summary.StatusCounts["deleted"] != 1 {
 		t.Fatalf("BuildDeploymentReviewPreview() status counts = %+v, want one deleted path", preview.Summary.StatusCounts)
 	}
@@ -359,8 +363,8 @@ func TestDeploymentReviewServiceBlocksDifferentAppliedProfile(t *testing.T) {
 	if err == nil {
 		t.Fatal("BuildDeploymentReviewPreview() error = nil, want different applied profile gate")
 	}
-	if err.Error() != "Restore vanilla before applying another profile." {
-		t.Fatalf("BuildDeploymentReviewPreview() error = %q, want applied profile gate", err.Error())
+	if apperror.UserMessage(err) != "Restore vanilla before applying another profile." {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %q, want applied profile gate", apperror.UserMessage(err))
 	}
 }
 
@@ -392,5 +396,140 @@ func TestDeploymentReviewServiceRejectsStalePreviewHash(t *testing.T) {
 	}
 	if err.Error() != "The deployment preview is no longer available. Refresh the preview and try again." {
 		t.Fatalf("GetDeploymentFileDetail() error = %q, want stale preview detail", err.Error())
+	}
+}
+
+func TestDeploymentReviewServiceApplyIncrementalDeploymentDeletesRemovedPath(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+
+	targetPath := filepath.Join(gameRoot, "Screenshots", "recording.mov")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("mod-content"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	appliedSHA256, appliedSize, err := fileops.FileIntegrity(targetPath)
+	if err != nil {
+		t.Fatalf("FileIntegrity() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
+		ProfileSnapshotJSON: `{"version":2}`,
+		ProfileSnapshotHash: "snapshot",
+		FileStates: []dbtypes.AppliedFileStateRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Screenshots/recording.mov",
+				ProfileID:        profileID,
+				AppliedExists:    true,
+				AppliedSHA256:    &appliedSHA256,
+				AppliedSizeBytes: &appliedSize,
+				OutputKind:       "copied",
+				LastAppliedAt:    "2026-06-27T00:00:00Z",
+			},
+		},
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	result, err := service.ApplyIncrementalDeployment(context.Background(), profileID, preview.PreviewHash)
+	if err != nil {
+		t.Fatalf("ApplyIncrementalDeployment() error = %v", err)
+	}
+	if !result.Success || result.CompletedCount != 1 {
+		t.Fatalf("ApplyIncrementalDeployment() = %+v, want successful delete", result)
+	}
+
+	if _, statErr := os.Stat(targetPath); !os.IsNotExist(statErr) {
+		t.Fatalf("target after apply stat = %v, want deleted file", statErr)
+	}
+
+	hasRows, err := store.HasAppliedFileStates(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("HasAppliedFileStates() error = %v", err)
+	}
+	if hasRows {
+		rows, err := store.ListAppliedFileStates(context.Background(), gameID)
+		if err != nil {
+			t.Fatalf("ListAppliedFileStates() error = %v", err)
+		}
+		if len(rows) != 0 {
+			t.Fatalf("applied file states = %+v, want empty after delete", rows)
+		}
+	}
+}
+
+func TestDeploymentReviewServiceApplyIncrementalDeploymentRejectsStalePreviewHash(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+
+	targetPath := filepath.Join(gameRoot, "Screenshots", "recording.mov")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("mod-content"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	appliedSHA256, appliedSize, err := fileops.FileIntegrity(targetPath)
+	if err != nil {
+		t.Fatalf("FileIntegrity() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
+		ProfileSnapshotJSON: `{"version":2}`,
+		ProfileSnapshotHash: "snapshot",
+		FileStates: []dbtypes.AppliedFileStateRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Screenshots/recording.mov",
+				ProfileID:        profileID,
+				AppliedExists:    true,
+				AppliedSHA256:    &appliedSHA256,
+				AppliedSizeBytes: &appliedSize,
+				OutputKind:       "copied",
+				LastAppliedAt:    "2026-06-27T00:00:00Z",
+			},
+		},
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	if _, err := service.BuildDeploymentReviewPreview(context.Background(), profileID); err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	_, err = service.ApplyIncrementalDeployment(context.Background(), profileID, "stale-hash")
+	if err == nil {
+		t.Fatal("ApplyIncrementalDeployment() error = nil, want stale preview hash")
+	}
+	if err.Error() != "The deployment preview is stale. Refresh the preview and try again." {
+		t.Fatalf("ApplyIncrementalDeployment() error = %q, want stale preview hash", err.Error())
 	}
 }

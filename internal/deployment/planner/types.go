@@ -12,14 +12,14 @@ const (
 type ReapplyAction string
 
 const (
-	ReapplyNoOp              ReapplyAction = "noop"
-	ReapplyCreate            ReapplyAction = "create"
-	ReapplyReplace           ReapplyAction = "replace"
-	ReapplyDelete            ReapplyAction = "delete"
-	ReapplyRestoreBaseline   ReapplyAction = "restore_baseline"
-	ReapplyRepair            ReapplyAction = "repair"
-	ReapplyRequireDecision   ReapplyAction = "require_decision"
-	ReapplyBlock             ReapplyAction = "block"
+	ReapplyNoOp            ReapplyAction = "noop"
+	ReapplyCreate          ReapplyAction = "create"
+	ReapplyReplace         ReapplyAction = "replace"
+	ReapplyDelete          ReapplyAction = "delete"
+	ReapplyRestoreBaseline ReapplyAction = "restore_baseline"
+	ReapplyRepair          ReapplyAction = "repair"
+	ReapplyRequireDecision ReapplyAction = "require_decision"
+	ReapplyBlock           ReapplyAction = "block"
 )
 
 type FileStateSnapshot struct {
@@ -45,17 +45,12 @@ type PathPlan struct {
 }
 
 type DeploymentPlan struct {
-	Mode        PlanMode
-	Paths       map[string]PathPlan
-	Issues      []deployment.PlanIssue
-	PreviewOnly bool
+	Mode   PlanMode
+	Paths  map[string]PathPlan
+	Issues []deployment.PlanIssue
 }
 
 func (p DeploymentPlan) CanApply() bool {
-	if p.PreviewOnly {
-		return false
-	}
-
 	for _, issue := range p.Issues {
 		if issue.Severity == deployment.PlanIssueSeverityError {
 			return false

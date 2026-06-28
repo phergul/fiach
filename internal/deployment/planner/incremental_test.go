@@ -537,6 +537,6 @@ func TestPlanIncrementalCanApplyWhenNoBlockers(t *testing.T) {
 	}
 
 	if !plan.CanApply() {
-		t.Fatal("PlanIncremental() CanApply = false, want true without PreviewOnly")
+		t.Fatal("PlanIncremental() CanApply = false, want true when no blockers")
 	}
 }

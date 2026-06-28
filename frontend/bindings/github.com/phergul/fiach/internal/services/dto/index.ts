@@ -6,6 +6,7 @@ export {
     AppliedFileManifestEntry,
     AppliedOperationManifest,
     AppliedProfileSummary,
+    ApplyIncrementalDeploymentResult,
     ApplyOperationPlanResult,
     ApplyOperationResult,
     ApplyOperationStatus,

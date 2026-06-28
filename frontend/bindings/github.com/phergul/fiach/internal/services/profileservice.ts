@@ -10,6 +10,12 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as appliedstate$0 from "../appliedstate/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as deployment$0 from "../deployment/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as planner$0 from "../deployment/planner/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
 export function AddModToProfile(profileID: number, modID: number): $CancellablePromise<dto$0.ProfileMod> {
@@ -90,6 +96,10 @@ export function RestoreVanillaState(gameID: number): $CancellablePromise<dto$0.R
     return $Call.ByID(1179292680, gameID).then(($result: any) => {
         return $$createType10($result);
     });
+}
+
+export function SaveIncrementalAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, existingStates: appliedstate$0.PersistedFileState[]): $CancellablePromise<void> {
+    return $Call.ByID(1318407708, gameID, profileID, installPath, plan, desired, existingStates);
 }
 
 export function SetProfileModEnabled(profileID: number, modID: number, enabled: boolean): $CancellablePromise<dto$0.ProfileMod> {

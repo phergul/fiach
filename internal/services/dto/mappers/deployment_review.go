@@ -4,6 +4,7 @@ import (
 	"maps"
 
 	"github.com/phergul/fiach/internal/deployment"
+	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/services/dto"
 )
@@ -129,5 +130,15 @@ func toDTOOptionalFileStateView(state review.FileStateView) *dto.FileStateView {
 		SHA256:    state.SHA256,
 		SizeBytes: state.SizeBytes,
 		Label:     state.Label,
+	}
+}
+
+func ToDTOApplyIncrementalDeploymentResult(result execute.Result) dto.ApplyIncrementalDeploymentResult {
+	return dto.ApplyIncrementalDeploymentResult{
+		Success:        result.Success,
+		CompletedCount: result.CompletedCount,
+		SkippedCount:   result.SkippedCount,
+		Message:        result.Message,
+		RolledBack:     result.RolledBack,
 	}
 }

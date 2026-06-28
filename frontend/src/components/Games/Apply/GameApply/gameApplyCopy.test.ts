@@ -8,8 +8,11 @@ describe('gameApplyCopy', () => {
       'Review drift and profile changes since the last apply.',
     );
     expect(
-      getApplyDisabledTitle(true, false, 'Default', false, false, null, false, false, false, true),
-    ).toContain('read-only');
+      getApplyDisabledTitle(true, false, 'Default', false, true, false, null, false, false, false, true),
+    ).toContain('blocking drift');
+    expect(
+      getApplyDisabledTitle(true, false, 'Default', true, true, false, null, false, false, false, true),
+    ).toBe('Confirm before applying this profile.');
   });
 
   it('describes another applied profile', () => {

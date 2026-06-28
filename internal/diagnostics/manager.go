@@ -51,6 +51,7 @@ const (
 	OperationBuildDeploymentReviewPreview = "build_deployment_review_preview"
 	OperationLoadDeploymentTreeChildren   = "load_deployment_tree_children"
 	OperationGetDeploymentFileDetail      = "get_deployment_file_detail"
+	OperationApplyIncrementalDeployment   = "apply_incremental_deployment"
 	OperationRestoreVanilla               = "restore_vanilla"
 	OperationSetGlobalModStorageRoot      = "set_global_mod_storage_root"
 	OperationSetTheme                     = "set_theme"
@@ -182,6 +183,7 @@ func Operations() []OperationDescriptor {
 		{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
 		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
 		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
+		{Value: OperationApplyIncrementalDeployment, Label: "Apply incremental deployment"},
 		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
 		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
 		{Value: OperationSetTheme, Label: "Set theme"},
