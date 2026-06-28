@@ -176,6 +176,7 @@ export enum PlanMode {
 
     PlanModeFirstApply = "first_apply",
     PlanModeIncremental = "incremental",
+    PlanModeRestorePreview = "restore_preview",
 };
 
 export enum ReapplyAction {

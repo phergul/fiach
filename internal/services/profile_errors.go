@@ -29,7 +29,7 @@ func profileUserError(err error) error {
 	}
 }
 
-func profilePlanUserError(err error) error {
+func profileRestoreUserError(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func profilePlanUserError(err error) error {
 
 	message := err.Error()
 	switch {
-	case strings.Contains(message, "operation plan has blocking issues"):
+	case strings.Contains(message, "deployment plan has blocking issues"):
 		return apperror.Wrap("Fix the issues in the plan before applying.", err)
 	case strings.Contains(message, "profile ID must be positive"):
 		return apperror.Wrap("A valid profile must be selected.", err)

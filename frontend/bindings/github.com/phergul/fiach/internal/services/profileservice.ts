@@ -89,8 +89,8 @@ export function RestoreVanillaState(gameID: number): $CancellablePromise<dto$0.R
     });
 }
 
-export function SaveFirstApplyAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, outcome: execute$0.FirstApplyOutcome, previewHash: string): $CancellablePromise<void> {
-    return $Call.ByID(2383268840, gameID, profileID, installPath, plan, desired, outcome, previewHash);
+export function SaveFirstApplyAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, outcome: execute$0.FirstApplyOutcome): $CancellablePromise<void> {
+    return $Call.ByID(2383268840, gameID, profileID, installPath, plan, desired, outcome);
 }
 
 export function SaveIncrementalAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, existingStates: appliedstate$0.PersistedFileState[]): $CancellablePromise<void> {

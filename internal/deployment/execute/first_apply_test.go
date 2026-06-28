@@ -77,7 +77,7 @@ func TestExecuteFirstApplyCreatesBaselineBackupAndAppliesReplace(t *testing.T) {
 
 	assertServiceFileContents(t, existingPath, "modded")
 
-	backupPath := filepath.Join(storageRoot, "operation-backups", "Data", "vanilla.txt")
+	backupPath := filepath.Join(storageRoot, "deployment-backups", "Data", "vanilla.txt")
 	if _, statErr := os.Stat(backupPath); statErr != nil {
 		t.Fatalf("baseline backup stat = %v, want backup file", statErr)
 	}

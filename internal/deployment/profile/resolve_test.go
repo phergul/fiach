@@ -10,7 +10,7 @@ import (
 	"github.com/phergul/fiach/internal/storage"
 )
 
-func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
+func TestResolveProfileDeploymentIncludesEnabledModsInLoadOrder(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -32,22 +32,22 @@ func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
 	addPlannerInstallConfig(t, store, secondModID, "generic_copy", "game_root", "BepInEx/plugins", &sourceSubpath)
 	addPlannerInstallConfig(t, store, disabledModID, "generic_copy", "game_root", "Ignored", nil)
 
-	result, err := ResolveProfilePlan(context.Background(), store, profileID)
+	result, err := ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 
 	if result.ProfileID != profileID || result.GameID != gameID || result.GameInstallPath != "/games/skyrim" {
-		t.Fatalf("ResolveProfilePlan() context = %+v, want profile/game/install path", result)
+		t.Fatalf("ResolveProfileDeployment() context = %+v, want profile/game/install path", result)
 	}
 	if result.GameModStoragePath == "" {
-		t.Fatalf("ResolveProfilePlan() GameModStoragePath = empty, want resolved managed storage path")
+		t.Fatalf("ResolveProfileDeployment() GameModStoragePath = empty, want resolved managed storage path")
 	}
 	if len(result.Issues) != 0 {
-		t.Fatalf("ResolveProfilePlan() issues = %+v, want none", result.Issues)
+		t.Fatalf("ResolveProfileDeployment() issues = %+v, want none", result.Issues)
 	}
 	if len(result.Mods) != 2 {
-		t.Fatalf("ResolveProfilePlan() mod count = %d, want 2", len(result.Mods))
+		t.Fatalf("ResolveProfileDeployment() mod count = %d, want 2", len(result.Mods))
 	}
 
 	first := result.Mods[0]
@@ -60,7 +60,7 @@ func TestResolveProfilePlanIncludesEnabledModsInLoadOrder(t *testing.T) {
 	}
 }
 
-func TestResolveProfilePlanReportsMissingInstallConfig(t *testing.T) {
+func TestResolveProfileDeploymentReportsMissingInstallConfig(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -71,16 +71,16 @@ func TestResolveProfilePlanReportsMissingInstallConfig(t *testing.T) {
 	modID := insertPlannerMod(t, store, gameID, "SkyUI", "/managed/skyui")
 	addPlannerProfileMod(t, store, profileID, modID, true, 0)
 
-	result, err := ResolveProfilePlan(context.Background(), store, profileID)
+	result, err := ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 
 	if len(result.Mods) != 0 {
-		t.Fatalf("ResolveProfilePlan() mods = %+v, want none", result.Mods)
+		t.Fatalf("ResolveProfileDeployment() mods = %+v, want none", result.Mods)
 	}
 	if len(result.Issues) != 1 {
-		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
+		t.Fatalf("ResolveProfileDeployment() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
 	if issue.Severity != deployment.PlanIssueSeverityError || issue.Kind != deployment.PlanIssueMissingInstallConfig || issue.ProfileID != profileID || issue.Mod == nil || issue.Mod.ModID != modID || issue.Mod.ModName != "SkyUI" || !strings.Contains(issue.Message, "missing an install configuration") {
@@ -88,7 +88,7 @@ func TestResolveProfilePlanReportsMissingInstallConfig(t *testing.T) {
 	}
 }
 
-func TestResolveProfilePlanReportsIncompleteInstallConfig(t *testing.T) {
+func TestResolveProfileDeploymentReportsIncompleteInstallConfig(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -100,16 +100,16 @@ func TestResolveProfilePlanReportsIncompleteInstallConfig(t *testing.T) {
 	addPlannerProfileMod(t, store, profileID, modID, true, 0)
 	addPlannerInstallConfig(t, store, modID, "generic_copy", "game_root", "", nil)
 
-	result, err := ResolveProfilePlan(context.Background(), store, profileID)
+	result, err := ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 
 	if len(result.Mods) != 0 {
-		t.Fatalf("ResolveProfilePlan() mods = %+v, want none", result.Mods)
+		t.Fatalf("ResolveProfileDeployment() mods = %+v, want none", result.Mods)
 	}
 	if len(result.Issues) != 1 {
-		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
+		t.Fatalf("ResolveProfileDeployment() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
 	if issue.Severity != deployment.PlanIssueSeverityError || issue.Kind != deployment.PlanIssueIncompleteInstallConfig || issue.Mod == nil || issue.Mod.ModID != modID || !strings.Contains(issue.Message, "incomplete install configuration") {
@@ -117,7 +117,7 @@ func TestResolveProfilePlanReportsIncompleteInstallConfig(t *testing.T) {
 	}
 }
 
-func TestResolveProfilePlanReportsMissingManagedSourcePath(t *testing.T) {
+func TestResolveProfileDeploymentReportsMissingManagedSourcePath(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -129,16 +129,16 @@ func TestResolveProfilePlanReportsMissingManagedSourcePath(t *testing.T) {
 	addPlannerProfileMod(t, store, profileID, modID, true, 0)
 	addPlannerInstallConfig(t, store, modID, "generic_copy", "game_root", "Data", nil)
 
-	result, err := ResolveProfilePlan(context.Background(), store, profileID)
+	result, err := ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 
 	if len(result.Mods) != 0 {
-		t.Fatalf("ResolveProfilePlan() mods = %+v, want none", result.Mods)
+		t.Fatalf("ResolveProfileDeployment() mods = %+v, want none", result.Mods)
 	}
 	if len(result.Issues) != 1 {
-		t.Fatalf("ResolveProfilePlan() issue count = %d, want 1", len(result.Issues))
+		t.Fatalf("ResolveProfileDeployment() issue count = %d, want 1", len(result.Issues))
 	}
 	issue := result.Issues[0]
 	if issue.Severity != deployment.PlanIssueSeverityError || issue.Kind != deployment.PlanIssueMissingManagedSourcePath || issue.Mod == nil || issue.Mod.ModID != modID || !strings.Contains(issue.Message, "missing a managed source path") {
@@ -146,7 +146,7 @@ func TestResolveProfilePlanReportsMissingManagedSourcePath(t *testing.T) {
 	}
 }
 
-func TestResolveProfilePlanReturnsPartialModsAndAllIssues(t *testing.T) {
+func TestResolveProfileDeploymentReturnsPartialModsAndAllIssues(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
@@ -168,16 +168,16 @@ func TestResolveProfilePlanReturnsPartialModsAndAllIssues(t *testing.T) {
 	beforeProfileMods := countPlannerRows(t, store, "profile_mods")
 	beforeConfigs := countPlannerRows(t, store, "mod_install_configs")
 
-	result, err := ResolveProfilePlan(context.Background(), store, profileID)
+	result, err := ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 
 	if len(result.Mods) != 1 || result.Mods[0].ModID != validModID {
-		t.Fatalf("ResolveProfilePlan() mods = %+v, want one valid mod", result.Mods)
+		t.Fatalf("ResolveProfileDeployment() mods = %+v, want one valid mod", result.Mods)
 	}
 	if len(result.Issues) != 2 {
-		t.Fatalf("ResolveProfilePlan() issue count = %d, want 2", len(result.Issues))
+		t.Fatalf("ResolveProfileDeployment() issue count = %d, want 2", len(result.Issues))
 	}
 
 	afterProfileMods := countPlannerRows(t, store, "profile_mods")
@@ -187,30 +187,30 @@ func TestResolveProfilePlanReturnsPartialModsAndAllIssues(t *testing.T) {
 	}
 }
 
-func TestResolveProfilePlanReturnsErrorForUnknownProfile(t *testing.T) {
+func TestResolveProfileDeploymentReturnsErrorForUnknownProfile(t *testing.T) {
 	t.Parallel()
 
 	store := openPlannerStore(t)
 	defer closePlannerStore(t, store)
 
-	_, err := ResolveProfilePlan(context.Background(), store, 999)
+	_, err := ResolveProfileDeployment(context.Background(), store, 999)
 	if err == nil {
-		t.Fatal("ResolveProfilePlan() error = nil, want error")
+		t.Fatal("ResolveProfileDeployment() error = nil, want error")
 	}
-	if !strings.Contains(err.Error(), "resolve profile plan") || !strings.Contains(err.Error(), "profile 999 was not found") {
-		t.Fatalf("ResolveProfilePlan() error = %q, want resolver context and unknown profile detail", err.Error())
+	if !strings.Contains(err.Error(), "resolve profile deployment") || !strings.Contains(err.Error(), "profile 999 was not found") {
+		t.Fatalf("ResolveProfileDeployment() error = %q, want resolver context and unknown profile detail", err.Error())
 	}
 }
 
-func TestResolveProfilePlanReturnsStoreConfigurationError(t *testing.T) {
+func TestResolveProfileDeploymentReturnsStoreConfigurationError(t *testing.T) {
 	t.Parallel()
 
-	_, err := ResolveProfilePlan(context.Background(), nil, 1)
+	_, err := ResolveProfileDeployment(context.Background(), nil, 1)
 	if err == nil {
-		t.Fatal("ResolveProfilePlan() error = nil, want error")
+		t.Fatal("ResolveProfileDeployment() error = nil, want error")
 	}
-	if !strings.Contains(err.Error(), "resolve profile plan") || !strings.Contains(err.Error(), "store is not configured") {
-		t.Fatalf("ResolveProfilePlan() error = %q, want resolver context and store configuration detail", err.Error())
+	if !strings.Contains(err.Error(), "resolve profile deployment") || !strings.Contains(err.Error(), "store is not configured") {
+		t.Fatalf("ResolveProfileDeployment() error = %q, want resolver context and store configuration detail", err.Error())
 	}
 }
 

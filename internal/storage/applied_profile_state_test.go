@@ -21,10 +21,19 @@ func TestMigrateUpAddsAppliedProfileStateTable(t *testing.T) {
 	if !tableExists(t, store, "applied_profile_states") {
 		t.Fatal("expected applied_profile_states table to exist")
 	}
-	for _, column := range []string{"game_id", "profile_id", "manifest_json", "profile_snapshot_json", "profile_snapshot_hash", "profile_composition_snapshot_json", "profile_composition_snapshot_hash", "applied_at"} {
+	for _, column := range []string{
+		"game_id",
+		"profile_id",
+		"profile_composition_snapshot_json",
+		"profile_composition_snapshot_hash",
+		"applied_at",
+	} {
 		if !columnExists(t, store, "applied_profile_states", column) {
 			t.Fatalf("expected applied_profile_states.%s column to exist", column)
 		}
+	}
+	if columnExists(t, store, "applied_profile_states", "manifest_json") {
+		t.Fatal("expected manifest_json column to be absent after migration")
 	}
 	if !indexExists(t, store, "idx_applied_profile_states_profile_id") {
 		t.Fatal("expected idx_applied_profile_states_profile_id to exist")
@@ -52,32 +61,26 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 	first, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      firstProfile.ID,
-		ManifestJSON:                   `{"version":1,"addedFiles":[]}`,
-		ProfileSnapshotJSON:            `{"version":1,"operations":[{"operationIndex":0}]}`,
-		ProfileSnapshotHash:            "first-hash",
 		ProfileCompositionSnapshotJSON: &firstCompositionJSON,
 		ProfileCompositionSnapshotHash: &firstCompositionHash,
 	})
 	if err != nil {
 		t.Fatalf("SaveAppliedProfileState() insert error = %v", err)
 	}
-	if first.GameID != gameID || first.ProfileID != firstProfile.ID || first.ProfileSnapshotHash != "first-hash" || first.ProfileCompositionSnapshotJSON == nil || *first.ProfileCompositionSnapshotJSON != firstCompositionJSON || first.ProfileCompositionSnapshotHash == nil || *first.ProfileCompositionSnapshotHash != firstCompositionHash || first.AppliedAt == "" {
+	if first.GameID != gameID || first.ProfileID != firstProfile.ID || first.ProfileCompositionSnapshotJSON == nil || *first.ProfileCompositionSnapshotJSON != firstCompositionJSON || first.ProfileCompositionSnapshotHash == nil || *first.ProfileCompositionSnapshotHash != firstCompositionHash || first.AppliedAt == "" {
 		t.Fatalf("inserted applied profile state = %+v, want first profile state", first)
 	}
 
 	replaced, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      secondProfile.ID,
-		ManifestJSON:                   `{"version":1,"addedFiles":[{"targetPath":"Data/SkyUI.esp"}]}`,
-		ProfileSnapshotJSON:            `{"version":1,"operations":[{"operationIndex":1}]}`,
-		ProfileSnapshotHash:            "second-hash",
 		ProfileCompositionSnapshotJSON: &secondCompositionJSON,
 		ProfileCompositionSnapshotHash: &secondCompositionHash,
 	})
 	if err != nil {
 		t.Fatalf("SaveAppliedProfileState() replace error = %v", err)
 	}
-	if replaced.GameID != gameID || replaced.ProfileID != secondProfile.ID || replaced.ProfileSnapshotHash != "second-hash" {
+	if replaced.GameID != gameID || replaced.ProfileID != secondProfile.ID {
 		t.Fatalf("replaced applied profile state = %+v, want second profile state", replaced)
 	}
 
@@ -88,7 +91,7 @@ func TestSaveAppliedProfileStateInsertsReadsAndReplacesCurrentGameState(t *testi
 	if !found {
 		t.Fatal("GetAppliedProfileState() found = false, want true")
 	}
-	if read.ProfileID != secondProfile.ID || read.ManifestJSON != replaced.ManifestJSON || read.ProfileSnapshotJSON != replaced.ProfileSnapshotJSON || read.ProfileSnapshotHash != "second-hash" || read.ProfileCompositionSnapshotJSON == nil || *read.ProfileCompositionSnapshotJSON != secondCompositionJSON || read.ProfileCompositionSnapshotHash == nil || *read.ProfileCompositionSnapshotHash != secondCompositionHash {
+	if read.ProfileID != secondProfile.ID || read.ProfileCompositionSnapshotJSON == nil || *read.ProfileCompositionSnapshotJSON != secondCompositionJSON || read.ProfileCompositionSnapshotHash == nil || *read.ProfileCompositionSnapshotHash != secondCompositionHash {
 		t.Fatalf("GetAppliedProfileState() = %+v, want replaced state", read)
 	}
 
@@ -133,11 +136,8 @@ func TestDeleteAppliedProfileStateClearsStateAndIsIdempotent(t *testing.T) {
 	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
 	profile := mustCreateProfile(t, store, gameID, "Default")
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profile.ID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "hash",
+		GameID:    gameID,
+		ProfileID: profile.ID,
 	}); err != nil {
 		t.Fatalf("SaveAppliedProfileState() error = %v", err)
 	}
@@ -154,6 +154,53 @@ func TestDeleteAppliedProfileStateClearsStateAndIsIdempotent(t *testing.T) {
 	}
 	if err := store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
 		t.Fatalf("DeleteAppliedProfileState() second error = %v", err)
+	}
+}
+
+func TestDeleteAppliedProfileStateCascadesCreatedDirectories(t *testing.T) {
+	t.Parallel()
+
+	store := openStore(t)
+	defer closeStore(t, store)
+
+	if err := store.MigrateUp(); err != nil {
+		t.Fatalf("MigrateUp() error = %v", err)
+	}
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	profile := mustCreateProfile(t, store, gameID, "Default")
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:    gameID,
+		ProfileID: profile.ID,
+		CreatedDirectories: []dbtypes.AppliedCreatedDirectoryRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Mods/Created",
+			},
+		},
+		ReplaceCreatedDirectories: true,
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	directories, err := store.ListAppliedCreatedDirectories(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListAppliedCreatedDirectories() error = %v", err)
+	}
+	if len(directories) != 1 {
+		t.Fatalf("ListAppliedCreatedDirectories() = %+v, want one directory", directories)
+	}
+
+	if err := store.DeleteAppliedProfileState(context.Background(), gameID); err != nil {
+		t.Fatalf("DeleteAppliedProfileState() error = %v", err)
+	}
+
+	directories, err = store.ListAppliedCreatedDirectories(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("ListAppliedCreatedDirectories() after delete error = %v", err)
+	}
+	if len(directories) != 0 {
+		t.Fatalf("ListAppliedCreatedDirectories() after delete = %+v, want cascade delete", directories)
 	}
 }
 
@@ -194,63 +241,22 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 		{
 			name: "missing game",
 			input: dbtypes.SaveAppliedProfileStateInput{
-				ProfileID:           1,
-				ManifestJSON:        `{"version":1}`,
-				ProfileSnapshotJSON: `{"version":1}`,
-				ProfileSnapshotHash: "hash",
+				ProfileID: 1,
 			},
 			want: "game ID must be positive",
 		},
 		{
 			name: "missing profile",
 			input: dbtypes.SaveAppliedProfileStateInput{
-				GameID:              1,
-				ManifestJSON:        `{"version":1}`,
-				ProfileSnapshotJSON: `{"version":1}`,
-				ProfileSnapshotHash: "hash",
+				GameID: 1,
 			},
 			want: "profile ID must be positive",
-		},
-		{
-			name: "invalid manifest JSON",
-			input: dbtypes.SaveAppliedProfileStateInput{
-				GameID:              1,
-				ProfileID:           1,
-				ManifestJSON:        `{`,
-				ProfileSnapshotJSON: `{"version":1}`,
-				ProfileSnapshotHash: "hash",
-			},
-			want: "manifest JSON is invalid",
-		},
-		{
-			name: "invalid snapshot JSON",
-			input: dbtypes.SaveAppliedProfileStateInput{
-				GameID:              1,
-				ProfileID:           1,
-				ManifestJSON:        `{"version":1}`,
-				ProfileSnapshotJSON: `{`,
-				ProfileSnapshotHash: "hash",
-			},
-			want: "profile snapshot JSON is invalid",
-		},
-		{
-			name: "missing hash",
-			input: dbtypes.SaveAppliedProfileStateInput{
-				GameID:              1,
-				ProfileID:           1,
-				ManifestJSON:        `{"version":1}`,
-				ProfileSnapshotJSON: `{"version":1}`,
-			},
-			want: "profile snapshot hash is required",
 		},
 		{
 			name: "invalid composition snapshot JSON",
 			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:                         1,
 				ProfileID:                      1,
-				ManifestJSON:                   `{"version":1}`,
-				ProfileSnapshotJSON:            `{"version":1}`,
-				ProfileSnapshotHash:            "hash",
 				ProfileCompositionSnapshotJSON: stringPtr("{"),
 				ProfileCompositionSnapshotHash: stringPtr("composition-hash"),
 			},
@@ -261,9 +267,6 @@ func TestSaveAppliedProfileStateRejectsInvalidInput(t *testing.T) {
 			input: dbtypes.SaveAppliedProfileStateInput{
 				GameID:                         1,
 				ProfileID:                      1,
-				ManifestJSON:                   `{"version":1}`,
-				ProfileSnapshotJSON:            `{"version":1}`,
-				ProfileSnapshotHash:            "hash",
 				ProfileCompositionSnapshotJSON: stringPtr(`{"version":1}`),
 			},
 			want: "profile composition snapshot JSON and hash must be provided together",
@@ -298,11 +301,8 @@ func TestSaveAppliedProfileStateRejectsProfileFromAnotherGame(t *testing.T) {
 	profile := mustCreateProfile(t, store, secondGameID, "Default")
 
 	_, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              firstGameID,
-		ProfileID:           profile.ID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "hash",
+		GameID:    firstGameID,
+		ProfileID: profile.ID,
 	})
 	if err == nil {
 		t.Fatal("SaveAppliedProfileState() error = nil, want profile/game mismatch")

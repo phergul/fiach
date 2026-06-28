@@ -141,7 +141,7 @@ func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"modded.txt": "modded",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)

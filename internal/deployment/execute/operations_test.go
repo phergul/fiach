@@ -60,7 +60,7 @@ func TestBuildOperationsCreateReplaceDeleteRestoreRepair(t *testing.T) {
 	}
 
 	backupRoot := t.TempDir()
-	backupPath := filepath.Join(backupRoot, "operation-backups", "Data", "plugin.esp")
+	backupPath := filepath.Join(backupRoot, "deployment-backups", "Data", "plugin.esp")
 	if err := os.MkdirAll(filepath.Dir(backupPath), 0o755); err != nil {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}

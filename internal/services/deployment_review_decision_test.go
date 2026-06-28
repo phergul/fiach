@@ -22,7 +22,7 @@ func TestDeploymentReviewServiceSetDriftDecisionRefreshesPreviewAndUnblocksApply
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
@@ -41,11 +41,8 @@ func TestDeploymentReviewServiceSetDriftDecisionRefreshesPreviewAndUnblocksApply
 	appliedSHA256 := "0000000000000000000000000000000000000000000000000000000000000000"
 	appliedSize := int64(1)
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{"Mods/SkyUI/Data/SkyUI.esp":{"gameRelativePath":"Mods/SkyUI/Data/SkyUI.esp","outputKind":"copied","appliedExists":true,"appliedSHA256":"0000000000000000000000000000000000000000000000000000000000000000","appliedSizeBytes":1}}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -157,7 +154,7 @@ func TestDeploymentReviewServiceSetDriftDecisionRejectsInvalidDecision(t *testin
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
@@ -176,11 +173,8 @@ func TestDeploymentReviewServiceSetDriftDecisionRejectsInvalidDecision(t *testin
 	appliedSHA256 := "0000000000000000000000000000000000000000000000000000000000000000"
 	appliedSize := int64(1)
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{"Mods/SkyUI/Data/SkyUI.esp":{"gameRelativePath":"Mods/SkyUI/Data/SkyUI.esp","outputKind":"copied","appliedExists":true,"appliedSHA256":"0000000000000000000000000000000000000000000000000000000000000000","appliedSizeBytes":1}}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,

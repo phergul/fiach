@@ -7,6 +7,3 @@ type ApplyDeploymentResult struct {
 	Message        string
 	RolledBack     bool
 }
-
-// ApplyIncrementalDeploymentResult is deprecated; use ApplyDeploymentResult.
-type ApplyIncrementalDeploymentResult = ApplyDeploymentResult

@@ -3,7 +3,7 @@ package mappers
 import (
 	"testing"
 
-	"github.com/phergul/fiach/internal/restoreplan"
+	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
@@ -12,19 +12,19 @@ func TestRestoreResultDTOConversion(t *testing.T) {
 	t.Parallel()
 
 	message := "backup missing"
-	result := restoreplan.RestoreResult{
+	result := execute.VanillaRestoreResult{
 		Success:     false,
 		FailedCount: 1,
-		Results: []restoreplan.RestoreOperationResult{
+		Results: []execute.VanillaRestoreOperationResult{
 			{
 				OperationIndex: 2,
-				Status:         restoreplan.RestoreOperationStatusFailed,
+				Status:         execute.VanillaRestoreOperationStatusFailed,
 				Message:        "Failed.",
 				Error:          &message,
-				Operation: restoreplan.RestoreOperation{
-					Type:                   restoreplan.RestoreOperationTypeRestoreReplacedFile,
+				Operation: execute.VanillaRestoreOperation{
+					Type:                   execute.VanillaRestoreOperationRestoreReplacedFile,
 					ManifestOperationIndex: 5,
-					Mod:                    restoreplan.Mod{ID: 4, Name: "Textures"},
+					Mod:                    execute.VanillaRestoreMod{ID: 4, Name: "Textures"},
 					TargetPath:             "/games/game/Data/texture.dds",
 				},
 			},

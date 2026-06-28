@@ -5,8 +5,9 @@ import "github.com/phergul/fiach/internal/deployment"
 type PlanMode string
 
 const (
-	PlanModeFirstApply  PlanMode = "first_apply"
-	PlanModeIncremental PlanMode = "incremental"
+	PlanModeFirstApply     PlanMode = "first_apply"
+	PlanModeIncremental    PlanMode = "incremental"
+	PlanModeRestorePreview PlanMode = "restore_preview"
 )
 
 type ReapplyAction string

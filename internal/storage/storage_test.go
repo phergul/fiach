@@ -81,6 +81,8 @@ func TestMigrateUpCreatesCoreTables(t *testing.T) {
 		"profile_mods",
 		"applied_profile_states",
 		"applied_file_states",
+		"applied_created_directories",
+		"deployment_rules",
 		"settings",
 		"tags",
 		"mod_tags",
@@ -469,9 +471,9 @@ func TestDeletingGameCascadesDependents(t *testing.T) {
 	}
 
 	if _, err := store.DB().Exec(`
-		INSERT INTO applied_profile_states (game_id, profile_id, manifest_json, profile_snapshot_json, profile_snapshot_hash)
-		VALUES (?, ?, ?, ?, ?)
-	`, gameID, profileID, `{"version":1}`, `{"version":1}`, "abc123"); err != nil {
+		INSERT INTO applied_profile_states (game_id, profile_id, applied_at)
+		VALUES (?, ?, ?)
+	`, gameID, profileID, "2026-06-27T00:00:00Z"); err != nil {
 		t.Fatalf("insert applied_profile_state: %v", err)
 	}
 

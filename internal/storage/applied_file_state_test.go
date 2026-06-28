@@ -213,11 +213,8 @@ func TestSaveAppliedProfileStatePersistsFileStatesInSameTransaction(t *testing.T
 	winningModID := int64(10)
 
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profile.ID,
-		ManifestJSON:        `{"version":2,"addedFiles":[],"replacedFiles":[],"createdDirectories":[]}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "hash",
+		GameID:    gameID,
+		ProfileID: profile.ID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:            gameID,
@@ -340,11 +337,8 @@ func saveAppliedProfileStateFixture(t *testing.T, store *Store, gameID int64, pr
 	t.Helper()
 
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":1,"addedFiles":[],"replacedFiles":[],"createdDirectories":[]}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "hash",
+		GameID:    gameID,
+		ProfileID: profileID,
 	}); err != nil {
 		t.Fatalf("SaveAppliedProfileState() fixture error = %v", err)
 	}

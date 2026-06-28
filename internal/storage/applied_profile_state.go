@@ -38,23 +38,20 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 			INSERT INTO applied_profile_states (
 				game_id,
 				profile_id,
-				manifest_json,
-				profile_snapshot_json,
-				profile_snapshot_hash,
 				profile_composition_snapshot_json,
 				profile_composition_snapshot_hash,
 				applied_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?)
 			ON CONFLICT(game_id) DO UPDATE SET
 				profile_id = excluded.profile_id,
-				manifest_json = excluded.manifest_json,
-				profile_snapshot_json = excluded.profile_snapshot_json,
-				profile_snapshot_hash = excluded.profile_snapshot_hash,
 				profile_composition_snapshot_json = excluded.profile_composition_snapshot_json,
 				profile_composition_snapshot_hash = excluded.profile_composition_snapshot_hash,
 				applied_at = excluded.applied_at
-		`, input.GameID, input.ProfileID, strings.TrimSpace(input.ManifestJSON), strings.TrimSpace(input.ProfileSnapshotJSON), strings.TrimSpace(input.ProfileSnapshotHash), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotJSON)), nullableText(cleanOptionalString(input.ProfileCompositionSnapshotHash)), appliedAt); err != nil {
+		`, input.GameID, input.ProfileID,
+			nullableText(cleanOptionalString(input.ProfileCompositionSnapshotJSON)),
+			nullableText(cleanOptionalString(input.ProfileCompositionSnapshotHash)),
+			appliedAt); err != nil {
 			return err
 		}
 
@@ -78,6 +75,20 @@ func (s *Store) SaveAppliedProfileState(ctx context.Context, input dbtypes.SaveA
 				GameID:     input.GameID,
 				ProfileID:  input.ProfileID,
 				FileStates: fileStates,
+			}); err != nil {
+				return err
+			}
+		}
+
+		if input.ReplaceCreatedDirectories || len(input.CreatedDirectories) > 0 {
+			directories := make([]dbtypes.AppliedCreatedDirectoryRow, len(input.CreatedDirectories))
+			copy(directories, input.CreatedDirectories)
+			for index := range directories {
+				directories[index].GameID = input.GameID
+			}
+			if err := replaceAppliedCreatedDirectories(ctx, tx, dbtypes.ReplaceAppliedCreatedDirectoriesInput{
+				GameID:      input.GameID,
+				Directories: directories,
 			}); err != nil {
 				return err
 			}
@@ -146,21 +157,6 @@ func validateSaveAppliedProfileStateInput(input dbtypes.SaveAppliedProfileStateI
 	if input.ProfileID <= 0 {
 		return errors.New("profile ID must be positive")
 	}
-	if strings.TrimSpace(input.ManifestJSON) == "" {
-		return errors.New("manifest JSON is required")
-	}
-	if !json.Valid([]byte(strings.TrimSpace(input.ManifestJSON))) {
-		return errors.New("manifest JSON is invalid")
-	}
-	if strings.TrimSpace(input.ProfileSnapshotJSON) == "" {
-		return errors.New("profile snapshot JSON is required")
-	}
-	if !json.Valid([]byte(strings.TrimSpace(input.ProfileSnapshotJSON))) {
-		return errors.New("profile snapshot JSON is invalid")
-	}
-	if strings.TrimSpace(input.ProfileSnapshotHash) == "" {
-		return errors.New("profile snapshot hash is required")
-	}
 	if (input.ProfileCompositionSnapshotJSON == nil) != (input.ProfileCompositionSnapshotHash == nil) {
 		return errors.New("profile composition snapshot JSON and hash must be provided together")
 	}
@@ -209,9 +205,6 @@ func getAppliedProfileState(ctx context.Context, db appliedProfileStateGetter, g
 		SELECT
 			game_id,
 			profile_id,
-			manifest_json,
-			profile_snapshot_json,
-			profile_snapshot_hash,
 			profile_composition_snapshot_json,
 			profile_composition_snapshot_hash,
 			applied_at

@@ -20,7 +20,7 @@ import (
 
 type deploymentPlanBuildResult struct {
 	Profile            dbtypes.ModProfile
-	Resolved           profile.ResolveProfilePlanResult
+	Resolved           profile.ResolveProfileDeploymentResult
 	Desired            deployment.DesiredState
 	Plan               planner.DeploymentPlan
 	DeploymentRules    []rules.DeploymentRule
@@ -59,7 +59,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 		return deploymentPlanBuildResult{}, apperror.New("Restore vanilla before applying another profile.")
 	}
 
-	resolved, err := profile.ResolveProfilePlan(ctx, s.store, profileID)
+	resolved, err := profile.ResolveProfileDeployment(ctx, s.store, profileID)
 	if err != nil {
 		return deploymentPlanBuildResult{}, err
 	}

@@ -40,16 +40,6 @@ func (s *ProfileService) SaveIncrementalAppliedProfileState(
 		return err
 	}
 
-	manifestDocument := appliedstate.ManifestDocument{
-		Version: appliedstate.DocumentVersion,
-	}
-	appliedstate.AttachManifestFiles(&manifestDocument, mergedStates)
-
-	manifestJSON, err := appliedstate.EncodeManifest(manifestDocument)
-	if err != nil {
-		return fmt.Errorf("encode applied manifest: %w", err)
-	}
-
 	profileMods, err := s.store.ListProfileMods(ctx, profileID)
 	if err != nil {
 		return err
@@ -62,9 +52,6 @@ func (s *ProfileService) SaveIncrementalAppliedProfileState(
 	_, err = s.store.SaveAppliedProfileState(ctx, dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      profileID,
-		ManifestJSON:                   manifestJSON,
-		ProfileSnapshotJSON:            appliedState.ProfileSnapshotJSON,
-		ProfileSnapshotHash:            appliedState.ProfileSnapshotHash,
 		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
 		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
 		FileStates:                     toDBAppliedFileStateRows(gameID, mergedStates, ""),
@@ -85,7 +72,6 @@ func (s *ProfileService) SaveFirstApplyAppliedProfileState(
 	plan planner.DeploymentPlan,
 	desired deployment.DesiredState,
 	outcome execute.FirstApplyOutcome,
-	previewHash string,
 ) (err error) {
 	defer func() {
 		if err != nil {
@@ -104,22 +90,9 @@ func (s *ProfileService) SaveFirstApplyAppliedProfileState(
 		return err
 	}
 
-	manifestDocument, err := execute.BuildFirstApplyManifest(plan, desired, outcome, installPath)
+	createdDirectories, err := toDBAppliedCreatedDirectoryRows(gameID, installPath, outcome)
 	if err != nil {
 		return err
-	}
-	appliedstate.AttachManifestFiles(&manifestDocument, fileStates)
-
-	manifestJSON, err := appliedstate.EncodeManifest(manifestDocument)
-	if err != nil {
-		return fmt.Errorf("encode applied manifest: %w", err)
-	}
-
-	snapshot, err := appliedstate.EncodeDeploymentProfileSnapshot(
-		appliedstate.BuildDeploymentProfileSnapshotDocument(previewHash, string(plan.Mode)),
-	)
-	if err != nil {
-		return fmt.Errorf("encode profile snapshot: %w", err)
 	}
 
 	profileMods, err := s.store.ListProfileMods(ctx, profileID)
@@ -134,13 +107,12 @@ func (s *ProfileService) SaveFirstApplyAppliedProfileState(
 	_, err = s.store.SaveAppliedProfileState(ctx, dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      profileID,
-		ManifestJSON:                   manifestJSON,
-		ProfileSnapshotJSON:            snapshot.JSON,
-		ProfileSnapshotHash:            snapshot.Hash,
 		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
 		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
 		FileStates:                     toDBAppliedFileStateRows(gameID, fileStates, ""),
 		ReplaceFileStates:              true,
+		CreatedDirectories:             createdDirectories,
+		ReplaceCreatedDirectories:      true,
 	})
 	if err != nil {
 		return err

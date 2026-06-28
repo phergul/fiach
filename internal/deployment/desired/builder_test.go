@@ -39,7 +39,7 @@ func TestBuildDesiredState_LoadOrderWinner(t *testing.T) {
 	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	file := desiredFile(t, state, "shared/plugin.txt")
@@ -75,7 +75,7 @@ func TestBuildDesiredState_MultiWriterStack(t *testing.T) {
 	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	file := desiredFile(t, state, "shared/plugin.txt")
@@ -125,7 +125,7 @@ func TestBuildDesiredState_MissingUnrealPaksTarget(t *testing.T) {
 		nil,
 	)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	if state.CanPreview() {
@@ -160,7 +160,7 @@ func TestBuildDesiredState_AmbiguousTiedLoadOrder(t *testing.T) {
 	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	file := desiredFile(t, state, "shared/plugin.txt")
@@ -196,7 +196,7 @@ func TestBuildDesiredState_PerFileWinnerRuleOverridesLoadOrder(t *testing.T) {
 	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state, err := desired.BuildDesiredState(context.Background(), resolved, []rules.DeploymentRule{
 		{
 			ProfileID:        profileID,
@@ -245,7 +245,7 @@ func TestBuildDesiredState_DestructiveFileDirectory(t *testing.T) {
 	addDesiredInstallConfig(t, store, fileModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, ".", nil)
 	addDesiredInstallConfig(t, store, nestedModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Shared", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	fileEntry := desiredFile(t, state, "shared")
@@ -276,7 +276,7 @@ func TestBuildDesiredState_BaseGameWriter(t *testing.T) {
 	addDesiredProfileMod(t, store, profileID, modID, true, 0)
 	addDesiredInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	file := desiredFile(t, state, "data/new.esp")
@@ -316,7 +316,7 @@ func TestBuildDesiredState_NoFilesystemMutations(t *testing.T) {
 	addDesiredProfileMod(t, store, profileID, modID, true, 0)
 	addDesiredInstallConfig(t, store, modID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	_ = buildDesiredState(t, resolved)
 
 	afterGame := dirSnapshot(t, gameRoot)
@@ -350,7 +350,7 @@ func TestBuildDesiredState_DisabledModExcluded(t *testing.T) {
 	addDesiredInstallConfig(t, store, enabledModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 	addDesiredInstallConfig(t, store, disabledModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	if _, found := state.Files["data/disabled.esp"]; found {
@@ -380,7 +380,7 @@ func TestBuildDesiredState_CaseFoldingMerge(t *testing.T) {
 	addDesiredInstallConfig(t, store, firstModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 	addDesiredInstallConfig(t, store, secondModID, string(installconfig.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "data", nil)
 
-	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	resolved := resolveDesiredProfileDeployment(t, store, profileID)
 	state := buildDesiredState(t, resolved)
 
 	if len(state.Files) != 1 {
@@ -393,7 +393,7 @@ func TestBuildDesiredState_CaseFoldingMerge(t *testing.T) {
 	}
 }
 
-func buildDesiredState(t *testing.T, resolved profile.ResolveProfilePlanResult) deployment.DesiredState {
+func buildDesiredState(t *testing.T, resolved profile.ResolveProfileDeploymentResult) deployment.DesiredState {
 	t.Helper()
 
 	state, err := desired.BuildDesiredState(context.Background(), resolved, nil)
@@ -403,12 +403,12 @@ func buildDesiredState(t *testing.T, resolved profile.ResolveProfilePlanResult) 
 	return state
 }
 
-func resolveDesiredProfilePlan(t *testing.T, store *storage.Store, profileID int64) profile.ResolveProfilePlanResult {
+func resolveDesiredProfileDeployment(t *testing.T, store *storage.Store, profileID int64) profile.ResolveProfileDeploymentResult {
 	t.Helper()
 
-	resolved, err := profile.ResolveProfilePlan(context.Background(), store, profileID)
+	resolved, err := profile.ResolveProfileDeployment(context.Background(), store, profileID)
 	if err != nil {
-		t.Fatalf("ResolveProfilePlan() error = %v", err)
+		t.Fatalf("ResolveProfileDeployment() error = %v", err)
 	}
 	return resolved
 }

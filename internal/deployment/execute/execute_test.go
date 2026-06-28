@@ -42,7 +42,6 @@ func (s *recordingSaver) SaveFirstApplyAppliedProfileState(
 	plan planner.DeploymentPlan,
 	desired deployment.DesiredState,
 	outcome execute.FirstApplyOutcome,
-	previewHash string,
 ) error {
 	s.firstApplyCalls++
 	return s.err

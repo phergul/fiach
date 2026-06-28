@@ -165,10 +165,6 @@ func ToDTOApplyDeploymentResult(result execute.Result) dto.ApplyDeploymentResult
 	}
 }
 
-func ToDTOApplyIncrementalDeploymentResult(result execute.Result) dto.ApplyIncrementalDeploymentResult {
-	return ToDTOApplyDeploymentResult(result)
-}
-
 func ToDTODeploymentFileInspection(result inspect.InspectionResult) dto.DeploymentFileInspection {
 	textLines := make([]dto.TextDiffLine, 0, len(result.TextLines))
 	for _, line := range result.TextLines {

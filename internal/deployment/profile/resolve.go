@@ -11,7 +11,7 @@ import (
 	"github.com/phergul/fiach/internal/storage"
 )
 
-type ProfilePlanMod struct {
+type ProfileDeploymentMod struct {
 	ProfileID          int64
 	ModID              int64
 	ModName            string
@@ -23,12 +23,12 @@ type ProfilePlanMod struct {
 	SourceSubpath      *string
 }
 
-type ResolveProfilePlanResult struct {
+type ResolveProfileDeploymentResult struct {
 	ProfileID          int64
 	GameID             int64
 	GameInstallPath    string
 	GameModStoragePath string
-	Mods               []ProfilePlanMod
+	Mods               []ProfileDeploymentMod
 	Issues             []deployment.PlanIssue
 }
 
@@ -36,36 +36,36 @@ type StrategyBuildInput struct {
 	ProfileID          int64
 	GameInstallPath    string
 	GameModStoragePath string
-	Mod                ProfilePlanMod
+	Mod                ProfileDeploymentMod
 }
 
-func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int64) (result ResolveProfilePlanResult, err error) {
+func ResolveProfileDeployment(ctx context.Context, store *storage.Store, profileID int64) (result ResolveProfileDeploymentResult, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("resolve profile plan: %w", err)
+			err = fmt.Errorf("resolve profile deployment: %w", err)
 		}
 	}()
 
 	if store == nil {
-		return ResolveProfilePlanResult{}, errors.New("store is not configured")
+		return ResolveProfileDeploymentResult{}, errors.New("store is not configured")
 	}
 
 	profile, found, err := store.GetProfile(ctx, profileID)
 	if err != nil {
-		return ResolveProfilePlanResult{}, err
+		return ResolveProfileDeploymentResult{}, err
 	}
 	if !found {
-		return ResolveProfilePlanResult{}, fmt.Errorf("profile %d was not found", profileID)
+		return ResolveProfileDeploymentResult{}, fmt.Errorf("profile %d was not found", profileID)
 	}
 
 	game, err := store.GetStoredGame(ctx, profile.GameID)
 	if err != nil {
-		return ResolveProfilePlanResult{}, err
+		return ResolveProfileDeploymentResult{}, err
 	}
 
 	gameModStoragePath, err := store.ResolveGameModStoragePath(ctx, profile.GameID, "")
 	if err != nil {
-		return ResolveProfilePlanResult{}, err
+		return ResolveProfileDeploymentResult{}, err
 	}
 
 	result.ProfileID = profileID
@@ -75,7 +75,7 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 
 	profileMods, err := store.ListProfileMods(ctx, profileID)
 	if err != nil {
-		return ResolveProfilePlanResult{}, err
+		return ResolveProfileDeploymentResult{}, err
 	}
 
 	for _, profileMod := range profileMods {
@@ -99,7 +99,7 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 
 		config, found, err := store.GetModInstallConfig(ctx, profileMod.ModID)
 		if err != nil {
-			return ResolveProfilePlanResult{}, err
+			return ResolveProfileDeploymentResult{}, err
 		}
 		if !found {
 			result.Issues = append(result.Issues, newPlanIssue(
@@ -127,7 +127,7 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 			continue
 		}
 
-		result.Mods = append(result.Mods, ProfilePlanMod{
+		result.Mods = append(result.Mods, ProfileDeploymentMod{
 			ProfileID:          profileID,
 			ModID:              profileMod.ModID,
 			ModName:            profileMod.Name,

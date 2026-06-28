@@ -86,9 +86,6 @@ CREATE TABLE profile_mods (
 CREATE TABLE applied_profile_states (
     game_id INTEGER PRIMARY KEY REFERENCES games(id) ON DELETE CASCADE,
     profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-    manifest_json TEXT NOT NULL,
-    profile_snapshot_json TEXT NOT NULL,
-    profile_snapshot_hash TEXT NOT NULL,
     profile_composition_snapshot_json TEXT,
     profile_composition_snapshot_hash TEXT,
     applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

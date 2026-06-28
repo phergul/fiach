@@ -44,7 +44,6 @@ func (s *capturingSaver) SaveFirstApplyAppliedProfileState(
 	plan planner.DeploymentPlan,
 	desired deployment.DesiredState,
 	outcome execute.FirstApplyOutcome,
-	previewHash string,
 ) error {
 	return nil
 }

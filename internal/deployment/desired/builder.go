@@ -22,7 +22,7 @@ type pathAccumulator struct {
 
 func BuildDesiredState(
 	ctx context.Context,
-	resolved profile.ResolveProfilePlanResult,
+	resolved profile.ResolveProfileDeploymentResult,
 	deploymentRules []rules.DeploymentRule,
 ) (state deployment.DesiredState, err error) {
 	defer func() {
@@ -40,7 +40,7 @@ func BuildDesiredState(
 		Issues:    append([]deployment.PlanIssue(nil), resolved.Issues...),
 	}
 
-	mods := append([]profile.ProfilePlanMod{}, resolved.Mods...)
+	mods := append([]profile.ProfileDeploymentMod{}, resolved.Mods...)
 	sort.SliceStable(mods, func(i int, j int) bool {
 		if mods[i].LoadOrder != mods[j].LoadOrder {
 			return mods[i].LoadOrder < mods[j].LoadOrder

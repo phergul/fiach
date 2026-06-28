@@ -162,11 +162,8 @@ func TestProfileServiceRejectsDeletingAppliedProfile(t *testing.T) {
 		t.Fatalf("CreateProfile() error = %v", err)
 	}
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profile.ID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profile.ID,
 	}); err != nil {
 		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
 	}
@@ -210,11 +207,8 @@ func TestProfileServiceGetsAppliedProfileSummary(t *testing.T) {
 	}
 
 	state, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profile.ID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profile.ID,
 	})
 	if err != nil {
 		t.Fatalf("SaveAppliedProfileState() setup error = %v", err)
@@ -369,9 +363,6 @@ func saveServiceAppliedStateWithCurrentComposition(t *testing.T, store *storage.
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
 		GameID:                         gameID,
 		ProfileID:                      profileID,
-		ManifestJSON:                   `{"version":1}`,
-		ProfileSnapshotJSON:            `{"version":1}`,
-		ProfileSnapshotHash:            "snapshot",
 		ProfileCompositionSnapshotJSON: &compositionSnapshot.JSON,
 		ProfileCompositionSnapshotHash: &compositionSnapshot.Hash,
 	}); err != nil {

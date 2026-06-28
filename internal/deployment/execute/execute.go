@@ -65,7 +65,6 @@ func Execute(ctx context.Context, execContext Context, saver AppliedStateSaver) 
 				execContext.Plan,
 				execContext.Desired,
 				firstApplyOutcome,
-				execContext.PreviewHash,
 			); err != nil {
 				return Result{}, err
 			}
@@ -185,7 +184,6 @@ func Execute(ctx context.Context, execContext Context, saver AppliedStateSaver) 
 			execContext.Plan,
 			execContext.Desired,
 			firstApplyOutcome,
-			execContext.PreviewHash,
 		); err != nil {
 			failedResult, returnErr := rollback(err)
 			failedResult.SkippedCount = skippedCount

@@ -43,7 +43,6 @@ type AppliedStateSaver interface {
 		plan planner.DeploymentPlan,
 		desired deployment.DesiredState,
 		outcome FirstApplyOutcome,
-		previewHash string,
 	) error
 }
 

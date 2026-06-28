@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
@@ -25,25 +24,38 @@ func TestProfileServiceRestoreVanillaStateRestoresFilesClearsStateAndDeletesBack
 	gameModStoragePath := serviceRestoreGameModStoragePath(t, store, gameID)
 	addedPath := writeServiceRestoreFile(t, gameRoot, "Data/added.txt", "added")
 	targetPath := writeServiceRestoreFile(t, gameRoot, "Data/replaced.txt", "modded")
-	backupPath := writeServiceRestoreFile(t, gameModStoragePath, "operation-backups/Data/replaced.txt", "vanilla")
+	backupPath := writeServiceRestoreFile(t, gameModStoragePath, "deployment-backups/Data/replaced.txt", "vanilla")
 	createdDirectory := filepath.Join(gameRoot, "Mods", "Created")
 	if err := os.MkdirAll(createdDirectory, 0o755); err != nil {
 		t.Fatalf("create directory: %v", err)
 	}
-	saveServiceRestoreAppliedState(t, store, gameID, profileID, appliedstate.ManifestDocument{
-		Version: appliedstate.DocumentVersion,
-		AddedFiles: []appliedstate.AddedFile{
-			serviceRestoreAddedFile(0, addedPath, "added"),
+
+	addedHash := testContentHash("added")
+	moddedHash := testContentHash("modded")
+	backupHash := testContentHash("vanilla")
+	addedSize := int64(len("added"))
+	moddedSize := int64(len("modded"))
+	backupSize := int64(len("vanilla"))
+
+	saveTestAppliedProfileState(t, store, gameID, profileID, []testAppliedFileSeed{
+		{
+			GameRelativePath: "Data/added.txt",
+			AppliedSHA256:    addedHash,
+			AppliedSizeBytes: addedSize,
 		},
-		ReplacedFiles: []appliedstate.ReplacedFile{
-			serviceRestoreReplacedFile(1, targetPath, "modded", backupPath, "vanilla"),
+		{
+			GameRelativePath:   "Data/replaced.txt",
+			BaselineExists:     true,
+			BaselineSHA256:     testStringPtr(backupHash),
+			BaselineSizeBytes:  testInt64Ptr(backupSize),
+			BaselineBackupPath: testStringPtr(backupPath),
+			AppliedSHA256:      moddedHash,
+			AppliedSizeBytes:   moddedSize,
 		},
-		CreatedDirectories: []appliedstate.CreatedDirectory{
-			{
-				OperationIndex: 2,
-				Mod:            appliedstate.Mod{ID: 1, Name: "Mod"},
-				TargetPath:     createdDirectory,
-			},
+	}, []dbtypes.AppliedCreatedDirectoryRow{
+		{
+			GameID:           gameID,
+			GameRelativePath: "Mods/Created",
 		},
 	})
 
@@ -100,13 +112,24 @@ func TestProfileServiceRestoreVanillaStatePreservesStateAndFilesOnPreflightFailu
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
 	gameModStoragePath := serviceRestoreGameModStoragePath(t, store, gameID)
 	targetPath := writeServiceRestoreFile(t, gameRoot, "Data/replaced.txt", "modded")
-	backupPath := filepath.Join(gameModStoragePath, "operation-backups", "Data", "replaced.txt")
-	saveServiceRestoreAppliedState(t, store, gameID, profileID, appliedstate.ManifestDocument{
-		Version: appliedstate.DocumentVersion,
-		ReplacedFiles: []appliedstate.ReplacedFile{
-			serviceRestoreReplacedFile(0, targetPath, "modded", backupPath, "vanilla"),
+	backupPath := filepath.Join(gameModStoragePath, "deployment-backups", "Data", "replaced.txt")
+
+	moddedHash := testContentHash("modded")
+	moddedSize := int64(len("modded"))
+	backupHash := testContentHash("vanilla")
+	backupSize := int64(len("vanilla"))
+
+	saveTestAppliedProfileState(t, store, gameID, profileID, []testAppliedFileSeed{
+		{
+			GameRelativePath:   "Data/replaced.txt",
+			BaselineExists:     true,
+			BaselineSHA256:     testStringPtr(backupHash),
+			BaselineSizeBytes:  testInt64Ptr(backupSize),
+			BaselineBackupPath: testStringPtr(backupPath),
+			AppliedSHA256:      moddedHash,
+			AppliedSizeBytes:   moddedSize,
 		},
-	})
+	}, nil)
 
 	result, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
@@ -136,7 +159,7 @@ func TestProfileServiceRestoreVanillaStatePreservesStateWhenBackupCleanupFails(t
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
 	gameModStoragePath := serviceRestoreGameModStoragePath(t, store, gameID)
 	targetPath := writeServiceRestoreFile(t, gameRoot, "Data/replaced.txt", "modded")
-	backupPath := writeServiceRestoreFile(t, gameModStoragePath, "operation-backups/Data/replaced.txt", "vanilla")
+	backupPath := writeServiceRestoreFile(t, gameModStoragePath, "deployment-backups/Data/replaced.txt", "vanilla")
 	backupDirectory := filepath.Dir(backupPath)
 	if err := os.Chmod(backupDirectory, 0o500); err != nil {
 		t.Fatalf("chmod backup directory: %v", err)
@@ -144,12 +167,23 @@ func TestProfileServiceRestoreVanillaStatePreservesStateWhenBackupCleanupFails(t
 	defer func() {
 		_ = os.Chmod(backupDirectory, 0o755)
 	}()
-	saveServiceRestoreAppliedState(t, store, gameID, profileID, appliedstate.ManifestDocument{
-		Version: appliedstate.DocumentVersion,
-		ReplacedFiles: []appliedstate.ReplacedFile{
-			serviceRestoreReplacedFile(0, targetPath, "modded", backupPath, "vanilla"),
+
+	moddedHash := testContentHash("modded")
+	moddedSize := int64(len("modded"))
+	backupHash := testContentHash("vanilla")
+	backupSize := int64(len("vanilla"))
+
+	saveTestAppliedProfileState(t, store, gameID, profileID, []testAppliedFileSeed{
+		{
+			GameRelativePath:   "Data/replaced.txt",
+			BaselineExists:     true,
+			BaselineSHA256:     testStringPtr(backupHash),
+			BaselineSizeBytes:  testInt64Ptr(backupSize),
+			BaselineBackupPath: testStringPtr(backupPath),
+			AppliedSHA256:      moddedHash,
+			AppliedSizeBytes:   moddedSize,
 		},
-	})
+	}, nil)
 
 	result, err := NewProfileService(store, testLogger()).RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
@@ -170,24 +204,6 @@ func TestProfileServiceRestoreVanillaStatePreservesStateWhenBackupCleanupFails(t
 	}
 }
 
-func saveServiceRestoreAppliedState(t *testing.T, store *storage.Store, gameID int64, profileID int64, manifest appliedstate.ManifestDocument) {
-	t.Helper()
-
-	manifestJSON, err := appliedstate.EncodeManifest(manifest)
-	if err != nil {
-		t.Fatalf("EncodeManifest() error = %v", err)
-	}
-	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        manifestJSON,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "hash",
-	}); err != nil {
-		t.Fatalf("SaveAppliedProfileState() error = %v", err)
-	}
-}
-
 func serviceRestoreGameModStoragePath(t *testing.T, store *storage.Store, gameID int64) string {
 	t.Helper()
 
@@ -197,29 +213,6 @@ func serviceRestoreGameModStoragePath(t *testing.T, store *storage.Store, gameID
 	}
 
 	return path
-}
-
-func serviceRestoreAddedFile(operationIndex int, targetPath string, content string) appliedstate.AddedFile {
-	return appliedstate.AddedFile{
-		OperationIndex: operationIndex,
-		Mod:            appliedstate.Mod{ID: 1, Name: "Mod"},
-		TargetPath:     targetPath,
-		SHA256:         sha256Hex(content),
-		SizeBytes:      int64(len(content)),
-	}
-}
-
-func serviceRestoreReplacedFile(operationIndex int, targetPath string, targetContent string, backupPath string, backupContent string) appliedstate.ReplacedFile {
-	return appliedstate.ReplacedFile{
-		OperationIndex:  operationIndex,
-		Mod:             appliedstate.Mod{ID: 1, Name: "Mod"},
-		TargetPath:      targetPath,
-		SHA256:          sha256Hex(targetContent),
-		SizeBytes:       int64(len(targetContent)),
-		BackupPath:      backupPath,
-		BackupSHA256:    sha256Hex(backupContent),
-		BackupSizeBytes: int64(len(backupContent)),
-	}
 }
 
 func writeServiceRestoreFile(t *testing.T, root string, relativePath string, content string) string {

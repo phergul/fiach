@@ -24,6 +24,32 @@ CREATE TABLE applied_file_states (
 
 CREATE INDEX idx_applied_file_states_profile_id ON applied_file_states(profile_id);
 
+CREATE TABLE deployment_rules (
+    id                 INTEGER PRIMARY KEY,
+    profile_id         INTEGER NOT NULL,
+    game_relative_path TEXT NOT NULL COLLATE NOCASE,
+    rule_kind          TEXT NOT NULL,
+    winner_mod_id      INTEGER,
+    explanation        TEXT,
+    created_at         TEXT NOT NULL,
+    UNIQUE (profile_id, game_relative_path, rule_kind),
+    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_deployment_rules_profile_id ON deployment_rules(profile_id);
+
+CREATE TABLE applied_created_directories (
+    game_id              INTEGER NOT NULL,
+    game_relative_path   TEXT NOT NULL COLLATE NOCASE,
+    mod_id               INTEGER,
+    mod_name             TEXT,
+    PRIMARY KEY (game_id, game_relative_path),
+    FOREIGN KEY (game_id) REFERENCES applied_profile_states(game_id) ON DELETE CASCADE
+);
+
 -- +goose Down
+DROP TABLE IF EXISTS applied_created_directories;
+DROP INDEX IF EXISTS idx_deployment_rules_profile_id;
+DROP TABLE IF EXISTS deployment_rules;
 DROP INDEX IF EXISTS idx_applied_file_states_profile_id;
 DROP TABLE IF EXISTS applied_file_states;

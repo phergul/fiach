@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 )
 
-const RootDirName = "operation-backups"
+const RootDirName = "deployment-backups"
 
 func PathForTarget(gameModStoragePath string, gameRelativeTargetPath string) string {
 	return filepath.Join(gameModStoragePath, RootDirName, filepath.FromSlash(gameRelativeTargetPath))

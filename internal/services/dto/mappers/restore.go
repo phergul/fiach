@@ -1,11 +1,11 @@
 package mappers
 
 import (
-	"github.com/phergul/fiach/internal/restoreplan"
+	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/services/dto"
 )
 
-func ToDTORestoreResult(result restoreplan.RestoreResult) dto.RestoreResult {
+func ToDTORestoreResult(result execute.VanillaRestoreResult) dto.RestoreResult {
 	return dto.RestoreResult{
 		Success:        result.Success,
 		CompletedCount: result.CompletedCount,
@@ -15,7 +15,7 @@ func ToDTORestoreResult(result restoreplan.RestoreResult) dto.RestoreResult {
 	}
 }
 
-func ToDTORestoreOperationResults(results []restoreplan.RestoreOperationResult) []dto.RestoreOperationResult {
+func ToDTORestoreOperationResults(results []execute.VanillaRestoreOperationResult) []dto.RestoreOperationResult {
 	dtoResults := make([]dto.RestoreOperationResult, 0, len(results))
 	for _, result := range results {
 		dtoResults = append(dtoResults, dto.RestoreOperationResult{
@@ -29,7 +29,7 @@ func ToDTORestoreOperationResults(results []restoreplan.RestoreOperationResult) 
 	return dtoResults
 }
 
-func ToDTORestoreOperation(operation restoreplan.RestoreOperation) dto.RestoreOperation {
+func ToDTORestoreOperation(operation execute.VanillaRestoreOperation) dto.RestoreOperation {
 	return dto.RestoreOperation{
 		Type:                   dto.RestoreOperationType(operation.Type),
 		ManifestOperationIndex: operation.ManifestOperationIndex,

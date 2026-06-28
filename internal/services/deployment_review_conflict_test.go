@@ -20,8 +20,8 @@ func TestDeploymentReviewServiceSetConflictRuleResolvesAmbiguousOverwrite(t *tes
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
 
-	firstSource := makeProfilePlanSourceTree(t, map[string]string{"plugin.txt": "alpha"})
-	secondSource := makeProfilePlanSourceTree(t, map[string]string{"plugin.txt": "beta"})
+	firstSource := makeProfileDeploymentSourceTree(t, map[string]string{"plugin.txt": "alpha"})
+	secondSource := makeProfileDeploymentSourceTree(t, map[string]string{"plugin.txt": "beta"})
 
 	firstModID := insertServiceProfileTestMod(t, store, gameID, "Alpha", firstSource)
 	secondModID := insertServiceProfileTestMod(t, store, gameID, "Beta", secondSource)

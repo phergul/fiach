@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/phergul/fiach/internal/storage/goosemigrations"
 	"github.com/pressly/goose/v3"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	_ "modernc.org/sqlite"

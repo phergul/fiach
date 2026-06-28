@@ -2,13 +2,11 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/phergul/fiach/internal/apperror"
-	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -30,7 +28,7 @@ func TestDeploymentReviewServiceBuildsPreview(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
@@ -99,7 +97,7 @@ func TestDeploymentReviewServiceSameProfileIncrementalPreviewDetectsDrift(t *tes
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"Data/SkyUI.esp": "plugin",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
@@ -118,11 +116,8 @@ func TestDeploymentReviewServiceSameProfileIncrementalPreviewDetectsDrift(t *tes
 	appliedSHA256 := "0000000000000000000000000000000000000000000000000000000000000000"
 	appliedSize := int64(1)
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{"Mods/SkyUI/Data/SkyUI.esp":{"gameRelativePath":"Mods/SkyUI/Data/SkyUI.esp","outputKind":"copied","appliedExists":true,"appliedSHA256":"0000000000000000000000000000000000000000000000000000000000000000","appliedSizeBytes":1}}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -202,7 +197,7 @@ func TestDeploymentReviewServiceIncrementalModAddedPathOmitsBaseGameWriter(t *te
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"recording.mov": "mod-content",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "Screenshots", sourcePath)
@@ -223,11 +218,8 @@ func TestDeploymentReviewServiceIncrementalModAddedPathOmitsBaseGameWriter(t *te
 		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -290,11 +282,8 @@ func TestDeploymentReviewServiceIncrementalRemovedModPathDeletes(t *testing.T) {
 		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -351,11 +340,8 @@ func TestDeploymentReviewServiceBlocksDifferentAppliedProfile(t *testing.T) {
 	otherProfileID := insertServiceProfileTestProfile(t, store, gameID, "Other")
 
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           appliedProfileID,
-		ManifestJSON:        `{"version":1}`,
-		ProfileSnapshotJSON: `{"version":1}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: appliedProfileID,
 	}); err != nil {
 		t.Fatalf("SaveAppliedProfileState() error = %v", err)
 	}
@@ -379,7 +365,7 @@ func TestDeploymentReviewServiceRejectsStalePreviewHash(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"plugin.txt": "content",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "Example", sourcePath)
@@ -424,11 +410,8 @@ func TestDeploymentReviewServiceApplyIncrementalDeploymentDeletesRemovedPath(t *
 		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -501,11 +484,8 @@ func TestDeploymentReviewServiceApplyIncrementalDeploymentRejectsStalePreviewHas
 		t.Fatalf("FileIntegrity() error = %v", err)
 	}
 	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
-		GameID:              gameID,
-		ProfileID:           profileID,
-		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
-		ProfileSnapshotJSON: `{"version":2}`,
-		ProfileSnapshotHash: "snapshot",
+		GameID:    gameID,
+		ProfileID: profileID,
 		FileStates: []dbtypes.AppliedFileStateRow{
 			{
 				GameID:           gameID,
@@ -545,7 +525,7 @@ func TestDeploymentReviewServiceApplyDeploymentFirstApply(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"modded.txt": "modded",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
@@ -577,14 +557,6 @@ func TestDeploymentReviewServiceApplyDeploymentFirstApply(t *testing.T) {
 	if !found || state.ProfileID != profileID {
 		t.Fatalf("applied profile state = %+v found=%v, want persisted first apply", state, found)
 	}
-
-	var snapshot appliedstate.DeploymentProfileSnapshotDocument
-	if err := json.Unmarshal([]byte(state.ProfileSnapshotJSON), &snapshot); err != nil {
-		t.Fatalf("unmarshal profile snapshot JSON: %v", err)
-	}
-	if snapshot.PreviewHash != preview.PreviewHash || snapshot.PlanMode != "first_apply" {
-		t.Fatalf("profile snapshot = %+v, want deployment preview hash and first_apply mode", snapshot)
-	}
 }
 
 func TestDeploymentReviewServiceApplyDeploymentRejectsAnotherProfileWhenApplied(t *testing.T) {
@@ -598,12 +570,12 @@ func TestDeploymentReviewServiceApplyDeploymentRejectsAnotherProfileWhenApplied(
 	firstProfileID := insertServiceProfileTestProfile(t, store, gameID, "First")
 	secondProfileID := insertServiceProfileTestProfile(t, store, gameID, "Second")
 
-	firstSource := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
+	firstSource := makeProfileDeploymentSourceTree(t, map[string]string{"first.txt": "first"})
 	firstModID := insertServiceProfileTestMod(t, store, gameID, "First Mod", firstSource)
 	addServiceProfileMod(t, store, firstProfileID, firstModID, true, 0)
 	addServiceInstallConfig(t, store, firstModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	secondSource := makeProfilePlanSourceTree(t, map[string]string{"second.txt": "second"})
+	secondSource := makeProfileDeploymentSourceTree(t, map[string]string{"second.txt": "second"})
 	secondModID := insertServiceProfileTestMod(t, store, gameID, "Second Mod", secondSource)
 	addServiceProfileMod(t, store, secondProfileID, secondModID, true, 0)
 	addServiceInstallConfig(t, store, secondModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
@@ -636,8 +608,8 @@ func TestDeploymentReviewServiceLoadOrderWinnerAllowsApply(t *testing.T) {
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
 
-	lowSource := makeProfilePlanSourceTree(t, map[string]string{"shared.txt": "low"})
-	highSource := makeProfilePlanSourceTree(t, map[string]string{"shared.txt": "high"})
+	lowSource := makeProfileDeploymentSourceTree(t, map[string]string{"shared.txt": "low"})
+	highSource := makeProfileDeploymentSourceTree(t, map[string]string{"shared.txt": "high"})
 	lowModID := insertServiceProfileTestMod(t, store, gameID, "Low", lowSource)
 	highModID := insertServiceProfileTestMod(t, store, gameID, "High", highSource)
 
@@ -691,7 +663,7 @@ func TestDeploymentReviewServiceApplyDeploymentAndRestoreVanilla(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"Data/vanilla.txt": "modded",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "Patch", sourcePath)
@@ -728,7 +700,7 @@ func TestDeploymentReviewServiceGetDeploymentFileInspectionTextDiff(t *testing.T
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+	sourcePath := makeProfileDeploymentSourceTree(t, map[string]string{
 		"config/settings.ini": "enabled=1\n",
 	})
 	modID := insertServiceProfileTestMod(t, store, gameID, "Config Mod", sourcePath)
