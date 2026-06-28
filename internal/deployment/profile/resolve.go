@@ -1,4 +1,4 @@
-package operationplan
+package profile
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/storage"
 )
@@ -28,7 +29,14 @@ type ResolveProfilePlanResult struct {
 	GameInstallPath    string
 	GameModStoragePath string
 	Mods               []ProfilePlanMod
-	Issues             []PlanIssue
+	Issues             []deployment.PlanIssue
+}
+
+type StrategyBuildInput struct {
+	ProfileID          int64
+	GameInstallPath    string
+	GameModStoragePath string
+	Mod                ProfilePlanMod
 }
 
 func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int64) (result ResolveProfilePlanResult, err error) {
@@ -78,8 +86,8 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 		managedSourcePath := strings.TrimSpace(profileMod.SourcePath)
 		if managedSourcePath == "" {
 			result.Issues = append(result.Issues, newPlanIssue(
-				PlanIssueSeverityError,
-				PlanIssueMissingManagedSourcePath,
+				deployment.PlanIssueSeverityError,
+				deployment.PlanIssueMissingManagedSourcePath,
 				profileID,
 				fmt.Sprintf("mod %q is missing a managed source path", profileMod.Name),
 				modContextPtr(profileMod.ModID, profileMod.Name),
@@ -95,8 +103,8 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 		}
 		if !found {
 			result.Issues = append(result.Issues, newPlanIssue(
-				PlanIssueSeverityError,
-				PlanIssueMissingInstallConfig,
+				deployment.PlanIssueSeverityError,
+				deployment.PlanIssueMissingInstallConfig,
 				profileID,
 				fmt.Sprintf("mod %q is missing an install configuration", profileMod.Name),
 				modContextPtr(profileMod.ModID, profileMod.Name),
@@ -108,8 +116,8 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 
 		if strings.TrimSpace(config.StrategyType) == "" || strings.TrimSpace(config.TargetBase) == "" || strings.TrimSpace(config.TargetRelativePath) == "" {
 			result.Issues = append(result.Issues, newPlanIssue(
-				PlanIssueSeverityError,
-				PlanIssueIncompleteInstallConfig,
+				deployment.PlanIssueSeverityError,
+				deployment.PlanIssueIncompleteInstallConfig,
 				profileID,
 				fmt.Sprintf("mod %q has an incomplete install configuration", profileMod.Name),
 				modContextPtr(profileMod.ModID, profileMod.Name),
@@ -136,15 +144,15 @@ func ResolveProfilePlan(ctx context.Context, store *storage.Store, profileID int
 }
 
 func newPlanIssue(
-	severity PlanIssueSeverity,
-	kind PlanIssueKind,
+	severity deployment.PlanIssueSeverity,
+	kind deployment.PlanIssueKind,
 	profileID int64,
 	message string,
-	mod *ModContext,
+	mod *deployment.ModContext,
 	sourcePath *string,
 	targetPath *string,
-) PlanIssue {
-	return PlanIssue{
+) deployment.PlanIssue {
+	return deployment.PlanIssue{
 		Severity:   severity,
 		Kind:       kind,
 		Message:    message,
@@ -155,13 +163,9 @@ func newPlanIssue(
 	}
 }
 
-func modContextPtr(modID int64, modName string) *ModContext {
-	return &ModContext{
+func modContextPtr(modID int64, modName string) *deployment.ModContext {
+	return &deployment.ModContext{
 		ModID:   modID,
 		ModName: modName,
 	}
-}
-
-func stringPtr(value string) *string {
-	return &value
 }

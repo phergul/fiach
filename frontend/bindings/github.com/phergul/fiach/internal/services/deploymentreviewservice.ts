@@ -9,8 +9,8 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
-export function ApplyIncrementalDeployment(profileID: number, previewHash: string): $CancellablePromise<dto$0.ApplyIncrementalDeploymentResult> {
-    return $Call.ByID(3425224667, profileID, previewHash).then(($result: any) => {
+export function ApplyDeployment(profileID: number, previewHash: string): $CancellablePromise<dto$0.ApplyDeploymentResult> {
+    return $Call.ByID(2397566147, profileID, previewHash).then(($result: any) => {
         return $$createType0($result);
     });
 }
@@ -52,7 +52,7 @@ export function SetDeploymentDriftDecision(profileID: number, previewHash: strin
 }
 
 // Private type creation functions
-const $$createType0 = dto$0.ApplyIncrementalDeploymentResult.createFrom;
+const $$createType0 = dto$0.ApplyDeploymentResult.createFrom;
 const $$createType1 = dto$0.DeploymentReviewPreview.createFrom;
 const $$createType2 = dto$0.DeploymentFileDetail.createFrom;
 const $$createType3 = dto$0.DeploymentFileInspection.createFrom;

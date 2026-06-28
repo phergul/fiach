@@ -13,6 +13,9 @@ import * as appliedstate$0 from "../appliedstate/models.js";
 import * as deployment$0 from "../deployment/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as execute$0 from "../deployment/execute/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as planner$0 from "../deployment/planner/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -24,21 +27,9 @@ export function AddModToProfile(profileID: number, modID: number): $CancellableP
     });
 }
 
-export function ApplyProfileOperationPlan(profileID: number, plan: dto$0.OperationPlan): $CancellablePromise<dto$0.ApplyOperationPlanResult> {
-    return $Call.ByID(1247512911, profileID, plan).then(($result: any) => {
-        return $$createType1($result);
-    });
-}
-
-export function BuildProfileOperationPlan(profileID: number): $CancellablePromise<dto$0.OperationPlan> {
-    return $Call.ByID(1883216351, profileID).then(($result: any) => {
-        return $$createType2($result);
-    });
-}
-
 export function CreateProfile(gameID: number, name: string): $CancellablePromise<dto$0.ModProfile> {
     return $Call.ByID(3434881059, gameID, name).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType1($result);
     });
 }
 
@@ -48,31 +39,31 @@ export function DeleteProfile(profileID: number): $CancellablePromise<void> {
 
 export function DuplicateProfile(profileID: number): $CancellablePromise<dto$0.ModProfile> {
     return $Call.ByID(1945213396, profileID).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType1($result);
     });
 }
 
 export function GetAppliedProfileSummary(gameID: number): $CancellablePromise<dto$0.AppliedProfileSummary | null> {
     return $Call.ByID(3862387448, gameID).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType3($result);
     });
 }
 
 export function ListProfileMods(profileID: number): $CancellablePromise<dto$0.ProfileMod[]> {
     return $Call.ByID(2451536030, profileID).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType4($result);
     });
 }
 
 export function ListProfiles(gameID: number): $CancellablePromise<dto$0.ModProfile[]> {
     return $Call.ByID(2077593160, gameID).then(($result: any) => {
-        return $$createType7($result);
+        return $$createType5($result);
     });
 }
 
 export function LoadAppliedFileStates(gameID: number): $CancellablePromise<appliedstate$0.PersistedFileState[]> {
     return $Call.ByID(2694248031, gameID).then(($result: any) => {
-        return $$createType9($result);
+        return $$createType7($result);
     });
 }
 
@@ -82,20 +73,24 @@ export function RemoveModFromProfile(profileID: number, modID: number): $Cancell
 
 export function RenameProfile(profileID: number, name: string): $CancellablePromise<dto$0.ModProfile> {
     return $Call.ByID(4188934241, profileID, name).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType1($result);
     });
 }
 
 export function ReorderProfileMods(profileID: number, modIDs: number[]): $CancellablePromise<dto$0.ProfileMod[]> {
     return $Call.ByID(879417303, profileID, modIDs).then(($result: any) => {
-        return $$createType6($result);
+        return $$createType4($result);
     });
 }
 
 export function RestoreVanillaState(gameID: number): $CancellablePromise<dto$0.RestoreResult> {
     return $Call.ByID(1179292680, gameID).then(($result: any) => {
-        return $$createType10($result);
+        return $$createType8($result);
     });
+}
+
+export function SaveFirstApplyAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, outcome: execute$0.FirstApplyOutcome, previewHash: string): $CancellablePromise<void> {
+    return $Call.ByID(2383268840, gameID, profileID, installPath, plan, desired, outcome, previewHash);
 }
 
 export function SaveIncrementalAppliedProfileState(gameID: number, profileID: number, installPath: string, plan: planner$0.DeploymentPlan, desired: deployment$0.DesiredState, existingStates: appliedstate$0.PersistedFileState[]): $CancellablePromise<void> {
@@ -110,13 +105,11 @@ export function SetProfileModEnabled(profileID: number, modID: number, enabled: 
 
 // Private type creation functions
 const $$createType0 = dto$0.ProfileMod.createFrom;
-const $$createType1 = dto$0.ApplyOperationPlanResult.createFrom;
-const $$createType2 = dto$0.OperationPlan.createFrom;
-const $$createType3 = dto$0.ModProfile.createFrom;
-const $$createType4 = dto$0.AppliedProfileSummary.createFrom;
-const $$createType5 = $Create.Nullable($$createType4);
-const $$createType6 = $Create.Array($$createType0);
-const $$createType7 = $Create.Array($$createType3);
-const $$createType8 = appliedstate$0.PersistedFileState.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = dto$0.RestoreResult.createFrom;
+const $$createType1 = dto$0.ModProfile.createFrom;
+const $$createType2 = dto$0.AppliedProfileSummary.createFrom;
+const $$createType3 = $Create.Nullable($$createType2);
+const $$createType4 = $Create.Array($$createType0);
+const $$createType5 = $Create.Array($$createType1);
+const $$createType6 = appliedstate$0.PersistedFileState.createFrom;
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = dto$0.RestoreResult.createFrom;

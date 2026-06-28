@@ -155,14 +155,18 @@ func toDTOOptionalFileStateView(state review.FileStateView) *dto.FileStateView {
 	}
 }
 
-func ToDTOApplyIncrementalDeploymentResult(result execute.Result) dto.ApplyIncrementalDeploymentResult {
-	return dto.ApplyIncrementalDeploymentResult{
+func ToDTOApplyDeploymentResult(result execute.Result) dto.ApplyDeploymentResult {
+	return dto.ApplyDeploymentResult{
 		Success:        result.Success,
 		CompletedCount: result.CompletedCount,
 		SkippedCount:   result.SkippedCount,
 		Message:        result.Message,
 		RolledBack:     result.RolledBack,
 	}
+}
+
+func ToDTOApplyIncrementalDeploymentResult(result execute.Result) dto.ApplyIncrementalDeploymentResult {
+	return ToDTOApplyDeploymentResult(result)
 }
 
 func ToDTODeploymentFileInspection(result inspect.InspectionResult) dto.DeploymentFileInspection {

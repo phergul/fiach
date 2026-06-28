@@ -12,9 +12,9 @@ import (
 
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/desired"
+	"github.com/phergul/fiach/internal/deployment/profile"
 	"github.com/phergul/fiach/internal/deployment/rules"
 	"github.com/phergul/fiach/internal/installconfig"
-	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/storage"
 )
 
@@ -96,6 +96,46 @@ func TestBuildDesiredState_MultiWriterStack(t *testing.T) {
 	}
 	if winnerCount != 1 || wouldWriteCount != 1 {
 		t.Fatalf("writers = %+v, want one winner and one would-write loser", modWriters)
+	}
+}
+
+func TestBuildDesiredState_MissingUnrealPaksTarget(t *testing.T) {
+	t.Parallel()
+
+	gameRoot := t.TempDir()
+	store := openDesiredStore(t)
+	defer closeDesiredStore(t, store)
+
+	gameID := insertDesiredGame(t, store, "Unreal Game", gameRoot)
+	profileID := insertDesiredProfile(t, store, gameID, "Default")
+
+	source := makeDesiredSourceTree(t, map[string]string{
+		"Nested/Example_P.pak": "pak",
+	})
+	modID := insertDesiredMod(t, store, gameID, "Example Pak", source)
+
+	addDesiredProfileMod(t, store, profileID, modID, true, 0)
+	addDesiredInstallConfig(
+		t,
+		store,
+		modID,
+		string(installconfig.StrategyTypeUnrealPak),
+		installconfig.TargetBaseGameRoot,
+		"Example/Content/Paks/~mods",
+		nil,
+	)
+
+	resolved := resolveDesiredProfilePlan(t, store, profileID)
+	state := buildDesiredState(t, resolved)
+
+	if state.CanPreview() {
+		t.Fatal("CanPreview() = true, want false for missing Unreal Paks target")
+	}
+	if len(state.Issues) != 1 {
+		t.Fatalf("issues len = %d, want 1", len(state.Issues))
+	}
+	if state.Issues[0].Kind != deployment.PlanIssueMissingUnrealPaksTarget {
+		t.Fatalf("issue kind = %q, want %q", state.Issues[0].Kind, deployment.PlanIssueMissingUnrealPaksTarget)
 	}
 }
 
@@ -353,7 +393,7 @@ func TestBuildDesiredState_CaseFoldingMerge(t *testing.T) {
 	}
 }
 
-func buildDesiredState(t *testing.T, resolved operationplan.ResolveProfilePlanResult) deployment.DesiredState {
+func buildDesiredState(t *testing.T, resolved profile.ResolveProfilePlanResult) deployment.DesiredState {
 	t.Helper()
 
 	state, err := desired.BuildDesiredState(context.Background(), resolved, nil)
@@ -363,10 +403,10 @@ func buildDesiredState(t *testing.T, resolved operationplan.ResolveProfilePlanRe
 	return state
 }
 
-func resolveDesiredProfilePlan(t *testing.T, store *storage.Store, profileID int64) operationplan.ResolveProfilePlanResult {
+func resolveDesiredProfilePlan(t *testing.T, store *storage.Store, profileID int64) profile.ResolveProfilePlanResult {
 	t.Helper()
 
-	resolved, err := operationplan.ResolveProfilePlan(context.Background(), store, profileID)
+	resolved, err := profile.ResolveProfilePlan(context.Background(), store, profileID)
 	if err != nil {
 		t.Fatalf("ResolveProfilePlan() error = %v", err)
 	}

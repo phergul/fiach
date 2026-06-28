@@ -2,7 +2,7 @@ package desired
 
 import (
 	"github.com/phergul/fiach/internal/deployment"
-	"github.com/phergul/fiach/internal/operationplan"
+	"github.com/phergul/fiach/internal/deployment/profile"
 )
 
 type DesiredFileMapping struct {
@@ -18,5 +18,5 @@ type DesiredInventoryResult struct {
 }
 
 type DesiredFileAdapter interface {
-	InventoryFiles(input operationplan.StrategyBuildInput) (DesiredInventoryResult, error)
+	InventoryFiles(input profile.StrategyBuildInput) (DesiredInventoryResult, error)
 }

@@ -17,9 +17,11 @@ type Context struct {
 	GameInstallPath    string
 	GameModStoragePath string
 	PreviewHash        string
+	PlanMode           planner.PlanMode
 	Plan               planner.DeploymentPlan
 	Desired            deployment.DesiredState
 	AppliedFileStates  []appliedstate.PersistedFileState
+	FirstApplyOutcome  FirstApplyOutcome
 	Now                func() time.Time
 }
 
@@ -32,6 +34,16 @@ type AppliedStateSaver interface {
 		plan planner.DeploymentPlan,
 		desired deployment.DesiredState,
 		existingStates []appliedstate.PersistedFileState,
+	) error
+	SaveFirstApplyAppliedProfileState(
+		ctx context.Context,
+		gameID int64,
+		profileID int64,
+		installPath string,
+		plan planner.DeploymentPlan,
+		desired deployment.DesiredState,
+		outcome FirstApplyOutcome,
+		previewHash string,
 	) error
 }
 

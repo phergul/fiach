@@ -2,16 +2,8 @@ import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
-import { ApplyIncrementalDeployment } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
-import {
-  ApplyProfileOperationPlan,
-  BuildProfileOperationPlan,
-} from '@bindings/github.com/phergul/fiach/internal/services/profileservice';
-import type {
-  ApplyIncrementalDeploymentResult,
-  ApplyOperationPlanResult,
-  OperationPlan,
-} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { ApplyDeployment } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
+import type { ApplyDeploymentResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
 import { useToast } from '@components/Common/Toast/Toast';
 import { DeploymentReview } from '@components/Deployment/DeploymentReview/DeploymentReview';
@@ -54,18 +46,7 @@ const parseProfileID = (profileID: string | undefined) => {
   return parsedProfileID;
 };
 
-const buildApplySuccessMessage = (result: ApplyOperationPlanResult) => {
-  if (result.CompletedCount === 0) {
-    return 'No operations were needed.';
-  }
-  if (result.CompletedCount === 1) {
-    return 'Applied 1 operation.';
-  }
-
-  return `Applied ${result.CompletedCount} operations.`;
-};
-
-const buildIncrementalApplySuccessMessage = (result: ApplyIncrementalDeploymentResult) => {
+const buildApplySuccessMessage = (result: ApplyDeploymentResult) => {
   if (result.Message.trim() !== '') {
     return result.Message;
   }
@@ -79,19 +60,12 @@ const buildIncrementalApplySuccessMessage = (result: ApplyIncrementalDeploymentR
   return `Applied ${result.CompletedCount} file changes.`;
 };
 
-const buildIncrementalApplyFailureMessage = (result: ApplyIncrementalDeploymentResult) => {
+const buildApplyFailureMessage = (result: ApplyDeploymentResult) => {
   if (result.Message.trim() !== '') {
     return result.Message;
   }
 
-  return 'Re-apply stopped before all file changes completed.';
-};
-
-const buildApplyFailureMessage = (result: ApplyOperationPlanResult) => {
-  const failedResult = result.Results.find((operationResult) => operationResult.Error !== null);
-  const failure = failedResult?.Error ?? 'Apply stopped before all operations completed.';
-
-  return `Apply stopped: ${failure} Completed ${result.CompletedCount}, skipped ${result.SkippedCount}.`;
+  return 'Apply stopped before all file changes completed.';
 };
 
 export const GameApply = () => {
@@ -100,7 +74,6 @@ export const GameApply = () => {
   const { addErrorToast, addToast } = useToast();
   const [isApplyConfirmOpen, setIsApplyConfirmOpen] = useState(false);
   const [isApplyPending, setIsApplyPending] = useState(false);
-  const [isPlanLoading, setIsPlanLoading] = useState(false);
   const { games, isLoading, isScanning, loadError, retryLoadGames } = useStoredGames();
   const parsedGameID = parseGameID(gameId);
   const parsedProfileID = parseProfileID(profileId);
@@ -144,8 +117,7 @@ export const GameApply = () => {
     summary !== null &&
     summary.CanApply &&
     !isPreviewLoading &&
-    !isApplyPending &&
-    !isPlanLoading;
+    !isApplyPending;
   const canStartIncrementalApply =
     selectedProfile !== null &&
     isSameProfileApplied &&
@@ -156,8 +128,7 @@ export const GameApply = () => {
     summary !== null &&
     summary.CanApply &&
     !isPreviewLoading &&
-    !isApplyPending &&
-    !isPlanLoading;
+    !isApplyPending;
   const canStartApply = canStartFirstApply || canStartIncrementalApply;
   const applyTitle =
     selectedProfile === null
@@ -172,7 +143,6 @@ export const GameApply = () => {
           appliedProfileManager.loadError,
           isPreviewLoading,
           isApplyPending,
-          isPlanLoading,
           previewAvailable,
         );
   const confirmMessage =
@@ -193,79 +163,34 @@ export const GameApply = () => {
   };
 
   const closeApplyConfirm = () => {
-    if (!isApplyPending && !isPlanLoading) {
+    if (!isApplyPending) {
       setIsApplyConfirmOpen(false);
     }
   };
 
   const confirmApply = async () => {
-    if (selectedProfile === null || isApplyPending || isPlanLoading) {
+    if (selectedProfile === null || isApplyPending) {
       return;
     }
 
-    if (isIncrementalApply && isSameProfileApplied) {
-      if (previewHash === '') {
-        addErrorToast(new Error('Refresh the deployment preview and try again.'));
-        return;
-      }
-
-      setIsApplyPending(true);
-
-      try {
-        const result = await ApplyIncrementalDeployment(selectedProfile.ID, previewHash);
-        if (result.Success) {
-          await appliedProfileManager.refreshAppliedProfile();
-          await refreshPreview();
-        }
-        setIsApplyConfirmOpen(false);
-        addToast({
-          message: result.Success
-            ? buildIncrementalApplySuccessMessage(result)
-            : buildIncrementalApplyFailureMessage(result),
-          tone: result.Success ? 'success' : 'error',
-        });
-        if (result.Success) {
-          navigate(gameDetailsPath);
-        }
-      } catch (error) {
-        setIsApplyConfirmOpen(false);
-        addErrorToast(error);
-      } finally {
-        setIsApplyPending(false);
-      }
-
-      return;
-    }
-
-    setIsPlanLoading(true);
-
-    let plan: OperationPlan;
-    try {
-      plan = await BuildProfileOperationPlan(selectedProfile.ID);
-    } catch (error) {
-      setIsPlanLoading(false);
-      addErrorToast(error);
-      return;
-    }
-
-    if (!plan.CanApply) {
-      setIsPlanLoading(false);
-      addErrorToast(new Error('The apply plan has blocking issues. Refresh the preview and try again.'));
+    if (previewHash === '') {
+      addErrorToast(new Error('Refresh the deployment preview and try again.'));
       return;
     }
 
     setIsApplyPending(true);
 
     try {
-      const result = await ApplyProfileOperationPlan(selectedProfile.ID, plan);
+      const result = await ApplyDeployment(selectedProfile.ID, previewHash);
       if (result.Success) {
         await appliedProfileManager.refreshAppliedProfile();
+        if (isIncrementalApply && isSameProfileApplied) {
+          await refreshPreview();
+        }
       }
       setIsApplyConfirmOpen(false);
       addToast({
-        message: result.Success
-          ? buildApplySuccessMessage(result)
-          : buildApplyFailureMessage(result),
+        message: result.Success ? buildApplySuccessMessage(result) : buildApplyFailureMessage(result),
         tone: result.Success ? 'success' : 'error',
       });
       if (result.Success) {
@@ -276,7 +201,6 @@ export const GameApply = () => {
       addErrorToast(error);
     } finally {
       setIsApplyPending(false);
-      setIsPlanLoading(false);
     }
   };
 
@@ -330,7 +254,7 @@ export const GameApply = () => {
           type="button"
         >
           <CheckCircle2 className="game-apply-toolbar-icon" aria-hidden="true" />
-          <span>{isApplyPending || isPlanLoading ? 'Applying' : 'Apply'}</span>
+          <span>{isApplyPending ? 'Applying' : 'Apply'}</span>
         </button>
       </div>
 
@@ -338,7 +262,7 @@ export const GameApply = () => {
         cancelLabel="Cancel"
         confirmLabel="Confirm apply"
         confirmTone="default"
-        isBusy={isApplyPending || isPlanLoading}
+        isBusy={isApplyPending}
         isOpen={isApplyConfirmOpen}
         message={confirmMessage}
         onCancel={closeApplyConfirm}

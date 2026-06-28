@@ -18,125 +18,6 @@ import * as reshade$0 from "../../reshade/models.js";
 // @ts-ignore: Unused imports
 import * as time$0 from "../../../../../../time/models.js";
 
-export class AppliedDirectoryManifestEntry {
-    "OperationIndex": number;
-    "Mod": ModContext;
-    "TargetPath": string;
-
-    /** Creates a new AppliedDirectoryManifestEntry instance. */
-    constructor($$source: Partial<AppliedDirectoryManifestEntry> = {}) {
-        if (!("OperationIndex" in $$source)) {
-            this["OperationIndex"] = 0;
-        }
-        if (!("Mod" in $$source)) {
-            this["Mod"] = (new ModContext());
-        }
-        if (!("TargetPath" in $$source)) {
-            this["TargetPath"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new AppliedDirectoryManifestEntry instance from a string or object.
-     */
-    static createFrom($$source: any = {}): AppliedDirectoryManifestEntry {
-        const $$createField1_0 = $$createType0;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Mod" in $$parsedSource) {
-            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
-        }
-        return new AppliedDirectoryManifestEntry($$parsedSource as Partial<AppliedDirectoryManifestEntry>);
-    }
-}
-
-export class AppliedFileManifestEntry {
-    "OperationIndex": number;
-    "Mod": ModContext;
-    "SourcePath": string;
-    "TargetPath": string;
-    "SHA256": string;
-    "SizeBytes": number;
-
-    /** Creates a new AppliedFileManifestEntry instance. */
-    constructor($$source: Partial<AppliedFileManifestEntry> = {}) {
-        if (!("OperationIndex" in $$source)) {
-            this["OperationIndex"] = 0;
-        }
-        if (!("Mod" in $$source)) {
-            this["Mod"] = (new ModContext());
-        }
-        if (!("SourcePath" in $$source)) {
-            this["SourcePath"] = "";
-        }
-        if (!("TargetPath" in $$source)) {
-            this["TargetPath"] = "";
-        }
-        if (!("SHA256" in $$source)) {
-            this["SHA256"] = "";
-        }
-        if (!("SizeBytes" in $$source)) {
-            this["SizeBytes"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new AppliedFileManifestEntry instance from a string or object.
-     */
-    static createFrom($$source: any = {}): AppliedFileManifestEntry {
-        const $$createField1_0 = $$createType0;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Mod" in $$parsedSource) {
-            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
-        }
-        return new AppliedFileManifestEntry($$parsedSource as Partial<AppliedFileManifestEntry>);
-    }
-}
-
-export class AppliedOperationManifest {
-    "AddedFiles": AppliedFileManifestEntry[];
-    "ReplacedFiles": ReplacedFileManifestEntry[];
-    "CreatedDirectories": AppliedDirectoryManifestEntry[];
-
-    /** Creates a new AppliedOperationManifest instance. */
-    constructor($$source: Partial<AppliedOperationManifest> = {}) {
-        if (!("AddedFiles" in $$source)) {
-            this["AddedFiles"] = [];
-        }
-        if (!("ReplacedFiles" in $$source)) {
-            this["ReplacedFiles"] = [];
-        }
-        if (!("CreatedDirectories" in $$source)) {
-            this["CreatedDirectories"] = [];
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new AppliedOperationManifest instance from a string or object.
-     */
-    static createFrom($$source: any = {}): AppliedOperationManifest {
-        const $$createField0_0 = $$createType2;
-        const $$createField1_0 = $$createType4;
-        const $$createField2_0 = $$createType6;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("AddedFiles" in $$parsedSource) {
-            $$parsedSource["AddedFiles"] = $$createField0_0($$parsedSource["AddedFiles"]);
-        }
-        if ("ReplacedFiles" in $$parsedSource) {
-            $$parsedSource["ReplacedFiles"] = $$createField1_0($$parsedSource["ReplacedFiles"]);
-        }
-        if ("CreatedDirectories" in $$parsedSource) {
-            $$parsedSource["CreatedDirectories"] = $$createField2_0($$parsedSource["CreatedDirectories"]);
-        }
-        return new AppliedOperationManifest($$parsedSource as Partial<AppliedOperationManifest>);
-    }
-}
-
 export class AppliedProfileSummary {
     "GameID": number;
     "ProfileID": number;
@@ -174,15 +55,15 @@ export class AppliedProfileSummary {
     }
 }
 
-export class ApplyIncrementalDeploymentResult {
+export class ApplyDeploymentResult {
     "Success": boolean;
     "CompletedCount": number;
     "SkippedCount": number;
     "Message": string;
     "RolledBack": boolean;
 
-    /** Creates a new ApplyIncrementalDeploymentResult instance. */
-    constructor($$source: Partial<ApplyIncrementalDeploymentResult> = {}) {
+    /** Creates a new ApplyDeploymentResult instance. */
+    constructor($$source: Partial<ApplyDeploymentResult> = {}) {
         if (!("Success" in $$source)) {
             this["Success"] = false;
         }
@@ -203,114 +84,13 @@ export class ApplyIncrementalDeploymentResult {
     }
 
     /**
-     * Creates a new ApplyIncrementalDeploymentResult instance from a string or object.
+     * Creates a new ApplyDeploymentResult instance from a string or object.
      */
-    static createFrom($$source: any = {}): ApplyIncrementalDeploymentResult {
+    static createFrom($$source: any = {}): ApplyDeploymentResult {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ApplyIncrementalDeploymentResult($$parsedSource as Partial<ApplyIncrementalDeploymentResult>);
+        return new ApplyDeploymentResult($$parsedSource as Partial<ApplyDeploymentResult>);
     }
 }
-
-export class ApplyOperationPlanResult {
-    "Success": boolean;
-    "CompletedCount": number;
-    "FailedCount": number;
-    "SkippedCount": number;
-    "Results": ApplyOperationResult[];
-    "Manifest": AppliedOperationManifest;
-
-    /** Creates a new ApplyOperationPlanResult instance. */
-    constructor($$source: Partial<ApplyOperationPlanResult> = {}) {
-        if (!("Success" in $$source)) {
-            this["Success"] = false;
-        }
-        if (!("CompletedCount" in $$source)) {
-            this["CompletedCount"] = 0;
-        }
-        if (!("FailedCount" in $$source)) {
-            this["FailedCount"] = 0;
-        }
-        if (!("SkippedCount" in $$source)) {
-            this["SkippedCount"] = 0;
-        }
-        if (!("Results" in $$source)) {
-            this["Results"] = [];
-        }
-        if (!("Manifest" in $$source)) {
-            this["Manifest"] = (new AppliedOperationManifest());
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ApplyOperationPlanResult instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ApplyOperationPlanResult {
-        const $$createField4_0 = $$createType8;
-        const $$createField5_0 = $$createType9;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Results" in $$parsedSource) {
-            $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
-        }
-        if ("Manifest" in $$parsedSource) {
-            $$parsedSource["Manifest"] = $$createField5_0($$parsedSource["Manifest"]);
-        }
-        return new ApplyOperationPlanResult($$parsedSource as Partial<ApplyOperationPlanResult>);
-    }
-}
-
-export class ApplyOperationResult {
-    "OperationIndex": number;
-    "Operation": Operation;
-    "Status": ApplyOperationStatus;
-    "Message": string;
-    "Error": string | null;
-
-    /** Creates a new ApplyOperationResult instance. */
-    constructor($$source: Partial<ApplyOperationResult> = {}) {
-        if (!("OperationIndex" in $$source)) {
-            this["OperationIndex"] = 0;
-        }
-        if (!("Operation" in $$source)) {
-            this["Operation"] = (new Operation());
-        }
-        if (!("Status" in $$source)) {
-            this["Status"] = ApplyOperationStatus.$zero;
-        }
-        if (!("Message" in $$source)) {
-            this["Message"] = "";
-        }
-        if (!("Error" in $$source)) {
-            this["Error"] = null;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ApplyOperationResult instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ApplyOperationResult {
-        const $$createField1_0 = $$createType10;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Operation" in $$parsedSource) {
-            $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
-        }
-        return new ApplyOperationResult($$parsedSource as Partial<ApplyOperationResult>);
-    }
-}
-
-export enum ApplyOperationStatus {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    ApplyOperationStatusCompleted = "completed",
-    ApplyOperationStatusFailed = "failed",
-    ApplyOperationStatusSkipped = "skipped",
-};
 
 export class ArchiveEntry {
     "Path": string;
@@ -458,11 +238,11 @@ export class DeploymentFileDetail {
      * Creates a new DeploymentFileDetail instance from a string or object.
      */
     static createFrom($$source: any = {}): DeploymentFileDetail {
-        const $$createField1_0 = $$createType11;
-        const $$createField2_0 = $$createType13;
-        const $$createField9_0 = $$createType14;
-        const $$createField10_0 = $$createType14;
-        const $$createField18_0 = $$createType15;
+        const $$createField1_0 = $$createType0;
+        const $$createField2_0 = $$createType2;
+        const $$createField9_0 = $$createType3;
+        const $$createField10_0 = $$createType3;
+        const $$createField18_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("States" in $$parsedSource) {
             $$parsedSource["States"] = $$createField1_0($$parsedSource["States"]);
@@ -559,15 +339,15 @@ export class DeploymentFileInspection {
      * Creates a new DeploymentFileInspection instance from a string or object.
      */
     static createFrom($$source: any = {}): DeploymentFileInspection {
-        const $$createField4_0 = $$createType16;
-        const $$createField5_0 = $$createType16;
-        const $$createField6_0 = $$createType18;
-        const $$createField7_0 = $$createType20;
-        const $$createField8_0 = $$createType20;
-        const $$createField9_0 = $$createType22;
-        const $$createField10_0 = $$createType22;
-        const $$createField11_0 = $$createType24;
-        const $$createField12_0 = $$createType24;
+        const $$createField4_0 = $$createType5;
+        const $$createField5_0 = $$createType5;
+        const $$createField6_0 = $$createType7;
+        const $$createField7_0 = $$createType9;
+        const $$createField8_0 = $$createType9;
+        const $$createField9_0 = $$createType11;
+        const $$createField10_0 = $$createType11;
+        const $$createField11_0 = $$createType13;
+        const $$createField12_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Left" in $$parsedSource) {
             $$parsedSource["Left"] = $$createField4_0($$parsedSource["Left"]);
@@ -624,8 +404,8 @@ export class DeploymentReviewPreview {
      * Creates a new DeploymentReviewPreview instance from a string or object.
      */
     static createFrom($$source: any = {}): DeploymentReviewPreview {
-        const $$createField0_0 = $$createType25;
-        const $$createField1_0 = $$createType26;
+        const $$createField0_0 = $$createType14;
+        const $$createField1_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Summary" in $$parsedSource) {
             $$parsedSource["Summary"] = $$createField0_0($$parsedSource["Summary"]);
@@ -693,7 +473,7 @@ export class DeploymentSummary {
      * Creates a new DeploymentSummary instance from a string or object.
      */
     static createFrom($$source: any = {}): DeploymentSummary {
-        const $$createField5_0 = $$createType27;
+        const $$createField5_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("StatusCounts" in $$parsedSource) {
             $$parsedSource["StatusCounts"] = $$createField5_0($$parsedSource["StatusCounts"]);
@@ -750,7 +530,7 @@ export class DeploymentTreeNode {
      * Creates a new DeploymentTreeNode instance from a string or object.
      */
     static createFrom($$source: any = {}): DeploymentTreeNode {
-        const $$createField8_0 = $$createType28;
+        const $$createField8_0 = $$createType17;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Children" in $$parsedSource) {
             $$parsedSource["Children"] = $$createField8_0($$parsedSource["Children"]);
@@ -783,7 +563,7 @@ export class DetectedReShadeTarget {
      * Creates a new DetectedReShadeTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): DetectedReShadeTarget {
-        const $$createField1_0 = $$createType14;
+        const $$createField1_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Executables" in $$parsedSource) {
             $$parsedSource["Executables"] = $$createField1_0($$parsedSource["Executables"]);
@@ -874,7 +654,7 @@ export class DiagnosticLogEntry {
      * Creates a new DiagnosticLogEntry instance from a string or object.
      */
     static createFrom($$source: any = {}): DiagnosticLogEntry {
-        const $$createField4_0 = $$createType29;
+        const $$createField4_0 = $$createType18;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Details" in $$parsedSource) {
             $$parsedSource["Details"] = $$createField4_0($$parsedSource["Details"]);
@@ -928,7 +708,7 @@ export class ExportDiagnosticLogsInput {
      * Creates a new ExportDiagnosticLogsInput instance from a string or object.
      */
     static createFrom($$source: any = {}): ExportDiagnosticLogsInput {
-        const $$createField1_0 = $$createType31;
+        const $$createField1_0 = $$createType20;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Entries" in $$parsedSource) {
             $$parsedSource["Entries"] = $$createField1_0($$parsedSource["Entries"]);
@@ -998,10 +778,10 @@ export class FourStateView {
      * Creates a new FourStateView instance from a string or object.
      */
     static createFrom($$source: any = {}): FourStateView {
-        const $$createField0_0 = $$createType33;
-        const $$createField1_0 = $$createType33;
-        const $$createField2_0 = $$createType33;
-        const $$createField3_0 = $$createType33;
+        const $$createField0_0 = $$createType22;
+        const $$createField1_0 = $$createType22;
+        const $$createField2_0 = $$createType22;
+        const $$createField3_0 = $$createType22;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Baseline" in $$parsedSource) {
             $$parsedSource["Baseline"] = $$createField0_0($$parsedSource["Baseline"]);
@@ -1100,8 +880,8 @@ export class ImportModInput {
      * Creates a new ImportModInput instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportModInput {
-        const $$createField6_0 = $$createType34;
-        const $$createField7_0 = $$createType36;
+        const $$createField6_0 = $$createType23;
+        const $$createField7_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TagIDs" in $$parsedSource) {
             $$parsedSource["TagIDs"] = $$createField6_0($$parsedSource["TagIDs"]);
@@ -1137,9 +917,9 @@ export class ImportModResult {
      * Creates a new ImportModResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportModResult {
-        const $$createField0_0 = $$createType37;
-        const $$createField1_0 = $$createType38;
-        const $$createField2_0 = $$createType14;
+        const $$createField0_0 = $$createType26;
+        const $$createField1_0 = $$createType27;
+        const $$createField2_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -1174,8 +954,8 @@ export class ImportTargetDetectionResult {
      * Creates a new ImportTargetDetectionResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ImportTargetDetectionResult {
-        const $$createField0_0 = $$createType14;
-        const $$createField1_0 = $$createType14;
+        const $$createField0_0 = $$createType3;
+        const $$createField1_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Candidates" in $$parsedSource) {
             $$parsedSource["Candidates"] = $$createField0_0($$parsedSource["Candidates"]);
@@ -1329,8 +1109,8 @@ export class Mod {
      * Creates a new Mod instance from a string or object.
      */
     static createFrom($$source: any = {}): Mod {
-        const $$createField11_0 = $$createType40;
-        const $$createField14_0 = $$createType42;
+        const $$createField11_0 = $$createType29;
+        const $$createField14_0 = $$createType31;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Metadata" in $$parsedSource) {
             $$parsedSource["Metadata"] = $$createField11_0($$parsedSource["Metadata"]);
@@ -1339,31 +1119,6 @@ export class Mod {
             $$parsedSource["Tags"] = $$createField14_0($$parsedSource["Tags"]);
         }
         return new Mod($$parsedSource as Partial<Mod>);
-    }
-}
-
-export class ModContext {
-    "ModID": number;
-    "ModName": string;
-
-    /** Creates a new ModContext instance. */
-    constructor($$source: Partial<ModContext> = {}) {
-        if (!("ModID" in $$source)) {
-            this["ModID"] = 0;
-        }
-        if (!("ModName" in $$source)) {
-            this["ModName"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ModContext instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ModContext {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ModContext($$parsedSource as Partial<ModContext>);
     }
 }
 
@@ -1534,10 +1289,10 @@ export class ModMetadata {
      * Creates a new ModMetadata instance from a string or object.
      */
     static createFrom($$source: any = {}): ModMetadata {
-        const $$createField1_0 = $$createType43;
-        const $$createField2_0 = $$createType43;
-        const $$createField3_0 = $$createType43;
-        const $$createField4_0 = $$createType43;
+        const $$createField1_0 = $$createType32;
+        const $$createField2_0 = $$createType32;
+        const $$createField3_0 = $$createType32;
+        const $$createField4_0 = $$createType32;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Version" in $$parsedSource) {
             $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
@@ -1664,7 +1419,7 @@ export class ModPackageSnapshot {
      * Creates a new ModPackageSnapshot instance from a string or object.
      */
     static createFrom($$source: any = {}): ModPackageSnapshot {
-        const $$createField6_0 = $$createType44;
+        const $$createField6_0 = $$createType33;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("DetectedMetadata" in $$parsedSource) {
             $$parsedSource["DetectedMetadata"] = $$createField6_0($$parsedSource["DetectedMetadata"]);
@@ -1718,99 +1473,6 @@ export enum ModSourceType {
 
     ModSourceTypeFolder = "folder",
     ModSourceTypeArchive = "archive",
-};
-
-export class Operation {
-    "Type": OperationType;
-    "SourcePath": string | null;
-    "TargetPath": string;
-    "BackupPath": string | null;
-    "Conflict": boolean;
-    "Mod": ModContext;
-
-    /** Creates a new Operation instance. */
-    constructor($$source: Partial<Operation> = {}) {
-        if (!("Type" in $$source)) {
-            this["Type"] = OperationType.$zero;
-        }
-        if (!("SourcePath" in $$source)) {
-            this["SourcePath"] = null;
-        }
-        if (!("TargetPath" in $$source)) {
-            this["TargetPath"] = "";
-        }
-        if (!("BackupPath" in $$source)) {
-            this["BackupPath"] = null;
-        }
-        if (!("Conflict" in $$source)) {
-            this["Conflict"] = false;
-        }
-        if (!("Mod" in $$source)) {
-            this["Mod"] = (new ModContext());
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new Operation instance from a string or object.
-     */
-    static createFrom($$source: any = {}): Operation {
-        const $$createField5_0 = $$createType0;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Mod" in $$parsedSource) {
-            $$parsedSource["Mod"] = $$createField5_0($$parsedSource["Mod"]);
-        }
-        return new Operation($$parsedSource as Partial<Operation>);
-    }
-}
-
-export class OperationPlan {
-    "Operations": Operation[];
-    "Issues": PlanIssue[];
-    "CanApply": boolean;
-
-    /** Creates a new OperationPlan instance. */
-    constructor($$source: Partial<OperationPlan> = {}) {
-        if (!("Operations" in $$source)) {
-            this["Operations"] = [];
-        }
-        if (!("Issues" in $$source)) {
-            this["Issues"] = [];
-        }
-        if (!("CanApply" in $$source)) {
-            this["CanApply"] = false;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new OperationPlan instance from a string or object.
-     */
-    static createFrom($$source: any = {}): OperationPlan {
-        const $$createField0_0 = $$createType45;
-        const $$createField1_0 = $$createType47;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Operations" in $$parsedSource) {
-            $$parsedSource["Operations"] = $$createField0_0($$parsedSource["Operations"]);
-        }
-        if ("Issues" in $$parsedSource) {
-            $$parsedSource["Issues"] = $$createField1_0($$parsedSource["Issues"]);
-        }
-        return new OperationPlan($$parsedSource as Partial<OperationPlan>);
-    }
-}
-
-export enum OperationType {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    OperationTypeCopy = "copy",
-    OperationTypeReplace = "replace",
-    OperationTypeCreateDirectory = "create_directory",
 };
 
 export const OptiScalerApplyResult = optiscaler$0.ApplyResult;
@@ -1973,96 +1635,6 @@ export class PEMetadata {
     }
 }
 
-export class PlanIssue {
-    "Severity": PlanIssueSeverity;
-    "Kind": PlanIssueKind;
-    "Message": string;
-    "ProfileID": number;
-    "SourcePath": string | null;
-    "TargetPath": string | null;
-    "Mod": ModContext | null;
-    "ConflictingOperationIndexes": number[];
-
-    /** Creates a new PlanIssue instance. */
-    constructor($$source: Partial<PlanIssue> = {}) {
-        if (!("Severity" in $$source)) {
-            this["Severity"] = PlanIssueSeverity.$zero;
-        }
-        if (!("Kind" in $$source)) {
-            this["Kind"] = PlanIssueKind.$zero;
-        }
-        if (!("Message" in $$source)) {
-            this["Message"] = "";
-        }
-        if (!("ProfileID" in $$source)) {
-            this["ProfileID"] = 0;
-        }
-        if (!("SourcePath" in $$source)) {
-            this["SourcePath"] = null;
-        }
-        if (!("TargetPath" in $$source)) {
-            this["TargetPath"] = null;
-        }
-        if (!("Mod" in $$source)) {
-            this["Mod"] = null;
-        }
-        if (!("ConflictingOperationIndexes" in $$source)) {
-            this["ConflictingOperationIndexes"] = [];
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new PlanIssue instance from a string or object.
-     */
-    static createFrom($$source: any = {}): PlanIssue {
-        const $$createField6_0 = $$createType48;
-        const $$createField7_0 = $$createType49;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Mod" in $$parsedSource) {
-            $$parsedSource["Mod"] = $$createField6_0($$parsedSource["Mod"]);
-        }
-        if ("ConflictingOperationIndexes" in $$parsedSource) {
-            $$parsedSource["ConflictingOperationIndexes"] = $$createField7_0($$parsedSource["ConflictingOperationIndexes"]);
-        }
-        return new PlanIssue($$parsedSource as Partial<PlanIssue>);
-    }
-}
-
-export enum PlanIssueKind {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    PlanIssueMissingManagedSourcePath = "missing_managed_source_path",
-    PlanIssueMissingInstallConfig = "missing_install_config",
-    PlanIssueIncompleteInstallConfig = "incomplete_install_config",
-    PlanIssueMissingGameInstallPath = "missing_game_install_path",
-    PlanIssueMissingGameInstallDir = "missing_game_install_directory",
-    PlanIssueGameInstallPathNotDir = "game_install_path_not_directory",
-    PlanIssueMissingSourceRoot = "missing_source_root",
-    PlanIssueSourceRootNotDirectory = "source_root_not_directory",
-    PlanIssueMissingGameModStorage = "missing_game_mod_storage_path",
-    PlanIssueTargetDirectoryPathFile = "target_directory_path_is_file",
-    PlanIssueTargetFilePathDirectory = "target_file_path_is_directory",
-    PlanIssueTargetPathConflict = "target_path_conflict",
-    PlanIssueReplaceExistingTarget = "replace_existing_target",
-    PlanIssueInvalidUnrealPakSource = "invalid_unreal_pak_source",
-    PlanIssueMissingUnrealPaksTarget = "missing_unreal_paks_target",
-};
-
-export enum PlanIssueSeverity {
-    /**
-     * The Go zero value for the underlying type of the enum.
-     */
-    $zero = "",
-
-    PlanIssueSeverityError = "error",
-    PlanIssueSeverityWarning = "warning",
-};
-
 export class PreValidateImportInput {
     "SourceType": ModSourceType;
     "SourcePath": string;
@@ -2165,8 +1737,8 @@ export class Preview {
      * Creates a new Preview instance from a string or object.
      */
     static createFrom($$source: any = {}): Preview {
-        const $$createField7_0 = $$createType14;
-        const $$createField10_0 = $$createType14;
+        const $$createField7_0 = $$createType3;
+        const $$createField10_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("TargetFilePaths" in $$parsedSource) {
             $$parsedSource["TargetFilePaths"] = $$createField7_0($$parsedSource["TargetFilePaths"]);
@@ -2352,8 +1924,8 @@ export class ReShadeChainTarget {
      * Creates a new ReShadeChainTarget instance from a string or object.
      */
     static createFrom($$source: any = {}): ReShadeChainTarget {
-        const $$createField7_0 = $$createType51;
-        const $$createField8_0 = $$createType53;
+        const $$createField7_0 = $$createType35;
+        const $$createField8_0 = $$createType37;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("OptiScaler" in $$parsedSource) {
             $$parsedSource["OptiScaler"] = $$createField7_0($$parsedSource["OptiScaler"]);
@@ -2392,7 +1964,7 @@ export class ReShadeDetectionResult {
      * Creates a new ReShadeDetectionResult instance from a string or object.
      */
     static createFrom($$source: any = {}): ReShadeDetectionResult {
-        const $$createField1_0 = $$createType55;
+        const $$createField1_0 = $$createType39;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Targets" in $$parsedSource) {
             $$parsedSource["Targets"] = $$createField1_0($$parsedSource["Targets"]);
@@ -2458,63 +2030,6 @@ export type ReShadeRequest = reshade$0.Request;
 export const ReShadeTarget = reshade$0.ManagedTarget;
 export type ReShadeTarget = reshade$0.ManagedTarget;
 
-export class ReplacedFileManifestEntry {
-    "OperationIndex": number;
-    "Mod": ModContext;
-    "SourcePath": string;
-    "TargetPath": string;
-    "SHA256": string;
-    "SizeBytes": number;
-    "BackupPath": string;
-    "BackupSHA256": string;
-    "BackupSizeBytes": number;
-
-    /** Creates a new ReplacedFileManifestEntry instance. */
-    constructor($$source: Partial<ReplacedFileManifestEntry> = {}) {
-        if (!("OperationIndex" in $$source)) {
-            this["OperationIndex"] = 0;
-        }
-        if (!("Mod" in $$source)) {
-            this["Mod"] = (new ModContext());
-        }
-        if (!("SourcePath" in $$source)) {
-            this["SourcePath"] = "";
-        }
-        if (!("TargetPath" in $$source)) {
-            this["TargetPath"] = "";
-        }
-        if (!("SHA256" in $$source)) {
-            this["SHA256"] = "";
-        }
-        if (!("SizeBytes" in $$source)) {
-            this["SizeBytes"] = 0;
-        }
-        if (!("BackupPath" in $$source)) {
-            this["BackupPath"] = "";
-        }
-        if (!("BackupSHA256" in $$source)) {
-            this["BackupSHA256"] = "";
-        }
-        if (!("BackupSizeBytes" in $$source)) {
-            this["BackupSizeBytes"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ReplacedFileManifestEntry instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ReplacedFileManifestEntry {
-        const $$createField1_0 = $$createType0;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("Mod" in $$parsedSource) {
-            $$parsedSource["Mod"] = $$createField1_0($$parsedSource["Mod"]);
-        }
-        return new ReplacedFileManifestEntry($$parsedSource as Partial<ReplacedFileManifestEntry>);
-    }
-}
-
 export class RestoreMod {
     "ID": number;
     "Name": string;
@@ -2572,7 +2087,7 @@ export class RestoreOperation {
      * Creates a new RestoreOperation instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperation {
-        const $$createField2_0 = $$createType56;
+        const $$createField2_0 = $$createType40;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField2_0($$parsedSource["Mod"]);
@@ -2613,7 +2128,7 @@ export class RestoreOperationResult {
      * Creates a new RestoreOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperationResult {
-        const $$createField1_0 = $$createType57;
+        const $$createField1_0 = $$createType41;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -2677,7 +2192,7 @@ export class RestoreResult {
      * Creates a new RestoreResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreResult {
-        const $$createField4_0 = $$createType59;
+        const $$createField4_0 = $$createType43;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
@@ -2714,7 +2229,7 @@ export class SourceScanResult {
      * Creates a new SourceScanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): SourceScanResult {
-        const $$createField3_0 = $$createType61;
+        const $$createField3_0 = $$createType45;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
@@ -2978,9 +2493,9 @@ export class UpdateModDetailsInput {
      * Creates a new UpdateModDetailsInput instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModDetailsInput {
-        const $$createField2_0 = $$createType62;
-        const $$createField3_0 = $$createType34;
-        const $$createField4_0 = $$createType36;
+        const $$createField2_0 = $$createType46;
+        const $$createField3_0 = $$createType23;
+        const $$createField4_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Metadata" in $$parsedSource) {
             $$parsedSource["Metadata"] = $$createField2_0($$parsedSource["Metadata"]);
@@ -3060,10 +2575,10 @@ export class UpdateModMetadataInput {
      * Creates a new UpdateModMetadataInput instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModMetadataInput {
-        const $$createField1_0 = $$createType63;
-        const $$createField2_0 = $$createType63;
-        const $$createField3_0 = $$createType63;
-        const $$createField4_0 = $$createType63;
+        const $$createField1_0 = $$createType47;
+        const $$createField2_0 = $$createType47;
+        const $$createField3_0 = $$createType47;
+        const $$createField4_0 = $$createType47;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Version" in $$parsedSource) {
             $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
@@ -3121,10 +2636,10 @@ export class UpdateModResult {
      * Creates a new UpdateModResult instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModResult {
-        const $$createField0_0 = $$createType37;
-        const $$createField1_0 = $$createType64;
-        const $$createField2_0 = $$createType64;
-        const $$createField4_0 = $$createType14;
+        const $$createField0_0 = $$createType26;
+        const $$createField1_0 = $$createType48;
+        const $$createField2_0 = $$createType48;
+        const $$createField4_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField0_0($$parsedSource["Mod"]);
@@ -3196,68 +2711,52 @@ export class WriterEntryDTO {
 }
 
 // Private type creation functions
-const $$createType0 = ModContext.createFrom;
-const $$createType1 = AppliedFileManifestEntry.createFrom;
+const $$createType0 = FourStateView.createFrom;
+const $$createType1 = WriterEntryDTO.createFrom;
 const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = ReplacedFileManifestEntry.createFrom;
-const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = AppliedDirectoryManifestEntry.createFrom;
-const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = ApplyOperationResult.createFrom;
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = AppliedOperationManifest.createFrom;
-const $$createType10 = Operation.createFrom;
-const $$createType11 = FourStateView.createFrom;
-const $$createType12 = WriterEntryDTO.createFrom;
+const $$createType3 = $Create.Array($Create.Any);
+const $$createType4 = StateComparison.createFrom;
+const $$createType5 = InspectionSideMetadata.createFrom;
+const $$createType6 = TextDiffLine.createFrom;
+const $$createType7 = $Create.Array($$createType6);
+const $$createType8 = PEMetadata.createFrom;
+const $$createType9 = $Create.Nullable($$createType8);
+const $$createType10 = ImageMetadata.createFrom;
+const $$createType11 = $Create.Nullable($$createType10);
+const $$createType12 = ArchiveEntry.createFrom;
 const $$createType13 = $Create.Array($$createType12);
-const $$createType14 = $Create.Array($Create.Any);
-const $$createType15 = StateComparison.createFrom;
-const $$createType16 = InspectionSideMetadata.createFrom;
-const $$createType17 = TextDiffLine.createFrom;
-const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = PEMetadata.createFrom;
-const $$createType20 = $Create.Nullable($$createType19);
-const $$createType21 = ImageMetadata.createFrom;
+const $$createType14 = DeploymentSummary.createFrom;
+const $$createType15 = DeploymentTreeNode.createFrom;
+const $$createType16 = $Create.Map($Create.Any, $Create.Any);
+const $$createType17 = $Create.Array($$createType15);
+const $$createType18 = $Create.Map($Create.Any, $Create.Any);
+const $$createType19 = DiagnosticLogEntry.createFrom;
+const $$createType20 = $Create.Array($$createType19);
+const $$createType21 = FileStateView.createFrom;
 const $$createType22 = $Create.Nullable($$createType21);
-const $$createType23 = ArchiveEntry.createFrom;
-const $$createType24 = $Create.Array($$createType23);
-const $$createType25 = DeploymentSummary.createFrom;
-const $$createType26 = DeploymentTreeNode.createFrom;
-const $$createType27 = $Create.Map($Create.Any, $Create.Any);
-const $$createType28 = $Create.Array($$createType26);
-const $$createType29 = $Create.Map($Create.Any, $Create.Any);
-const $$createType30 = DiagnosticLogEntry.createFrom;
+const $$createType23 = $Create.Array($Create.Any);
+const $$createType24 = CreateTagInput.createFrom;
+const $$createType25 = $Create.Array($$createType24);
+const $$createType26 = Mod.createFrom;
+const $$createType27 = ModInstallConfig.createFrom;
+const $$createType28 = ModMetadata.createFrom;
+const $$createType29 = $Create.Nullable($$createType28);
+const $$createType30 = Tag.createFrom;
 const $$createType31 = $Create.Array($$createType30);
-const $$createType32 = FileStateView.createFrom;
-const $$createType33 = $Create.Nullable($$createType32);
-const $$createType34 = $Create.Array($Create.Any);
-const $$createType35 = CreateTagInput.createFrom;
-const $$createType36 = $Create.Array($$createType35);
-const $$createType37 = Mod.createFrom;
-const $$createType38 = ModInstallConfig.createFrom;
-const $$createType39 = ModMetadata.createFrom;
-const $$createType40 = $Create.Nullable($$createType39);
-const $$createType41 = Tag.createFrom;
-const $$createType42 = $Create.Array($$createType41);
-const $$createType43 = ModMetadataField.createFrom;
-const $$createType44 = ModDetectedMetadataSnapshot.createFrom;
-const $$createType45 = $Create.Array($$createType10);
-const $$createType46 = PlanIssue.createFrom;
-const $$createType47 = $Create.Array($$createType46);
-const $$createType48 = $Create.Nullable($$createType0);
-const $$createType49 = $Create.Array($Create.Any);
-const $$createType50 = ReShadeOptiScalerChainState.createFrom;
-const $$createType51 = $Create.Nullable($$createType50);
-const $$createType52 = ReShadeChainState.createFrom;
-const $$createType53 = $Create.Nullable($$createType52);
-const $$createType54 = DetectedReShadeTarget.createFrom;
-const $$createType55 = $Create.Array($$createType54);
-const $$createType56 = RestoreMod.createFrom;
-const $$createType57 = RestoreOperation.createFrom;
-const $$createType58 = RestoreOperationResult.createFrom;
-const $$createType59 = $Create.Array($$createType58);
-const $$createType60 = StoredGame.createFrom;
-const $$createType61 = $Create.Array($$createType60);
-const $$createType62 = UpdateModMetadataInput.createFrom;
-const $$createType63 = ModMetadataFieldUpdate.createFrom;
-const $$createType64 = ModPackageSnapshot.createFrom;
+const $$createType32 = ModMetadataField.createFrom;
+const $$createType33 = ModDetectedMetadataSnapshot.createFrom;
+const $$createType34 = ReShadeOptiScalerChainState.createFrom;
+const $$createType35 = $Create.Nullable($$createType34);
+const $$createType36 = ReShadeChainState.createFrom;
+const $$createType37 = $Create.Nullable($$createType36);
+const $$createType38 = DetectedReShadeTarget.createFrom;
+const $$createType39 = $Create.Array($$createType38);
+const $$createType40 = RestoreMod.createFrom;
+const $$createType41 = RestoreOperation.createFrom;
+const $$createType42 = RestoreOperationResult.createFrom;
+const $$createType43 = $Create.Array($$createType42);
+const $$createType44 = StoredGame.createFrom;
+const $$createType45 = $Create.Array($$createType44);
+const $$createType46 = UpdateModMetadataInput.createFrom;
+const $$createType47 = ModMetadataFieldUpdate.createFrom;
+const $$createType48 = ModPackageSnapshot.createFrom;

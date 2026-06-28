@@ -292,6 +292,7 @@ export enum PlanIssueKind {
     PlanIssueMissingSourceRoot = "missing_source_root",
     PlanIssueSourceRootNotDirectory = "source_root_not_directory",
     PlanIssueInvalidUnrealPakSource = "invalid_unreal_pak_source",
+    PlanIssueMissingUnrealPaksTarget = "missing_unreal_paks_target",
     PlanIssueUnsupportedStrategy = "unsupported_strategy",
 };
 

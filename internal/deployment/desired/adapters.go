@@ -6,13 +6,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/phergul/fiach/internal/deployment"
+	"github.com/phergul/fiach/internal/deployment/profile"
 	"github.com/phergul/fiach/internal/fileignore"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/installpath"
-	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/unrealpak"
 )
 
@@ -22,7 +23,7 @@ var desiredFileAdapters = map[installconfig.StrategyType]DesiredFileAdapter{
 	installconfig.StrategyTypeUnrealPak:   unrealPakDesiredAdapter{},
 }
 
-func inventoryFilesForMod(input operationplan.StrategyBuildInput) (DesiredInventoryResult, error) {
+func inventoryFilesForMod(input profile.StrategyBuildInput) (DesiredInventoryResult, error) {
 	adapter, found := desiredFileAdapters[input.Mod.StrategyType]
 	if !found {
 		return DesiredInventoryResult{}, fmt.Errorf("unsupported install strategy %q", input.Mod.StrategyType)
@@ -38,7 +39,7 @@ func inventoryFilesForMod(input operationplan.StrategyBuildInput) (DesiredInvent
 
 type fileTreeDesiredAdapter struct{}
 
-func (a fileTreeDesiredAdapter) InventoryFiles(input operationplan.StrategyBuildInput) (DesiredInventoryResult, error) {
+func (a fileTreeDesiredAdapter) InventoryFiles(input profile.StrategyBuildInput) (DesiredInventoryResult, error) {
 	if input.Mod.TargetBase != installconfig.TargetBaseGameRoot {
 		return DesiredInventoryResult{}, fmt.Errorf("unsupported target base %q", input.Mod.TargetBase)
 	}
@@ -61,7 +62,7 @@ func (a fileTreeDesiredAdapter) InventoryFiles(input operationplan.StrategyBuild
 
 type unrealPakDesiredAdapter struct{}
 
-func (a unrealPakDesiredAdapter) InventoryFiles(input operationplan.StrategyBuildInput) (DesiredInventoryResult, error) {
+func (a unrealPakDesiredAdapter) InventoryFiles(input profile.StrategyBuildInput) (DesiredInventoryResult, error) {
 	if input.Mod.TargetBase != installconfig.TargetBaseGameRoot {
 		return DesiredInventoryResult{}, fmt.Errorf("unsupported target base %q", input.Mod.TargetBase)
 	}
@@ -89,6 +90,12 @@ func (a unrealPakDesiredAdapter) InventoryFiles(input operationplan.StrategyBuil
 		return DesiredInventoryResult{Issues: []deployment.PlanIssue{issue}}, nil
 	}
 
+	if issue, err := validateExistingStandardUnrealTarget(input); err != nil {
+		return DesiredInventoryResult{}, err
+	} else if issue != nil {
+		return DesiredInventoryResult{Issues: []deployment.PlanIssue{*issue}}, nil
+	}
+
 	for _, file := range inspection.Files {
 		targetRelativePath := installpath.JoinTargetRelativePath(input.Mod.TargetRelativePath, file.Name)
 		if err := inventory.addMappedSourceFile(file.SourcePath, targetRelativePath); err != nil {
@@ -100,14 +107,14 @@ func (a unrealPakDesiredAdapter) InventoryFiles(input operationplan.StrategyBuil
 }
 
 type sourceInventory struct {
-	input operationplan.StrategyBuildInput
+	input profile.StrategyBuildInput
 
 	mappings      []DesiredFileMapping
 	issues        []deployment.PlanIssue
 	blockingIssue *deployment.PlanIssue
 }
 
-func newSourceInventory(input operationplan.StrategyBuildInput, sourceRoot string) (*sourceInventory, error) {
+func newSourceInventory(input profile.StrategyBuildInput, sourceRoot string) (*sourceInventory, error) {
 	inventory := &sourceInventory{
 		input:    input,
 		mappings: []DesiredFileMapping{},
@@ -215,7 +222,7 @@ func resolveTargetRelativePath(sourceRoot string, sourcePath string, targetRoot 
 	return installpath.JoinTargetRelativePath(targetRoot, filepath.ToSlash(sourceRelativePath)), nil
 }
 
-func validateSourceRoot(input operationplan.StrategyBuildInput, sourceRoot string) ([]deployment.PlanIssue, error) {
+func validateSourceRoot(input profile.StrategyBuildInput, sourceRoot string) ([]deployment.PlanIssue, error) {
 	info, err := os.Stat(sourceRoot)
 	if err == nil {
 		if !info.IsDir() {
@@ -275,4 +282,36 @@ func modContextPtr(modID int64, modName string) *deployment.ModContext {
 		ModID:   modID,
 		ModName: modName,
 	}
+}
+
+func validateExistingStandardUnrealTarget(input profile.StrategyBuildInput) (*deployment.PlanIssue, error) {
+	targetParts := strings.Split(filepath.ToSlash(filepath.Clean(input.Mod.TargetRelativePath)), "/")
+	if len(targetParts) < 3 ||
+		!strings.EqualFold(targetParts[len(targetParts)-3], "Content") ||
+		!strings.EqualFold(targetParts[len(targetParts)-2], "Paks") ||
+		!strings.EqualFold(targetParts[len(targetParts)-1], "~mods") {
+		return nil, nil
+	}
+
+	paksRelativePath := filepath.Join(targetParts[:len(targetParts)-1]...)
+	paksPath := filepath.Join(input.GameInstallPath, filepath.FromSlash(filepath.ToSlash(paksRelativePath)))
+	info, err := os.Stat(paksPath)
+	if err == nil {
+		if info.IsDir() {
+			return nil, nil
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("stat Unreal Paks target %q: %w", paksPath, err)
+	}
+
+	issue := newPlanIssue(
+		deployment.PlanIssueSeverityError,
+		deployment.PlanIssueMissingUnrealPaksTarget,
+		input.ProfileID,
+		fmt.Sprintf("mod %q targets %q, but its Content/Paks folder does not exist", input.Mod.ModName, input.Mod.TargetRelativePath),
+		modContextPtr(input.Mod.ModID, input.Mod.ModName),
+		nil,
+		new(paksPath),
+	)
+	return &issue, nil
 }

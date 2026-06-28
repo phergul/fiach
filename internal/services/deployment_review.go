@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phergul/fiach/internal/apperror"
+	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/deployment/execute"
 	"github.com/phergul/fiach/internal/deployment/inspect"
 	"github.com/phergul/fiach/internal/deployment/planner"
@@ -70,56 +71,65 @@ func (s *DeploymentReviewService) BuildDeploymentReviewPreview(ctx context.Conte
 	return preview, nil
 }
 
-func (s *DeploymentReviewService) ApplyIncrementalDeployment(
+func (s *DeploymentReviewService) ApplyDeployment(
 	ctx context.Context,
 	profileID int64,
 	previewHash string,
-) (result dto.ApplyIncrementalDeploymentResult, err error) {
-	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationApplyIncrementalDeployment, "Incremental deployment apply started",
+) (result dto.ApplyDeploymentResult, err error) {
+	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationApplyDeployment, "Deployment apply started",
 		slog.Int64("profile_id", profileID),
 		slog.Bool("preview_hash_provided", strings.TrimSpace(previewHash) != ""),
 	)
 	defer func() {
 		if err != nil {
-			err = diag.failWithMappedError("Incremental deployment apply failed", err, deploymentReviewUserError)
+			err = diag.failWithMappedError("Deployment apply failed", err, deploymentReviewUserError)
 		}
 	}()
 
 	if strings.TrimSpace(previewHash) == "" {
-		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Refresh the deployment preview and try again.")
+		return dto.ApplyDeploymentResult{}, apperror.New("Refresh the deployment preview and try again.")
 	}
 
 	buildResult, err := s.buildDeploymentPlan(ctx, profileID)
 	if err != nil {
-		return dto.ApplyIncrementalDeploymentResult{}, err
-	}
-
-	if !buildResult.AppliedFound {
-		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("No profile is currently applied for this game.")
-	}
-	if buildResult.Plan.Mode != planner.PlanModeIncremental {
-		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Incremental deployment apply is only available for an already applied profile.")
+		return dto.ApplyDeploymentResult{}, err
 	}
 
 	entry, err := deploymentPlanPreviewEntry(buildResult)
 	if err != nil {
-		return dto.ApplyIncrementalDeploymentResult{}, err
+		return dto.ApplyDeploymentResult{}, err
 	}
 	if !strings.EqualFold(entry.PreviewHash, previewHash) {
-		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("The deployment preview is stale. Refresh the preview and try again.")
+		return dto.ApplyDeploymentResult{}, apperror.New("The deployment preview is stale. Refresh the preview and try again.")
 	}
 	if !buildResult.Plan.CanApply() {
-		return dto.ApplyIncrementalDeploymentResult{}, apperror.New("Resolve blocking issues before applying this profile.")
+		return dto.ApplyDeploymentResult{}, apperror.New("Resolve blocking issues before applying this profile.")
+	}
+
+	switch buildResult.Plan.Mode {
+	case planner.PlanModeFirstApply:
+		if buildResult.AppliedFound {
+			return dto.ApplyDeploymentResult{}, apperror.New("Restore vanilla before applying another profile.")
+		}
+	case planner.PlanModeIncremental:
+		if !buildResult.AppliedFound {
+			return dto.ApplyDeploymentResult{}, apperror.New("No profile is currently applied for this game.")
+		}
+	default:
+		return dto.ApplyDeploymentResult{}, apperror.New("Deployment apply is not available for this preview.")
 	}
 
 	gameModStoragePath, err := s.store.ResolveGameModStoragePath(ctx, buildResult.Profile.GameID, "")
 	if err != nil {
-		return dto.ApplyIncrementalDeploymentResult{}, err
+		return dto.ApplyDeploymentResult{}, err
 	}
 
-	appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, buildResult.Profile.GameID)
-	if err != nil {
-		return dto.ApplyIncrementalDeploymentResult{}, err
+	var appliedFileStates []appliedstate.PersistedFileState
+	if buildResult.Plan.Mode == planner.PlanModeIncremental {
+		appliedFileStates, err = s.profileService.LoadAppliedFileStates(ctx, buildResult.Profile.GameID)
+		if err != nil {
+			return dto.ApplyDeploymentResult{}, err
+		}
 	}
 
 	applyResult, err := execute.Execute(ctx, execute.Context{
@@ -128,13 +138,14 @@ func (s *DeploymentReviewService) ApplyIncrementalDeployment(
 		GameInstallPath:    buildResult.Resolved.GameInstallPath,
 		GameModStoragePath: gameModStoragePath,
 		PreviewHash:        previewHash,
+		PlanMode:           buildResult.Plan.Mode,
 		Plan:               buildResult.Plan,
 		Desired:            buildResult.Desired,
 		AppliedFileStates:  appliedFileStates,
 	}, s.profileService)
 	if err != nil {
-		result = mappers.ToDTOApplyIncrementalDeploymentResult(applyResult)
-		diag.warn("Incremental deployment apply completed with failures",
+		result = mappers.ToDTOApplyDeploymentResult(applyResult)
+		diag.warn("Deployment apply completed with failures",
 			slog.Bool("success", false),
 			slog.Int("completed_count", applyResult.CompletedCount),
 			slog.Bool("rolled_back", applyResult.RolledBack),
@@ -144,11 +155,14 @@ func (s *DeploymentReviewService) ApplyIncrementalDeployment(
 
 	s.cache.Delete(previewHash)
 
-	result = mappers.ToDTOApplyIncrementalDeploymentResult(applyResult)
-	diag.complete("Incremental deployment apply completed",
+	result = mappers.ToDTOApplyDeploymentResult(applyResult)
+	diag.complete("Deployment apply completed",
 		slog.Bool("success", true),
 		slog.Int("completed_count", applyResult.CompletedCount),
 		slog.Int("skipped_count", applyResult.SkippedCount),
+		slog.String("plan_mode", string(buildResult.Plan.Mode)),
+		slog.Int64("game_id", buildResult.Profile.GameID),
+		slog.Int64("profile_id", profileID),
 	)
 
 	return result, nil

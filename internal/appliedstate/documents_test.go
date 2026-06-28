@@ -5,29 +5,28 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"testing"
-
-	"github.com/phergul/fiach/internal/operationplan"
 )
 
 func TestEncodeManifestUsesVersionedStableJSONShape(t *testing.T) {
 	sourcePath := "/mods/SkyUI/Data/SkyUI.esp"
 	targetPath := "/games/Skyrim/Data/SkyUI.esp"
 	backupPath := "/managed/operation-backups/Data/SkyUI.esp"
-	manifest := operationplan.AppliedOperationManifest{
-		AddedFiles: []operationplan.AppliedFileManifestEntry{
+	document := ManifestDocument{
+		Version: DocumentVersion,
+		AddedFiles: []AddedFile{
 			{
 				OperationIndex: 1,
-				Mod:            operationplan.ModContext{ModID: 10, ModName: "SkyUI"},
+				Mod:            Mod{ID: 10, Name: "SkyUI"},
 				SourcePath:     sourcePath,
 				TargetPath:     targetPath,
 				SHA256:         "added-sha",
 				SizeBytes:      42,
 			},
 		},
-		ReplacedFiles: []operationplan.ReplacedFileManifestEntry{
+		ReplacedFiles: []ReplacedFile{
 			{
 				OperationIndex: 2,
-				Mod:            operationplan.ModContext{ModID: 11, ModName: "Patch"},
+				Mod:            Mod{ID: 11, Name: "Patch"},
 				SourcePath:     sourcePath,
 				TargetPath:     targetPath,
 				SHA256:         "target-sha",
@@ -36,16 +35,16 @@ func TestEncodeManifestUsesVersionedStableJSONShape(t *testing.T) {
 				BackupSHA256:   "backup-sha",
 			},
 		},
-		CreatedDirectories: []operationplan.AppliedDirectoryManifestEntry{
+		CreatedDirectories: []CreatedDirectory{
 			{
 				OperationIndex: 0,
-				Mod:            operationplan.ModContext{ModID: 10, ModName: "SkyUI"},
+				Mod:            Mod{ID: 10, Name: "SkyUI"},
 				TargetPath:     "/games/Skyrim/Data",
 			},
 		},
 	}
 
-	encoded, err := EncodeManifest(BuildManifestDocument(manifest))
+	encoded, err := EncodeManifest(document)
 	if err != nil {
 		t.Fatalf("EncodeManifest() error = %v", err)
 	}
@@ -102,46 +101,6 @@ func TestDecodeManifestValidatesVersionAndNormalizesSlices(t *testing.T) {
 
 	if _, err := DecodeManifest(`{"version":3}`); err == nil {
 		t.Fatal("DecodeManifest() error = nil, want unsupported version error")
-	}
-}
-
-func TestEncodeProfileSnapshotHashesDeterministicOperationShape(t *testing.T) {
-	sourcePath := "/mods/SkyUI/Data/SkyUI.esp"
-	backupPath := "/managed/operation-backups/Data/SkyUI.esp"
-	plan := operationplan.OperationPlan{
-		CanApply: true,
-		Operations: []operationplan.Operation{
-			{
-				Type:       operationplan.OperationTypeCopy,
-				SourcePath: &sourcePath,
-				TargetPath: "/games/Skyrim/Data/SkyUI.esp",
-				BackupPath: &backupPath,
-				Mod:        operationplan.ModContext{ModID: 10, ModName: "SkyUI"},
-			},
-		},
-	}
-
-	snapshot, err := EncodeProfileSnapshot(BuildProfileSnapshotDocument(plan))
-	if err != nil {
-		t.Fatalf("EncodeProfileSnapshot() error = %v", err)
-	}
-	if snapshot.JSON == "" || snapshot.Hash == "" {
-		t.Fatalf("EncodeProfileSnapshot() = %+v, want JSON and hash", snapshot)
-	}
-	if snapshot.Hash != sha256Hex(snapshot.JSON) {
-		t.Fatalf("snapshot hash = %q, want SHA-256 of JSON", snapshot.Hash)
-	}
-
-	var decoded ProfileSnapshotDocument
-	if err := json.Unmarshal([]byte(snapshot.JSON), &decoded); err != nil {
-		t.Fatalf("json.Unmarshal() error = %v", err)
-	}
-	if decoded.Version != DocumentVersion || !decoded.CanApply || len(decoded.Operations) != 1 {
-		t.Fatalf("decoded snapshot = %+v, want one versioned operation", decoded)
-	}
-	operation := decoded.Operations[0]
-	if operation.OperationIndex != 0 || operation.Type != operationplan.OperationTypeCopy || operation.Mod.ID != 10 || operation.Mod.Name != "SkyUI" || operation.SourcePath == nil || *operation.SourcePath != sourcePath || operation.BackupPath == nil || *operation.BackupPath != backupPath {
-		t.Fatalf("decoded snapshot operation = %+v, want operation-relevant shape", operation)
 	}
 }
 

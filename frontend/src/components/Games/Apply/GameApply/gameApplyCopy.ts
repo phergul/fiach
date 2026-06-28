@@ -8,7 +8,6 @@ export const getApplyDisabledTitle = (
   appliedProfileLoadError: string | null,
   isPreviewLoading: boolean,
   isApplyPending: boolean,
-  isPlanLoading: boolean,
   previewAvailable: boolean,
 ) => {
   if (isApplyPending) {
@@ -37,9 +36,6 @@ export const getApplyDisabledTitle = (
   }
   if (!canApply) {
     return 'Resolve blocking issues before applying this profile.';
-  }
-  if (isPlanLoading) {
-    return 'Preparing apply plan.';
   }
 
   return 'Confirm before applying this profile.';

@@ -46,13 +46,11 @@ const (
 	OperationRemoveProfileMod             = "remove_profile_mod"
 	OperationSetProfileModEnabled         = "set_profile_mod_enabled"
 	OperationReorderProfileMods           = "reorder_profile_mods"
-	OperationBuildProfilePlan             = "build_profile_plan"
-	OperationApplyProfile                 = "apply_profile"
 	OperationBuildDeploymentReviewPreview = "build_deployment_review_preview"
 	OperationLoadDeploymentTreeChildren   = "load_deployment_tree_children"
 	OperationGetDeploymentFileDetail      = "get_deployment_file_detail"
 	OperationGetDeploymentFileInspection  = "get_deployment_file_inspection"
-	OperationApplyIncrementalDeployment   = "apply_incremental_deployment"
+	OperationApplyDeployment              = "apply_deployment"
 	OperationSetDeploymentDriftDecision   = "set_deployment_drift_decision"
 	OperationSetDeploymentConflictRule    = "set_deployment_conflict_rule"
 	OperationRestoreVanilla               = "restore_vanilla"
@@ -181,13 +179,11 @@ func Operations() []OperationDescriptor {
 		{Value: OperationRemoveProfileMod, Label: "Remove profile mod"},
 		{Value: OperationSetProfileModEnabled, Label: "Set profile mod enabled"},
 		{Value: OperationReorderProfileMods, Label: "Reorder profile mods"},
-		{Value: OperationBuildProfilePlan, Label: "Build profile plan"},
-		{Value: OperationApplyProfile, Label: "Apply profile"},
 		{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
 		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
 		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
 		{Value: OperationGetDeploymentFileInspection, Label: "Get deployment file inspection"},
-		{Value: OperationApplyIncrementalDeployment, Label: "Apply incremental deployment"},
+		{Value: OperationApplyDeployment, Label: "Apply deployment"},
 		{Value: OperationSetDeploymentDriftDecision, Label: "Set deployment drift decision"},
 		{Value: OperationSetDeploymentConflictRule, Label: "Set deployment conflict rule"},
 		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},

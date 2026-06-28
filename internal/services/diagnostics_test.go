@@ -11,6 +11,7 @@ import (
 
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/gamesource"
+	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
 )
 
@@ -140,43 +141,28 @@ func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	gameRoot := t.TempDir()
 	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
 	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
-	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", "/managed/skyui")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"modded.txt": "modded",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
 	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
 
-	sourceRoot := makeProfilePlanSourceTree(t, map[string]string{
-		"Data/modded.txt": "modded",
-	})
-	sourceFilePath := filepath.Join(sourceRoot, "Data", "modded.txt")
-	targetPath := filepath.Join(gameRoot, "Data", "modded.txt")
-	backupPath := filepath.Join(serviceRestoreGameModStoragePath(t, store, gameID), "operation-backups", "Data", "modded.txt")
-
-	service := NewProfileService(store, manager.Logger())
-	applyResult, err := service.ApplyProfileOperationPlan(context.Background(), profileID, dto.OperationPlan{
-		CanApply: true,
-		Operations: []dto.Operation{
-			{
-				Type:       dto.OperationTypeCreateDirectory,
-				TargetPath: filepath.Dir(targetPath),
-			},
-			{
-				Type:       dto.OperationTypeCopy,
-				SourcePath: &sourceFilePath,
-				TargetPath: targetPath,
-				BackupPath: &backupPath,
-				Mod: dto.ModContext{
-					ModID:   modID,
-					ModName: "SkyUI",
-				},
-			},
-		},
-	})
+	reviewService := NewDeploymentReviewService(store, NewProfileService(store, manager.Logger()), manager.Logger())
+	preview, err := reviewService.BuildDeploymentReviewPreview(context.Background(), profileID)
 	if err != nil {
-		t.Fatalf("ApplyProfileOperationPlan() error = %v", err)
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	applyResult, err := reviewService.ApplyDeployment(context.Background(), profileID, preview.PreviewHash)
+	if err != nil {
+		t.Fatalf("ApplyDeployment() error = %v", err)
 	}
 	if !applyResult.Success {
-		t.Fatalf("ApplyProfileOperationPlan() = %+v, want success", applyResult)
+		t.Fatalf("ApplyDeployment() = %+v, want success", applyResult)
 	}
 
+	service := NewProfileService(store, manager.Logger())
 	restoreResult, err := service.RestoreVanillaState(context.Background(), gameID)
 	if err != nil {
 		t.Fatalf("RestoreVanillaState() error = %v", err)
@@ -186,7 +172,7 @@ func TestProfileServiceApplyAndRestoreWriteDiagnostics(t *testing.T) {
 	}
 
 	entries := readServiceTestLogs(t, manager)
-	applyCompleted, ok := findDiagnosticEvent(entries, diagnostics.OperationApplyProfile, diagnostics.EventCompleted)
+	applyCompleted, ok := findDiagnosticEvent(entries, diagnostics.OperationApplyDeployment, diagnostics.EventCompleted)
 	if !ok {
 		t.Fatalf("diagnostic entries = %+v, want apply completed event", entries)
 	}

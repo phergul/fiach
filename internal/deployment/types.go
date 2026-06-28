@@ -69,6 +69,7 @@ const (
 	PlanIssueMissingSourceRoot        PlanIssueKind = "missing_source_root"
 	PlanIssueSourceRootNotDirectory   PlanIssueKind = "source_root_not_directory"
 	PlanIssueInvalidUnrealPakSource   PlanIssueKind = "invalid_unreal_pak_source"
+	PlanIssueMissingUnrealPaksTarget  PlanIssueKind = "missing_unreal_paks_target"
 	PlanIssueUnsupportedStrategy      PlanIssueKind = "unsupported_strategy"
 )
 

@@ -16,8 +16,9 @@ import (
 )
 
 type recordingSaver struct {
-	calls int
-	err   error
+	incrementalCalls int
+	firstApplyCalls  int
+	err              error
 }
 
 func (s *recordingSaver) SaveIncrementalAppliedProfileState(
@@ -29,7 +30,21 @@ func (s *recordingSaver) SaveIncrementalAppliedProfileState(
 	desired deployment.DesiredState,
 	existingStates []appliedstate.PersistedFileState,
 ) error {
-	s.calls++
+	s.incrementalCalls++
+	return s.err
+}
+
+func (s *recordingSaver) SaveFirstApplyAppliedProfileState(
+	ctx context.Context,
+	gameID int64,
+	profileID int64,
+	installPath string,
+	plan planner.DeploymentPlan,
+	desired deployment.DesiredState,
+	outcome execute.FirstApplyOutcome,
+	previewHash string,
+) error {
+	s.firstApplyCalls++
 	return s.err
 }
 
@@ -77,8 +92,8 @@ func TestExecuteDeletesFileAndRollsBackOnCommitFailure(t *testing.T) {
 	if _, statErr := os.Stat(targetPath); statErr != nil {
 		t.Fatalf("target after rollback stat = %v, want file restored", statErr)
 	}
-	if saver.calls != 1 {
-		t.Fatalf("saver calls = %d, want 1 before rollback on commit failure", saver.calls)
+	if saver.incrementalCalls != 1 {
+		t.Fatalf("saver calls = %d, want 1 before rollback on commit failure", saver.incrementalCalls)
 	}
 }
 
@@ -126,8 +141,8 @@ func TestExecuteAppliesDeleteAndCommitsState(t *testing.T) {
 	if _, statErr := os.Stat(targetPath); !errors.Is(statErr, os.ErrNotExist) {
 		t.Fatalf("target after delete stat = %v, want missing file", statErr)
 	}
-	if saver.calls != 1 {
-		t.Fatalf("saver calls = %d, want 1", saver.calls)
+	if saver.incrementalCalls != 1 {
+		t.Fatalf("saver calls = %d, want 1", saver.incrementalCalls)
 	}
 }
 
@@ -245,8 +260,8 @@ func TestExecuteNoopPlanSkipsFileChanges(t *testing.T) {
 	if !result.Success || result.CompletedCount != 0 || result.SkippedCount != 1 {
 		t.Fatalf("result = %+v, want noop success", result)
 	}
-	if saver.calls != 0 {
-		t.Fatalf("saver calls = %d, want 0 for noop plan", saver.calls)
+	if saver.incrementalCalls != 0 {
+		t.Fatalf("saver calls = %d, want 0 for noop plan", saver.incrementalCalls)
 	}
 }
 

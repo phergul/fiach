@@ -36,6 +36,19 @@ func (s *capturingSaver) SaveIncrementalAppliedProfileState(
 	return nil
 }
 
+func (s *capturingSaver) SaveFirstApplyAppliedProfileState(
+	ctx context.Context,
+	gameID int64,
+	profileID int64,
+	installPath string,
+	plan planner.DeploymentPlan,
+	desired deployment.DesiredState,
+	outcome execute.FirstApplyOutcome,
+	previewHash string,
+) error {
+	return nil
+}
+
 func TestExecuteBackupAndApplyArchivesExternalFileAndClearsDecision(t *testing.T) {
 	t.Parallel()
 

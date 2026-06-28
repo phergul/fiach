@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/phergul/fiach/internal/operationplan"
 )
 
 const (
@@ -66,10 +64,10 @@ type CreatedDirectory struct {
 	TargetPath     string `json:"targetPath"`
 }
 
-type ProfileSnapshotDocument struct {
-	Version    int                 `json:"version"`
-	CanApply   bool                `json:"canApply"`
-	Operations []SnapshotOperation `json:"operations"`
+type DeploymentProfileSnapshotDocument struct {
+	Version     int    `json:"version"`
+	PreviewHash string `json:"previewHash"`
+	PlanMode    string `json:"planMode"`
 }
 
 type ProfileCompositionDocument struct {
@@ -86,15 +84,6 @@ type ProfileCompositionMod struct {
 	PackageUpdatedAt string `json:"packageUpdatedAt"`
 }
 
-type SnapshotOperation struct {
-	OperationIndex int                         `json:"operationIndex"`
-	Type           operationplan.OperationType `json:"type"`
-	Mod            Mod                         `json:"mod"`
-	SourcePath     *string                     `json:"sourcePath"`
-	TargetPath     string                      `json:"targetPath"`
-	BackupPath     *string                     `json:"backupPath"`
-}
-
 type Mod struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
@@ -103,69 +92,6 @@ type Mod struct {
 type EncodedSnapshot struct {
 	JSON string
 	Hash string
-}
-
-func BuildManifestDocument(manifest operationplan.AppliedOperationManifest) ManifestDocument {
-	document := ManifestDocument{
-		Version:            DocumentVersion,
-		AddedFiles:         make([]AddedFile, 0, len(manifest.AddedFiles)),
-		ReplacedFiles:      make([]ReplacedFile, 0, len(manifest.ReplacedFiles)),
-		CreatedDirectories: make([]CreatedDirectory, 0, len(manifest.CreatedDirectories)),
-	}
-
-	for _, entry := range manifest.AddedFiles {
-		document.AddedFiles = append(document.AddedFiles, AddedFile{
-			OperationIndex: entry.OperationIndex,
-			Mod:            modDocument(entry.Mod),
-			SourcePath:     entry.SourcePath,
-			TargetPath:     entry.TargetPath,
-			SHA256:         entry.SHA256,
-			SizeBytes:      entry.SizeBytes,
-		})
-	}
-	for _, entry := range manifest.ReplacedFiles {
-		document.ReplacedFiles = append(document.ReplacedFiles, ReplacedFile{
-			OperationIndex:  entry.OperationIndex,
-			Mod:             modDocument(entry.Mod),
-			SourcePath:      entry.SourcePath,
-			TargetPath:      entry.TargetPath,
-			SHA256:          entry.SHA256,
-			SizeBytes:       entry.SizeBytes,
-			BackupPath:      entry.BackupPath,
-			BackupSHA256:    entry.BackupSHA256,
-			BackupSizeBytes: entry.BackupSizeBytes,
-		})
-	}
-	for _, entry := range manifest.CreatedDirectories {
-		document.CreatedDirectories = append(document.CreatedDirectories, CreatedDirectory{
-			OperationIndex: entry.OperationIndex,
-			Mod:            modDocument(entry.Mod),
-			TargetPath:     entry.TargetPath,
-		})
-	}
-
-	return document
-}
-
-func BuildProfileSnapshotDocument(plan operationplan.OperationPlan) ProfileSnapshotDocument {
-	document := ProfileSnapshotDocument{
-		Version:    DocumentVersion,
-		CanApply:   plan.CanApply,
-		Operations: make([]SnapshotOperation, 0, len(plan.Operations)),
-	}
-
-	for index, operation := range plan.Operations {
-		document.Operations = append(document.Operations, SnapshotOperation{
-			OperationIndex: index,
-			Type:           operation.Type,
-			Mod:            modDocument(operation.Mod),
-			SourcePath:     copyStringPtr(operation.SourcePath),
-			TargetPath:     operation.TargetPath,
-			BackupPath:     copyStringPtr(operation.BackupPath),
-		})
-	}
-
-	return document
 }
 
 func BuildProfileCompositionDocument(profileID int64, mods []ProfileCompositionMod) ProfileCompositionDocument {
@@ -225,7 +151,15 @@ func DecodeManifest(documentJSON string) (ManifestDocument, error) {
 	return document, nil
 }
 
-func EncodeProfileSnapshot(document ProfileSnapshotDocument) (EncodedSnapshot, error) {
+func BuildDeploymentProfileSnapshotDocument(previewHash string, planMode string) DeploymentProfileSnapshotDocument {
+	return DeploymentProfileSnapshotDocument{
+		Version:     DocumentVersion,
+		PreviewHash: previewHash,
+		PlanMode:    planMode,
+	}
+}
+
+func EncodeDeploymentProfileSnapshot(document DeploymentProfileSnapshotDocument) (EncodedSnapshot, error) {
 	encoded, err := json.Marshal(document)
 	if err != nil {
 		return EncodedSnapshot{}, err
@@ -255,20 +189,4 @@ func EncodeProfileCompositionSnapshot(document ProfileCompositionDocument) (snap
 		JSON: string(encoded),
 		Hash: hex.EncodeToString(sum[:]),
 	}, nil
-}
-
-func modDocument(mod operationplan.ModContext) Mod {
-	return Mod{
-		ID:   mod.ModID,
-		Name: mod.ModName,
-	}
-}
-
-func copyStringPtr(value *string) *string {
-	if value == nil {
-		return nil
-	}
-
-	copied := *value
-	return &copied
 }

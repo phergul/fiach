@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/phergul/fiach/internal/apperror"
+	"github.com/phergul/fiach/internal/appliedstate"
 	"github.com/phergul/fiach/internal/fileops"
 	"github.com/phergul/fiach/internal/installconfig"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -449,12 +451,12 @@ func TestDeploymentReviewServiceApplyIncrementalDeploymentDeletesRemovedPath(t *
 		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
 	}
 
-	result, err := service.ApplyIncrementalDeployment(context.Background(), profileID, preview.PreviewHash)
+	result, err := service.ApplyDeployment(context.Background(), profileID, preview.PreviewHash)
 	if err != nil {
-		t.Fatalf("ApplyIncrementalDeployment() error = %v", err)
+		t.Fatalf("ApplyDeployment() error = %v", err)
 	}
 	if !result.Success || result.CompletedCount != 1 {
-		t.Fatalf("ApplyIncrementalDeployment() = %+v, want successful delete", result)
+		t.Fatalf("ApplyDeployment() = %+v, want successful delete", result)
 	}
 
 	if _, statErr := os.Stat(targetPath); !os.IsNotExist(statErr) {
@@ -525,13 +527,196 @@ func TestDeploymentReviewServiceApplyIncrementalDeploymentRejectsStalePreviewHas
 		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
 	}
 
-	_, err = service.ApplyIncrementalDeployment(context.Background(), profileID, "stale-hash")
+	_, err = service.ApplyDeployment(context.Background(), profileID, "stale-hash")
 	if err == nil {
-		t.Fatal("ApplyIncrementalDeployment() error = nil, want stale preview hash")
+		t.Fatal("ApplyDeployment() error = nil, want stale preview hash")
 	}
 	if err.Error() != "The deployment preview is stale. Refresh the preview and try again." {
-		t.Fatalf("ApplyIncrementalDeployment() error = %q, want stale preview hash", err.Error())
+		t.Fatalf("ApplyDeployment() error = %q, want stale preview hash", err.Error())
 	}
+}
+
+func TestDeploymentReviewServiceApplyDeploymentFirstApply(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"modded.txt": "modded",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "SkyUI", sourcePath)
+
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	result, err := service.ApplyDeployment(context.Background(), profileID, preview.PreviewHash)
+	if err != nil {
+		t.Fatalf("ApplyDeployment() error = %v", err)
+	}
+	if !result.Success || result.CompletedCount != 1 {
+		t.Fatalf("ApplyDeployment() = %+v, want one completed file change", result)
+	}
+
+	targetPath := filepath.Join(gameRoot, "Data", "modded.txt")
+	assertServiceFileContents(t, targetPath, "modded")
+
+	state, found, err := store.GetAppliedProfileState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("GetAppliedProfileState() error = %v", err)
+	}
+	if !found || state.ProfileID != profileID {
+		t.Fatalf("applied profile state = %+v found=%v, want persisted first apply", state, found)
+	}
+
+	var snapshot appliedstate.DeploymentProfileSnapshotDocument
+	if err := json.Unmarshal([]byte(state.ProfileSnapshotJSON), &snapshot); err != nil {
+		t.Fatalf("unmarshal profile snapshot JSON: %v", err)
+	}
+	if snapshot.PreviewHash != preview.PreviewHash || snapshot.PlanMode != "first_apply" {
+		t.Fatalf("profile snapshot = %+v, want deployment preview hash and first_apply mode", snapshot)
+	}
+}
+
+func TestDeploymentReviewServiceApplyDeploymentRejectsAnotherProfileWhenApplied(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	firstProfileID := insertServiceProfileTestProfile(t, store, gameID, "First")
+	secondProfileID := insertServiceProfileTestProfile(t, store, gameID, "Second")
+
+	firstSource := makeProfilePlanSourceTree(t, map[string]string{"first.txt": "first"})
+	firstModID := insertServiceProfileTestMod(t, store, gameID, "First Mod", firstSource)
+	addServiceProfileMod(t, store, firstProfileID, firstModID, true, 0)
+	addServiceInstallConfig(t, store, firstModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	secondSource := makeProfilePlanSourceTree(t, map[string]string{"second.txt": "second"})
+	secondModID := insertServiceProfileTestMod(t, store, gameID, "Second Mod", secondSource)
+	addServiceProfileMod(t, store, secondProfileID, secondModID, true, 0)
+	addServiceInstallConfig(t, store, secondModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	service := newDeploymentReviewTestService(store)
+	firstPreview, err := service.BuildDeploymentReviewPreview(context.Background(), firstProfileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() first error = %v", err)
+	}
+	if _, err := service.ApplyDeployment(context.Background(), firstProfileID, firstPreview.PreviewHash); err != nil {
+		t.Fatalf("ApplyDeployment() first error = %v", err)
+	}
+
+	secondPreview, err := service.BuildDeploymentReviewPreview(context.Background(), secondProfileID)
+	if err == nil {
+		t.Fatalf("BuildDeploymentReviewPreview() second error = nil, want applied-state guard: %+v", secondPreview)
+	}
+	if apperror.UserMessage(err) != "Restore vanilla before applying another profile." {
+		t.Fatalf("BuildDeploymentReviewPreview() second error = %q, want applied-state guard", apperror.UserMessage(err))
+	}
+}
+
+func TestDeploymentReviewServiceLoadOrderWinnerAllowsApply(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+
+	lowSource := makeProfilePlanSourceTree(t, map[string]string{"shared.txt": "low"})
+	highSource := makeProfilePlanSourceTree(t, map[string]string{"shared.txt": "high"})
+	lowModID := insertServiceProfileTestMod(t, store, gameID, "Low", lowSource)
+	highModID := insertServiceProfileTestMod(t, store, gameID, "High", highSource)
+
+	addServiceProfileMod(t, store, profileID, lowModID, true, 0)
+	addServiceProfileMod(t, store, profileID, highModID, true, 1)
+	addServiceInstallConfig(t, store, lowModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+	addServiceInstallConfig(t, store, highModID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+	if !preview.Summary.CanApply {
+		t.Fatalf("preview summary = %+v, want can apply for load-order winner", preview.Summary)
+	}
+
+	detail, err := service.GetDeploymentFileDetail(context.Background(), preview.PreviewHash, "Data/shared.txt")
+	if err != nil {
+		t.Fatalf("GetDeploymentFileDetail() error = %v", err)
+	}
+	if detail.ConflictCategory != "expected_overwrite" {
+		t.Fatalf("GetDeploymentFileDetail() conflict = %q, want expected_overwrite", detail.ConflictCategory)
+	}
+
+	result, err := service.ApplyDeployment(context.Background(), profileID, preview.PreviewHash)
+	if err != nil {
+		t.Fatalf("ApplyDeployment() error = %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("ApplyDeployment() = %+v, want success", result)
+	}
+
+	assertServiceFileContents(t, filepath.Join(gameRoot, "Data", "shared.txt"), "high")
+}
+
+func TestDeploymentReviewServiceApplyDeploymentAndRestoreVanilla(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+	existingPath := filepath.Join(gameRoot, "Data", "vanilla.txt")
+	if err := os.MkdirAll(filepath.Dir(existingPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(existingPath, []byte("vanilla"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	sourcePath := makeProfilePlanSourceTree(t, map[string]string{
+		"Data/vanilla.txt": "modded",
+	})
+	modID := insertServiceProfileTestMod(t, store, gameID, "Patch", sourcePath)
+	addServiceProfileMod(t, store, profileID, modID, true, 0)
+	addServiceInstallConfig(t, store, modID, string(dto.StrategyTypeGenericCopy), installconfig.TargetBaseGameRoot, "Data", nil)
+
+	reviewService := newDeploymentReviewTestService(store)
+	preview, err := reviewService.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+	if _, err := reviewService.ApplyDeployment(context.Background(), profileID, preview.PreviewHash); err != nil {
+		t.Fatalf("ApplyDeployment() error = %v", err)
+	}
+
+	profileService := NewProfileService(store, testLogger())
+	restoreResult, err := profileService.RestoreVanillaState(context.Background(), gameID)
+	if err != nil {
+		t.Fatalf("RestoreVanillaState() error = %v", err)
+	}
+	if !restoreResult.Success {
+		t.Fatalf("RestoreVanillaState() = %+v, want success", restoreResult)
+	}
+
+	assertServiceFileContents(t, existingPath, "vanilla")
 }
 
 func TestDeploymentReviewServiceGetDeploymentFileInspectionTextDiff(t *testing.T) {

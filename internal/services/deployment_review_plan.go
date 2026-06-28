@@ -10,17 +10,17 @@ import (
 	"github.com/phergul/fiach/internal/deployment/desired"
 	"github.com/phergul/fiach/internal/deployment/drift"
 	"github.com/phergul/fiach/internal/deployment/planner"
+	"github.com/phergul/fiach/internal/deployment/profile"
 	"github.com/phergul/fiach/internal/deployment/provenance"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/deployment/rules"
-	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
 
 type deploymentPlanBuildResult struct {
 	Profile            dbtypes.ModProfile
-	Resolved           operationplan.ResolveProfilePlanResult
+	Resolved           profile.ResolveProfilePlanResult
 	Desired            deployment.DesiredState
 	Plan               planner.DeploymentPlan
 	DeploymentRules    []rules.DeploymentRule
@@ -43,7 +43,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 		return deploymentPlanBuildResult{}, apperror.New("A valid profile must be selected.")
 	}
 
-	profile, found, err := s.store.GetProfile(ctx, profileID)
+	modProfile, found, err := s.store.GetProfile(ctx, profileID)
 	if err != nil {
 		return deploymentPlanBuildResult{}, err
 	}
@@ -51,7 +51,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 		return deploymentPlanBuildResult{}, apperror.New("Profile was not found.")
 	}
 
-	appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, profile.GameID)
+	appliedState, appliedFound, err := s.store.GetAppliedProfileState(ctx, modProfile.GameID)
 	if err != nil {
 		return deploymentPlanBuildResult{}, err
 	}
@@ -59,7 +59,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 		return deploymentPlanBuildResult{}, apperror.New("Restore vanilla before applying another profile.")
 	}
 
-	resolved, err := operationplan.ResolveProfilePlan(ctx, s.store, profileID)
+	resolved, err := profile.ResolveProfilePlan(ctx, s.store, profileID)
 	if err != nil {
 		return deploymentPlanBuildResult{}, err
 	}
@@ -78,7 +78,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 	var appliedAt *time.Time
 
 	if appliedFound && appliedState.ProfileID == profileID {
-		appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, profile.GameID)
+		appliedFileStates, err := s.profileService.LoadAppliedFileStates(ctx, modProfile.GameID)
 		if err != nil {
 			return deploymentPlanBuildResult{}, err
 		}
@@ -106,7 +106,7 @@ func (s *DeploymentReviewService) buildDeploymentPlan(
 	}
 
 	return deploymentPlanBuildResult{
-		Profile:            profile,
+		Profile:            modProfile,
 		Resolved:           resolved,
 		Desired:            desiredState,
 		Plan:               plan,

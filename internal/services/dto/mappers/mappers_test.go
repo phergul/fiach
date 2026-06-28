@@ -3,96 +3,10 @@ package mappers
 import (
 	"testing"
 
-	"github.com/phergul/fiach/internal/operationplan"
 	"github.com/phergul/fiach/internal/restoreplan"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage/dbtypes"
 )
-
-func TestOperationPlanDTORoundTrip(t *testing.T) {
-	t.Parallel()
-
-	sourcePath := "/managed/mod/file.txt"
-	backupPath := "/managed/storage/backup/file.txt"
-	targetPath := "/games/game/file.txt"
-	plan := operationplan.OperationPlan{
-		CanApply: true,
-		Operations: []operationplan.Operation{
-			{
-				Type:       operationplan.OperationTypeReplace,
-				SourcePath: &sourcePath,
-				TargetPath: targetPath,
-				BackupPath: &backupPath,
-				Conflict:   true,
-				Mod:        operationplan.ModContext{ModID: 7, ModName: "SkyUI"},
-			},
-		},
-		Issues: []operationplan.PlanIssue{
-			{
-				Severity:                    operationplan.PlanIssueSeverityWarning,
-				Kind:                        operationplan.PlanIssueReplaceExistingTarget,
-				Message:                     "Target exists.",
-				ProfileID:                   3,
-				SourcePath:                  &sourcePath,
-				TargetPath:                  &targetPath,
-				Mod:                         &operationplan.ModContext{ModID: 7, ModName: "SkyUI"},
-				ConflictingOperationIndexes: []int{0, 2},
-			},
-		},
-	}
-
-	roundTrip := ToInternalOperationPlan(ToDTOOperationPlan(plan))
-	if roundTrip.Operations[0].Type != plan.Operations[0].Type ||
-		*roundTrip.Operations[0].SourcePath != sourcePath ||
-		*roundTrip.Operations[0].BackupPath != backupPath ||
-		roundTrip.Issues[0].Kind != plan.Issues[0].Kind ||
-		roundTrip.Issues[0].Mod.ModID != 7 ||
-		len(roundTrip.Issues[0].ConflictingOperationIndexes) != 2 ||
-		roundTrip.Issues[0].ConflictingOperationIndexes[0] != 0 ||
-		roundTrip.Issues[0].ConflictingOperationIndexes[1] != 2 {
-		t.Fatalf("operation plan round trip = %+v, want preserved plan", roundTrip)
-	}
-}
-
-func TestApplyResultDTOIncludesManifest(t *testing.T) {
-	t.Parallel()
-
-	result := operationplan.ApplyOperationPlanResult{
-		Success:        true,
-		CompletedCount: 1,
-		Results: []operationplan.ApplyOperationResult{
-			{
-				OperationIndex: 0,
-				Status:         operationplan.ApplyOperationStatusCompleted,
-				Message:        "Copied file.",
-				Operation: operationplan.Operation{
-					Type:       operationplan.OperationTypeCopy,
-					TargetPath: "/games/game/Data/file.txt",
-					Mod:        operationplan.ModContext{ModID: 9, ModName: "Patch"},
-				},
-			},
-		},
-		Manifest: operationplan.AppliedOperationManifest{
-			AddedFiles: []operationplan.AppliedFileManifestEntry{
-				{
-					OperationIndex: 0,
-					Mod:            operationplan.ModContext{ModID: 9, ModName: "Patch"},
-					SourcePath:     "/managed/patch/file.txt",
-					TargetPath:     "/games/game/Data/file.txt",
-					SHA256:         "abc",
-					SizeBytes:      12,
-				},
-			},
-		},
-	}
-
-	dtoResult := ToDTOApplyOperationPlanResult(result)
-	if dtoResult.Results[0].Status != dto.ApplyOperationStatusCompleted ||
-		dtoResult.Manifest.AddedFiles[0].Mod.ModID != 9 ||
-		dtoResult.Manifest.AddedFiles[0].SHA256 != "abc" {
-		t.Fatalf("ToDTOApplyOperationPlanResult() = %+v, want result and manifest fields", dtoResult)
-	}
-}
 
 func TestRestoreResultDTOConversion(t *testing.T) {
 	t.Parallel()

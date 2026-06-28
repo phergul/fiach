@@ -6,8 +6,6 @@ export type { UseGameModsResult } from './useGameMods';
 export { useGameProfiles } from './useGameProfiles';
 export type { UseGameProfilesResult } from './useGameProfiles';
 export { useGameSearch } from './useGameSearch';
-export { useProfileOperationPlan } from './useProfileOperationPlan';
-export type { UseProfileOperationPlanResult } from './useProfileOperationPlan';
 export { useDeploymentReviewPreview } from './useDeploymentReviewPreview';
 export type { UseDeploymentReviewPreviewResult } from './useDeploymentReviewPreview';
 export { useDeploymentTree } from './useDeploymentTree';
