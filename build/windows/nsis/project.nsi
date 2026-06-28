@@ -59,6 +59,7 @@ ManifestDPIAware true
 !insertmacro MUI_PAGE_WELCOME # Welcome to the installer page.
 # !insertmacro MUI_PAGE_LICENSE "resources\eula.txt" # Adds a EULA page to the installer
 !insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
+!insertmacro MUI_PAGE_COMPONENTS # Optional installation choices.
 !insertmacro MUI_PAGE_INSTFILES # Installing page.
 !insertmacro MUI_PAGE_FINISH # Finished installation page.
 
@@ -79,7 +80,9 @@ Function .onInit
    !insertmacro wails.checkArchitecture
 FunctionEnd
 
-Section
+Section "!${INFO_PRODUCTNAME}" SecApplication
+    SectionIn RO
+
     !insertmacro wails.setShellContext
 
     !insertmacro wails.webview2runtime
@@ -89,13 +92,23 @@ Section
     !insertmacro wails.files
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
-    CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
 
     !insertmacro wails.associateFiles
     !insertmacro wails.associateCustomProtocols
     
     !insertmacro wails.writeUninstaller
 SectionEnd
+
+Section "Desktop shortcut" SecDesktopShortcut
+    !insertmacro wails.setShellContext
+
+    CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
+SectionEnd
+
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecApplication} "Install ${INFO_PRODUCTNAME}."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktopShortcut} "Create a desktop shortcut for ${INFO_PRODUCTNAME}."
+!insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section "uninstall" 
     !insertmacro wails.setShellContext
