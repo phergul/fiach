@@ -20,6 +20,8 @@ type FileStatus string
 const (
 	FileStatusAdded     FileStatus = "added"
 	FileStatusReplaced  FileStatus = "replaced"
+	FileStatusDeleted   FileStatus = "deleted"
+	FileStatusRestored  FileStatus = "restored"
 	FileStatusBlocked   FileStatus = "blocked"
 	FileStatusConflict  FileStatus = "conflict"
 	FileStatusDrifted   FileStatus = "drifted"

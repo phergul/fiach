@@ -264,6 +264,75 @@ func TestDeploymentReviewServiceIncrementalModAddedPathOmitsBaseGameWriter(t *te
 	}
 }
 
+func TestDeploymentReviewServiceIncrementalRemovedModPathDeletes(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameRoot := t.TempDir()
+	gameID := insertServiceProfileTestGame(t, store, "Skyrim", gameRoot)
+	profileID := insertServiceProfileTestProfile(t, store, gameID, "Default")
+
+	targetPath := filepath.Join(gameRoot, "Screenshots", "recording.mov")
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(targetPath, []byte("mod-content"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	appliedSHA256, appliedSize, err := fileops.FileIntegrity(targetPath)
+	if err != nil {
+		t.Fatalf("FileIntegrity() error = %v", err)
+	}
+	if _, err := store.SaveAppliedProfileState(context.Background(), dbtypes.SaveAppliedProfileStateInput{
+		GameID:              gameID,
+		ProfileID:           profileID,
+		ManifestJSON:        `{"version":2,"createdDirectories":[],"addedFiles":[],"replacedFiles":[],"files":{}}`,
+		ProfileSnapshotJSON: `{"version":2}`,
+		ProfileSnapshotHash: "snapshot",
+		FileStates: []dbtypes.AppliedFileStateRow{
+			{
+				GameID:           gameID,
+				GameRelativePath: "Screenshots/recording.mov",
+				ProfileID:        profileID,
+				AppliedExists:    true,
+				AppliedSHA256:    &appliedSHA256,
+				AppliedSizeBytes: &appliedSize,
+				OutputKind:       "copied",
+				LastAppliedAt:    "2026-06-27T00:00:00Z",
+			},
+		},
+	}); err != nil {
+		t.Fatalf("SaveAppliedProfileState() error = %v", err)
+	}
+
+	service := newDeploymentReviewTestService(store)
+	preview, err := service.BuildDeploymentReviewPreview(context.Background(), profileID)
+	if err != nil {
+		t.Fatalf("BuildDeploymentReviewPreview() error = %v", err)
+	}
+
+	if preview.Summary.PlanMode != "incremental" {
+		t.Fatalf("BuildDeploymentReviewPreview() plan mode = %q, want incremental", preview.Summary.PlanMode)
+	}
+	if preview.Summary.StatusCounts["deleted"] != 1 {
+		t.Fatalf("BuildDeploymentReviewPreview() status counts = %+v, want one deleted path", preview.Summary.StatusCounts)
+	}
+
+	detail, err := service.GetDeploymentFileDetail(context.Background(), preview.PreviewHash, "Screenshots/recording.mov")
+	if err != nil {
+		t.Fatalf("GetDeploymentFileDetail() error = %v", err)
+	}
+	if detail.PlannedAction != "delete" || detail.FileStatus != "deleted" {
+		t.Fatalf("GetDeploymentFileDetail() = %+v, want deleted delete", detail)
+	}
+	if detail.States.Desired != nil && detail.States.Desired.Exists {
+		t.Fatalf("GetDeploymentFileDetail() desired = %+v, want absent desired state", detail.States.Desired)
+	}
+}
+
 func TestDeploymentReviewServiceBlocksDifferentAppliedProfile(t *testing.T) {
 	t.Parallel()
 

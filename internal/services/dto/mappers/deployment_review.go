@@ -1,6 +1,8 @@
 package mappers
 
 import (
+	"maps"
+
 	"github.com/phergul/fiach/internal/deployment"
 	"github.com/phergul/fiach/internal/deployment/review"
 	"github.com/phergul/fiach/internal/services/dto"
@@ -26,9 +28,7 @@ func ToDTODeploymentReviewPreview(entry review.CachedPreview, rootNodes []review
 
 func ToDTODeploymentSummary(summary review.Summary, previewHash string) dto.DeploymentSummary {
 	statusCounts := map[string]int{}
-	for key, value := range summary.StatusCounts {
-		statusCounts[key] = value
-	}
+	maps.Copy(statusCounts, summary.StatusCounts)
 
 	return dto.DeploymentSummary{
 		GameID:          summary.GameID,

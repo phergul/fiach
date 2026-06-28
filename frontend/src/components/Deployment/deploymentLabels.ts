@@ -1,6 +1,6 @@
 export const DEPLOYMENT_FILE_STATUSES = ['added', 'replaced', 'blocked', 'conflict'] as const;
 
-export const DEPLOYMENT_INCREMENTAL_STATUSES = ['drifted', 'external', 'unchanged'] as const;
+export const DEPLOYMENT_INCREMENTAL_STATUSES = ['drifted', 'external', 'unchanged', 'deleted', 'restored'] as const;
 
 export const DEPLOYMENT_SUMMARY_STATUSES = [
   ...DEPLOYMENT_FILE_STATUSES,
@@ -33,11 +33,16 @@ export const deploymentStatusLabel: Record<string, string> = {
   drifted: 'Drifted',
   external: 'External',
   unchanged: 'Unchanged',
+  deleted: 'Deleted',
+  restored: 'Restored',
 };
 
 export const deploymentActionLabel: Record<string, string> = {
   create: 'Create',
   replace: 'Replace',
+  delete: 'Delete',
+  restore_baseline: 'Restore baseline',
+  repair: 'Repair',
   block: 'Block',
   conflict: 'Conflict',
   require_decision: 'Decision required',
@@ -72,6 +77,9 @@ export type DeploymentToneChipTone = (typeof DEPLOYMENT_TONE_CHIP_TONES)[number]
 export const deploymentActionTone: Record<string, DeploymentToneChipTone> = {
   create: 'add',
   replace: 'replace',
+  delete: 'replace',
+  restore_baseline: 'replace',
+  repair: 'warning',
   block: 'blocked',
   conflict: 'conflict',
   require_decision: 'warning',
@@ -79,6 +87,8 @@ export const deploymentActionTone: Record<string, DeploymentToneChipTone> = {
   drifted: 'warning',
   external: 'info',
   unchanged: 'default',
+  deleted: 'replace',
+  restored: 'replace',
 };
 
 export const deploymentRiskTone: Record<string, 'default' | 'info' | 'error'> = {
@@ -93,6 +103,8 @@ const deploymentSummaryOnlyTone: Record<string, DeploymentToneChipTone> = {
   drifted: 'warning',
   external: 'info',
   unchanged: 'default',
+  deleted: 'replace',
+  restored: 'replace',
 };
 
 const resolveDeploymentActionKey = (status: string, plannedAction = '') => {

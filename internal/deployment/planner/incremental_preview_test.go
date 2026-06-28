@@ -66,6 +66,9 @@ func TestPlanIncrementalPreviewDriftedPathRequiresDecision(t *testing.T) {
 	if plan.CanApply() {
 		t.Fatal("PlanIncrementalPreview() CanApply = true, want false")
 	}
+	if !plan.PreviewOnly {
+		t.Fatal("PlanIncrementalPreview() PreviewOnly = false, want true until MOD-082")
+	}
 }
 
 func TestPlanIncrementalPreviewUnchangedAppliedPath(t *testing.T) {
@@ -119,6 +122,9 @@ func TestPlanIncrementalPreviewUnchangedAppliedPath(t *testing.T) {
 	if pathPlan.PlannedAction != planner.ReapplyNoOp || pathPlan.FileStatus != deployment.FileStatusUnchanged {
 		t.Fatalf("path plan = %+v, want unchanged noop", pathPlan)
 	}
+	if !plan.PreviewOnly {
+		t.Fatal("PlanIncrementalPreview() PreviewOnly = false, want true until MOD-082")
+	}
 }
 
 func TestPlanIncrementalPreviewExternalDecision(t *testing.T) {
@@ -170,5 +176,8 @@ func TestPlanIncrementalPreviewExternalDecision(t *testing.T) {
 	pathPlan := plan.Paths[deployment.CanonicalGameRelativePath("Data/plugin.esp")]
 	if pathPlan.PlannedAction != planner.ReapplyNoOp || pathPlan.FileStatus != deployment.FileStatusExternal {
 		t.Fatalf("path plan = %+v, want external noop", pathPlan)
+	}
+	if !plan.PreviewOnly {
+		t.Fatal("PlanIncrementalPreview() PreviewOnly = false, want true until MOD-082")
 	}
 }

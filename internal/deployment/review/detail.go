@@ -66,10 +66,7 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		return FileDetail{}, fmt.Errorf("deployment path %q was not found in preview", relativePath)
 	}
 
-	desiredFile, found := entry.Desired.Files[canonicalPath]
-	if !found {
-		return FileDetail{}, fmt.Errorf("desired file %q was not found in preview", relativePath)
-	}
+	desiredFile, hasDesired := entry.Desired.Files[canonicalPath]
 
 	comparison := buildStateComparison(pathPlan.Applied, pathPlan.Current, pathPlan.Desired)
 
@@ -80,20 +77,37 @@ func BuildFileDetail(entry CachedPreview, relativePath string) (FileDetail, erro
 		}
 	}
 
+	relativePathValue := pathPlan.GameRelativePath
+	if relativePathValue == "" && hasDesired {
+		relativePathValue = desiredFile.GameRelativePath
+	}
+
+	var writerStack []deployment.WriterEntry
+	var explanation string
+	var conflictCategory deployment.ConflictCategory
+	if hasDesired {
+		writerStack = append([]deployment.WriterEntry(nil), desiredFile.Writers...)
+		explanation = desiredFile.Explanation
+		conflictCategory = pathPlan.ConflictCategory
+		if conflictCategory == "" {
+			conflictCategory = desiredFile.ConflictCategory
+		}
+	}
+
 	return FileDetail{
-		RelativePath: desiredFile.GameRelativePath,
+		RelativePath: relativePathValue,
 		States: FourStateView{
 			Baseline: toFileStateView(pathPlan.Baseline),
 			Applied:  toFileStateView(pathPlan.Applied),
 			Current:  toFileStateView(pathPlan.Current),
 			Desired:  toFileStateView(pathPlan.Desired),
 		},
-		WriterStack:      append([]deployment.WriterEntry(nil), desiredFile.Writers...),
-		ConflictCategory: pathPlan.ConflictCategory,
+		WriterStack:      writerStack,
+		ConflictCategory: conflictCategory,
 		FileStatus:       pathPlan.FileStatus,
 		PlannedAction:    pathPlan.PlannedAction,
 		RiskLevel:        pathPlan.RiskLevel,
-		Explanation:      desiredFile.Explanation,
+		Explanation:      explanation,
 		BackupAvailable:  pathPlan.BaselineBackupPath != "",
 		AvailableActions: nil,
 		DriftKind:        pathPlan.DriftKind,
@@ -119,10 +133,15 @@ func PreviewHash(entry CachedPreview) (string, error) {
 	input.Paths = make([]previewHashPath, 0, len(canonicalPaths))
 	for _, canonicalPath := range canonicalPaths {
 		pathPlan := entry.Plan.Paths[canonicalPath]
-		desiredFile := entry.Desired.Files[canonicalPath]
+		desiredSHA256 := ""
+		if desiredFile, found := entry.Desired.Files[canonicalPath]; found {
+			desiredSHA256 = desiredFile.SHA256
+		} else if pathPlan.Desired.Exists {
+			desiredSHA256 = pathPlan.Desired.SHA256
+		}
 		input.Paths = append(input.Paths, previewHashPath{
 			Path:          canonicalPath,
-			DesiredSHA256: desiredFile.SHA256,
+			DesiredSHA256: desiredSHA256,
 			AppliedSHA256: pathPlan.Applied.SHA256,
 			CurrentSHA256: pathPlan.Current.SHA256,
 			DriftKind:     string(pathPlan.DriftKind),

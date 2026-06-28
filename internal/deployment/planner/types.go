@@ -12,11 +12,14 @@ const (
 type ReapplyAction string
 
 const (
-	ReapplyNoOp            ReapplyAction = "noop"
-	ReapplyCreate          ReapplyAction = "create"
-	ReapplyReplace         ReapplyAction = "replace"
-	ReapplyRequireDecision ReapplyAction = "require_decision"
-	ReapplyBlock           ReapplyAction = "block"
+	ReapplyNoOp              ReapplyAction = "noop"
+	ReapplyCreate            ReapplyAction = "create"
+	ReapplyReplace           ReapplyAction = "replace"
+	ReapplyDelete            ReapplyAction = "delete"
+	ReapplyRestoreBaseline   ReapplyAction = "restore_baseline"
+	ReapplyRepair            ReapplyAction = "repair"
+	ReapplyRequireDecision   ReapplyAction = "require_decision"
+	ReapplyBlock             ReapplyAction = "block"
 )
 
 type FileStateSnapshot struct {

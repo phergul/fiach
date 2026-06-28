@@ -185,13 +185,13 @@ func riskLevelPriority(level deployment.RiskLevel) int {
 func plannedActionPriority(action planner.ReapplyAction) int {
 	switch action {
 	case planner.ReapplyBlock:
-		return 4
+		return 5
 	case planner.ReapplyRequireDecision:
+		return 4
+	case planner.ReapplyRestoreBaseline, planner.ReapplyDelete, planner.ReapplyRepair, planner.ReapplyReplace:
 		return 3
-	case planner.ReapplyReplace:
-		return 2
 	case planner.ReapplyCreate:
-		return 1
+		return 2
 	default:
 		return 0
 	}
