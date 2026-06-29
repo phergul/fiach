@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Breadcrumbs } from '@components/Common/Breadcrumbs/Breadcrumbs';
 import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
@@ -123,19 +122,6 @@ export const OptiScalerDashboard = () => {
             logoArtworkSource={logoArtworkSource}
             onLogoArtworkError={handleLogoArtworkError}
           />
-
-          <div className="optiscaler-dashboard-breadcrumbs">
-            <Breadcrumbs
-              items={[
-                {
-                  label: game.Name,
-                },
-                {
-                  label: 'OptiScaler',
-                },
-              ]}
-            />
-          </div>
 
           <OptiScalerPageHeader
             isLoading={optiScaler.isLoading}

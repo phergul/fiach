@@ -101,15 +101,6 @@ $optiscaler-page-header-height: 5rem;
   background: color-mix(in srgb, $color-danger 12%, $color-surface);
 }
 
-.optiscaler-dashboard-breadcrumbs {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  padding: 0 $spacing-xl $spacing-sm;
-  background: rgb(#{$color-background-rgb} / 40%);
-  backdrop-filter: blur(12px);
-}
-
 .optiscaler-dashboard-content {
   position: relative;
   z-index: 1;

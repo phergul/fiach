@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
-import { Breadcrumbs } from '@components/Common/Breadcrumbs/Breadcrumbs';
 import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
@@ -113,19 +112,6 @@ export const ReShadeDashboard = () => {
             logoArtworkSource={logoArtworkSource}
             onLogoArtworkError={handleLogoArtworkError}
           />
-
-          <div className="reshade-dashboard-breadcrumbs">
-            <Breadcrumbs
-              items={[
-                {
-                  label: game.Name,
-                },
-                {
-                  label: 'ReShade',
-                },
-              ]}
-            />
-          </div>
 
           <ReShadePageHeader
             installerStatus={reShade.installerStatus}
