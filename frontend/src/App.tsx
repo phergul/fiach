@@ -6,14 +6,7 @@ import { OptiScalerSessionProvider } from '@components/Games/OptiScaler/OptiScal
 import { Layout } from '@components/Layout/Layout';
 import { DevLogsWindow } from '@components/Dev/DevLogsWindow/DevLogsWindow';
 import { LogsWindow } from '@components/Logs/LogsWindow/LogsWindow';
-import {
-  GameApply,
-  GameDetails,
-  GameOptiScaler,
-  GameReShade,
-  Library,
-  Settings,
-} from '@pages';
+import { GameApply, GameDetails, GameOptiScaler, GameReShade, Library, Settings } from '@pages';
 
 const providers = [ThemeProvider, ToastProvider, OptiScalerSessionProvider];
 

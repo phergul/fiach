@@ -75,6 +75,7 @@ interface GameProfileAssignedModsListProps {
   canReorder: boolean;
   isBusy: boolean;
   mods: ProfileMod[];
+  pendingToggleIDs: Record<string, boolean>;
   tagsByModID: Record<number, Tag[]>;
   onMoveMod: (modID: number, direction: -1 | 1) => void;
   onReorderMods: (orderedModIDs: number[]) => Promise<void> | void;
@@ -86,6 +87,7 @@ export const GameProfileAssignedModsList = ({
   canReorder,
   isBusy,
   mods,
+  pendingToggleIDs,
   tagsByModID,
   onMoveMod,
   onReorderMods,
@@ -157,6 +159,7 @@ export const GameProfileAssignedModsList = ({
               canMoveUp={index > 0}
               canReorder={canReorder}
               isBusy={isBusy}
+              isTogglePending={pendingToggleIDs[`${mod.ProfileID}:${mod.ModID}`] === true}
               mod={mod}
               tags={tagsByModID[mod.ModID] ?? []}
               onMoveDown={() => onMoveMod(mod.ModID, 1)}
@@ -180,6 +183,9 @@ export const GameProfileAssignedModsList = ({
               canReorder={canReorder}
               dragOverlay
               isBusy={isBusy}
+              isTogglePending={
+                pendingToggleIDs[`${activeMod.ProfileID}:${activeMod.ModID}`] === true
+              }
               mod={activeMod}
               tags={tagsByModID[activeMod.ModID] ?? []}
               onMoveDown={() => onMoveMod(activeMod.ModID, 1)}

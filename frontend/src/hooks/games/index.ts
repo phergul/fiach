@@ -1,24 +1,51 @@
-// games
-export { useGameArtwork } from './useGameArtwork';
-export { useGameModImportFlow } from './useGameModImportFlow';
-export type { UseGameModImportFlowResult } from './useGameModImportFlow';
-export { useGameModUpdateFlow } from './useGameModUpdateFlow';
-export type { UseGameModUpdateFlowResult } from './useGameModUpdateFlow';
-export { useGameMods } from './useGameMods';
-export type { UseGameModsResult } from './useGameMods';
-export { getOptiScalerAggregateStatus, useGameOptiScaler } from './useGameOptiScaler';
-export type { OptiScalerAggregateStatus, UseGameOptiScalerResult } from './useGameOptiScaler';
-export { useGameProfiles } from './useGameProfiles';
-export type { UseGameProfilesResult } from './useGameProfiles';
+// artwork
+export { useGameArtwork } from './artwork/useGameArtwork';
+
+// mods
+export { useGameModImportFlow } from './mods/useGameModImportFlow';
+export type { UseGameModImportFlowResult } from './mods/useGameModImportFlow';
+export { useGameModUpdateFlow } from './mods/useGameModUpdateFlow';
+export type { UseGameModUpdateFlowResult } from './mods/useGameModUpdateFlow';
+export { useGameMods } from './mods/useGameMods';
+export type { UseGameModsResult } from './mods/useGameMods';
+
+// optiscaler
+export { getOptiScalerAggregateStatus, useGameOptiScaler } from './optiscaler/useGameOptiScaler';
+export type {
+  OptiScalerAggregateStatus,
+  UseGameOptiScalerResult,
+} from './optiscaler/useGameOptiScaler';
+
+// profiles
+export {
+  fetchGameProfiles,
+  invalidateGameProfiles,
+  preloadGameProfiles,
+  useGameProfiles,
+} from './profiles/useGameProfiles';
+export type { CachedGameProfiles, UseGameProfilesResult } from './profiles/useGameProfiles';
+
+// reshade
 export {
   getReShadeAggregateStatus,
   isReShadeUpdateAvailable,
   useGameReShade,
-} from './useGameReShade';
-export type { ReShadeAggregateStatus, UseGameReShadeResult } from './useGameReShade';
-export { useGameReShadeDetection } from './useGameReShadeDetection';
-export type { UseGameReShadeDetectionResult } from './useGameReShadeDetection';
-export { useGameSearch } from './useGameSearch';
-export { useGameStorageOverride } from './useGameStorageOverride';
-export type { UseGameStorageOverrideResult } from './useGameStorageOverride';
-export { useStoredGames } from './useStoredGames';
+} from './reshade/useGameReShade';
+export type { ReShadeAggregateStatus, UseGameReShadeResult } from './reshade/useGameReShade';
+export { useGameReShadeDetection } from './reshade/useGameReShadeDetection';
+export type { UseGameReShadeDetectionResult } from './reshade/useGameReShadeDetection';
+
+// search
+export { useGameSearch } from './search/useGameSearch';
+
+// storage
+export { useGameStorageOverride } from './storage/useGameStorageOverride';
+export type { UseGameStorageOverrideResult } from './storage/useGameStorageOverride';
+
+// stored
+export {
+  fetchStoredGames,
+  invalidateStoredGames,
+  preloadStoredGames,
+  useStoredGames,
+} from './stored/useStoredGames';

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, FileSearch, Plus } from 'lucide-react';
 
 import type { AppliedProfileSummary } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
@@ -9,21 +9,33 @@ import type {
   ModProfile,
   ProfileMod,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
+import { useToast } from '@components/Common/Toast/Toast';
 import { GameProfileAddModsModal } from '@components/Games/Details/Profiles/GameProfileAddModsModal/GameProfileAddModsModal';
 import { GameProfileAssignedModsList } from '@components/Games/Details/Profiles/GameProfileAssignedModsList/GameProfileAssignedModsList';
 import { GameProfileModsFilter } from '@components/Games/Details/Profiles/GameProfileModsFilter/GameProfileModsFilter';
 import { ModTagFilter } from '@components/Games/Details/Mods/ModTags/ModTagFilter/ModTagFilter';
+import {
+  fetchAppliedProfile,
+  fetchDeploymentReviewPreview,
+  preloadAppliedProfile,
+  preloadDeploymentReviewPreview,
+  preloadGameProfiles,
+  preloadStoredGames,
+} from '@hooks';
 
 import './GameProfileModsPanel.scss';
 
 interface GameProfileModsPanelProps {
   appliedProfile: AppliedProfileSummary | null;
   applyProfilePath: string;
+  gameID: number;
   gameMods: Mod[];
   isBusy: boolean;
   isGameModsLoading: boolean;
   isProfilesLoading: boolean;
+  pendingProfileModToggleIDs: Record<string, boolean>;
   profile: ModProfile | null;
   profileMods: ProfileMod[];
   onAddModsToProfile: (profileID: number, modIDs: number[]) => Promise<void> | void;
@@ -35,10 +47,12 @@ interface GameProfileModsPanelProps {
 export const GameProfileModsPanel = ({
   appliedProfile,
   applyProfilePath,
+  gameID,
   gameMods,
   isBusy,
   isGameModsLoading,
   isProfilesLoading,
+  pendingProfileModToggleIDs,
   profile,
   profileMods,
   onAddModsToProfile,
@@ -46,8 +60,12 @@ export const GameProfileModsPanel = ({
   onReorderProfileMods,
   onSetProfileModEnabled,
 }: GameProfileModsPanelProps) => {
+  const navigate = useNavigate();
+  const { addErrorToast } = useToast();
+  const preloadPromisesByProfileID = useRef<Record<number, Promise<void>>>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEnabledOnly, setIsEnabledOnly] = useState(false);
+  const [pendingApplyProfileID, setPendingApplyProfileID] = useState<number | null>(null);
   const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const assignedModIDs = useMemo(
     () => new Set(profileMods.map((profileMod) => profileMod.ModID)),
@@ -102,6 +120,14 @@ export const GameProfileModsPanel = ({
   }, [profile?.ID]);
 
   useEffect(() => {
+    if (profile === null) {
+      return;
+    }
+
+    delete preloadPromisesByProfileID.current[profile.ID];
+  }, [profile?.ID, profileMods]);
+
+  useEffect(() => {
     const availableTagIDs = new Set(assignedMods.flatMap((mod) => mod.Tags.map((tag) => tag.ID)));
     setSelectedTagIDs((currentTagIDs) =>
       currentTagIDs.filter((tagID) => availableTagIDs.has(tagID)),
@@ -139,6 +165,45 @@ export const GameProfileModsPanel = ({
     );
   };
 
+  const warmApplyDestination = (profileID: number) => {
+    preloadPromisesByProfileID.current[profileID] ??= Promise.all([
+      preloadStoredGames(),
+      preloadGameProfiles(gameID),
+      preloadAppliedProfile(gameID),
+      preloadDeploymentReviewPreview(profileID),
+    ]).then(() => undefined);
+
+    preloadPromisesByProfileID.current[profileID].catch(() => undefined);
+  };
+
+  const navigateAfterApplyPreload = async (
+    event: MouseEvent<HTMLAnchorElement>,
+    profileID: number,
+  ) => {
+    event.preventDefault();
+
+    if (isBusy || pendingApplyProfileID !== null) {
+      return;
+    }
+
+    setPendingApplyProfileID(profileID);
+
+    try {
+      await Promise.all([
+        preloadStoredGames(),
+        preloadGameProfiles(gameID),
+        fetchAppliedProfile(gameID),
+        fetchDeploymentReviewPreview(profileID),
+      ]);
+      navigate(`${applyProfilePath}/${profileID}`);
+    } catch (error) {
+      delete preloadPromisesByProfileID.current[profileID];
+      addErrorToast(error);
+    } finally {
+      setPendingApplyProfileID(null);
+    }
+  };
+
   if (profile === null) {
     return (
       <section className="game-profile-mods-panel" aria-label="Profile mods">
@@ -155,7 +220,7 @@ export const GameProfileModsPanel = ({
   return (
     <section className="game-profile-mods-panel" aria-label={`${profile.Name} mods`}>
       <div className="game-profile-mods-panel-body">
-        {isGameModsLoading && (
+        {isGameModsLoading && gameMods.length === 0 && (
           <StateBlock
             className="game-profile-mods-panel-empty"
             message="Loading imported mods..."
@@ -188,6 +253,7 @@ export const GameProfileModsPanel = ({
                 canReorder={!isEnabledOnly && selectedTagIDs.length === 0}
                 isBusy={isBusy}
                 mods={visibleProfileMods}
+                pendingToggleIDs={pendingProfileModToggleIDs}
                 tagsByModID={tagsByModID}
                 onMoveMod={handleMoveProfileMod}
                 onReorderMods={(orderedModIDs) => onReorderProfileMods(profile.ID, orderedModIDs)}
@@ -236,20 +302,25 @@ export const GameProfileModsPanel = ({
           {isSelectedProfileApplied ? (
             <Link
               className={
-                isBusy
+                isBusy || pendingApplyProfileID === profile.ID
                   ? 'game-profile-mods-panel-review-button button-main game-profile-mods-panel-link-disabled'
                   : 'game-profile-mods-panel-review-button button-main'
               }
               to={`${applyProfilePath}/${profile.ID}`}
-              onClick={(event) => {
-                if (isBusy) {
-                  event.preventDefault();
-                }
-              }}
-              aria-disabled={isBusy}
+              onClick={(event) => void navigateAfterApplyPreload(event, profile.ID)}
+              onFocus={() => warmApplyDestination(profile.ID)}
+              onMouseDown={() => warmApplyDestination(profile.ID)}
+              onPointerEnter={() => warmApplyDestination(profile.ID)}
+              aria-disabled={isBusy || pendingApplyProfileID === profile.ID}
             >
-              <FileSearch className="game-profile-mods-panel-icon" aria-hidden="true" />
-              <span>Review deployment</span>
+              {pendingApplyProfileID === profile.ID ? (
+                <InlineLoading label="Review deployment" />
+              ) : (
+                <>
+                  <FileSearch className="game-profile-mods-panel-icon" aria-hidden="true" />
+                  <span>Review deployment</span>
+                </>
+              )}
             </Link>
           ) : isAnotherProfileApplied ? (
             <button
@@ -264,20 +335,25 @@ export const GameProfileModsPanel = ({
           ) : (
             <Link
               className={
-                isBusy
+                isBusy || pendingApplyProfileID === profile.ID
                   ? 'game-profile-mods-panel-apply-button button-main game-profile-mods-panel-link-disabled'
                   : 'game-profile-mods-panel-apply-button button-main'
               }
               to={`${applyProfilePath}/${profile.ID}`}
-              onClick={(event) => {
-                if (isBusy) {
-                  event.preventDefault();
-                }
-              }}
-              aria-disabled={isBusy}
+              onClick={(event) => void navigateAfterApplyPreload(event, profile.ID)}
+              onFocus={() => warmApplyDestination(profile.ID)}
+              onMouseDown={() => warmApplyDestination(profile.ID)}
+              onPointerEnter={() => warmApplyDestination(profile.ID)}
+              aria-disabled={isBusy || pendingApplyProfileID === profile.ID}
             >
-              <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
-              <span>Apply Profile</span>
+              {pendingApplyProfileID === profile.ID ? (
+                <InlineLoading label="Apply Profile" />
+              ) : (
+                <>
+                  <CheckCircle2 className="game-profile-mods-panel-icon" aria-hidden="true" />
+                  <span>Apply Profile</span>
+                </>
+              )}
             </Link>
           )}
         </div>

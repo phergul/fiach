@@ -1,9 +1,12 @@
 // deployment
 export {
+  fetchDeploymentReviewPreview,
+  invalidateDeploymentPreview,
   useDeploymentFileDetail,
   useDeploymentFileInspection,
   useDeploymentReviewPreview,
   useDeploymentTree,
+  preloadDeploymentReviewPreview,
   type UseDeploymentFileDetailResult,
   type UseDeploymentFileInspectionResult,
   type UseDeploymentReviewPreviewResult,
@@ -12,8 +15,12 @@ export {
 
 // games
 export {
+  fetchGameProfiles,
+  fetchStoredGames,
   getOptiScalerAggregateStatus,
   getReShadeAggregateStatus,
+  invalidateGameProfiles,
+  invalidateStoredGames,
   isReShadeUpdateAvailable,
   useGameArtwork,
   useGameModImportFlow,
@@ -26,6 +33,8 @@ export {
   useGameSearch,
   useGameStorageOverride,
   useStoredGames,
+  preloadGameProfiles,
+  preloadStoredGames,
   type OptiScalerAggregateStatus,
   type ReShadeAggregateStatus,
   type UseGameModImportFlowResult,
@@ -39,7 +48,13 @@ export {
 } from './games';
 
 // profiles
-export { useAppliedProfile, type UseAppliedProfileResult } from './profiles';
+export {
+  fetchAppliedProfile,
+  invalidateAppliedProfile,
+  preloadAppliedProfile,
+  useAppliedProfile,
+  type UseAppliedProfileResult,
+} from './profiles';
 
 // runtime
 export { useRuntime } from './runtime';

@@ -45,7 +45,7 @@ export const GameProfilesList = ({
 }: GameProfilesListProps) => {
   return (
     <div className="game-profiles-list-shell">
-      {isLoading && (
+      {isLoading && profiles.length === 0 && (
         <StateBlock className="game-profiles-list-empty" message="Loading profiles..." />
       )}
 
@@ -56,7 +56,7 @@ export const GameProfilesList = ({
         />
       )}
 
-      {!isLoading && profiles.length > 0 && (
+      {profiles.length > 0 && (
         <ul className="game-profiles-list">
           {profiles.map((profile) => (
             <GameProfilesListItem

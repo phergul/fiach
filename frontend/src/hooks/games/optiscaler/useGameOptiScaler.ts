@@ -14,7 +14,7 @@ import {
 import { useOptiScalerSession } from '@components/Games/OptiScaler/OptiScalerSessionProvider/OptiScalerSessionProvider';
 import { getErrorMessage } from '@utils';
 
-import { useRuntime } from '../runtime/useRuntime';
+import { useRuntime } from '../../runtime/useRuntime';
 
 export type OptiScalerAggregateStatus =
   | 'checking'
@@ -25,6 +25,14 @@ export type OptiScalerAggregateStatus =
   | 'managed'
   | 'unmanaged'
   | 'not_detected';
+
+interface CachedGameOptiScaler {
+  candidates: OptiScalerCandidate[];
+  recovery: OptiScalerRecoveryState | null;
+  targets: OptiScalerTarget[];
+}
+
+const cachedGameOptiScalerByGameID = new Map<number, CachedGameOptiScaler>();
 
 export const getOptiScalerAggregateStatus = (
   candidates: OptiScalerCandidate[],
@@ -66,10 +74,15 @@ export const getOptiScalerAggregateStatus = (
 export const useGameOptiScaler = (gameID: number | null) => {
   const { isWindows } = useRuntime();
   const { isReleaseLoading, loadRelease, release, releaseError } = useOptiScalerSession();
-  const [candidates, setCandidates] = useState<OptiScalerCandidate[]>([]);
-  const [targets, setTargets] = useState<OptiScalerTarget[]>([]);
-  const [recovery, setRecovery] = useState<OptiScalerRecoveryState | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const cachedOptiScaler = gameID === null ? undefined : cachedGameOptiScalerByGameID.get(gameID);
+  const [candidates, setCandidates] = useState<OptiScalerCandidate[]>(
+    cachedOptiScaler?.candidates ?? [],
+  );
+  const [targets, setTargets] = useState<OptiScalerTarget[]>(cachedOptiScaler?.targets ?? []);
+  const [recovery, setRecovery] = useState<OptiScalerRecoveryState | null>(
+    cachedOptiScaler?.recovery ?? null,
+  );
+  const [isLoading, setIsLoading] = useState(gameID !== null && cachedOptiScaler === undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isRollingBack, setIsRollingBack] = useState(false);
 
@@ -83,6 +96,16 @@ export const useGameOptiScaler = (gameID: number | null) => {
       return;
     }
 
+    const cachedCurrentOptiScaler = cachedGameOptiScalerByGameID.get(gameID);
+    if (cachedCurrentOptiScaler === undefined) {
+      setCandidates([]);
+      setTargets([]);
+      setRecovery(null);
+    } else {
+      setCandidates(cachedCurrentOptiScaler.candidates);
+      setTargets(cachedCurrentOptiScaler.targets);
+      setRecovery(cachedCurrentOptiScaler.recovery);
+    }
     setIsLoading(true);
     setLoadError(null);
     try {
@@ -92,6 +115,11 @@ export const useGameOptiScaler = (gameID: number | null) => {
         GetOptiScalerRecoveryState(),
         loadRelease(),
       ]);
+      cachedGameOptiScalerByGameID.set(gameID, {
+        candidates: loadedCandidates,
+        recovery: loadedRecovery,
+        targets: loadedTargets,
+      });
       setCandidates(loadedCandidates);
       setTargets(loadedTargets);
       setRecovery(loadedRecovery);
@@ -148,8 +176,10 @@ export const useGameOptiScaler = (gameID: number | null) => {
   return {
     aggregateStatus,
     candidates,
+    isInitialLoading: isLoading && candidates.length === 0 && targets.length === 0,
     isLoading,
     isReleaseLoading,
+    isRefreshing: isLoading && (candidates.length > 0 || targets.length > 0),
     isRollingBack,
     loadError,
     recovery,

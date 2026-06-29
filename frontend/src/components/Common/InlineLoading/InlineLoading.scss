@@ -1,0 +1,29 @@
+@use '@styles' as *;
+
+$inline-loading-spinner-size: 0.875rem;
+
+.inline-loading {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: $spacing-sm;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  line-height: $line-height-heading;
+}
+
+.inline-loading-spinner {
+  width: $inline-loading-spinner-size;
+  height: $inline-loading-spinner-size;
+  flex: 0 0 $inline-loading-spinner-size;
+  border: $app-border-width solid $color-border-strong;
+  border-top-color: $color-text-subtle;
+  border-radius: 50%;
+  animation: inline-loading-spin 900ms linear infinite;
+}
+
+@keyframes inline-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

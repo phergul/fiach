@@ -85,6 +85,15 @@ $reshade-page-header-height: 5rem;
   background: color-mix(in srgb, $color-danger 12%, $color-surface);
 }
 
+.reshade-dashboard-breadcrumbs {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  padding: 0 $spacing-xl $spacing-sm;
+  background: rgb(#{$color-background-rgb} / 40%);
+  backdrop-filter: blur(12px);
+}
+
 .reshade-dashboard-content {
   position: relative;
   z-index: 1;
@@ -93,6 +102,15 @@ $reshade-page-header-height: 5rem;
   flex: 1 1 auto;
   flex-direction: column;
   overflow: hidden;
+  background: $color-background;
+}
+
+.reshade-dashboard-inline-loading {
+  position: absolute;
+  top: $spacing-md;
+  right: $spacing-xl;
+  z-index: 2;
+  padding: $spacing-xs $spacing-sm;
   background: $color-background;
 }
 

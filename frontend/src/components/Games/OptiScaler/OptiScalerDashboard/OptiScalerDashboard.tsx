@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { Breadcrumbs } from '@components/Common/Breadcrumbs/Breadcrumbs';
+import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
@@ -122,6 +124,19 @@ export const OptiScalerDashboard = () => {
             onLogoArtworkError={handleLogoArtworkError}
           />
 
+          <div className="optiscaler-dashboard-breadcrumbs">
+            <Breadcrumbs
+              items={[
+                {
+                  label: game.Name,
+                },
+                {
+                  label: 'OptiScaler',
+                },
+              ]}
+            />
+          </div>
+
           <OptiScalerPageHeader
             isLoading={optiScaler.isLoading}
             onRefresh={() => void optiScaler.refresh()}
@@ -141,6 +156,12 @@ export const OptiScalerDashboard = () => {
           )}
 
           <main className="optiscaler-dashboard-content">
+            {optiScaler.isRefreshing && (
+              <InlineLoading
+                className="optiscaler-dashboard-inline-loading"
+                label="Refreshing OptiScaler targets..."
+              />
+            )}
             {operationSelection !== null && !isRecoveryRequired ? (
               <OptiScalerWizard
                 gameID={game.ID}
@@ -149,10 +170,11 @@ export const OptiScalerDashboard = () => {
                 onRefresh={optiScaler.refresh}
                 selection={operationSelection}
               />
-            ) : optiScaler.isLoading &&
-              optiScaler.targets.length === 0 &&
-              optiScaler.candidates.length === 0 ? (
-              <GameDetailsState title="Discovering OptiScaler targets." />
+            ) : optiScaler.isInitialLoading ? (
+              <InlineLoading
+                className="optiscaler-dashboard-inline-loading"
+                label="Discovering OptiScaler targets..."
+              />
             ) : optiScaler.loadError !== null ? (
               <GameDetailsState
                 actionLabel="Retry"

@@ -168,16 +168,25 @@ $game-apply-toolbar-icon-size: 1.25rem;
   backdrop-filter: none;
 }
 
-.game-apply-breadcrumbs {
-  min-height: 0;
-}
-
 .game-apply-page-header .game-apply-title {
   font-size: $font-size-xl;
 }
 
 .game-apply-page-header .game-apply-description {
   font-size: $font-size-sm;
+}
+
+.game-apply-page-header-status {
+  display: flex;
+  min-height: 1.25rem;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.game-apply-inline-loading {
+  position: relative;
+  z-index: 1;
+  margin: $spacing-md $spacing-xl;
 }
 
 .game-apply-title {

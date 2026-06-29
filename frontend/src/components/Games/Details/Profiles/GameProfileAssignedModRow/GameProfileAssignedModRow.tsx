@@ -19,6 +19,7 @@ interface GameProfileAssignedModRowProps {
   canReorder: boolean;
   dragOverlay?: boolean;
   isBusy: boolean;
+  isTogglePending: boolean;
   mod: ProfileMod;
   tags: Tag[];
   onMoveDown: () => void;
@@ -33,6 +34,7 @@ export const GameProfileAssignedModRow = ({
   canReorder,
   dragOverlay = false,
   isBusy,
+  isTogglePending,
   mod,
   tags,
   onMoveDown,
@@ -54,7 +56,9 @@ export const GameProfileAssignedModRow = ({
   const RowTag = dragOverlay ? 'div' : 'li';
   const rowClassName = dragOverlay
     ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-dragging game-profile-assigned-mod-row-overlay'
-    : 'game-profile-assigned-mod-row';
+    : isTogglePending
+      ? 'game-profile-assigned-mod-row game-profile-assigned-mod-row-toggle-pending'
+      : 'game-profile-assigned-mod-row';
 
   return (
     <RowTag
@@ -120,7 +124,7 @@ export const GameProfileAssignedModRow = ({
           <input
             aria-label={`${mod.Enabled ? 'Disable' : 'Enable'} ${mod.Name}`}
             checked={mod.Enabled}
-            disabled={isBusy}
+            disabled={isBusy || isTogglePending}
             onChange={(event) => onSetModEnabled(mod.ModID, event.target.checked)}
             type="checkbox"
           />

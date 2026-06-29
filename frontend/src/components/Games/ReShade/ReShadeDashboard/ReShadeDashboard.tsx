@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
+import { Breadcrumbs } from '@components/Common/Breadcrumbs/Breadcrumbs';
+import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { useToast } from '@components/Common/Toast/Toast';
 import { GameDetailsHeader } from '@components/Games/Details/GameDetailsHeader/GameDetailsHeader';
 import { GameDetailsState } from '@components/Games/Details/GameDetailsState/GameDetailsState';
@@ -112,6 +114,19 @@ export const ReShadeDashboard = () => {
             onLogoArtworkError={handleLogoArtworkError}
           />
 
+          <div className="reshade-dashboard-breadcrumbs">
+            <Breadcrumbs
+              items={[
+                {
+                  label: game.Name,
+                },
+                {
+                  label: 'ReShade',
+                },
+              ]}
+            />
+          </div>
+
           <ReShadePageHeader
             installerStatus={reShade.installerStatus}
             isLoading={reShade.isLoading}
@@ -131,6 +146,12 @@ export const ReShadeDashboard = () => {
           )}
 
           <main className="reshade-dashboard-content">
+            {reShade.isRefreshing && (
+              <InlineLoading
+                className="reshade-dashboard-inline-loading"
+                label="Refreshing ReShade targets..."
+              />
+            )}
             {operationSelection !== null && !isRecoveryRequired ? (
               <ReShadeWizard
                 catalogue={reShade.catalogue}
@@ -141,8 +162,11 @@ export const ReShadeDashboard = () => {
                 onRefresh={reShade.refresh}
                 selection={operationSelection}
               />
-            ) : reShade.isLoading && reShade.targets.length === 0 && reShade.discovery === null ? (
-              <GameDetailsState title="Discovering ReShade targets." />
+            ) : reShade.isInitialLoading ? (
+              <InlineLoading
+                className="reshade-dashboard-inline-loading"
+                label="Discovering ReShade targets..."
+              />
             ) : reShade.loadError !== null ? (
               <GameDetailsState
                 actionLabel="Retry"

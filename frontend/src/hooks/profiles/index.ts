@@ -1,3 +1,8 @@
-// profiles
-export { useAppliedProfile } from './useAppliedProfile';
-export type { UseAppliedProfileResult } from './useAppliedProfile';
+// applied
+export {
+  fetchAppliedProfile,
+  invalidateAppliedProfile,
+  preloadAppliedProfile,
+  useAppliedProfile,
+} from './applied/useAppliedProfile';
+export type { UseAppliedProfileResult } from './applied/useAppliedProfile';

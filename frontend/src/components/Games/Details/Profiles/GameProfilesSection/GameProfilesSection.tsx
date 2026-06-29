@@ -15,6 +15,7 @@ import './GameProfilesSection.scss';
 interface GameProfilesSectionProps {
   appliedProfileManager: UseAppliedProfileResult;
   applyProfilePath: string;
+  gameID: number;
   gameModManager: UseGameModsResult;
   profileManager: UseGameProfilesResult;
   onRestoreVanilla: () => void;
@@ -23,6 +24,7 @@ interface GameProfilesSectionProps {
 export const GameProfilesSection = ({
   appliedProfileManager,
   applyProfilePath,
+  gameID,
   gameModManager,
   profileManager,
   onRestoreVanilla,
@@ -37,6 +39,7 @@ export const GameProfilesSection = ({
     isLoading,
     loadError,
     pendingAction,
+    pendingProfileModToggleIDs,
     profileModsByProfileID,
     profiles,
     removeModFromProfile,
@@ -247,12 +250,14 @@ export const GameProfilesSection = ({
             <GameProfileModsPanel
               appliedProfile={appliedProfile}
               applyProfilePath={applyProfilePath}
+              gameID={gameID}
               gameMods={gameMods}
               isBusy={isBusy}
               isGameModsLoading={isGameModsLoading}
               isProfilesLoading={isLoading}
               profile={selectedProfile}
               profileMods={selectedProfileMods}
+              pendingProfileModToggleIDs={pendingProfileModToggleIDs}
               onAddModsToProfile={handleAddModsToProfile}
               onRemoveModFromProfile={handleRemoveModFromProfile}
               onReorderProfileMods={handleReorderProfileMods}

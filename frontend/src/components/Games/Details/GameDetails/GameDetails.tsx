@@ -292,6 +292,7 @@ export const GameDetails = () => {
             <GameProfilesSection
               appliedProfileManager={appliedProfileManager}
               applyProfilePath={applyProfilePath}
+              gameID={game.ID}
               gameModManager={gameModManager}
               onRestoreVanilla={openRestoreConfirm}
               profileManager={profileManager}

@@ -4,7 +4,7 @@ import { DetectGameReShade } from '@bindings/github.com/phergul/fiach/internal/s
 import type { ReShadeDetectionResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
-import { useRuntime } from '../runtime/useRuntime';
+import { useRuntime } from '../../runtime/useRuntime';
 
 export const useGameReShadeDetection = (gameID: number | null) => {
   const { isWindows } = useRuntime();

@@ -75,10 +75,27 @@ tasks:
     cmds:
       - go test ./...
 
+  format:backend:
+    summary: Formats the backend
+    cmds:
+      - go fmt ./...
+
+  format:frontend:
+    summary: Formats the frontend
+    dir: frontend
+    cmds:
+      - bun run format
+
   checks:
     summary: Runs checks on the application
     cmds:
       - go vet ./...
-      - go fmt ./...
+      - task: format:backend
       - task: test:frontend
       - task: test:backend
+
+  format:
+    summary: Formats the application (backend and frontend)
+    cmds:
+      - task: format:backend
+      - task: format:frontend

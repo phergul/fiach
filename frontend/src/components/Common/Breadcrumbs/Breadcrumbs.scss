@@ -1,0 +1,59 @@
+@use '@styles' as *;
+
+$breadcrumbs-separator-size: 0.8rem;
+$breadcrumbs-item-max-width: 18rem;
+$breadcrumbs-current-max-width: 24rem;
+
+.breadcrumbs {
+  min-width: 0;
+  max-width: 100%;
+  color: $color-text-subtle;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-heading;
+}
+
+.breadcrumbs-list {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumbs-item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.breadcrumbs-label,
+.breadcrumbs-current {
+  display: block;
+  min-width: 0;
+  max-width: $breadcrumbs-item-max-width;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breadcrumbs-label {
+  color: $color-text-muted;
+}
+
+.breadcrumbs-current {
+  max-width: $breadcrumbs-current-max-width;
+  color: $color-text-primary;
+}
+
+.breadcrumbs-separator {
+  width: $breadcrumbs-separator-size;
+  height: $breadcrumbs-separator-size;
+  flex: 0 0 $breadcrumbs-separator-size;
+  color: $color-text-muted;
+  stroke-width: 1.8;
+}

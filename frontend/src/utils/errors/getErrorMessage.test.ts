@@ -20,9 +20,9 @@ describe('getErrorMessage', () => {
   });
 
   test('uses generic fallback for chained Go errors', () => {
-    expect(getErrorMessage('import mod: import mod source: read source folder: permission denied')).toBe(
-      genericFallback,
-    );
+    expect(
+      getErrorMessage('import mod: import mod source: read source folder: permission denied'),
+    ).toBe(genericFallback);
   });
 
   test('uses generic fallback for technical sqlite errors', () => {
@@ -40,14 +40,18 @@ describe('getErrorMessage', () => {
   });
 
   test('uses generic fallback for a RuntimeError cause chain', () => {
-    const error = new Error('pre validate import: prepare folder import source: source folder "/mods/Empty" is empty');
+    const error = new Error(
+      'pre validate import: prepare folder import source: source folder "/mods/Empty" is empty',
+    );
     error.name = 'RuntimeError';
 
     expect(getErrorMessage(error)).toBe(genericFallback);
   });
 
   test('unwraps a serialized RuntimeError cause', () => {
-    const error = new Error('{"message":"RuntimeError","cause":{"message":"pre validate import: source folder is empty"}}');
+    const error = new Error(
+      '{"message":"RuntimeError","cause":{"message":"pre validate import: source folder is empty"}}',
+    );
     error.name = 'RuntimeError';
 
     expect(getErrorMessage(error)).toBe(genericFallback);
@@ -67,7 +71,8 @@ describe('getErrorMessage', () => {
 
 describe('getRawErrorMessage', () => {
   test('preserves the raw chain for diagnostics', () => {
-    expect(getRawErrorMessage(new Error('import mod: read source folder: permission denied')))
-      .toBe('import mod: read source folder: permission denied');
+    expect(getRawErrorMessage(new Error('import mod: read source folder: permission denied'))).toBe(
+      'import mod: read source folder: permission denied',
+    );
   });
 });

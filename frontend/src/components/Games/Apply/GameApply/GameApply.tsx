@@ -4,7 +4,9 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 import { ApplyDeployment } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
 import type { ApplyDeploymentResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import { Breadcrumbs, type BreadcrumbItem } from '@components/Common/Breadcrumbs/Breadcrumbs';
 import { ConfirmDialog } from '@components/Common/ConfirmDialog/ConfirmDialog';
+import { InlineLoading } from '@components/Common/InlineLoading/InlineLoading';
 import { useToast } from '@components/Common/Toast/Toast';
 import { DeploymentReview } from '@components/Deployment/DeploymentReview/DeploymentReview';
 import { DeploymentSummaryBar } from '@components/Deployment/DeploymentSummary/DeploymentSummary';
@@ -87,7 +89,9 @@ export const GameApply = () => {
       : (profileManager.profiles.find((profile) => profile.ID === parsedProfileID) ?? null);
   const {
     applyPreview,
+    isInitialLoading: isPreviewInitialLoading,
     isLoading: isPreviewLoading,
+    isRefreshing: isPreviewRefreshing,
     loadError: previewLoadError,
     previewHash,
     refreshPreview,
@@ -100,6 +104,25 @@ export const GameApply = () => {
   const hasLoadError = loadError !== null && game === undefined;
   const hasNotFound = !isWaitingForGame && !hasLoadError && game === undefined;
   const gameDetailsPath = parsedGameID === null ? '/library' : `/library/${parsedGameID}`;
+  const breadcrumbItems: BreadcrumbItem[] =
+    game === undefined
+      ? []
+      : [
+          {
+            label: game.Name,
+          },
+          {
+            label: 'Deployment',
+          },
+        ];
+  if (selectedProfile !== null) {
+    breadcrumbItems[1] = {
+      label: 'Deployment',
+    };
+    breadcrumbItems.push({
+      label: selectedProfile.Name,
+    });
+  }
   const appliedProfileName = appliedProfileManager.appliedProfile?.ProfileName ?? null;
   const isSameProfileApplied =
     selectedProfile !== null &&
@@ -183,9 +206,7 @@ export const GameApply = () => {
       const result = await ApplyDeployment(selectedProfile.ID, previewHash);
       if (result.Success) {
         await appliedProfileManager.refreshAppliedProfile();
-        if (isIncrementalApply && isSameProfileApplied) {
-          await refreshPreview();
-        }
+        await refreshPreview();
       }
       setIsApplyConfirmOpen(false);
       addToast({
@@ -206,17 +227,16 @@ export const GameApply = () => {
   };
 
   const showDeploymentReview =
-    selectedProfile !== null &&
-    !isPreviewLoading &&
-    previewLoadError === null &&
-    previewHash !== '';
+    selectedProfile !== null && previewLoadError === null && previewHash !== '';
+  const showDeploymentShell =
+    parsedProfileID !== null && (selectedProfile !== null || profileManager.isInitialLoading);
 
-  const hasBackdrop = heroArtworkSource !== '' && !showDeploymentReview;
+  const hasBackdrop = heroArtworkSource !== '' && !showDeploymentShell;
 
   return (
     <section
       className={
-        showDeploymentReview
+        showDeploymentShell
           ? 'game-apply game-apply-deployment'
           : hasBackdrop
             ? 'game-apply game-apply-with-backdrop'
@@ -303,8 +323,9 @@ export const GameApply = () => {
 
       {game !== undefined && (
         <>
-          {!showDeploymentReview && (
+          {!showDeploymentShell && (
             <div className="game-apply-heading">
+              <Breadcrumbs items={breadcrumbItems} />
               <h2 className="game-apply-title">
                 {selectedProfile === null ? 'Apply profile' : `Apply ${selectedProfile.Name}`}
               </h2>
@@ -318,9 +339,9 @@ export const GameApply = () => {
             </div>
           )}
 
-          {showDeploymentReview && (
+          {showDeploymentShell && (
             <header className="game-apply-page-header">
-              <div className="game-apply-breadcrumbs" aria-hidden="true" />
+              <Breadcrumbs items={breadcrumbItems} />
               <div className="game-apply-heading">
                 <h2 className="game-apply-title">Deployment preview</h2>
                 <p className="game-apply-description">
@@ -331,12 +352,23 @@ export const GameApply = () => {
                   )}
                 </p>
               </div>
+              <div className="game-apply-page-header-status">
+                {profileManager.isRefreshing && selectedProfile !== null && (
+                  <InlineLoading label="Refreshing profile..." />
+                )}
+                {isPreviewRefreshing && <InlineLoading label="Refreshing preview..." />}
+              </div>
             </header>
           )}
 
           {showDeploymentReview && summary !== null && <DeploymentSummaryBar summary={summary} />}
 
-          {profileManager.isLoading && <GameDetailsState title="Loading selected profile." />}
+          {profileManager.isInitialLoading && (
+            <InlineLoading
+              className="game-apply-inline-loading"
+              label="Loading selected profile..."
+            />
+          )}
 
           {!profileManager.isLoading && profileManager.loadError !== null && (
             <GameDetailsState
@@ -366,8 +398,11 @@ export const GameApply = () => {
               />
             )}
 
-          {selectedProfile !== null && isPreviewLoading && (
-            <GameDetailsState title="Building deployment preview." />
+          {selectedProfile !== null && isPreviewInitialLoading && (
+            <InlineLoading
+              className="game-apply-inline-loading"
+              label="Building deployment preview..."
+            />
           )}
 
           {selectedProfile !== null && !isPreviewLoading && previewLoadError !== null && (

@@ -19,7 +19,7 @@ import {
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import { getErrorMessage } from '@utils';
 
-import { useRuntime } from '../runtime/useRuntime';
+import { useRuntime } from '../../runtime/useRuntime';
 
 export type ReShadeAggregateStatus =
   | 'checking'
@@ -31,6 +31,17 @@ export type ReShadeAggregateStatus =
   | 'managed'
   | 'unmanaged'
   | 'not_detected';
+
+interface CachedGameReShade {
+  catalogue: ReShadeContentCatalogue | null;
+  chainTargets: ReShadeChainTarget[];
+  discovery: ReShadeDiscoveryResult | null;
+  installerStatus: ReShadeInstallerStatus | null;
+  recovery: ReShadeRecoveryState | null;
+  targets: ReShadeTarget[];
+}
+
+const cachedGameReShadeByGameID = new Map<number, CachedGameReShade>();
 
 const releaseForTarget = (
   target: ReShadeTarget,
@@ -97,13 +108,24 @@ export const getReShadeAggregateStatus = (
 
 export const useGameReShade = (gameID: number | null) => {
   const { isWindows } = useRuntime();
-  const [discovery, setDiscovery] = useState<ReShadeDiscoveryResult | null>(null);
-  const [targets, setTargets] = useState<ReShadeTarget[]>([]);
-  const [recovery, setRecovery] = useState<ReShadeRecoveryState | null>(null);
-  const [installerStatus, setInstallerStatus] = useState<ReShadeInstallerStatus | null>(null);
-  const [catalogue, setCatalogue] = useState<ReShadeContentCatalogue | null>(null);
-  const [chainTargets, setChainTargets] = useState<ReShadeChainTarget[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const cachedReShade = gameID === null ? undefined : cachedGameReShadeByGameID.get(gameID);
+  const [discovery, setDiscovery] = useState<ReShadeDiscoveryResult | null>(
+    cachedReShade?.discovery ?? null,
+  );
+  const [targets, setTargets] = useState<ReShadeTarget[]>(cachedReShade?.targets ?? []);
+  const [recovery, setRecovery] = useState<ReShadeRecoveryState | null>(
+    cachedReShade?.recovery ?? null,
+  );
+  const [installerStatus, setInstallerStatus] = useState<ReShadeInstallerStatus | null>(
+    cachedReShade?.installerStatus ?? null,
+  );
+  const [catalogue, setCatalogue] = useState<ReShadeContentCatalogue | null>(
+    cachedReShade?.catalogue ?? null,
+  );
+  const [chainTargets, setChainTargets] = useState<ReShadeChainTarget[]>(
+    cachedReShade?.chainTargets ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(gameID !== null && cachedReShade === undefined);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -121,6 +143,22 @@ export const useGameReShade = (gameID: number | null) => {
         return;
       }
 
+      const cachedCurrentReShade = cachedGameReShadeByGameID.get(gameID);
+      if (cachedCurrentReShade === undefined) {
+        setDiscovery(null);
+        setTargets([]);
+        setRecovery(null);
+        setInstallerStatus(null);
+        setCatalogue(null);
+        setChainTargets([]);
+      } else {
+        setDiscovery(cachedCurrentReShade.discovery);
+        setTargets(cachedCurrentReShade.targets);
+        setRecovery(cachedCurrentReShade.recovery);
+        setInstallerStatus(cachedCurrentReShade.installerStatus);
+        setCatalogue(cachedCurrentReShade.catalogue);
+        setChainTargets(cachedCurrentReShade.chainTargets);
+      }
       setIsLoading(true);
       setLoadError(null);
       try {
@@ -139,6 +177,14 @@ export const useGameReShade = (gameID: number | null) => {
           ListReShadeContentCatalogue(refreshRemote),
           ListReShadeChainTargets(gameID),
         ]);
+        cachedGameReShadeByGameID.set(gameID, {
+          catalogue: loadedCatalogue,
+          chainTargets: loadedChainTargets,
+          discovery: loadedDiscovery,
+          installerStatus: loadedInstallerStatus,
+          recovery: loadedRecovery,
+          targets: loadedTargets,
+        });
         setDiscovery(loadedDiscovery);
         setTargets(loadedTargets);
         setRecovery(loadedRecovery);
@@ -188,7 +234,9 @@ export const useGameReShade = (gameID: number | null) => {
     chainTargets,
     discovery,
     installerStatus,
+    isInitialLoading: isLoading && discovery === null && targets.length === 0,
     isLoading,
+    isRefreshing: isLoading && (discovery !== null || targets.length > 0),
     isRollingBack,
     loadError,
     recovery,
