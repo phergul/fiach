@@ -14,6 +14,8 @@ import {
 import { useOptiScalerSession } from '@components/Games/OptiScaler/OptiScalerSessionProvider/OptiScalerSessionProvider';
 import { getErrorMessage } from '@utils';
 
+import { useRuntime } from '../runtime/useRuntime';
+
 export type OptiScalerAggregateStatus =
   | 'checking'
   | 'error'
@@ -62,6 +64,7 @@ export const getOptiScalerAggregateStatus = (
 };
 
 export const useGameOptiScaler = (gameID: number | null) => {
+  const { isWindows } = useRuntime();
   const { isReleaseLoading, loadRelease, release, releaseError } = useOptiScalerSession();
   const [candidates, setCandidates] = useState<OptiScalerCandidate[]>([]);
   const [targets, setTargets] = useState<OptiScalerTarget[]>([]);
@@ -71,7 +74,7 @@ export const useGameOptiScaler = (gameID: number | null) => {
   const [isRollingBack, setIsRollingBack] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (gameID === null) {
+    if (gameID === null || !isWindows) {
       setCandidates([]);
       setTargets([]);
       setRecovery(null);
@@ -97,14 +100,14 @@ export const useGameOptiScaler = (gameID: number | null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [gameID, loadRelease]);
+  }, [gameID, isWindows, loadRelease]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
   const rollbackRecovery = useCallback(async () => {
-    if (!recovery?.required || recovery.journalId === undefined || isRollingBack) {
+    if (!isWindows || !recovery?.required || recovery.journalId === undefined || isRollingBack) {
       return null;
     }
     setIsRollingBack(true);

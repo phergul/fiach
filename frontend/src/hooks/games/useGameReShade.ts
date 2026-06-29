@@ -19,6 +19,8 @@ import {
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
 import { getErrorMessage } from '@utils';
 
+import { useRuntime } from '../runtime/useRuntime';
+
 export type ReShadeAggregateStatus =
   | 'checking'
   | 'error'
@@ -94,6 +96,7 @@ export const getReShadeAggregateStatus = (
 };
 
 export const useGameReShade = (gameID: number | null) => {
+  const { isWindows } = useRuntime();
   const [discovery, setDiscovery] = useState<ReShadeDiscoveryResult | null>(null);
   const [targets, setTargets] = useState<ReShadeTarget[]>([]);
   const [recovery, setRecovery] = useState<ReShadeRecoveryState | null>(null);
@@ -106,7 +109,7 @@ export const useGameReShade = (gameID: number | null) => {
 
   const refresh = useCallback(
     async (refreshRemote = false) => {
-      if (gameID === null) {
+      if (gameID === null || !isWindows) {
         setDiscovery(null);
         setTargets([]);
         setRecovery(null);
@@ -148,7 +151,7 @@ export const useGameReShade = (gameID: number | null) => {
         setIsLoading(false);
       }
     },
-    [gameID],
+    [gameID, isWindows],
   );
 
   useEffect(() => {
@@ -156,7 +159,7 @@ export const useGameReShade = (gameID: number | null) => {
   }, [refresh]);
 
   const rollbackRecovery = useCallback(async () => {
-    if (!recovery?.required || recovery.journalId === undefined || isRollingBack) {
+    if (!isWindows || !recovery?.required || recovery.journalId === undefined || isRollingBack) {
       return null;
     }
     setIsRollingBack(true);

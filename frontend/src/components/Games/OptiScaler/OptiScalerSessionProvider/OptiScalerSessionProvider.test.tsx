@@ -6,8 +6,21 @@ import { GetOptiScalerReleaseStatus } from '@bindings/github.com/phergul/fiach/i
 
 import { OptiScalerSessionProvider, useOptiScalerSession } from './OptiScalerSessionProvider';
 
+const runtimeState = vi.hoisted(() => ({
+  isWindows: true,
+}));
+
 vi.mock('@bindings/github.com/phergul/fiach/internal/services/optiscalerservice', () => ({
   GetOptiScalerReleaseStatus: vi.fn(),
+}));
+
+vi.mock('../../../../hooks/runtime/useRuntime', () => ({
+  useRuntime: () => ({
+    isLinux: !runtimeState.isWindows,
+    isMac: false,
+    isWindows: runtimeState.isWindows,
+    runtime: runtimeState.isWindows ? 'windows' : 'linux',
+  }),
 }));
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -16,6 +29,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 describe('OptiScalerSessionProvider', () => {
   beforeEach(() => {
+    runtimeState.isWindows = true;
     vi.mocked(GetOptiScalerReleaseStatus).mockReset();
   });
 
@@ -134,5 +148,19 @@ describe('OptiScalerSessionProvider', () => {
     expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(1, false);
     expect(GetOptiScalerReleaseStatus).toHaveBeenNthCalledWith(2, true);
     expect(result.current.release?.version).toBe('OptiScaler v2');
+  });
+
+  it('does not load the release on unsupported platforms', async () => {
+    runtimeState.isWindows = false;
+    const { result } = renderHook(() => useOptiScalerSession(), { wrapper });
+
+    let release: Awaited<ReturnType<typeof result.current.loadRelease>> = null;
+    await act(async () => {
+      release = await result.current.loadRelease();
+    });
+
+    expect(release).toBeNull();
+    expect(GetOptiScalerReleaseStatus).not.toHaveBeenCalled();
+    expect(result.current.releaseError).toBeNull();
   });
 });

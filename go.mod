@@ -10,7 +10,7 @@ require (
 	github.com/nwaples/rardecode/v2 v2.2.0
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/sergi/go-diff v1.4.0
-	github.com/wailsapp/wails/v3 v3.0.0-alpha2.106
+	github.com/wailsapp/wails/v3 v3.0.0-alpha2.108
 	golang.org/x/mod v0.35.0
 	golang.org/x/sys v0.43.0
 	modernc.org/sqlite v1.49.1

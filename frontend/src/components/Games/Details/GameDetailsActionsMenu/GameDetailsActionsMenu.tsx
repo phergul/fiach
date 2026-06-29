@@ -2,9 +2,9 @@ import { FolderCog, FolderOpen, Gauge, RotateCcw, SlidersHorizontal, Sparkles } 
 
 import type { StoredGame } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu, type DropdownMenuItem } from '@components/Common/DropdownMenu/DropdownMenu';
+import { useRuntime } from '@hooks';
 
 import './GameDetailsActionsMenu.scss';
-import { useRuntime } from '@hooks';
 
 interface GameDetailsActionsMenuProps {
   game: StoredGame;
@@ -25,6 +25,8 @@ export const GameDetailsActionsMenu = ({
   onOpenInstallDirectory,
   onSetStorageOverride,
 }: GameDetailsActionsMenuProps) => {
+  const { isWindows } = useRuntime();
+
   if (!isOpen) {
     return null;
   }
@@ -51,7 +53,6 @@ export const GameDetailsActionsMenu = ({
     },
   ];
 
-  const { isWindows } = useRuntime();
   if (isWindows) {
     items.unshift({
       icon: SlidersHorizontal,

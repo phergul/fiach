@@ -4,13 +4,16 @@ import { DetectGameReShade } from '@bindings/github.com/phergul/fiach/internal/s
 import type { ReShadeDetectionResult } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { getErrorMessage } from '@utils';
 
+import { useRuntime } from '../runtime/useRuntime';
+
 export const useGameReShadeDetection = (gameID: number | null) => {
+  const { isWindows } = useRuntime();
   const [result, setResult] = useState<ReShadeDetectionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (gameID === null) {
+    if (gameID === null || !isWindows) {
       setResult(null);
       setIsLoading(false);
       setLoadError(null);
@@ -29,7 +32,7 @@ export const useGameReShadeDetection = (gameID: number | null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [gameID]);
+  }, [gameID, isWindows]);
 
   useEffect(() => {
     void refresh().catch(() => undefined);

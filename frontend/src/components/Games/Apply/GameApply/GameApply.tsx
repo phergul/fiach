@@ -248,7 +248,7 @@ export const GameApply = () => {
         </div>
 
         <button
-          className="game-apply-toolbar-button"
+          className="game-apply-toolbar-button button-main"
           disabled={!canStartApply}
           onClick={openApplyConfirm}
           title={applyTitle}

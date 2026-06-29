@@ -12,6 +12,8 @@ import type { OptiScalerRelease } from '@bindings/github.com/phergul/fiach/inter
 import { GetOptiScalerReleaseStatus } from '@bindings/github.com/phergul/fiach/internal/services/optiscalerservice';
 import { getErrorMessage } from '@utils';
 
+import { useRuntime } from '../../../../hooks/runtime/useRuntime';
+
 interface OptiScalerSessionContextValue {
   isReleaseLoading: boolean;
   loadRelease: (refresh?: boolean) => Promise<OptiScalerRelease | null>;
@@ -26,6 +28,7 @@ interface OptiScalerSessionProviderProps {
 const OptiScalerSessionContext = createContext<OptiScalerSessionContextValue | null>(null);
 
 export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProviderProps) => {
+  const { isWindows } = useRuntime();
   const [release, setRelease] = useState<OptiScalerRelease | null>(null);
   const [releaseError, setReleaseError] = useState<string | null>(null);
   const [isReleaseLoading, setIsReleaseLoading] = useState(false);
@@ -33,6 +36,14 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
 
   const loadRelease = useCallback(
     (refresh = false) => {
+      if (!isWindows) {
+        setRelease(null);
+        setReleaseError(null);
+        setIsReleaseLoading(false);
+        releasePromiseRef.current = null;
+        return Promise.resolve(null);
+      }
+
       if (!refresh && release !== null) {
         return Promise.resolve(release);
       }
@@ -68,7 +79,7 @@ export const OptiScalerSessionProvider = ({ children }: OptiScalerSessionProvide
       releasePromiseRef.current = request;
       return request;
     },
-    [release],
+    [isWindows, release],
   );
 
   const value = useMemo(
