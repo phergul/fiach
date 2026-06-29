@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  deploymentTreeNodeGuideLayout,
-  deploymentTreeRowPaddingRem,
-} from './deploymentTreeLayout';
+import { deploymentTreeNodeGuideLayout, deploymentTreeRowPaddingRem } from './deploymentTreeLayout';
 
 describe('deploymentTreeLayout', () => {
   it('indents directories by depth and aligns file icons with parent folder icons', () => {

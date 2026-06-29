@@ -79,7 +79,9 @@ export const DeploymentFileInspector = ({
   }
 
   if (inspection === null) {
-    return <StateBlock message="File comparison is not available for this path." title="No comparison" />;
+    return (
+      <StateBlock message="File comparison is not available for this path." title="No comparison" />
+    );
   }
 
   const compareLabel = resolveComparePairLabel(inspection);
@@ -87,10 +89,10 @@ export const DeploymentFileInspector = ({
   return (
     <div className="deployment-file-inspector">
       <div className="deployment-file-inspector-summary">
-        <p className="deployment-file-inspector-kind">{resolveInspectionKindLabel(inspection.Kind)}</p>
-        {compareLabel !== '' && (
-          <p className="deployment-file-inspector-pair">{compareLabel}</p>
-        )}
+        <p className="deployment-file-inspector-kind">
+          {resolveInspectionKindLabel(inspection.Kind)}
+        </p>
+        {compareLabel !== '' && <p className="deployment-file-inspector-pair">{compareLabel}</p>}
       </div>
 
       {shouldShowInspectionFallback(inspection) && inspection.FallbackReason !== '' && (

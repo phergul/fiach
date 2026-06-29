@@ -1,83 +1,70 @@
 # Backend
 
-- Any internal exported functions that are used by a service (internal/services) should always prefix errors returned using a defer instead of manually adding to all returns (for error tracing). Example:
-```
+- Internal exported functions used by `internal/services` must wrap returned errors with a deferred prefix for tracing:
+```go
 defer func() {
-    if err != nil {
-        err = fmt.Errorf("parse Steam library folders: %w", err)
-    }
+	if err != nil {
+		err = fmt.Errorf("parse Steam library folders: %w", err)
+	}
 }()
 ```
-- When both a service and an inner layer wrap errors, the messages should be distinct. Service-level messages should describe the higher-level user operation, while storage/helper-layer messages should describe the lower-level action so errors do not repeat the same prefix twice.
-- Nullable or unset storage values should use pointer types. Treat `nil` as "not set" and avoid collapsing SQL `NULL` into zero values unless a specific call site deliberately needs that behavior.
-- `internal/storage` is the persistence layer. It can be organized by table or by a close table/domain cluster when queries naturally cross tables. Do not introduce repository structs unless there is a concrete need beyond grouping SQL.
-- `internal/services` is workflow/domain-oriented, not one service per database table. Services expose app-facing operations and coordinate storage/helper packages.
-- Services are thin, so with heavy internal logic, create go package(s) with idiomatic conventions under `internal` for this logic. (example of this: `internal/modimport`)
-- `profile_mods` operations belong on `ProfileService` because they describe profile composition: which mods are in a profile, enabled state, and load order.
-- Service file organization:
-    - `internal/services/mod.go`: `ModService`
-    - `internal/services/profile.go`: `ProfileService`
-    - `internal/services/profile_mods.go`: `ProfileService` methods that manage profile-mod membership and state.
-- Always expand go objects (for formatting) and don't have multiple attributes on the same line (one attribute objects can be inlined):
-```
-//good
+- If both service and inner layers wrap errors, use distinct messages: service prefixes describe the user operation; storage/helper prefixes describe the lower-level action.
+- Nullable/unset storage values use pointers. Treat `nil` as "not set"; do not collapse SQL `NULL` to zero values unless a call site explicitly needs that.
+- `internal/storage` is the persistence layer. Group by table or close domain/table cluster when queries cross tables. Do not add repository structs without a concrete need beyond grouping SQL.
+- `internal/services` is workflow/domain-oriented, not one service per table. Services expose app-facing operations and coordinate storage/helper packages.
+- `internal/services/dto` owns all service-to-frontend generated types. Use mappers for internal -> dto and dto -> internal conversions.
+- Keep services thin. Put heavy internal logic in idiomatic packages under `internal` such as `internal/modimport`.
+- Place operations on the workflow/domain service that owns the concept, not a table-named service; e.g. `profile_mods` belongs on `ProfileService`, not `ProfileModsService`.
+- Service files:
+  - `internal/services/mod.go`: `ModService`
+  - `internal/services/profile.go`: `ProfileService`
+  - `internal/services/profile_mods.go`: `ProfileService` profile-mod membership/state methods
+- Expand Go object literals; one-field literals may be inline:
+```go
 return ApplyResult{
-	Success:    true,
-	RolledBack: true,
-	Message:    "Recovery rollback completed.",
+	Success: true,
+	Message: "Recovery rollback completed.",
 }
 
-//bad
-return ApplyResult{Success: true, RolledBack: true, Message: "ReShade recovery rollback completed."}
+return ApplyResult{Success: true} // ok
 ```
 
 # Frontend
 
-- This is a desktop app, no mobile breakpoint
-- Everything should be componentised. Pages only orchestrate routing and data flow. UI logic belongs in components.
+- Desktop app only; no mobile breakpoint.
+- Pages only orchestrate routing/data flow. UI logic belongs in components.
+- Non-component frontend folders use area/domain subfolders, not flat catch-all packages. Barrels use lowercase section comments followed by that section's exports.
 - Components live under `frontend/src/components`.
-- Top-level component folders should represent either:
-    - A shared app area, e.g. `Layout`, `Sidebar`, `Navigation`, `Common`
-    - A feature/domain, e.g. `Games`, `Mods`, `Profiles`
-- Feature/domain folders may contain nested subfolders when components belong to a specific area of that feature. This can be more than one level deep if necessary.
-    - Example:
-        - `frontend/src/components/Games/Library/GameLibrary/GameLibrary.tsx`
-        - `frontend/src/components/Games/Grid/GameGrid/GameGrid.tsx`
-        - `frontend/src/components/Games/Details/GameDetails/GameDetails.tsx`
-        - `frontend/src/components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata.tsx`
-- If a component is being too large and complex (return statement with hundreds of lines), it should be broken down into smaller components. These smaller components should be placed in the same folder as the parent component, and named according to their purpose (e.g. `GameProfilesSectionList`, `GameProfilesSectionListItem`).
-- Keep reusable feature components at the nearest shared level.
-    - If a component is only used by game details, put it under `Games/Details`.
-    - If it is reused across the whole games feature, put it directly under `Games`.
-    - If it is reused across unrelated features, move it to `Common`.
-- Each component must be in its own PascalCase directory with matching `.tsx` and `.scss` files:
-    - `ComponentName/ComponentName.tsx`
-    - `ComponentName/ComponentName.scss`
-- Component names should describe the component itself, not the app shell. Avoid prefixes like `AppSidebar`. use `Sidebar`.
-- Styling rules:
-    - Root styling is applyed ONLY in the file `frontend/src/styles/_theme.scss`, this is where root styles live. Root styles are for primitives that are used around the whole app for consistency (e.g. button). `frontend/src/styles/_variables.scss` is where all variables live.
-    - Component-specific SCSS variables used only by one component should be defined at the top of that component's SCSS file.
-    - Each component should have its own scss file, and styles should be scoped to that component (don't create .scss file if there are no styles to apply).
-    - Don't use arbitrary class names, use localised `component-name-style`
-    - Always prefer using local styles over global styles, and avoid using global styles unless necessary.
-    - Don't use arbitrary numbers in styles, use variables instead, and define them in the `_theme.scss` file (e.g. padding, sizes etc).
+- Top-level component folders are shared app areas (`Layout`, `Sidebar`, `Navigation`, `Common`) or features/domains (`Games`, `Mods`, `Profiles`).
+- Feature folders may nest by specific area, e.g. `Games/Library/GameLibrary`, `Games/Grid/GameGrid`, `Games/Details/GameDetails`, `Games/Details/Metadata/GameDetailsMetadata`.
+- Split very large components into smaller same-folder components named for their purpose, e.g. `GameProfilesSectionList`.
+- Keep reusable feature components at the nearest shared level: details-only under `Games/Details`, whole-feature under `Games`, cross-feature under `Common`.
+- Each component has its own PascalCase directory with matching files:
+  - `ComponentName/ComponentName.tsx`
+  - `ComponentName/ComponentName.scss`
+- Component names describe the component, not the app shell. Avoid prefixes like `AppSidebar`; use `Sidebar`.
+- Styling:
+  - Root primitive styles only in `frontend/src/styles/_theme.scss`.
+  - Variables only in `frontend/src/styles/_variables.scss`.
+  - Component-only SCSS variables go at the top of that component's SCSS file.
+  - Each styled component has its own scoped SCSS file; omit SCSS files when there are no styles.
+  - Use localized class names such as `component-name-style`.
+  - Prefer local styles; use globals only when necessary.
+  - Avoid arbitrary style numbers; use variables from `_theme.scss` for spacing/sizes/etc.
+- Import order: standard library, third-party, local app, SCSS.
+```ts
+import React from 'react';
 
-- Imports should be structured as follows:
-  - Standard library imports
-  - Third-party imports
-  - Local application imports
-  - SCSS imports
+import { thirdPartyLibrary } from 'third-party-library';
 
-  ```
-  //Like this...
+import { localModule } from './localModule';
 
-  import React from 'react';
-  import { useState } from 'react';
+import './styles.scss';
+```
 
-  import { thirdPartyLibrary } from 'third-party-library';
+# Commands
 
-  import { localModule } from './localModule';
-
-  import './styles.scss';
-
-  ```
+- App: `wails3 task dev`, `wails3 task build`, `wails3 task package`, `wails3 task checks`
+- Backend: `go test ./...`, `go vet ./...`, `go fmt ./...`
+- Frontend: `cd frontend && bun install`, `cd frontend && bun run test`, `cd frontend && bun run build:dev`, `cd frontend && bun run build`
+- Task wrappers: `wails3 task test:frontend`, `wails3 task test:backend`

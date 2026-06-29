@@ -12,7 +12,6 @@ import {
   GameOptiScaler,
   GameReShade,
   Library,
-  Profiles,
   Settings,
 } from '@pages';
 
@@ -49,7 +48,6 @@ export const App = () => {
           <Route path="library/:gameId/optiscaler" element={<GameOptiScaler />} />
           <Route path="library/:gameId/reshade" element={<GameReShade />} />
           <Route path="library/:gameId" element={<GameDetails />} />
-          <Route path="profiles" element={<Profiles />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/library" replace />} />
         </Route>

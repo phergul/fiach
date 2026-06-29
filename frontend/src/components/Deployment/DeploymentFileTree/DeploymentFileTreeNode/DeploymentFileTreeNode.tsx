@@ -6,7 +6,10 @@ import type { DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/inte
 import { formatDeploymentDisplayPath } from '@utils';
 
 import { DeploymentToneChip } from '../../DeploymentToneChip/DeploymentToneChip';
-import { deploymentTreeNodeGuideLayout, deploymentTreeRowPaddingRem } from '../deploymentTreeLayout';
+import {
+  deploymentTreeNodeGuideLayout,
+  deploymentTreeRowPaddingRem,
+} from '../deploymentTreeLayout';
 import { formatTreeNodeActionTone, formatTreeNodeMeta } from '../deploymentTreeMeta';
 
 import './DeploymentFileTreeNode.scss';
@@ -41,7 +44,8 @@ export const DeploymentFileTreeNodeRow = ({
   const actionTone = formatTreeNodeActionTone(node);
   const canExpand = node.IsDirectory && node.HasChildren;
   const showActionChip = !node.IsDirectory && actionLabel !== '';
-  const { ancestorContinuations, leafContinuation } = deploymentTreeNodeGuideLayout(guideContinuations);
+  const { ancestorContinuations, leafContinuation } =
+    deploymentTreeNodeGuideLayout(guideContinuations);
   const showLeafGuideColumn = leafContinuation !== null;
   const useCompactToggleSpacer = !node.IsDirectory && showLeafGuideColumn;
   const rowStatusClass =

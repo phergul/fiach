@@ -85,8 +85,7 @@ const TreeBranch = ({
     <ul className="deployment-file-tree-list">
       {visibleNodes.map((node, nodeIndex) => {
         const isLastSibling = nodeIndex === visibleNodes.length - 1;
-        const nodeGuideContinuations =
-          depth === 0 ? [] : [...guideContinuations, !isLastSibling];
+        const nodeGuideContinuations = depth === 0 ? [] : [...guideContinuations, !isLastSibling];
         const isExpanded = expandedPaths[node.Path] === true;
         const children = node.IsDirectory ? getChildren(node.Path) : [];
         const visibleChildren =
@@ -176,7 +175,9 @@ export const DeploymentFileTree = ({
 
       <div className="deployment-file-tree-body">
         {!hasVisibleNodes && (
-          <p className="deployment-file-tree-empty">This profile has no deployment paths to review.</p>
+          <p className="deployment-file-tree-empty">
+            This profile has no deployment paths to review.
+          </p>
         )}
 
         {hasVisibleNodes && (

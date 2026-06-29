@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import type { DeploymentReviewPreview, DeploymentTreeNode } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  DeploymentReviewPreview,
+  DeploymentTreeNode,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   useDeploymentFileDetail,
   useDeploymentFileInspection,

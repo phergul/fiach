@@ -47,8 +47,7 @@ export const GameProfileAssignedModRow = ({
     disabled: isBusy || !canReorder || !isSortable,
   });
   const style: CSSProperties = {
-    transform:
-      isSortable && transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
+    transform: isSortable && transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
     transition: isSortable ? transition : undefined,
     opacity: isDragging && !dragOverlay ? 0 : undefined,
   };

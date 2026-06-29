@@ -8,7 +8,5 @@ interface DeploymentToneChipProps {
 }
 
 export const DeploymentToneChip = ({ label, tone = 'default' }: DeploymentToneChipProps) => {
-  return (
-    <span className={`deployment-tone-chip deployment-tone-chip-${tone}`}>{label}</span>
-  );
+  return <span className={`deployment-tone-chip deployment-tone-chip-${tone}`}>{label}</span>;
 };

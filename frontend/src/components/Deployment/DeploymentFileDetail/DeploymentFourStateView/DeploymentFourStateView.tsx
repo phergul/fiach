@@ -1,4 +1,7 @@
-import type { FileStateView, StateComparison } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  FileStateView,
+  StateComparison,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { formatDeploymentBytes, truncateDeploymentHash } from '@utils';
 
 import './DeploymentFourStateView.scss';

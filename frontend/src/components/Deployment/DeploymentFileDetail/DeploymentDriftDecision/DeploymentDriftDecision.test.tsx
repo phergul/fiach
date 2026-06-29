@@ -2,7 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SetDeploymentDriftDecision } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
-import type { DeploymentFileDetail, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  DeploymentFileDetail,
+  DeploymentReviewPreview,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   DeploymentFileDetail as DeploymentFileDetailModel,
   DeploymentReviewPreview as DeploymentReviewPreviewModel,

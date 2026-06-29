@@ -7,8 +7,15 @@ interface DeploymentCompareGridProps {
   children: ReactNode;
 }
 
-export const DeploymentCompareGrid = ({ 'aria-label': ariaLabel, children }: DeploymentCompareGridProps) => (
-  <div aria-label={ariaLabel} className="deployment-compare-grid" role={ariaLabel !== undefined ? 'group' : undefined}>
+export const DeploymentCompareGrid = ({
+  'aria-label': ariaLabel,
+  children,
+}: DeploymentCompareGridProps) => (
+  <div
+    aria-label={ariaLabel}
+    className="deployment-compare-grid"
+    role={ariaLabel !== undefined ? 'group' : undefined}
+  >
     {children}
   </div>
 );
@@ -27,10 +34,7 @@ export const DeploymentCompareColumn = ({
   label,
 }: DeploymentCompareColumnProps) => (
   <article
-    className={[
-      'deployment-compare-column',
-      isDesired ? 'deployment-compare-column-desired' : '',
-    ]
+    className={['deployment-compare-column', isDesired ? 'deployment-compare-column-desired' : '']
       .filter(Boolean)
       .join(' ')}
   >

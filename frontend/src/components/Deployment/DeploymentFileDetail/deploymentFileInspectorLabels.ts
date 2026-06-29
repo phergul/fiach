@@ -28,14 +28,14 @@ export const shouldShowInspectionFallback = (inspection: DeploymentFileInspectio
     return false;
   }
 
-  if (reason === inspection.Left?.UnavailableReason || reason === inspection.Right?.UnavailableReason) {
+  if (
+    reason === inspection.Left?.UnavailableReason ||
+    reason === inspection.Right?.UnavailableReason
+  ) {
     return false;
   }
 
-  if (
-    reason === 'File is not present.' ||
-    reason === 'Neither side is available for inspection.'
-  ) {
+  if (reason === 'File is not present.' || reason === 'Neither side is available for inspection.') {
     return false;
   }
 

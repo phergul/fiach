@@ -13,8 +13,7 @@ const createThemeTokens = (
 ): ThemeTokens => ({
   ...tokens,
   backgroundRgb: tokens.backgroundRgb ?? toRGBChannels(tokens.background),
-  backgroundElevatedRgb:
-    tokens.backgroundElevatedRgb ?? toRGBChannels(tokens.backgroundElevated),
+  backgroundElevatedRgb: tokens.backgroundElevatedRgb ?? toRGBChannels(tokens.backgroundElevated),
   dangerRgb: tokens.dangerRgb ?? toRGBChannels(tokens.danger),
   surfaceRgb: tokens.surfaceRgb ?? toRGBChannels(tokens.surface),
 });

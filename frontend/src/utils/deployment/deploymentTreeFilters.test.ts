@@ -67,7 +67,11 @@ describe('deploymentTreeFilters', () => {
 
   it('keeps ancestor directories when a descendant matches', () => {
     const directory = directoryNode();
-    const child = fileNode({ Status: 'blocked', Path: 'BepInEx/plugins/blocked.dll', Name: 'blocked.dll' });
+    const child = fileNode({
+      Status: 'blocked',
+      Path: 'BepInEx/plugins/blocked.dll',
+      Name: 'blocked.dll',
+    });
     const filters = {
       risks: [],
       searchQuery: '',

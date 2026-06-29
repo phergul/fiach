@@ -128,7 +128,12 @@ const resolveDeploymentActionKey = (status: string, plannedAction = '') => {
     return 'conflict';
   }
 
-  if (status === 'drifted' || status === 'external' || status === 'skipped' || status === 'unchanged') {
+  if (
+    status === 'drifted' ||
+    status === 'external' ||
+    status === 'skipped' ||
+    status === 'unchanged'
+  ) {
     return status;
   }
 

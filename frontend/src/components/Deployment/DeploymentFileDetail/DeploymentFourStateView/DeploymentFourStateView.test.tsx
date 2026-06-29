@@ -33,7 +33,9 @@ describe('DeploymentFourStateView', () => {
       />,
     );
 
-    expect(screen.getByText('This file was modified on disk since the last apply.')).toBeInTheDocument();
+    expect(
+      screen.getByText('This file was modified on disk since the last apply.'),
+    ).toBeInTheDocument();
     expect(document.querySelector('.deployment-four-state-view-column-drift')).toBeTruthy();
   });
 

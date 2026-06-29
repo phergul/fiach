@@ -69,7 +69,8 @@ export const DeploymentDriftDecision = ({
     }
   };
 
-  const showSavedDecision = detail.UserDecision !== '' && detail.PlannedAction !== 'require_decision';
+  const showSavedDecision =
+    detail.UserDecision !== '' && detail.PlannedAction !== 'require_decision';
 
   return (
     <section className="deployment-drift-decision" aria-label="Drift decision">

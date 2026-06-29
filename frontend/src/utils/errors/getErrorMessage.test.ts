@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 
-import { getErrorMessage, getRawErrorMessage } from '../src/utils/getErrorMessage';
+import { getErrorMessage, getRawErrorMessage } from './getErrorMessage';
 
 const genericFallback = 'Something went wrong. Check the logs for details.';
 
@@ -40,9 +40,7 @@ describe('getErrorMessage', () => {
   });
 
   test('uses generic fallback for a RuntimeError cause chain', () => {
-    const error = new Error('RuntimeError', {
-      cause: 'pre validate import: prepare folder import source: source folder "/mods/Empty" is empty',
-    });
+    const error = new Error('pre validate import: prepare folder import source: source folder "/mods/Empty" is empty');
     error.name = 'RuntimeError';
 
     expect(getErrorMessage(error)).toBe(genericFallback);

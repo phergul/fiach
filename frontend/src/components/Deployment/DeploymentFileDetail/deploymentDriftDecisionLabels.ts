@@ -23,10 +23,7 @@ export const deploymentDriftDecisionDescription: Record<
   skipped: 'Leave this path unchanged for now and keep the decision across sessions.',
 };
 
-export const resolveDriftDecisionLabel = (
-  decision: string,
-  driftKind = '',
-): string => {
+export const resolveDriftDecisionLabel = (decision: string, driftKind = ''): string => {
   if (decision === 'backup_and_apply' && driftKind === 'missing') {
     return 'Apply mod version';
   }

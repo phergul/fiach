@@ -27,9 +27,7 @@ export const DeploymentWriterStack = ({ writers }: DeploymentWriterStackProps) =
             <span className="deployment-writer-stack-name">
               {writer.ModName.trim() !== '' ? writer.ModName : writer.SourceKind}
             </span>
-            {writer.IsWinner && (
-              <span className="deployment-writer-stack-badge">Final winner</span>
-            )}
+            {writer.IsWinner && <span className="deployment-writer-stack-badge">Final winner</span>}
           </div>
           <p className="deployment-writer-stack-meta">
             {writer.SourceKind === 'mod' && (

@@ -1,8 +1,16 @@
 import { FileSearch } from 'lucide-react';
 
-import type { DeploymentFileDetail, DeploymentFileInspection, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  DeploymentFileDetail,
+  DeploymentFileInspection,
+  DeploymentReviewPreview,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
-import { deploymentPathBaseName, formatAppliedAtFromDate, formatDeploymentDisplayPath } from '@utils';
+import {
+  deploymentPathBaseName,
+  formatAppliedAtFromDate,
+  formatDeploymentDisplayPath,
+} from '@utils';
 
 import {
   deploymentConflictCategoryLabel,
@@ -57,7 +65,10 @@ export const DeploymentFileDetailPanel = ({
 }: DeploymentFileDetailPanelProps) => {
   if (selectedPath === null) {
     return (
-      <section className="deployment-file-detail deployment-file-detail-empty" aria-label="File detail">
+      <section
+        className="deployment-file-detail deployment-file-detail-empty"
+        aria-label="File detail"
+      >
         <FileSearch className="deployment-file-detail-empty-icon" aria-hidden="true" />
         <StateBlock className="deployment-file-detail-empty-copy" title="No file selected" />
       </section>
@@ -66,7 +77,10 @@ export const DeploymentFileDetailPanel = ({
 
   if (isLoading) {
     return (
-      <section className="deployment-file-detail deployment-file-detail-empty" aria-label="File detail">
+      <section
+        className="deployment-file-detail deployment-file-detail-empty"
+        aria-label="File detail"
+      >
         <StateBlock message="Loading file detail…" title="Loading" />
       </section>
     );
@@ -74,7 +88,10 @@ export const DeploymentFileDetailPanel = ({
 
   if (loadError !== null) {
     return (
-      <section className="deployment-file-detail deployment-file-detail-empty" aria-label="File detail">
+      <section
+        className="deployment-file-detail deployment-file-detail-empty"
+        aria-label="File detail"
+      >
         <StateBlock message={loadError} title="Could not load file detail" />
         <button className="deployment-file-detail-retry" onClick={onRetry} type="button">
           Retry
@@ -85,7 +102,10 @@ export const DeploymentFileDetailPanel = ({
 
   if (detail === null) {
     return (
-      <section className="deployment-file-detail deployment-file-detail-empty" aria-label="File detail">
+      <section
+        className="deployment-file-detail deployment-file-detail-empty"
+        aria-label="File detail"
+      >
         <StateBlock message="File detail is not available for this path." title="No detail" />
       </section>
     );

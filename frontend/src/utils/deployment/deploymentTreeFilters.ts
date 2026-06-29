@@ -14,9 +14,7 @@ export const emptyDeploymentTreeFilters = (): DeploymentTreeFilters => ({
 
 export const hasActiveDeploymentTreeFilters = (filters: DeploymentTreeFilters): boolean => {
   return (
-    filters.statuses.length > 0 ||
-    filters.risks.length > 0 ||
-    filters.searchQuery.trim().length > 0
+    filters.statuses.length > 0 || filters.risks.length > 0 || filters.searchQuery.trim().length > 0
   );
 };
 

@@ -104,8 +104,7 @@ export const GameApply = () => {
   const isSameProfileApplied =
     selectedProfile !== null &&
     appliedProfileManager.appliedProfile?.ProfileID === selectedProfile.ID;
-  const isAnotherProfileApplied =
-    appliedProfileName !== null && !isSameProfileApplied;
+  const isAnotherProfileApplied = appliedProfileName !== null && !isSameProfileApplied;
   const previewAvailable = summary !== null && previewHash !== '';
   const isIncrementalApply = summary?.PlanMode === 'incremental';
   const canStartFirstApply =
@@ -190,7 +189,9 @@ export const GameApply = () => {
       }
       setIsApplyConfirmOpen(false);
       addToast({
-        message: result.Success ? buildApplySuccessMessage(result) : buildApplyFailureMessage(result),
+        message: result.Success
+          ? buildApplySuccessMessage(result)
+          : buildApplyFailureMessage(result),
         tone: result.Success ? 'success' : 'error',
       });
       if (result.Success) {
@@ -381,17 +382,17 @@ export const GameApply = () => {
           )}
 
           {showDeploymentReview && (
-              <DeploymentReview
-                gameInstallPath={game.InstallPath}
-                gameName={game.Name}
-                onPreviewRefreshNeeded={handlePreviewRefreshNeeded}
-                onPreviewUpdated={applyPreview}
-                planMode={summary?.PlanMode ?? 'first_apply'}
-                previewHash={previewHash}
-                profileID={selectedProfile?.ID ?? null}
-                rootChildren={rootChildren}
-              />
-            )}
+            <DeploymentReview
+              gameInstallPath={game.InstallPath}
+              gameName={game.Name}
+              onPreviewRefreshNeeded={handlePreviewRefreshNeeded}
+              onPreviewUpdated={applyPreview}
+              planMode={summary?.PlanMode ?? 'first_apply'}
+              previewHash={previewHash}
+              profileID={selectedProfile?.ID ?? null}
+              rootChildren={rootChildren}
+            />
+          )}
         </>
       )}
     </section>

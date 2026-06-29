@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { DeploymentFileInspection, InspectionSideMetadata } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import {
+  DeploymentFileInspection,
+  InspectionSideMetadata,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 
 import {
   resolveComparePairLabel,

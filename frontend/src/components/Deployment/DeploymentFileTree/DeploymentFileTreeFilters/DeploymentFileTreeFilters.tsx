@@ -18,11 +18,7 @@ interface DeploymentFileTreeFiltersProps {
     statuses: string[];
   };
   isScanning: boolean;
-  onFiltersChange: (filters: {
-    risks: string[];
-    searchQuery: string;
-    statuses: string[];
-  }) => void;
+  onFiltersChange: (filters: { risks: string[]; searchQuery: string; statuses: string[] }) => void;
   scanCapReached: boolean;
 }
 

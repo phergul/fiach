@@ -4,7 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SetDeploymentConflictRule } from '@bindings/github.com/phergul/fiach/internal/services/deploymentreviewservice';
-import type { DeploymentFileDetail, DeploymentReviewPreview } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
+import type {
+  DeploymentFileDetail,
+  DeploymentReviewPreview,
+} from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import {
   DeploymentFileDetail as DeploymentFileDetailModel,
   DeploymentReviewPreview as DeploymentReviewPreviewModel,
@@ -84,7 +87,10 @@ describe('DeploymentConflictDecision', () => {
 
     expect(screen.getByRole('button', { name: /Use Alpha for this file/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Use Beta for this file/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Open profile mods/i })).toHaveAttribute('href', '/library/42');
+    expect(screen.getByRole('link', { name: /Open profile mods/i })).toHaveAttribute(
+      'href',
+      '/library/42',
+    );
   });
 
   it('saves a per-file winner and refreshes preview state', async () => {
@@ -115,7 +121,11 @@ describe('DeploymentConflictDecision', () => {
     renderConflictDecision({
       detail: buildDetail({
         ConflictCategory: 'expected_overwrite',
-        ConflictAvailableActions: ['set_per_file_winner:1', 'set_per_file_winner:2', 'clear_conflict_rule'],
+        ConflictAvailableActions: [
+          'set_per_file_winner:1',
+          'set_per_file_winner:2',
+          'clear_conflict_rule',
+        ],
         SavedConflictRuleModID: 1,
         SavedConflictRuleModName: 'Alpha',
       }),

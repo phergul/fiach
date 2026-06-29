@@ -1,22 +1,26 @@
-export { getErrorMessage, getRawErrorMessage } from './getErrorMessage';
-export { openDirectory } from './openDirectory';
-export { openArchive } from './openArchive';
+// deployment
 export {
   collectDirectoryPaths,
+  deploymentPathBaseName,
   emptyDeploymentTreeFilters,
   filterVisibleTreeNodes,
+  formatDeploymentBytes,
+  formatDeploymentDisplayPath,
   hasActiveDeploymentTreeFilters,
   matchesRisk,
   matchesSearch,
   matchesStatus,
   nodeMatchesFilters,
-  type DeploymentTreeFilters,
-} from './deploymentTreeFilters';
-export {
-  deploymentPathBaseName,
-  formatDeploymentBytes,
-  formatDeploymentDisplayPath,
   normalizeDeploymentPath,
   truncateDeploymentHash,
-} from './deploymentPaths';
-export { formatAppliedAt, formatAppliedAtFromDate } from './formatAppliedAt';
+  type DeploymentTreeFilters,
+} from './deployment';
+
+// dialogs
+export { openArchive, openDirectory } from './dialogs';
+
+// errors
+export { getErrorMessage, getRawErrorMessage } from './errors';
+
+// profiles
+export { formatAppliedAt, formatAppliedAtFromDate } from './profiles';

@@ -1,4 +1,4 @@
-import { getErrorMessage } from './getErrorMessage';
+import { getErrorMessage } from '../errors';
 
 export const isDialogCancelError = (error: unknown) => {
   const message = getErrorMessage(error).trim().toLowerCase();

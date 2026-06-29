@@ -30,6 +30,8 @@ describe('deploymentTreeMeta', () => {
   });
 
   it('uses conflict label when status is conflict', () => {
-    expect(formatTreeNodeMeta(node({ Status: 'conflict', PlannedAction: 'block' }))).toBe('Conflict');
+    expect(formatTreeNodeMeta(node({ Status: 'conflict', PlannedAction: 'block' }))).toBe(
+      'Conflict',
+    );
   });
 });
