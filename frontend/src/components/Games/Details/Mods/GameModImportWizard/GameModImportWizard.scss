@@ -47,8 +47,37 @@ $game-mod-import-wizard-height: 28rem;
   min-height: $game-mod-import-wizard-height;
   max-height: $game-mod-import-wizard-height;
   flex-direction: column;
-  gap: $spacing-separator;
   background: $color-background;
+}
+
+.game-mod-import-wizard-queue-island {
+  justify-self: center;
+  padding: $spacing-xs $spacing-md;
+  background: $color-surface;
+  border: $app-border;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  letter-spacing: 0.02em;
+}
+
+.game-mod-import-wizard-reuse-box {
+  padding: $spacing-md $spacing-xl 0;
+  background: $color-surface;
+  border-bottom: 2px solid $color-surface;
+}
+
+.game-mod-import-wizard-reuse.dropdown-menu-checkbox-option {
+  border: $app-border;
+  background: $color-surface-elevated;
+}
+
+.game-mod-import-wizard-reuse.dropdown-menu-checkbox-option:hover {
+  background: $color-surface-elevated;
+}
+
+.game-mod-import-wizard-reuse .dropdown-menu-item-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
 }
 
 .game-mod-import-wizard-steps {
@@ -118,13 +147,37 @@ $game-mod-import-wizard-height: 28rem;
   background: $color-surface;
 }
 
+.game-mod-import-wizard-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-left: auto;
+}
+
+.game-mod-import-wizard-import-another.dropdown-menu-checkbox-option {
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  border: none;
+  background: transparent;
+}
+
+.game-mod-import-wizard-import-another.dropdown-menu-checkbox-option:hover {
+  background: transparent;
+}
+
+.game-mod-import-wizard-import-another .dropdown-menu-item-label {
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  white-space: nowrap;
+}
+
 .game-mod-import-wizard-panel .modal-footer button {
   min-width: 6rem;
   min-height: $input-height;
 }
 
-.game-mod-import-wizard-panel .modal-footer .button-main {
-  margin-left: auto;
+.game-mod-import-wizard-footer-actions .button-main {
+  min-width: 6rem;
 }
 
 .game-mod-import-wizard-panel .modal-footer > button:not(.button-main) {

@@ -934,6 +934,76 @@ export class ImportModResult {
     }
 }
 
+export class ImportSourceDuplicateStatus {
+    "SourceType": ModSourceType;
+    "SourcePath": string;
+    "CanonicalPath": string;
+    "Error": string | null;
+    "IsDuplicate": boolean;
+    "ExistingModID": number | null;
+    "ExistingModName": string | null;
+
+    /** Creates a new ImportSourceDuplicateStatus instance. */
+    constructor($$source: Partial<ImportSourceDuplicateStatus> = {}) {
+        if (!("SourceType" in $$source)) {
+            this["SourceType"] = ModSourceType.$zero;
+        }
+        if (!("SourcePath" in $$source)) {
+            this["SourcePath"] = "";
+        }
+        if (!("CanonicalPath" in $$source)) {
+            this["CanonicalPath"] = "";
+        }
+        if (!("Error" in $$source)) {
+            this["Error"] = null;
+        }
+        if (!("IsDuplicate" in $$source)) {
+            this["IsDuplicate"] = false;
+        }
+        if (!("ExistingModID" in $$source)) {
+            this["ExistingModID"] = null;
+        }
+        if (!("ExistingModName" in $$source)) {
+            this["ExistingModName"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ImportSourceDuplicateStatus instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ImportSourceDuplicateStatus {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ImportSourceDuplicateStatus($$parsedSource as Partial<ImportSourceDuplicateStatus>);
+    }
+}
+
+export class ImportSourceRef {
+    "SourceType": ModSourceType;
+    "SourcePath": string;
+
+    /** Creates a new ImportSourceRef instance. */
+    constructor($$source: Partial<ImportSourceRef> = {}) {
+        if (!("SourceType" in $$source)) {
+            this["SourceType"] = ModSourceType.$zero;
+        }
+        if (!("SourcePath" in $$source)) {
+            this["SourcePath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ImportSourceRef instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ImportSourceRef {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ImportSourceRef($$parsedSource as Partial<ImportSourceRef>);
+    }
+}
+
 export class ImportTargetDetectionResult {
     "Candidates": string[];
     "Warnings": string[];
@@ -2030,6 +2100,60 @@ export type ReShadeRequest = reshade$0.Request;
 export const ReShadeTarget = reshade$0.ManagedTarget;
 export type ReShadeTarget = reshade$0.ManagedTarget;
 
+export class ResolveImportSourceDuplicatesInput {
+    "GameID": number;
+    "Sources": ImportSourceRef[];
+
+    /** Creates a new ResolveImportSourceDuplicatesInput instance. */
+    constructor($$source: Partial<ResolveImportSourceDuplicatesInput> = {}) {
+        if (!("GameID" in $$source)) {
+            this["GameID"] = 0;
+        }
+        if (!("Sources" in $$source)) {
+            this["Sources"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ResolveImportSourceDuplicatesInput instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ResolveImportSourceDuplicatesInput {
+        const $$createField1_0 = $$createType41;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Sources" in $$parsedSource) {
+            $$parsedSource["Sources"] = $$createField1_0($$parsedSource["Sources"]);
+        }
+        return new ResolveImportSourceDuplicatesInput($$parsedSource as Partial<ResolveImportSourceDuplicatesInput>);
+    }
+}
+
+export class ResolveImportSourceDuplicatesResult {
+    "Items": ImportSourceDuplicateStatus[];
+
+    /** Creates a new ResolveImportSourceDuplicatesResult instance. */
+    constructor($$source: Partial<ResolveImportSourceDuplicatesResult> = {}) {
+        if (!("Items" in $$source)) {
+            this["Items"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ResolveImportSourceDuplicatesResult instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ResolveImportSourceDuplicatesResult {
+        const $$createField0_0 = $$createType43;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("Items" in $$parsedSource) {
+            $$parsedSource["Items"] = $$createField0_0($$parsedSource["Items"]);
+        }
+        return new ResolveImportSourceDuplicatesResult($$parsedSource as Partial<ResolveImportSourceDuplicatesResult>);
+    }
+}
+
 export class RestoreMod {
     "ID": number;
     "Name": string;
@@ -2087,7 +2211,7 @@ export class RestoreOperation {
      * Creates a new RestoreOperation instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperation {
-        const $$createField2_0 = $$createType40;
+        const $$createField2_0 = $$createType44;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
             $$parsedSource["Mod"] = $$createField2_0($$parsedSource["Mod"]);
@@ -2128,7 +2252,7 @@ export class RestoreOperationResult {
      * Creates a new RestoreOperationResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreOperationResult {
-        const $$createField1_0 = $$createType41;
+        const $$createField1_0 = $$createType45;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Operation" in $$parsedSource) {
             $$parsedSource["Operation"] = $$createField1_0($$parsedSource["Operation"]);
@@ -2192,7 +2316,7 @@ export class RestoreResult {
      * Creates a new RestoreResult instance from a string or object.
      */
     static createFrom($$source: any = {}): RestoreResult {
-        const $$createField4_0 = $$createType43;
+        const $$createField4_0 = $$createType47;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Results" in $$parsedSource) {
             $$parsedSource["Results"] = $$createField4_0($$parsedSource["Results"]);
@@ -2229,7 +2353,7 @@ export class SourceScanResult {
      * Creates a new SourceScanResult instance from a string or object.
      */
     static createFrom($$source: any = {}): SourceScanResult {
-        const $$createField3_0 = $$createType45;
+        const $$createField3_0 = $$createType49;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Games" in $$parsedSource) {
             $$parsedSource["Games"] = $$createField3_0($$parsedSource["Games"]);
@@ -2493,7 +2617,7 @@ export class UpdateModDetailsInput {
      * Creates a new UpdateModDetailsInput instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModDetailsInput {
-        const $$createField2_0 = $$createType46;
+        const $$createField2_0 = $$createType50;
         const $$createField3_0 = $$createType23;
         const $$createField4_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
@@ -2575,10 +2699,10 @@ export class UpdateModMetadataInput {
      * Creates a new UpdateModMetadataInput instance from a string or object.
      */
     static createFrom($$source: any = {}): UpdateModMetadataInput {
-        const $$createField1_0 = $$createType47;
-        const $$createField2_0 = $$createType47;
-        const $$createField3_0 = $$createType47;
-        const $$createField4_0 = $$createType47;
+        const $$createField1_0 = $$createType51;
+        const $$createField2_0 = $$createType51;
+        const $$createField3_0 = $$createType51;
+        const $$createField4_0 = $$createType51;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Version" in $$parsedSource) {
             $$parsedSource["Version"] = $$createField1_0($$parsedSource["Version"]);
@@ -2637,8 +2761,8 @@ export class UpdateModResult {
      */
     static createFrom($$source: any = {}): UpdateModResult {
         const $$createField0_0 = $$createType26;
-        const $$createField1_0 = $$createType48;
-        const $$createField2_0 = $$createType48;
+        const $$createField1_0 = $$createType52;
+        const $$createField2_0 = $$createType52;
         const $$createField4_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Mod" in $$parsedSource) {
@@ -2751,12 +2875,16 @@ const $$createType36 = ReShadeChainState.createFrom;
 const $$createType37 = $Create.Nullable($$createType36);
 const $$createType38 = DetectedReShadeTarget.createFrom;
 const $$createType39 = $Create.Array($$createType38);
-const $$createType40 = RestoreMod.createFrom;
-const $$createType41 = RestoreOperation.createFrom;
-const $$createType42 = RestoreOperationResult.createFrom;
+const $$createType40 = ImportSourceRef.createFrom;
+const $$createType41 = $Create.Array($$createType40);
+const $$createType42 = ImportSourceDuplicateStatus.createFrom;
 const $$createType43 = $Create.Array($$createType42);
-const $$createType44 = StoredGame.createFrom;
-const $$createType45 = $Create.Array($$createType44);
-const $$createType46 = UpdateModMetadataInput.createFrom;
-const $$createType47 = ModMetadataFieldUpdate.createFrom;
-const $$createType48 = ModPackageSnapshot.createFrom;
+const $$createType44 = RestoreMod.createFrom;
+const $$createType45 = RestoreOperation.createFrom;
+const $$createType46 = RestoreOperationResult.createFrom;
+const $$createType47 = $Create.Array($$createType46);
+const $$createType48 = StoredGame.createFrom;
+const $$createType49 = $Create.Array($$createType48);
+const $$createType50 = UpdateModMetadataInput.createFrom;
+const $$createType51 = ModMetadataFieldUpdate.createFrom;
+const $$createType52 = ModPackageSnapshot.createFrom;

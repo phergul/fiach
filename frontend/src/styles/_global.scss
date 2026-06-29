@@ -3,7 +3,6 @@
 // Shared utility and cross-component class styles.
 
 $checkbox-option-size: 1.25rem;
-$checkbox-option-offset: 0.125rem;
 $checkbox-option-check-top: 0.1875rem;
 $checkbox-option-check-left: 0.375rem;
 $checkbox-option-check-width: 0.375rem;
@@ -39,7 +38,6 @@ $checkbox-option-hidden-input-offset: -0.0625rem;
   position: relative;
   width: $checkbox-option-size;
   height: $checkbox-option-size;
-  margin-top: $checkbox-option-offset;
   background: $color-surface;
   border: $app-border-width solid $color-border;
   border-radius: 0;
@@ -77,4 +75,11 @@ $checkbox-option-hidden-input-offset: -0.0625rem;
 .dropdown-menu-checkbox-option:has(input:disabled) {
   cursor: not-allowed;
   opacity: 0.58;
+}
+
+.dropdown-menu-checkbox-option .dropdown-menu-item-label {
+  display: flex;
+  align-items: center;
+  min-height: $checkbox-option-size;
+  line-height: 1;
 }

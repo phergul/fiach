@@ -40,6 +40,12 @@ interface GameModImportWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (input: GameModImportWizardSubmitInput) => Promise<void> | void;
+  onImportAnotherAfterCompleteChange?: (enabled: boolean) => void;
+  onReusePreviousSettingsChange?: (enabled: boolean) => void;
+  importAnotherAfterComplete?: boolean;
+  queuePosition?: { current: number; total: number } | null;
+  reuseFromPrevious?: { strategyType: StrategyType; targetRelativePath: string } | null;
+  reusePreviousSettings?: boolean;
   sourceLabel: string;
   sourcePath: string;
   sourceType: ModSourceType;
@@ -65,6 +71,12 @@ export const GameModImportWizard = ({
   isOpen,
   onClose,
   onImport,
+  onImportAnotherAfterCompleteChange,
+  onReusePreviousSettingsChange,
+  importAnotherAfterComplete = false,
+  queuePosition = null,
+  reuseFromPrevious = null,
+  reusePreviousSettings = false,
   sourceLabel,
   sourcePath,
   sourceType,
@@ -105,6 +117,15 @@ export const GameModImportWizard = ({
     (isTargetStep && !canPreviewTarget) ||
     (isPreviewStep && preview === null);
 
+  const canReusePreviousSettings =
+    reuseFromPrevious !== null && onReusePreviousSettingsChange !== undefined;
+  const queueIsland =
+    queuePosition === null ? undefined : (
+      <div className="game-mod-import-wizard-queue-island" aria-live="polite">
+        Queue: {queuePosition.current} of {queuePosition.total}
+      </div>
+    );
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -114,7 +135,11 @@ export const GameModImportWizard = ({
     setStep('details');
     setName(initialName);
     setSelectedStrategyType(null);
-    setTargetRelativePath('.');
+    setTargetRelativePath(
+      reusePreviousSettings && reuseFromPrevious !== null
+        ? reuseFromPrevious.targetRelativePath
+        : '.',
+    );
     setTags([]);
     setPreview(null);
     setPreviewError(null);
@@ -134,11 +159,15 @@ export const GameModImportWizard = ({
         }
 
         setStrategies(loadedStrategies);
+        const preferredStrategyType =
+          reusePreviousSettings && reuseFromPrevious !== null
+            ? reuseFromPrevious.strategyType
+            : suggestedStrategyType;
         if (
-          suggestedStrategyType !== null &&
-          loadedStrategies.some((strategy) => strategy.Type === suggestedStrategyType)
+          preferredStrategyType !== null &&
+          loadedStrategies.some((strategy) => strategy.Type === preferredStrategyType)
         ) {
-          setSelectedStrategyType(suggestedStrategyType);
+          setSelectedStrategyType(preferredStrategyType);
         } else if (loadedStrategies.length === 1) {
           setSelectedStrategyType(loadedStrategies[0].Type);
         }
@@ -159,7 +188,7 @@ export const GameModImportWizard = ({
     return () => {
       isCancelled = true;
     };
-  }, [initialName, isOpen, suggestedStrategyType]);
+  }, [initialName, isOpen, reuseFromPrevious, reusePreviousSettings, suggestedStrategyType]);
 
   useEffect(() => {
     if (!isOpen || !isTargetStep || selectedStrategy === undefined) {
@@ -210,6 +239,9 @@ export const GameModImportWizard = ({
   }, [gameID, isOpen, isTargetStep, selectedStrategy]);
 
   const handleStrategySelect = (strategyType: StrategyType) => {
+    if (canReusePreviousSettings && reusePreviousSettings) {
+      onReusePreviousSettingsChange?.(false);
+    }
     setSelectedStrategyType(strategyType);
     setTargetRelativePath(strategyType === StrategyType.StrategyTypeUnrealPak ? '' : '.');
     setTargetCandidates([]);
@@ -220,6 +252,9 @@ export const GameModImportWizard = ({
   };
 
   const handleTargetRelativePathChange = (nextTargetRelativePath: string) => {
+    if (canReusePreviousSettings && reusePreviousSettings) {
+      onReusePreviousSettingsChange?.(false);
+    }
     setTargetRelativePath(nextTargetRelativePath);
     setPreview(null);
     setPreviewError(null);
@@ -305,6 +340,8 @@ export const GameModImportWizard = ({
     }
   };
 
+  const canImportAnother = isPreviewStep && onImportAnotherAfterCompleteChange !== undefined;
+
   const footer = (
     <>
       {!isDetailsStep && (
@@ -315,22 +352,37 @@ export const GameModImportWizard = ({
       <button disabled={isBusy} onClick={onClose} type="button">
         Cancel
       </button>
-      <button className="button-main" disabled={isNextDisabled} type="submit">
-        {isPreviewStep
-          ? isBusy
-            ? 'Importing...'
-            : 'Import Mod'
-          : isTargetStep
-            ? isPreviewing
-              ? 'Previewing...'
-              : 'Preview'
-            : 'Next'}
-      </button>
+      <div className="game-mod-import-wizard-footer-actions">
+        {canImportAnother && (
+          <label className="dropdown-menu-checkbox-option game-mod-import-wizard-import-another">
+            <input
+              checked={importAnotherAfterComplete}
+              disabled={isBusy}
+              onChange={(event) => onImportAnotherAfterCompleteChange?.(event.target.checked)}
+              type="checkbox"
+            />
+            <span className="dropdown-menu-checkbox-control" aria-hidden="true" />
+            <span className="dropdown-menu-item-label">Import another</span>
+          </label>
+        )}
+        <button className="button-main" disabled={isNextDisabled} type="submit">
+          {isPreviewStep
+            ? isBusy
+              ? 'Importing...'
+              : 'Import Mod'
+            : isTargetStep
+              ? isPreviewing
+                ? 'Previewing...'
+                : 'Preview'
+              : 'Next'}
+        </button>
+      </div>
     </>
   );
 
   return (
     <Modal
+      abovePanel={queueIsland}
       bodyClassName="game-mod-import-wizard-body"
       closeTitle="Close import wizard"
       description="Decide how to import this mod into your game"
@@ -344,6 +396,23 @@ export const GameModImportWizard = ({
       title="Import Mod"
       footer={footer}
     >
+      {canReusePreviousSettings && (
+        <div className="game-mod-import-wizard-reuse-box">
+          <label className="dropdown-menu-checkbox-option game-mod-import-wizard-reuse">
+            <input
+              checked={reusePreviousSettings}
+              disabled={isBusy}
+              onChange={(event) => onReusePreviousSettingsChange?.(event.target.checked)}
+              type="checkbox"
+            />
+            <span className="dropdown-menu-checkbox-control" aria-hidden="true" />
+            <span className="dropdown-menu-item-label">
+              Reuse strategy and target from previous import
+            </span>
+          </label>
+        </div>
+      )}
+
       <ol className="game-mod-import-wizard-steps" aria-label="Import steps">
         {stepOrder.map((stepName, index) => (
           <li

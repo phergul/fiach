@@ -1,0 +1,125 @@
+@use '@styles' as *;
+
+$game-mod-import-queue-control-height: 2.5rem;
+
+.game-mod-import-queue-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.game-mod-import-queue-panel .modal-header,
+.game-mod-import-queue-panel .modal-footer {
+  background: $color-surface;
+
+  button {
+    background: $color-background;
+  }
+}
+
+.game-mod-import-queue-list-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.game-mod-import-queue-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-mod-import-queue-list-item {
+  background: $color-background;
+  margin-top: $spacing-separator;
+}
+
+.game-mod-import-queue-list-item + .game-mod-import-queue-list-item {
+  margin-top: $spacing-separator;
+}
+
+.game-mod-import-queue-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-lg;
+}
+
+.game-mod-import-queue-item:hover {
+  background: rgb(#{$color-surface-rgb} / 42%);
+}
+
+.game-mod-import-queue-item-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.game-mod-import-queue-status {
+  display: inline-flex;
+  width: fit-content;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.game-mod-import-queue-status-pending,
+.game-mod-import-queue-status-reviewing,
+.game-mod-import-queue-status-importing {
+  color: $color-info;
+}
+
+.game-mod-import-queue-status-imported {
+  color: $color-success;
+}
+
+.game-mod-import-queue-status-failed {
+  color: $color-danger;
+}
+
+.game-mod-import-queue-status-skipped {
+  color: $color-warning;
+}
+
+.game-mod-import-queue-item-name {
+  overflow-wrap: anywhere;
+  color: $color-text-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.game-mod-import-queue-item-detail {
+  overflow-wrap: anywhere;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-queue-item-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.game-mod-import-queue-item-actions button {
+  min-height: $game-mod-import-queue-control-height;
+  background: $color-surface;
+}
+
+.game-mod-import-queue-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+
+  button {
+    background: $color-background;
+  }
+}
+
+.game-mod-import-queue-close-button {
+  min-width: 6rem;
+  min-height: $game-mod-import-queue-control-height;
+}

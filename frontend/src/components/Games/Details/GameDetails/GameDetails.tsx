@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
@@ -16,6 +16,8 @@ import {
   type GameDetailsTab,
 } from '@components/Games/Details/GameDetailsTabs/GameDetailsTabs';
 import { GameDetailsMetadata } from '@components/Games/Details/Metadata/GameDetailsMetadata/GameDetailsMetadata';
+import { GameModImportQueue } from '@components/Games/Details/Mods/GameModImportQueue/GameModImportQueue';
+import { GameModImportQueueSummary } from '@components/Games/Details/Mods/GameModImportQueueSummary/GameModImportQueueSummary';
 import { GameModImportWizard } from '@components/Games/Details/Mods/GameModImportWizard/GameModImportWizard';
 import { GameModUpdateModal } from '@components/Games/Details/Mods/GameModUpdateModal/GameModUpdateModal';
 import { GameModsSection } from '@components/Games/Details/Mods/GameModsSection/GameModsSection';
@@ -23,9 +25,10 @@ import { GameProfilesSection } from '@components/Games/Details/Profiles/GameProf
 import {
   useAppliedProfile,
   useGameArtwork,
-  useGameModImportFlow,
+  useGameModImportQueue,
   useGameModUpdateFlow,
   useGameMods,
+  useModImportFileDrop,
   useGameOptiScaler,
   useGameProfiles,
   useGameReShade,
@@ -69,15 +72,31 @@ export const GameDetails = () => {
   const reShadeDetection = useGameReShadeDetection(game?.ID ?? null);
   const reShade = useGameReShade(game?.ID ?? null);
   const optiScaler = useGameOptiScaler(game?.ID ?? null);
-  const importFlow = useGameModImportFlow({
+  const importQueue = useGameModImportQueue({
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
   });
+  const handleDroppedFiles = useCallback(
+    (files: string[]) => {
+      void importQueue.handleDroppedFiles(files);
+    },
+    [importQueue.handleDroppedFiles],
+  );
+  useModImportFileDrop({
+    enabled: activeTab === 'mods' && game !== undefined && !importQueue.isBusy,
+    onFilesDropped: handleDroppedFiles,
+  });
   const isImportMenuVisible =
-    importFlow.isImportMenuOpen && game !== undefined && !importFlow.isImporting;
+    importQueue.isImportMenuOpen && game !== undefined && !importQueue.isBusy;
+  const reuseFromPrevious =
+    importQueue.queuePosition !== null &&
+    importQueue.queuePosition.current > 1 &&
+    importQueue.lastImportSettings !== null
+      ? importQueue.lastImportSettings
+      : null;
   useClickOutside(
     importMenuAnchorRef,
-    () => importFlow.setIsImportMenuOpen(false),
+    () => importQueue.setIsImportMenuOpen(false),
     isImportMenuVisible,
   );
   useClickOutside(actionsMenuAnchorRef, () => setIsActionsMenuOpen(false), isActionsMenuOpen);
@@ -173,13 +192,13 @@ export const GameDetails = () => {
           <div className="game-details-menu-anchor" ref={importMenuAnchorRef}>
             <button
               className="game-details-toolbar-button game-details-import-mods"
-              disabled={game === undefined || importFlow.isImporting}
+              disabled={game === undefined || importQueue.isBusy}
               onClick={() => {
                 setIsActionsMenuOpen(false);
-                importFlow.setIsImportMenuOpen((currentValue) => !currentValue);
+                importQueue.setIsImportMenuOpen((currentValue) => !currentValue);
               }}
               type="button"
-              aria-expanded={importFlow.isImportMenuOpen}
+              aria-expanded={importQueue.isImportMenuOpen}
             >
               <Plus className="game-details-toolbar-icon" aria-hidden="true" />
               <span>Import Mod</span>
@@ -187,17 +206,17 @@ export const GameDetails = () => {
 
             <DropdownMenu
               ariaLabel="Import mod"
-              isOpen={importFlow.isImportMenuOpen && game !== undefined && !importFlow.isImporting}
+              isOpen={importQueue.isImportMenuOpen && game !== undefined && !importQueue.isBusy}
               items={[
                 {
                   icon: FolderOpen,
                   label: 'Folder',
-                  onSelect: importFlow.startFolderImportFlow,
+                  onSelect: importQueue.startFolderImportFlow,
                 },
                 {
                   icon: Archive,
                   label: 'ZIP Archive',
-                  onSelect: importFlow.startArchiveImportFlow,
+                  onSelect: importQueue.startArchiveImportFlow,
                 },
               ]}
             />
@@ -207,7 +226,7 @@ export const GameDetails = () => {
               className="game-details-toolbar-button game-details-toolbar-icon-button"
               disabled={game === undefined}
               onClick={() => {
-                importFlow.setIsImportMenuOpen(false);
+                importQueue.setIsImportMenuOpen(false);
                 setIsActionsMenuOpen((currentValue) => !currentValue);
               }}
               title="Game actions"
@@ -290,12 +309,13 @@ export const GameDetails = () => {
 
           {activeTab === 'mods' ? (
             <GameModsSection
-              isImportDisabled={importFlow.isImporting}
+              isFileDropTargetActive={activeTab === 'mods' && !importQueue.isBusy}
+              isImportDisabled={importQueue.isBusy}
               isUpdateDisabled={updateFlow.isBusy}
               modManager={gameModManager}
               onModDeleted={refreshAfterModDeleted}
-              onImportArchive={importFlow.startArchiveImportFlow}
-              onImportFolder={importFlow.startFolderImportFlow}
+              onImportArchive={importQueue.startArchiveImportFlow}
+              onImportFolder={importQueue.startFolderImportFlow}
               onUpdateArchiveMod={updateFlow.startArchiveUpdateFlow}
               onUpdateFolderMod={updateFlow.startFolderUpdateFlow}
             />
@@ -314,18 +334,42 @@ export const GameDetails = () => {
 
       <GameModImportWizard
         availableTags={gameModManager.gameTags}
-        error={importFlow.importError}
+        error={importQueue.importError}
         gameID={game?.ID ?? 0}
-        initialName={importFlow.importWizard?.initialName ?? ''}
-        isBusy={importFlow.isImporting}
-        isOpen={importFlow.importWizard !== null}
-        onClose={importFlow.closeImportReview}
-        onImport={importFlow.importWizardMod}
-        sourceLabel={importFlow.importWizard?.sourceLabel ?? 'Source'}
-        sourcePath={importFlow.importWizard?.sourcePath ?? ''}
-        sourceType={importFlow.importWizard?.sourceType ?? ModSourceType.$zero}
-        suggestedStrategyType={importFlow.importWizard?.suggestedStrategy ?? null}
-        targetPath={importFlow.importWizard?.targetPath ?? ''}
+        initialName={importQueue.currentItem?.initialName ?? ''}
+        isBusy={importQueue.isImporting}
+        isOpen={importQueue.isWizardOpen}
+        onClose={importQueue.closeImportReview}
+        onImport={importQueue.importCurrentItem}
+        onImportAnotherAfterCompleteChange={importQueue.setImportAnotherAfterComplete}
+        importAnotherAfterComplete={importQueue.importAnotherAfterComplete}
+        onReusePreviousSettingsChange={importQueue.setReusePreviousImportSettings}
+        queuePosition={importQueue.queuePosition}
+        reuseFromPrevious={reuseFromPrevious}
+        reusePreviousSettings={importQueue.reusePreviousImportSettings}
+        sourceLabel={importQueue.currentItem?.sourceLabel ?? 'Source'}
+        sourcePath={importQueue.currentItem?.sourcePath ?? ''}
+        sourceType={importQueue.currentItem?.sourceType ?? ModSourceType.$zero}
+        suggestedStrategyType={importQueue.currentItem?.suggestedStrategy ?? null}
+        targetPath={importQueue.currentItem?.targetPath ?? ''}
+      />
+
+      <GameModImportQueue
+        isBusy={importQueue.isBusy}
+        isOpen={importQueue.viewMode === 'queue'}
+        items={importQueue.items}
+        onClose={importQueue.closeQueue}
+        onRemoveItem={importQueue.removeItem}
+        onReviewItem={importQueue.reviewItem}
+        onSkipItem={importQueue.skipItem}
+      />
+
+      <GameModImportQueueSummary
+        counts={importQueue.summaryCounts}
+        isBusy={importQueue.isBusy}
+        isOpen={importQueue.viewMode === 'summary'}
+        items={importQueue.items}
+        onClose={importQueue.closeSummary}
       />
 
       <GameModUpdateModal

@@ -16,6 +16,68 @@ import (
 	"github.com/phergul/fiach/internal/unrealpak"
 )
 
+func (s *ModService) ResolveImportSourceDuplicates(ctx context.Context, input dto.ResolveImportSourceDuplicatesInput) (result dto.ResolveImportSourceDuplicatesResult, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("resolve import source duplicates: %w", err)
+		}
+	}()
+
+	if input.GameID <= 0 {
+		return dto.ResolveImportSourceDuplicatesResult{}, errors.New("game ID must be positive")
+	}
+
+	result.Items = make([]dto.ImportSourceDuplicateStatus, 0, len(input.Sources))
+	canonicalPaths := make([]string, 0, len(input.Sources))
+
+	for _, sourceRef := range input.Sources {
+		status := dto.ImportSourceDuplicateStatus{
+			SourceType: sourceRef.SourceType,
+			SourcePath: sourceRef.SourcePath,
+		}
+
+		source, sourceErr := importSource(sourceRef.SourceType, sourceRef.SourcePath)
+		if sourceErr != nil {
+			message := modImportUserError(sourceErr).Error()
+			status.Error = &message
+			result.Items = append(result.Items, status)
+			continue
+		}
+
+		canonicalPath := source.OriginalPath()
+		status.CanonicalPath = canonicalPath
+		canonicalPaths = append(canonicalPaths, canonicalPath)
+		result.Items = append(result.Items, status)
+	}
+
+	if len(canonicalPaths) == 0 {
+		return result, nil
+	}
+
+	modsByPath, err := s.store.FindModsByOriginalSourcePaths(ctx, input.GameID, canonicalPaths)
+	if err != nil {
+		return dto.ResolveImportSourceDuplicatesResult{}, err
+	}
+
+	for index := range result.Items {
+		status := &result.Items[index]
+		if status.Error != nil || status.CanonicalPath == "" {
+			continue
+		}
+
+		existingMod, found := modsByPath[status.CanonicalPath]
+		if !found {
+			continue
+		}
+
+		status.IsDuplicate = true
+		status.ExistingModID = &existingMod.ID
+		status.ExistingModName = &existingMod.Name
+	}
+
+	return result, nil
+}
+
 func (s *ModService) PreValidateImport(ctx context.Context, input dto.PreValidateImportInput) (result dto.PreValidateImportResult, err error) {
 	diag := startDiagnosticOperation(ctx, s.logger, diagnostics.OperationPreValidateMod, "Mod import validation started",
 		slog.String("source_type", string(input.SourceType)),

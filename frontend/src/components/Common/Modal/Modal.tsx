@@ -8,6 +8,7 @@ type ModalBackground = 'background' | 'surface';
 type ModalSize = 'sm' | 'md' | 'lg';
 
 interface ModalProps {
+  abovePanel?: ReactNode;
   background?: ModalBackground;
   bodyClassName?: string;
   children: ReactNode;
@@ -26,6 +27,7 @@ interface ModalProps {
 }
 
 export const Modal = ({
+  abovePanel,
   background = 'background',
   bodyClassName,
   children,
@@ -66,37 +68,45 @@ export const Modal = ({
     <div className="modal" role="presentation">
       <div className="modal-backdrop" onClick={handleClose} aria-hidden="true" />
 
-      <PanelElement
-        className={panelClassNames}
-        onSubmit={onSubmit}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledByID}
-        aria-describedby={describedByID}
+      <div
+        className={
+          abovePanel === undefined ? 'modal-stack' : 'modal-stack modal-stack-with-accessory'
+        }
       >
-        <header className="modal-header">
-          <div className="modal-heading">
-            <h2 className="modal-title" id={labelledByID}>
-              {title}
-            </h2>
-            {description !== undefined && <div className="modal-summary">{description}</div>}
-          </div>
+        {abovePanel}
 
-          <button
-            className="modal-close"
-            disabled={isBusy}
-            onClick={handleClose}
-            title={closeTitle}
-            type="button"
-          >
-            <X className="modal-icon" aria-hidden="true" />
-          </button>
-        </header>
+        <PanelElement
+          className={panelClassNames}
+          onSubmit={onSubmit}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={labelledByID}
+          aria-describedby={describedByID}
+        >
+          <header className="modal-header">
+            <div className="modal-heading">
+              <h2 className="modal-title" id={labelledByID}>
+                {title}
+              </h2>
+              {description !== undefined && <div className="modal-summary">{description}</div>}
+            </div>
 
-        <div className={bodyClassNames}>{children}</div>
+            <button
+              className="modal-close"
+              disabled={isBusy}
+              onClick={handleClose}
+              title={closeTitle}
+              type="button"
+            >
+              <X className="modal-icon" aria-hidden="true" />
+            </button>
+          </header>
 
-        {footer !== undefined && <footer className="modal-footer">{footer}</footer>}
-      </PanelElement>
+          <div className={bodyClassNames}>{children}</div>
+
+          {footer !== undefined && <footer className="modal-footer">{footer}</footer>}
+        </PanelElement>
+      </div>
     </div>
   );
 };

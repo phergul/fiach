@@ -17,6 +17,7 @@ import (
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 //go:embed all:frontend/dist
@@ -93,7 +94,7 @@ func main() {
 	defer unsubscribeDiagnosticLogEntries()
 	go emitDiagnosticLogEntries(app, diagnosticLogEntries)
 
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
+	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:  "main",
 		Title: "Fiach",
 		Mac: application.MacWindow{
@@ -102,11 +103,22 @@ func main() {
 			TitleBar:                application.MacTitleBarDefault,
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
+		EnableFileDrop:   true,
 		Width:            1920,
 		Height:           1080,
 		MinWidth:         1000,
 		MinHeight:        800,
 		URL:              "/",
+	})
+	mainWindow.OnWindowEvent(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
+		files := event.Context().DroppedFiles()
+		if len(files) == 0 {
+			return
+		}
+
+		mainWindow.EmitEvent("files-dropped", map[string]any{
+			"files": files,
+		})
 	})
 
 	devlog.SetEmitter(func(entry devlog.Entry) {

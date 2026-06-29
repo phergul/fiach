@@ -1,3 +1,7 @@
 // dialogs
-export { openArchive } from './openArchive';
-export { openDirectory } from './openDirectory';
+export { openArchive, openArchives } from './openArchive';
+export { openDirectories, openDirectory } from './openDirectory';
+export {
+  normalizeMultipleDialogSelection,
+  normalizeSingleDialogSelection,
+} from './normalizeDialogSelection';

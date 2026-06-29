@@ -17,7 +17,15 @@ export {
 } from './deployment';
 
 // dialogs
-export { openArchive, openDirectory } from './dialogs';
+export { openArchive, openArchives, openDirectories, openDirectory } from './dialogs';
+
+// import
+export { inferImportSourceType, isArchiveImportPath } from './import/inferImportSourceType';
+export {
+  getArchiveImportName,
+  getFolderImportName,
+  getImportSourceLabel,
+} from './import/importSourceNames';
 
 // errors
 export { getErrorMessage, getRawErrorMessage } from './errors';

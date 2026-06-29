@@ -16,6 +16,30 @@ $modal-icon-size: 1rem;
   padding: $spacing-lg;
 }
 
+.modal-stack {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min($modal-width-md, 100%);
+  max-height: $modal-max-height;
+}
+
+.modal-stack:has(> .modal-panel-sm) {
+  width: min($modal-width-sm, 100%);
+}
+
+.modal-stack:has(> .modal-panel-lg) {
+  width: min($modal-width-lg, 100%);
+}
+
+.modal-stack-with-accessory {
+  gap: $spacing-sm;
+}
+
+.modal-stack .modal-panel {
+  width: 100%;
+}
+
 .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -24,9 +48,7 @@ $modal-icon-size: 1rem;
 
 .modal-panel {
   position: relative;
-  z-index: 1;
   display: grid;
-  width: min($modal-width-md, 100%);
   max-height: $modal-max-height;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background: $color-background;
@@ -41,6 +63,10 @@ $modal-icon-size: 1rem;
 
 .modal-panel-lg {
   width: min($modal-width-lg, 100%);
+}
+
+.modal-panel:not(.modal-panel-sm):not(.modal-panel-lg) {
+  width: min($modal-width-md, 100%);
 }
 
 .modal-panel-background {

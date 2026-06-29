@@ -70,6 +70,38 @@ func TestFindModByOriginalSourcePathUsesCanonicalPathAndGame(t *testing.T) {
 	}
 }
 
+func TestFindModsByOriginalSourcePathsReturnsGameScopedMatches(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	gameID := insertProfileTestGame(t, store, "Skyrim", "/games/skyrim")
+	otherGameID := insertProfileTestGame(t, store, "Fallout", "/games/fallout")
+	firstPath, err := CanonicalModOriginalSourcePath(filepath.Join(t.TempDir(), "mods", "SkyUI"))
+	if err != nil {
+		t.Fatalf("CanonicalModOriginalSourcePath() first error = %v", err)
+	}
+	secondPath, err := CanonicalModOriginalSourcePath(filepath.Join(t.TempDir(), "mods", "USSEP"))
+	if err != nil {
+		t.Fatalf("CanonicalModOriginalSourcePath() second error = %v", err)
+	}
+	firstModID := insertProfileTestModWithOriginalSource(t, store, gameID, "SkyUI", "/managed/skyrim/SkyUI", firstPath)
+	insertProfileTestModWithOriginalSource(t, store, otherGameID, "SkyUI", "/managed/fallout/SkyUI", firstPath)
+
+	modsByPath, err := store.FindModsByOriginalSourcePaths(context.Background(), gameID, []string{firstPath, secondPath})
+	if err != nil {
+		t.Fatalf("FindModsByOriginalSourcePaths() error = %v", err)
+	}
+	if len(modsByPath) != 1 {
+		t.Fatalf("FindModsByOriginalSourcePaths() length = %d, want 1: %+v", len(modsByPath), modsByPath)
+	}
+	foundMod, found := modsByPath[firstPath]
+	if !found || foundMod.ID != firstModID || foundMod.Name != "SkyUI" {
+		t.Fatalf("FindModsByOriginalSourcePaths() = %+v, want SkyUI mod %d", foundMod, firstModID)
+	}
+}
+
 func TestCreateModPersistsOriginalSourcePath(t *testing.T) {
 	t.Parallel()
 

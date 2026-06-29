@@ -293,6 +293,61 @@ func (s *Store) FindModByOriginalSourcePath(ctx context.Context, gameID int64, o
 	return mod, true, nil
 }
 
+func (s *Store) FindModsByOriginalSourcePaths(ctx context.Context, gameID int64, originalSourcePaths []string) (modsByPath map[string]dbtypes.Mod, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("find mods by original source paths: %w", err)
+		}
+	}()
+
+	if s == nil || s.db == nil {
+		return nil, errors.New("store is not open")
+	}
+	if gameID <= 0 {
+		return nil, errors.New("game ID must be positive")
+	}
+	if len(originalSourcePaths) == 0 {
+		return map[string]dbtypes.Mod{}, nil
+	}
+
+	canonicalPaths := make([]string, 0, len(originalSourcePaths))
+	seen := make(map[string]struct{}, len(originalSourcePaths))
+	for _, originalSourcePath := range originalSourcePaths {
+		canonicalPath, canonicalErr := CanonicalModOriginalSourcePath(originalSourcePath)
+		if canonicalErr != nil {
+			return nil, canonicalErr
+		}
+		if _, found := seen[canonicalPath]; found {
+			continue
+		}
+		seen[canonicalPath] = struct{}{}
+		canonicalPaths = append(canonicalPaths, canonicalPath)
+	}
+
+	query, args, err := sqlx.In(`
+		SELECT `+modSelectColumns+`
+		FROM mods
+		WHERE game_id = ?
+			AND original_source_path IN (?)
+	`, gameID, canonicalPaths)
+	if err != nil {
+		return nil, err
+	}
+	query = s.db.Rebind(query)
+
+	mods := make([]dbtypes.Mod, 0, len(canonicalPaths))
+	if err := s.db.SelectContext(ctx, &mods, query, args...); err != nil {
+		return nil, err
+	}
+
+	modsByPath = make(map[string]dbtypes.Mod, len(mods))
+	for _, mod := range mods {
+		modsByPath[mod.OriginalSourcePath] = mod
+	}
+
+	return modsByPath, nil
+}
+
 func insertMod(ctx context.Context, db interface {
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
 	GetContext(context.Context, any, string, ...any) error

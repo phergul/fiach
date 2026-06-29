@@ -89,6 +89,12 @@ export function RenameTag(tagID: number, name: string, color: dto$0.TagColor): $
     });
 }
 
+export function ResolveImportSourceDuplicates(input: dto$0.ResolveImportSourceDuplicatesInput): $CancellablePromise<dto$0.ResolveImportSourceDuplicatesResult> {
+    return $Call.ByID(775457951, input).then(($result: any) => {
+        return $$createType13($result);
+    });
+}
+
 export function UpdateMod(input: dto$0.UpdateModInput): $CancellablePromise<dto$0.UpdateModResult> {
     return $Call.ByID(4122963090, input).then(($result: any) => {
         return $$createType12($result);
@@ -121,3 +127,4 @@ const $$createType9 = $Create.Array($$createType8);
 const $$createType10 = dto$0.PreValidateImportResult.createFrom;
 const $$createType11 = dto$0.Preview.createFrom;
 const $$createType12 = dto$0.UpdateModResult.createFrom;
+const $$createType13 = dto$0.ResolveImportSourceDuplicatesResult.createFrom;

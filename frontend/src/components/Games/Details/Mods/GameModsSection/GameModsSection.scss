@@ -6,12 +6,38 @@ $game-mods-section-import-width: 8.5rem;
 $game-mods-section-side-panel-width: 32rem;
 
 .game-mods-section {
+  position: relative;
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
   background: $color-background;
   z-index: 1;
+}
+
+$game-mods-section-drop-overlay-icon-size: 3rem;
+
+.game-mods-section-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, $color-background 35%, black);
+  pointer-events: none;
+}
+
+.game-mods-section.file-drop-target-active .game-mods-section-drop-overlay {
+  display: flex;
+}
+
+.game-mods-section-drop-overlay-icon {
+  width: $game-mods-section-drop-overlay-icon-size;
+  height: $game-mods-section-drop-overlay-icon-size;
+  color: $color-text-primary;
+  opacity: 0.9;
+  stroke-width: 1.5;
 }
 
 .game-mods-section-controls {

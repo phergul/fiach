@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
+import { Archive, FolderOpen, Plus, Search, Upload } from 'lucide-react';
 
 import {
   DeleteMod,
@@ -31,6 +31,7 @@ import { getErrorMessage } from '@utils';
 import './GameModsSection.scss';
 
 interface GameModsSectionProps {
+  isFileDropTargetActive?: boolean;
   isImportDisabled?: boolean;
   isUpdateDisabled?: boolean;
   modManager: UseGameModsResult;
@@ -63,6 +64,7 @@ const deleteSummaryMessage = (mod: Mod | null, summary: ModDeleteSummary | null)
 };
 
 export const GameModsSection = ({
+  isFileDropTargetActive = false,
   isImportDisabled = false,
   isUpdateDisabled = false,
   modManager,
@@ -260,7 +262,16 @@ export const GameModsSection = ({
   };
 
   return (
-    <section className="game-mods-section" aria-label="Imported mods">
+    <section
+      className="game-mods-section"
+      aria-label="Imported mods"
+      {...(isFileDropTargetActive ? { 'data-file-drop-target': '' } : {})}
+    >
+      {isFileDropTargetActive && (
+        <div className="game-mods-section-drop-overlay" aria-hidden="true">
+          <Upload className="game-mods-section-drop-overlay-icon" />
+        </div>
+      )}
       <div className="game-mods-section-controls">
         <div className="game-mods-section-search">
           <Search className="game-mods-section-search-icon" aria-hidden="true" />

@@ -1,0 +1,65 @@
+@use '@styles' as *;
+
+.game-mod-import-queue-summary-body {
+  display: grid;
+  gap: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+}
+
+.game-mod-import-queue-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $spacing-sm;
+}
+
+.game-mod-import-queue-summary-count {
+  display: grid;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  border: $app-border;
+  background: $color-surface;
+}
+
+.game-mod-import-queue-summary-count span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+.game-mod-import-queue-summary-count strong {
+  font-size: $font-size-lg;
+}
+
+.game-mod-import-queue-summary-list {
+  display: grid;
+  gap: $spacing-sm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-mod-import-queue-summary-item {
+  display: grid;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  border: $app-border;
+  background: $color-surface;
+}
+
+.game-mod-import-queue-summary-item span {
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  overflow-wrap: anywhere;
+}
+
+.game-mod-import-queue-summary-panel .modal-footer {
+  min-height: 4.25rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: $spacing-md $spacing-xl;
+  background: $color-background;
+}
+
+.game-mod-import-queue-summary-panel .modal-footer .button-main {
+  min-width: 6rem;
+  min-height: $input-height;
+}

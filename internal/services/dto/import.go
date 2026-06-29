@@ -71,3 +71,27 @@ type ModDetectedMetadataSnapshot struct {
 	Description *string
 	SourceURL   *string
 }
+
+type ImportSourceRef struct {
+	SourceType ModSourceType
+	SourcePath string
+}
+
+type ResolveImportSourceDuplicatesInput struct {
+	GameID  int64
+	Sources []ImportSourceRef
+}
+
+type ImportSourceDuplicateStatus struct {
+	SourceType      ModSourceType
+	SourcePath      string
+	CanonicalPath   string
+	Error           *string
+	IsDuplicate     bool
+	ExistingModID   *int64
+	ExistingModName *string
+}
+
+type ResolveImportSourceDuplicatesResult struct {
+	Items []ImportSourceDuplicateStatus
+}
