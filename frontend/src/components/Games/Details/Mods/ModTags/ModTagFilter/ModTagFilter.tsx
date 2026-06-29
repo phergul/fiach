@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { ListFilter, Search } from 'lucide-react';
 
 import type { Mod, Tag } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { ModTagChip } from '@components/Games/Details/Mods/ModTags/ModTagChip/ModTagChip';
+import { useClickOutside } from '@hooks';
 
 import './ModTagFilter.scss';
 
@@ -24,6 +25,8 @@ export const ModTagFilter = ({
 }: ModTagFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const controlRef = useRef<HTMLDivElement>(null);
+  useClickOutside(controlRef, () => setIsOpen(false), isOpen);
   const tags = useMemo(() => {
     const tagsByID = new Map<number, Tag>();
     candidateMods.forEach((mod) => mod.Tags.forEach((tag) => tagsByID.set(tag.ID, tag)));
@@ -56,7 +59,7 @@ export const ModTagFilter = ({
 
   return (
     <div className={`mod-tag-filter mod-tag-filter-${popoverPlacement} mod-tag-filter-${variant}`}>
-      <div className="mod-tag-filter-control">
+      <div className="mod-tag-filter-control" ref={controlRef}>
         <button
           aria-expanded={isOpen}
           className={
@@ -89,12 +92,13 @@ export const ModTagFilter = ({
             {variant !== 'profile-footer' && searchField}
             <div className="mod-tag-filter-options">
               {filteredTags.map((tag) => (
-                <label className="mod-tag-filter-option" key={tag.ID}>
+                <label className="dropdown-menu-checkbox-option" key={tag.ID}>
                   <input
                     checked={selectedTagIDs.includes(tag.ID)}
                     onChange={() => toggleTag(tag.ID)}
                     type="checkbox"
                   />
+                  <span className="dropdown-menu-checkbox-control" aria-hidden="true" />
                   <ModTagChip color={tag.Color} name={tag.Name} />
                 </label>
               ))}

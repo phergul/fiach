@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { ChevronDown } from 'lucide-react';
 
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
+import { useClickOutside } from '@hooks';
 
 import './DeploymentTreeFilterDropdown.scss';
 
@@ -33,11 +34,13 @@ export const DeploymentTreeFilterDropdown = ({
   onChange,
 }: DeploymentTreeFilterDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const controlRef = useRef<HTMLDivElement>(null);
   const isActive = selectedValues.length > 0;
+  useClickOutside(controlRef, () => setIsOpen(false), isOpen);
 
   return (
     <div className="deployment-tree-filter-dropdown">
-      <div className="deployment-tree-filter-dropdown-control">
+      <div className="deployment-tree-filter-dropdown-control" ref={controlRef}>
         <button
           aria-expanded={isOpen}
           className={

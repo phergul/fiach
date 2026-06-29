@@ -8,6 +8,7 @@ import { applyThemeCSSVariables } from '@theme/themeCSSVariables';
 import { defaultTheme } from '@theme/themes';
 
 import './styles/_theme.scss';
+import './styles/_global.scss';
 
 applyThemeCSSVariables(defaultTheme);
 

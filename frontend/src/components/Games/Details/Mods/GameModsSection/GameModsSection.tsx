@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Archive, FolderOpen, Plus, Search } from 'lucide-react';
 
@@ -25,6 +25,7 @@ import {
   type ModMetadataSaveInput,
 } from '@components/Games/Details/Mods/ModMetadataSidePanel/ModMetadataSidePanel';
 import type { UseGameModsResult } from '@hooks';
+import { useClickOutside } from '@hooks';
 import { getErrorMessage } from '@utils';
 
 import './GameModsSection.scss';
@@ -81,6 +82,7 @@ export const GameModsSection = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
+  const importMenuAnchorRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTagIDs, setSelectedTagIDs] = useState<number[]>([]);
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
@@ -123,6 +125,11 @@ export const GameModsSection = ({
   ];
   const isDeleteBusy = isDeleteSummaryLoading || isDeleting;
   const isRowBusy = isDeleteBusy || isSavingMetadata || isUpdateDisabled;
+  useClickOutside(
+    importMenuAnchorRef,
+    () => setIsImportMenuOpen(false),
+    isImportMenuOpen && !isImportDisabled,
+  );
   const selectedMetadataMod =
     editingMetadataModID === null
       ? null
@@ -273,7 +280,7 @@ export const GameModsSection = ({
           selectedTagIDs={selectedTagIDs}
         />
 
-        <div className="game-mods-section-import-anchor">
+        <div className="game-mods-section-import-anchor" ref={importMenuAnchorRef}>
           <button
             className="game-mods-section-import-button"
             disabled={isImportDisabled}

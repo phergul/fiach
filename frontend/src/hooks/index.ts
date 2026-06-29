@@ -1,3 +1,6 @@
+// common
+export { useClickOutside } from './common';
+
 // deployment
 export {
   fetchDeploymentReviewPreview,

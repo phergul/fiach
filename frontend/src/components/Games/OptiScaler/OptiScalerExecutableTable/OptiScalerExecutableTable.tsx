@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Ellipsis, RefreshCw, ShieldCheck, Trash2, Wrench } from 'lucide-react';
 
@@ -9,6 +9,7 @@ import type {
   OptiScalerTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
+import { useClickOutside } from '@hooks';
 import type { OptiScalerOperationSelection } from '@components/Games/OptiScaler/OptiScalerWizard/OptiScalerWizard';
 
 import './OptiScalerExecutableTable.scss';
@@ -92,6 +93,8 @@ const OptiScalerManagedActions = ({
   row: ManagedRow;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuAnchorRef = useRef<HTMLDivElement>(null);
+  useClickOutside(menuAnchorRef, () => setIsOpen(false), isOpen && !disabled);
   const primaryAction =
     row.target.Status === 'drifted'
       ? Action.ActionRepair
@@ -115,7 +118,7 @@ const OptiScalerManagedActions = ({
       >
         {primaryLabel}
       </button>
-      <div className="optiscaler-executable-menu-anchor">
+      <div className="optiscaler-executable-menu-anchor" ref={menuAnchorRef}>
         <button
           aria-expanded={isOpen}
           aria-label={`More actions for ${executableName(row.target.ExecutableRelativePath)}`}

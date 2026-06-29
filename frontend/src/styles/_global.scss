@@ -1,0 +1,80 @@
+@use 'variables' as *;
+
+// Shared utility and cross-component class styles.
+
+$checkbox-option-size: 1.25rem;
+$checkbox-option-offset: 0.125rem;
+$checkbox-option-check-top: 0.1875rem;
+$checkbox-option-check-left: 0.375rem;
+$checkbox-option-check-width: 0.375rem;
+$checkbox-option-check-height: 0.625rem;
+$checkbox-option-hidden-input-size: 0.0625rem;
+$checkbox-option-hidden-input-offset: -0.0625rem;
+
+.dropdown-menu-checkbox-option {
+  display: grid;
+  grid-template-columns: $checkbox-option-size minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-sm;
+  min-height: $input-height;
+  padding: 0 $spacing-sm;
+  background: $color-surface;
+  cursor: pointer;
+}
+
+.dropdown-menu-checkbox-option:hover {
+  background: $color-surface-elevated;
+}
+
+.dropdown-menu-checkbox-option input {
+  position: absolute;
+  width: $checkbox-option-hidden-input-size;
+  height: $checkbox-option-hidden-input-size;
+  margin: $checkbox-option-hidden-input-offset;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.dropdown-menu-checkbox-control {
+  position: relative;
+  width: $checkbox-option-size;
+  height: $checkbox-option-size;
+  margin-top: $checkbox-option-offset;
+  background: $color-surface;
+  border: $app-border-width solid $color-border;
+  border-radius: 0;
+  transition:
+    background-color $transition-duration-fast $transition-easing-standard,
+    border-color $transition-duration-fast $transition-easing-standard;
+}
+
+.dropdown-menu-checkbox-control::after {
+  position: absolute;
+  top: $checkbox-option-check-top;
+  left: $checkbox-option-check-left;
+  width: $checkbox-option-check-width;
+  height: $checkbox-option-check-height;
+  border-right: $app-border-width solid $color-background;
+  border-bottom: $app-border-width solid $color-background;
+  content: '';
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+.dropdown-menu-checkbox-option input:checked + .dropdown-menu-checkbox-control {
+  background: $color-success;
+  border-color: $color-success;
+}
+
+.dropdown-menu-checkbox-option input:checked + .dropdown-menu-checkbox-control::after {
+  opacity: 1;
+}
+
+.dropdown-menu-checkbox-option:has(input:focus-visible) .dropdown-menu-checkbox-control {
+  border-color: $color-border-strong;
+}
+
+.dropdown-menu-checkbox-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.58;
+}

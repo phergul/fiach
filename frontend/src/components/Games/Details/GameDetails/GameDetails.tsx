@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, FolderOpen, Menu, Plus } from 'lucide-react';
@@ -32,6 +32,7 @@ import {
   useGameReShadeDetection,
   useGameStorageOverride,
   useStoredGames,
+  useClickOutside,
 } from '@hooks';
 
 import './GameDetails.scss';
@@ -55,6 +56,8 @@ export const GameDetails = () => {
   const [activeTab, setActiveTab] = useState<GameDetailsTab>('profiles');
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+  const importMenuAnchorRef = useRef<HTMLDivElement>(null);
+  const actionsMenuAnchorRef = useRef<HTMLDivElement>(null);
   const { games, isLoading, isScanning, loadError, retryLoadGames, updateStoredGame } =
     useStoredGames();
   const parsedGameID = parseGameID(gameId);
@@ -70,6 +73,14 @@ export const GameDetails = () => {
     gameID: game?.ID ?? null,
     refreshMods: gameModManager.refreshMods,
   });
+  const isImportMenuVisible =
+    importFlow.isImportMenuOpen && game !== undefined && !importFlow.isImporting;
+  useClickOutside(
+    importMenuAnchorRef,
+    () => importFlow.setIsImportMenuOpen(false),
+    isImportMenuVisible,
+  );
+  useClickOutside(actionsMenuAnchorRef, () => setIsActionsMenuOpen(false), isActionsMenuOpen);
   const refreshAfterModUpdated = async () => {
     await Promise.all([
       gameModManager.refreshMods(),
@@ -159,7 +170,7 @@ export const GameDetails = () => {
           Back
         </Link>
         <div className="game-details-toolbar-actions">
-          <div className="game-details-menu-anchor">
+          <div className="game-details-menu-anchor" ref={importMenuAnchorRef}>
             <button
               className="game-details-toolbar-button game-details-import-mods"
               disabled={game === undefined || importFlow.isImporting}
@@ -191,7 +202,7 @@ export const GameDetails = () => {
               ]}
             />
           </div>
-          <div className="game-details-actions-menu-anchor">
+          <div className="game-details-actions-menu-anchor" ref={actionsMenuAnchorRef}>
             <button
               className="game-details-toolbar-button game-details-toolbar-icon-button"
               disabled={game === undefined}

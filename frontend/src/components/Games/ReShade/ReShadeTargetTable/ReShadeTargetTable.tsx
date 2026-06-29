@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import {
   Ellipsis,
@@ -18,7 +18,7 @@ import type {
   ReShadeTarget,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
-import { isReShadeUpdateAvailable } from '@hooks';
+import { isReShadeUpdateAvailable, useClickOutside } from '@hooks';
 
 import './ReShadeTargetTable.scss';
 
@@ -145,6 +145,8 @@ const ReShadeManagedActions = ({
   updateAvailable: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuAnchorRef = useRef<HTMLDivElement>(null);
+  useClickOutside(menuAnchorRef, () => setIsOpen(false), isOpen && !disabled);
   const primaryAction =
     target.Status === 'drifted'
       ? Action.ActionRepair
@@ -168,7 +170,7 @@ const ReShadeManagedActions = ({
       >
         {primaryLabel}
       </button>
-      <div className="reshade-target-menu-anchor">
+      <div className="reshade-target-menu-anchor" ref={menuAnchorRef}>
         <button
           aria-expanded={isOpen}
           aria-label={`More actions for ${filename(target.ExecutableRelativePath)}`}

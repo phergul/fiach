@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Archive, FolderOpen, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 
 import type { Mod } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { DropdownMenu } from '@components/Common/DropdownMenu/DropdownMenu';
+import { useClickOutside } from '@hooks';
 import {
   formatModMetadataBytes,
   formatModMetadataCount,
@@ -35,6 +36,12 @@ export const GameModListItem = ({
   onUpdateFolderMod,
 }: GameModListItemProps) => {
   const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
+  const updateMenuAnchorRef = useRef<HTMLDivElement>(null);
+  useClickOutside(
+    updateMenuAnchorRef,
+    () => setIsUpdateMenuOpen(false),
+    isUpdateMenuOpen && !isBusy,
+  );
   const version = mod.Metadata?.Version.Effective?.trim() ?? '';
   const author = mod.Metadata?.Author.Effective?.trim() ?? '';
   const identityMetadata = [
@@ -108,7 +115,7 @@ export const GameModListItem = ({
       </div>
 
       <div className="game-mod-list-item-actions">
-        <div className="game-mod-list-item-update-anchor">
+        <div className="game-mod-list-item-update-anchor" ref={updateMenuAnchorRef}>
           <button
             aria-expanded={isUpdateMenuOpen}
             aria-label={`Update ${mod.Name}`}
