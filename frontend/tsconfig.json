@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@app": ["src/App.tsx"],
+      "@assets/*": ["assets/*"],
       "@bindings/*": ["bindings/*"],
       "@components/*": ["src/components/*"],
       "@fiach/theme/*": ["../internal/theme/*"],

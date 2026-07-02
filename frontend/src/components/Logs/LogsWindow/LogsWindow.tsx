@@ -15,6 +15,7 @@ import {
   ListDiagnosticLogsInput,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { useToast } from '@components/Common/Toast/Toast';
+import { TitleBar } from '@components/Common/TitleBar/TitleBar';
 import { LogsTable } from '@components/Logs/LogsTable/LogsTable';
 import {
   LogLevelFilter,
@@ -234,6 +235,7 @@ export const LogsWindow = () => {
 
   return (
     <main className="logs-window">
+      <TitleBar title="Logs" />
       <LogsToolbar
         isExporting={isExporting}
         isLoading={isLoading}

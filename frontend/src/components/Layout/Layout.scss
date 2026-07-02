@@ -1,8 +1,24 @@
 @use '@styles' as *;
 
+.window-shell {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  background: $color-background;
+  color: $color-text-primary;
+}
+
+.window-shell-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
 .layout {
   display: flex;
-  min-height: $app-min-height;
+  min-height: 0;
+  flex: 1;
   background: $color-background;
   color: $color-text-primary;
 }

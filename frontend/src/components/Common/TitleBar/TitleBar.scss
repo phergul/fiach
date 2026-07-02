@@ -1,0 +1,81 @@
+@use '@styles' as *;
+
+$title-bar-control-width: 2.875rem;
+$title-bar-window-icon-size: 0.825rem;
+
+.title-bar {
+  --wails-draggable: drag;
+
+  display: flex;
+  height: $app-titlebar-height;
+  flex: 0 0 $app-titlebar-height;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: 0 0 0 $spacing-sm;
+  border-bottom: $app-border-width solid $color-border-subtle;
+  background: $color-surface;
+}
+
+.title-bar-leading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.title-bar-icon {
+  --wails-draggable: no-drag;
+
+  display: block;
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  flex: 0 0 $app-sidebar-icon-size;
+}
+
+.title-bar-title {
+  overflow: hidden;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-overflow: ellipsis;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.title-bar-controls {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
+}
+
+.title-bar-control {
+  --wails-draggable: no-drag;
+
+  width: $title-bar-control-width;
+  height: auto;
+  padding: 0;
+  background: transparent;
+}
+
+.title-bar-control:hover:not(:disabled),
+.title-bar-control:focus-visible:not(:disabled) {
+  background: $color-surface-elevated;
+  color: $color-text-primary;
+}
+
+.title-bar-control-close:hover:not(:disabled),
+.title-bar-control-close:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, $color-danger 36%, $color-surface-elevated);
+}
+
+.title-bar-control svg {
+  width: $app-sidebar-icon-size;
+  height: $app-sidebar-icon-size;
+  stroke-width: 1.5;
+}
+
+.title-bar-control-window svg {
+  width: $title-bar-window-icon-size;
+  height: $title-bar-window-icon-size;
+}

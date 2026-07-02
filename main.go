@@ -96,12 +96,15 @@ func main() {
 	go emitDiagnosticLogEntries(app, diagnosticLogEntries)
 
 	mainWindow := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Name:  "main",
-		Title: "Fiach",
+		Name:      "main",
+		Title:     "Fiach",
+		Frameless: true,
 		Mac: application.MacWindow{
-			InvisibleTitleBarHeight: 50,
+			InvisibleTitleBarHeight: 32,
 			Backdrop:                application.MacBackdropTranslucent,
-			TitleBar:                application.MacTitleBarDefault,
+		},
+		Windows: application.WindowsWindow{
+			DisableFramelessWindowDecorations: false,
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		EnableFileDrop:   true,

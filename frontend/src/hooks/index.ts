@@ -1,5 +1,5 @@
 // common
-export { useClickOutside } from './common';
+export { useClickOutside, useWindowMaximised } from './common';
 
 // deployment
 export {

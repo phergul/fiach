@@ -47,8 +47,16 @@ func (s *WindowService) OpenLogsWindow(ctx context.Context) (err error) {
 	}
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Name:             logsWindowName,
-		Title:            "Logs",
+		Name:      logsWindowName,
+		Title:     "Logs",
+		Frameless: true,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 48,
+			Backdrop:                application.MacBackdropTranslucent,
+		},
+		Windows: application.WindowsWindow{
+			DisableFramelessWindowDecorations: false,
+		},
 		URL:              "/?window=logs",
 		Width:            960,
 		Height:           720,
@@ -88,8 +96,16 @@ func (s *WindowService) OpenDevLogsWindow(ctx context.Context) (err error) {
 	}
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Name:             devLogsWindowName,
-		Title:            "Dev Logs",
+		Name:      devLogsWindowName,
+		Title:     "Dev Logs",
+		Frameless: true,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 48,
+			Backdrop:                application.MacBackdropTranslucent,
+		},
+		Windows: application.WindowsWindow{
+			DisableFramelessWindowDecorations: false,
+		},
 		URL:              "/?window=dev-logs",
 		Width:            960,
 		Height:           720,

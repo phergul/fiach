@@ -52,7 +52,7 @@ Fiach can check for updates from **Settings → About → Check for updates**. T
 
 Fiach is built with [Wails v3](https://v3.wails.io/) (Go backend, React frontend).
 
-**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha2.108`, Bun 1.3.x. On Linux, install GTK4/WebKitGTK 6.0 development packages (`libgtk-4-dev`, `libwebkitgtk-6.0-dev`, and related build tools).
+**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha2.111`, Bun 1.3.x. On Linux, install GTK4/WebKitGTK 6.0 development packages (`libgtk-4-dev`, `libwebkitgtk-6.0-dev`, and related build tools).
 
 ```bash
 wails3 task dev      # development

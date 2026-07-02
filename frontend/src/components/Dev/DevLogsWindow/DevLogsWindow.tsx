@@ -9,6 +9,7 @@ import {
 } from '@bindings/github.com/phergul/fiach/internal/services/devservice';
 import { DevLogEntry } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
 import { StateBlock } from '@components/Common/StateBlock/StateBlock';
+import { TitleBar } from '@components/Common/TitleBar/TitleBar';
 import { useToast } from '@components/Common/Toast/Toast';
 
 import './DevLogsWindow.scss';
@@ -100,6 +101,7 @@ export const DevLogsWindow = () => {
 
   return (
     <main className="dev-logs-window">
+      <TitleBar title="Dev Logs" />
       <header className="dev-logs-toolbar">
         <div className="dev-logs-toolbar-title">
           <h1>Dev Logs</h1>

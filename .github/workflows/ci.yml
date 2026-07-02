@@ -11,7 +11,7 @@ permissions:
 
 env:
   BUN_VERSION: 1.3.13
-  WAILS_VERSION: v3.0.0-alpha2.106
+  WAILS_VERSION: v3.0.0-alpha2.111
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

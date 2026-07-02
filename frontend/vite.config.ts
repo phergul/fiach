@@ -18,6 +18,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@app": fileURLToPath(new URL("./src/App.tsx", import.meta.url)),
+      "@assets": fileURLToPath(new URL("./assets", import.meta.url)),
       "@bindings": fileURLToPath(new URL("./bindings", import.meta.url)),
       "@components": fileURLToPath(new URL("./src/components", import.meta.url)),
       "@fiach/theme": fileURLToPath(new URL("../internal/theme", import.meta.url)),

@@ -16,7 +16,7 @@ permissions:
 
 env:
   BUN_VERSION: 1.3.13
-  WAILS_VERSION: v3.0.0-alpha2.108
+  WAILS_VERSION: v3.0.0-alpha2.111
   APP_NAME: fiach
 
 jobs:
@@ -71,6 +71,8 @@ jobs:
     runs-on: windows-latest
     needs:
       - release-init
+    outputs:
+      checksum_line: ${{ steps.checksum.outputs.line }}
 
     steps:
       - name: Check out repository
@@ -129,17 +131,21 @@ jobs:
             "artifacts/windows/${{ env.APP_NAME }}_windows_amd64_installer.exe" \
             --clobber
 
-      - name: Upload Windows checksum inputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-windows
-          path: artifacts/windows/${{ env.APP_NAME }}_windows_amd64.exe
+      - name: Compute Windows updater checksum
+        id: checksum
+        shell: bash
+        run: |
+          line=$(sha256sum "artifacts/windows/${{ env.APP_NAME }}_windows_amd64.exe")
+          echo "line=${line}" >> "${GITHUB_OUTPUT}"
 
   macos:
     name: macOS
     runs-on: macos-latest
     needs:
       - release-init
+    outputs:
+      checksum_line_arm64: ${{ steps.checksum.outputs.arm64 }}
+      checksum_line_amd64: ${{ steps.checksum.outputs.amd64 }}
 
     steps:
       - name: Check out repository
@@ -177,19 +183,21 @@ jobs:
             "artifacts/macos/${APP_NAME}_darwin_amd64.zip" \
             --clobber
 
-      - name: Upload macOS checksum inputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-macos
-          path: |
-            artifacts/macos/${{ env.APP_NAME }}_darwin_arm64.zip
-            artifacts/macos/${{ env.APP_NAME }}_darwin_amd64.zip
+      - name: Compute macOS updater checksums
+        id: checksum
+        run: |
+          arm64=$(shasum -a 256 "artifacts/macos/${APP_NAME}_darwin_arm64.zip")
+          amd64=$(shasum -a 256 "artifacts/macos/${APP_NAME}_darwin_amd64.zip")
+          echo "arm64=${arm64}" >> "${GITHUB_OUTPUT}"
+          echo "amd64=${amd64}" >> "${GITHUB_OUTPUT}"
 
   linux:
     name: Linux
     runs-on: ubuntu-latest
     needs:
       - release-init
+    outputs:
+      checksum_line: ${{ steps.checksum.outputs.line }}
 
     steps:
       - name: Check out repository
@@ -251,11 +259,11 @@ jobs:
             "artifacts/linux/${APP_NAME}_linux_amd64.rpm" \
             --clobber
 
-      - name: Upload Linux checksum inputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-linux
-          path: artifacts/linux/${{ env.APP_NAME }}_linux_amd64
+      - name: Compute Linux updater checksum
+        id: checksum
+        run: |
+          line=$(sha256sum "artifacts/linux/${APP_NAME}_linux_amd64")
+          echo "line=${line}" >> "${GITHUB_OUTPUT}"
 
   checksums:
     name: Generate SHA256SUMS
@@ -267,44 +275,20 @@ jobs:
       - linux
 
     steps:
-      - name: Download updater artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: release-*
-          merge-multiple: true
-          path: artifacts
-
       - name: Generate SHA256SUMS
         shell: bash
         run: |
-          shopt -s globstar nullglob
-          files=(
-            artifacts/**/${APP_NAME}_windows_amd64.exe
-            artifacts/**/${APP_NAME}_darwin_arm64.zip
-            artifacts/**/${APP_NAME}_darwin_amd64.zip
-            artifacts/**/${APP_NAME}_linux_amd64
-          )
-          if [ "${#files[@]}" -ne 4 ]; then
-            echo "Expected 4 updater artifacts, found ${#files[@]}:"
-            printf '  %s\n' "${files[@]}"
-            exit 1
-          fi
-          mkdir -p dist
-          cp "${files[@]}" dist/
-          (
-            cd dist
-            sha256sum \
-              "${APP_NAME}_windows_amd64.exe" \
-              "${APP_NAME}_darwin_arm64.zip" \
-              "${APP_NAME}_darwin_amd64.zip" \
-              "${APP_NAME}_linux_amd64" \
-              > SHA256SUMS
-          )
+          {
+            echo "${{ needs.windows.outputs.checksum_line }}"
+            echo "${{ needs.macos.outputs.checksum_line_arm64 }}"
+            echo "${{ needs.macos.outputs.checksum_line_amd64 }}"
+            echo "${{ needs.linux.outputs.checksum_line }}"
+          } > SHA256SUMS
 
       - name: Upload SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${{ needs.release-init.outputs.tag }}" \
-            dist/SHA256SUMS \
+            SHA256SUMS \
             --clobber

@@ -5,7 +5,7 @@
   flex: 0 0 $app-sidebar-collapsed-width;
   position: relative;
   z-index: $z-index-sidebar;
-  min-height: $app-min-height;
+  min-height: 0;
   transition:
     width $transition-duration-fast $transition-easing-standard,
     flex-basis $transition-duration-fast $transition-easing-standard;
@@ -21,7 +21,7 @@
   top: 0;
   display: flex;
   width: calc($app-sidebar-collapsed-width + $app-border-width);
-  height: 100vh;
+  height: 100%;
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
