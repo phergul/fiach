@@ -288,6 +288,7 @@ jobs:
       - name: Upload SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release upload "${{ needs.release-init.outputs.tag }}" \
             SHA256SUMS \
