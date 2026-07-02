@@ -25,14 +25,14 @@ func NewDiagnosticsService(manager *diagnostics.Manager) *DiagnosticsService {
 	}
 }
 
-func (s *DiagnosticsService) ListDiagnosticOperations(_ context.Context) (operations []dto.DiagnosticOperation, err error) {
+func (s *DiagnosticsService) ListDiagnosticOperations(_ context.Context) (groups []dto.DiagnosticOperationGroup, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("list diagnostic operations: %w", err)
 		}
 	}()
 
-	return mappers.ToDTODiagnosticOperations(diagnostics.Operations()), nil
+	return mappers.ToDTODiagnosticOperationGroups(diagnostics.OperationGroups()), nil
 }
 
 func (s *DiagnosticsService) ListRecentLogs(ctx context.Context, input dto.ListDiagnosticLogsInput) (entries []dto.DiagnosticLogEntry, err error) {

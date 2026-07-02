@@ -10,13 +10,18 @@ export interface LogOperationOption {
   value: LogOperationFilter;
 }
 
+export interface LogOperationOptionGroup {
+  area: string;
+  options: LogOperationOption[];
+}
+
 interface LogsToolbarProps {
   isExporting: boolean;
   isLoading: boolean;
   isRawJsonVisible: boolean;
   level: LogLevelFilter;
   operation: LogOperationFilter;
-  operationOptions: LogOperationOption[];
+  operationOptionGroups: LogOperationOptionGroup[];
   visibleCount: number;
   onClear: () => void;
   onCopy: () => void;
@@ -41,7 +46,7 @@ export const LogsToolbar = ({
   isRawJsonVisible,
   level,
   operation,
-  operationOptions,
+  operationOptionGroups,
   visibleCount,
   onClear,
   onCopy,
@@ -72,15 +77,20 @@ export const LogsToolbar = ({
           </select>
         </label>
 
-        <label className="logs-toolbar-field">
+        <label className="logs-toolbar-field logs-toolbar-field-operations">
           <select
             value={operation}
             onChange={(event) => onOperationChange(event.target.value as LogOperationFilter)}
           >
-            {operationOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+            <option value="all">All operations</option>
+            {operationOptionGroups.map((group) => (
+              <optgroup key={group.area} label={group.area.toUpperCase()}>
+                {group.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </label>

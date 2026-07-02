@@ -39,3 +39,19 @@ func ToDTODiagnosticOperations(operations []diagnostics.OperationDescriptor) []d
 
 	return result
 }
+
+func ToDTODiagnosticOperationGroups(groups []diagnostics.OperationGroup) []dto.DiagnosticOperationGroup {
+	if len(groups) == 0 {
+		return nil
+	}
+
+	result := make([]dto.DiagnosticOperationGroup, 0, len(groups))
+	for _, group := range groups {
+		result = append(result, dto.DiagnosticOperationGroup{
+			Area:       group.Area,
+			Operations: ToDTODiagnosticOperations(group.Operations),
+		})
+	}
+
+	return result
+}

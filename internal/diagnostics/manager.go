@@ -89,6 +89,17 @@ const (
 	EventFailed    = "failed"
 )
 
+const (
+	AreaGames       = "Games"
+	AreaMods        = "Mods"
+	AreaProfiles    = "Profiles"
+	AreaDeployment  = "Deployment"
+	AreaSettings    = "Settings"
+	AreaReShade     = "ReShade"
+	AreaOptiScaler  = "OptiScaler"
+	AreaDiagnostics = "Diagnostics"
+)
+
 type Options struct {
 	LogPath     string
 	MaxFileSize int64
@@ -113,6 +124,11 @@ type RecentLogsInput struct {
 type OperationDescriptor struct {
 	Value string
 	Label string
+}
+
+type OperationGroup struct {
+	Area       string
+	Operations []OperationDescriptor
 }
 
 type LogEntry struct {
@@ -160,60 +176,100 @@ func (m *Manager) Logger() *slog.Logger {
 	return m.logger
 }
 
-func Operations() []OperationDescriptor {
-	return []OperationDescriptor{
-		{Value: OperationScanGames, Label: "Scan games"},
-		{Value: OperationPreValidateMod, Label: "Pre-validate mod import"},
-		{Value: OperationPreviewMod, Label: "Preview mod import"},
-		{Value: OperationImportMod, Label: "Import mod"},
-		{Value: OperationPreviewUpdateMod, Label: "Preview mod update"},
-		{Value: OperationUpdateMod, Label: "Update mod"},
-		{Value: OperationRenameMod, Label: "Rename mod"},
-		{Value: OperationGetModDeleteSummary, Label: "Get mod delete summary"},
-		{Value: OperationDeleteMod, Label: "Delete mod"},
-		{Value: OperationCreateProfile, Label: "Create profile"},
-		{Value: OperationDuplicateProfile, Label: "Duplicate profile"},
-		{Value: OperationRenameProfile, Label: "Rename profile"},
-		{Value: OperationDeleteProfile, Label: "Delete profile"},
-		{Value: OperationAddProfileMod, Label: "Add profile mod"},
-		{Value: OperationRemoveProfileMod, Label: "Remove profile mod"},
-		{Value: OperationSetProfileModEnabled, Label: "Set profile mod enabled"},
-		{Value: OperationReorderProfileMods, Label: "Reorder profile mods"},
-		{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
-		{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
-		{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
-		{Value: OperationGetDeploymentFileInspection, Label: "Get deployment file inspection"},
-		{Value: OperationApplyDeployment, Label: "Apply deployment"},
-		{Value: OperationSetDeploymentDriftDecision, Label: "Set deployment drift decision"},
-		{Value: OperationSetDeploymentConflictRule, Label: "Set deployment conflict rule"},
-		{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
-		{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
-		{Value: OperationSetTheme, Label: "Set theme"},
-		{Value: OperationSetGameModStorageOverride, Label: "Set game mod storage override"},
-		{Value: OperationReShadeStartup, Label: "ReShade startup"},
-		{Value: OperationDetectReShade, Label: "Detect ReShade"},
-		{Value: OperationListReShadeTargets, Label: "List ReShade targets"},
-		{Value: OperationListReShadeContent, Label: "List ReShade content"},
-		{Value: OperationReShadeInstallerStatus, Label: "ReShade installer status"},
-		{Value: OperationListReShadeChainTargets, Label: "List ReShade chain targets"},
-		{Value: OperationInspectReShadePreset, Label: "Inspect ReShade preset"},
-		{Value: OperationDiscoverReShade, Label: "Discover ReShade"},
-		{Value: OperationPreviewReShade, Label: "Preview ReShade"},
-		{Value: OperationApplyReShade, Label: "Apply ReShade"},
-		{Value: OperationReShadeRecovery, Label: "ReShade recovery"},
-		{Value: OperationOptiScalerStartup, Label: "OptiScaler startup"},
-		{Value: OperationDiscoverOptiScaler, Label: "Discover OptiScaler"},
-		{Value: OperationListOptiScalerTargets, Label: "List OptiScaler targets"},
-		{Value: OperationOptiScalerReleaseStatus, Label: "OptiScaler release status"},
-		{Value: OperationPreviewOptiScaler, Label: "Preview OptiScaler"},
-		{Value: OperationApplyOptiScaler, Label: "Apply OptiScaler"},
-		{Value: OperationOptiScalerRecovery, Label: "OptiScaler recovery"},
-		{Value: OperationExportLogs, Label: "Export logs"},
-		{Value: OperationRenameTag, Label: "Rename tag"},
-		{Value: OperationUpdateModDetails, Label: "Update mod details"},
-		{Value: OperationUpdateModMetadata, Label: "Update mod metadata"},
-		{Value: OperationGetModMetadata, Label: "Get mod metadata"},
-		{Value: OperationDetectImportTargets, Label: "Detect import targets"},
+func OperationGroups() []OperationGroup {
+	return []OperationGroup{
+		{
+			Area: AreaGames,
+			Operations: []OperationDescriptor{
+				{Value: OperationScanGames, Label: "Scan games"},
+			},
+		},
+		{
+			Area: AreaMods,
+			Operations: []OperationDescriptor{
+				{Value: OperationPreValidateMod, Label: "Pre-validate mod import"},
+				{Value: OperationPreviewMod, Label: "Preview mod import"},
+				{Value: OperationImportMod, Label: "Import mod"},
+				{Value: OperationPreviewUpdateMod, Label: "Preview mod update"},
+				{Value: OperationUpdateMod, Label: "Update mod"},
+				{Value: OperationRenameMod, Label: "Rename mod"},
+				{Value: OperationGetModDeleteSummary, Label: "Get mod delete summary"},
+				{Value: OperationDeleteMod, Label: "Delete mod"},
+				{Value: OperationRenameTag, Label: "Rename tag"},
+				{Value: OperationUpdateModDetails, Label: "Update mod details"},
+				{Value: OperationUpdateModMetadata, Label: "Update mod metadata"},
+				{Value: OperationGetModMetadata, Label: "Get mod metadata"},
+				{Value: OperationDetectImportTargets, Label: "Detect import targets"},
+			},
+		},
+		{
+			Area: AreaProfiles,
+			Operations: []OperationDescriptor{
+				{Value: OperationCreateProfile, Label: "Create profile"},
+				{Value: OperationDuplicateProfile, Label: "Duplicate profile"},
+				{Value: OperationRenameProfile, Label: "Rename profile"},
+				{Value: OperationDeleteProfile, Label: "Delete profile"},
+				{Value: OperationAddProfileMod, Label: "Add profile mod"},
+				{Value: OperationRemoveProfileMod, Label: "Remove profile mod"},
+				{Value: OperationSetProfileModEnabled, Label: "Set profile mod enabled"},
+				{Value: OperationReorderProfileMods, Label: "Reorder profile mods"},
+				{Value: OperationRestoreVanilla, Label: "Restore vanilla"},
+			},
+		},
+		{
+			Area: AreaDeployment,
+			Operations: []OperationDescriptor{
+				{Value: OperationBuildDeploymentReviewPreview, Label: "Build deployment review preview"},
+				{Value: OperationLoadDeploymentTreeChildren, Label: "Load deployment tree children"},
+				{Value: OperationGetDeploymentFileDetail, Label: "Get deployment file detail"},
+				{Value: OperationGetDeploymentFileInspection, Label: "Get deployment file inspection"},
+				{Value: OperationApplyDeployment, Label: "Apply deployment"},
+				{Value: OperationSetDeploymentDriftDecision, Label: "Set deployment drift decision"},
+				{Value: OperationSetDeploymentConflictRule, Label: "Set deployment conflict rule"},
+			},
+		},
+		{
+			Area: AreaSettings,
+			Operations: []OperationDescriptor{
+				{Value: OperationSetGlobalModStorageRoot, Label: "Set global mod storage root"},
+				{Value: OperationSetTheme, Label: "Set theme"},
+				{Value: OperationSetGameModStorageOverride, Label: "Set game mod storage override"},
+			},
+		},
+		{
+			Area: AreaReShade,
+			Operations: []OperationDescriptor{
+				{Value: OperationReShadeStartup, Label: "ReShade startup"},
+				{Value: OperationDetectReShade, Label: "Detect ReShade"},
+				{Value: OperationListReShadeTargets, Label: "List ReShade targets"},
+				{Value: OperationListReShadeContent, Label: "List ReShade content"},
+				{Value: OperationReShadeInstallerStatus, Label: "ReShade installer status"},
+				{Value: OperationListReShadeChainTargets, Label: "List ReShade chain targets"},
+				{Value: OperationInspectReShadePreset, Label: "Inspect ReShade preset"},
+				{Value: OperationDiscoverReShade, Label: "Discover ReShade"},
+				{Value: OperationPreviewReShade, Label: "Preview ReShade"},
+				{Value: OperationApplyReShade, Label: "Apply ReShade"},
+				{Value: OperationReShadeRecovery, Label: "ReShade recovery"},
+			},
+		},
+		{
+			Area: AreaOptiScaler,
+			Operations: []OperationDescriptor{
+				{Value: OperationOptiScalerStartup, Label: "OptiScaler startup"},
+				{Value: OperationDiscoverOptiScaler, Label: "Discover OptiScaler"},
+				{Value: OperationListOptiScalerTargets, Label: "List OptiScaler targets"},
+				{Value: OperationOptiScalerReleaseStatus, Label: "OptiScaler release status"},
+				{Value: OperationPreviewOptiScaler, Label: "Preview OptiScaler"},
+				{Value: OperationApplyOptiScaler, Label: "Apply OptiScaler"},
+				{Value: OperationOptiScalerRecovery, Label: "OptiScaler recovery"},
+			},
+		},
+		{
+			Area: AreaDiagnostics,
+			Operations: []OperationDescriptor{
+				{Value: OperationExportLogs, Label: "Export logs"},
+			},
+		},
 	}
 }
 

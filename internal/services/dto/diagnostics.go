@@ -16,6 +16,11 @@ type DiagnosticOperation struct {
 	Label string
 }
 
+type DiagnosticOperationGroup struct {
+	Area       string
+	Operations []DiagnosticOperation
+}
+
 type DiagnosticLogEntry struct {
 	Timestamp string
 	Level     string

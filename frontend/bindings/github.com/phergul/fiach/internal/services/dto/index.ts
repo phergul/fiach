@@ -16,6 +16,7 @@ export {
     DevLogEntry,
     DiagnosticLogEntry,
     DiagnosticOperation,
+    DiagnosticOperationGroup,
     ExportDiagnosticLogsInput,
     FileStateView,
     FourStateView,

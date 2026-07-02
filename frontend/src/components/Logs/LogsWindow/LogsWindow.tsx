@@ -10,7 +10,7 @@ import {
 } from '@bindings/github.com/phergul/fiach/internal/services/diagnosticsservice';
 import {
   DiagnosticLogEntry,
-  DiagnosticOperation,
+  DiagnosticOperationGroup,
   ExportDiagnosticLogsInput,
   ListDiagnosticLogsInput,
 } from '@bindings/github.com/phergul/fiach/internal/services/dto/models';
@@ -19,7 +19,7 @@ import { LogsTable } from '@components/Logs/LogsTable/LogsTable';
 import {
   LogLevelFilter,
   LogOperationFilter,
-  LogOperationOption,
+  LogOperationOptionGroup,
   LogsToolbar,
 } from '@components/Logs/LogsToolbar/LogsToolbar';
 import { getErrorMessage } from '@utils';
@@ -33,20 +33,18 @@ const normalizeLogEntry = (entry: unknown): DiagnosticLogEntry => {
   return DiagnosticLogEntry.createFrom(entry);
 };
 
-const allOperationOption: LogOperationOption = {
-  label: 'All operations',
-  value: 'all',
-};
-
-const toOperationOptions = (operations: DiagnosticOperation[]): LogOperationOption[] => [
-  allOperationOption,
-  ...operations
-    .filter((operation) => operation.Value.trim() !== '' && operation.Label.trim() !== '')
-    .map((operation) => ({
-      label: operation.Label,
-      value: operation.Value,
-    })),
-];
+const toOperationGroups = (groups: DiagnosticOperationGroup[]): LogOperationOptionGroup[] =>
+  groups
+    .map((group) => ({
+      area: group.Area.trim(),
+      options: group.Operations.filter(
+        (operation) => operation.Value.trim() !== '' && operation.Label.trim() !== '',
+      ).map((operation) => ({
+        label: operation.Label,
+        value: operation.Value,
+      })),
+    }))
+    .filter((group) => group.area !== '' && group.options.length > 0);
 
 const matchesLevel = (entry: DiagnosticLogEntry, level: LogLevelFilter) => {
   return level === 'all' || entry.Level.toLowerCase() === level;
@@ -84,9 +82,7 @@ export const LogsWindow = () => {
   const [entries, setEntries] = useState<DiagnosticLogEntry[]>([]);
   const [level, setLevel] = useState<LogLevelFilter>('all');
   const [operation, setOperation] = useState<LogOperationFilter>('all');
-  const [operationOptions, setOperationOptions] = useState<LogOperationOption[]>([
-    allOperationOption,
-  ]);
+  const [operationOptionGroups, setOperationOptionGroups] = useState<LogOperationOptionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRawJsonVisible, setIsRawJsonVisible] = useState(false);
   const [rawJson, setRawJson] = useState('[]');
@@ -123,8 +119,8 @@ export const LogsWindow = () => {
 
   const loadOperationOptions = useCallback(async () => {
     try {
-      const operations = await ListDiagnosticOperations();
-      setOperationOptions(toOperationOptions(operations ?? []));
+      const groups = await ListDiagnosticOperations();
+      setOperationOptionGroups(toOperationGroups(groups ?? []));
     } catch (error) {
       addErrorToast(error);
     }
@@ -244,7 +240,7 @@ export const LogsWindow = () => {
         isRawJsonVisible={isRawJsonVisible}
         level={level}
         operation={operation}
-        operationOptions={operationOptions}
+        operationOptionGroups={operationOptionGroups}
         visibleCount={visibleEntries.length}
         onClear={clearVisibleLogs}
         onCopy={() => void copyVisibleLogs()}

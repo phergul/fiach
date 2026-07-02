@@ -2,6 +2,7 @@
 
 $logs-toolbar-button-size: 2.25rem;
 $logs-toolbar-select-width: 11rem;
+$logs-toolbar-operations-select-width: 14rem;
 $logs-toolbar-height: 3rem;
 $logs-toolbar-actions-height: 2.25rem;
 
@@ -55,6 +56,10 @@ $logs-toolbar-actions-height: 2.25rem;
   padding: 0 $spacing-sm;
   border-radius: 0;
   background: $color-background;
+}
+
+.logs-toolbar-field-operations select {
+  width: $logs-toolbar-operations-select-width;
 }
 
 .logs-toolbar-field select:hover {

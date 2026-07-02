@@ -91,6 +91,7 @@ tasks:
     cmds:
       - go vet ./...
       - task: format:backend
+      - task: format:frontend
       - task: test:frontend
       - task: test:backend
 
