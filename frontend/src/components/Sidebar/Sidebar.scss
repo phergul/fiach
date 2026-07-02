@@ -64,6 +64,7 @@
 }
 
 .sidebar-pin-button {
+  position: relative;
   width: 100%;
   height: $app-sidebar-control-size;
   justify-content: flex-start;
@@ -86,6 +87,7 @@
 }
 
 .sidebar-pin-button-icon {
+  display: block;
   width: $app-sidebar-icon-size;
   height: $app-sidebar-icon-size;
   flex: 0 0 $app-sidebar-icon-size;
@@ -93,7 +95,10 @@
 }
 
 .sidebar-pin-button-label {
+  position: absolute;
+  left: calc($app-sidebar-control-icon-offset + $app-sidebar-icon-size + $spacing-sm);
   opacity: 0;
+  pointer-events: none;
   transform: translateX(-$spacing-xs);
   transition:
     opacity $transition-duration-fast $transition-easing-standard,
@@ -104,6 +109,7 @@
 .sidebar:has(:focus-visible) .sidebar-pin-button-label,
 .sidebar-pinned .sidebar-pin-button-label {
   opacity: 1;
+  pointer-events: auto;
   transform: translateX(0);
   transition-delay: 120ms;
 }

@@ -55,7 +55,9 @@ $app-sidebar-width: 10rem;
 $app-sidebar-collapsed-width: 3.25rem;
 $app-sidebar-control-size: 2.25rem;
 $app-sidebar-icon-size: 1.125rem;
-$app-sidebar-control-icon-offset: 0.5rem;
+$app-sidebar-control-icon-offset: calc(
+  ($app-sidebar-collapsed-width - ($spacing-sm * 2) - $app-sidebar-icon-size) / 2
+);
 $app-content-max-width: 76rem;
 $app-border-width: 0.0625rem;
 // remove this later
