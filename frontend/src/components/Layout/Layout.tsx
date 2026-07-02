@@ -18,7 +18,7 @@ export const Layout = () => {
           <Sidebar isPinned={isSidebarPinned} onPinnedChange={setIsSidebarPinned} />
 
           <main className="layout-main">
-            <div className="layout-main-content">
+            <div className="layout-route">
               <Outlet />
             </div>
           </main>

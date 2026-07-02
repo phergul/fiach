@@ -8,10 +8,9 @@ $game-apply-toolbar-icon-size: 1.25rem;
 .game-apply {
   position: relative;
   display: flex;
-  height: $app-min-height;
-  min-height: $app-min-height;
+  min-height: 0;
+  flex: 1;
   flex-direction: column;
-  margin: -$spacing-xl;
   overflow: hidden;
   background: $color-background;
   color: $color-text-primary;

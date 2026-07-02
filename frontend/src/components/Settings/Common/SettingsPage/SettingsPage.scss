@@ -1,13 +1,12 @@
 @use '@styles' as *;
 
-$settings-page-min-height: $app-min-height;
 $settings-page-header-padding: $spacing-xl;
 
 .settings-page {
   display: flex;
-  min-height: $settings-page-min-height;
+  min-height: 0;
+  flex: 1;
   flex-direction: column;
-  margin: -$spacing-xl;
   overflow: hidden;
   gap: $spacing-separator;
   background: $color-background;
