@@ -18,6 +18,7 @@
       "@app": ["src/App.tsx"],
       "@bindings/*": ["bindings/*"],
       "@components/*": ["src/components/*"],
+      "@fiach/theme/*": ["../internal/theme/*"],
       "@hooks": ["src/hooks/index.ts"],
       "@pages": ["src/pages/index.ts"],
       "@styles": ["src/styles/index.scss"],
@@ -32,5 +33,5 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "bindings"],
+  "include": ["src", "bindings", "../internal/theme/themes.json"],
 }

@@ -25,9 +25,11 @@
 Pre-built binaries are published to [GitHub Releases](https://github.com/phergul/fiach/releases).
 
 1. Open [GitHub Releases](https://github.com/phergul/fiach/releases) and download the artifact for your OS.
-2. **Windows** - Run the installer, or use the portable `.exe` directly.
-3. **macOS** - Unzip and open `fiach.app`.
-4. **Linux** - Use the AppImage, `.deb`, `.rpm`, or standalone binary as you prefer.
+2. **Windows** - Run `fiach_windows_amd64_installer.exe`, or use `fiach_windows_amd64.exe` directly.
+3. **macOS** - Download `fiach_darwin_arm64.zip` or `fiach_darwin_amd64.zip` (same universal app), unzip, and open `fiach.app`.
+4. **Linux** - Use `fiach_linux_amd64`, the AppImage, `.deb`, or `.rpm` as you prefer.
+
+Fiach can check for updates from **Settings → About → Check for updates**. The in-app updater installs `fiach_windows_amd64.exe`, `fiach_darwin_*.zip`, or `fiach_linux_amd64` depending on your platform.
 
 ## Usage
 
@@ -50,7 +52,7 @@ Pre-built binaries are published to [GitHub Releases](https://github.com/phergul
 
 Fiach is built with [Wails v3](https://v3.wails.io/) (Go backend, React frontend).
 
-**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha2.106`, Bun 1.3.x. On Linux, install GTK4/WebKitGTK 6.0 development packages (`libgtk-4-dev`, `libwebkitgtk-6.0-dev`, and related build tools).
+**Prerequisites:** Go 1.26.4+, Wails v3 CLI `v3.0.0-alpha2.108`, Bun 1.3.x. On Linux, install GTK4/WebKitGTK 6.0 development packages (`libgtk-4-dev`, `libwebkitgtk-6.0-dev`, and related build tools).
 
 ```bash
 wails3 task dev      # development

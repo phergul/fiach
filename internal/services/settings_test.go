@@ -16,7 +16,7 @@ func TestSettingsServiceGetsAndSetsGlobalModStorageRoot(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewSettingsService(store, testLogger())
+	service := NewSettingsService(store, testLogger(), nil)
 	if err := service.SetGlobalModStorageRoot(context.Background(), "/mods/root"); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
@@ -37,7 +37,7 @@ func TestSettingsServiceGetsAndSetsThemeID(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewSettingsService(store, testLogger())
+	service := NewSettingsService(store, testLogger(), nil)
 	if err := service.SetThemeID(context.Background(), "midnight"); err != nil {
 		t.Fatalf("SetThemeID() error = %v", err)
 	}
@@ -57,7 +57,7 @@ func TestSettingsServiceSetThemeIDRejectsBlankValues(t *testing.T) {
 	store := openMigratedStore(t)
 	defer closeStore(t, store)
 
-	service := NewSettingsService(store, testLogger())
+	service := NewSettingsService(store, testLogger(), nil)
 	if err := service.SetThemeID(context.Background(), "   "); err == nil {
 		t.Fatal("SetThemeID() error = nil, want validation error")
 	}
@@ -70,7 +70,7 @@ func TestSettingsServiceResolvesGameModStoragePathWithOverride(t *testing.T) {
 	defer closeStore(t, store)
 
 	gameID := insertSettingsServiceTestGame(t, store, "Skyrim", "/games/skyrim")
-	service := NewSettingsService(store, testLogger())
+	service := NewSettingsService(store, testLogger(), nil)
 	if err := service.SetGlobalModStorageRoot(context.Background(), "/managed/root"); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}
@@ -96,7 +96,7 @@ func TestSettingsServiceEnsuresGameModStoragePath(t *testing.T) {
 
 	gameID := insertSettingsServiceTestGame(t, store, "Skyrim", "/games/skyrim")
 	root := filepath.Join(t.TempDir(), "managed")
-	service := NewSettingsService(store, testLogger())
+	service := NewSettingsService(store, testLogger(), nil)
 	if err := service.SetGlobalModStorageRoot(context.Background(), root); err != nil {
 		t.Fatalf("SetGlobalModStorageRoot() error = %v", err)
 	}

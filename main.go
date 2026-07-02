@@ -16,6 +16,7 @@ import (
 	"github.com/phergul/fiach/internal/services"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/updater"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
@@ -64,7 +65,7 @@ func main() {
 			application.NewService(services.NewModService(store, logger)),
 			application.NewService(profileService),
 			application.NewService(services.NewDeploymentReviewService(store, profileService, logger)),
-			application.NewService(services.NewSettingsService(store, logger)),
+			application.NewService(services.NewSettingsService(store, logger, &app)),
 			application.NewService(services.NewReshadeService(store, logger, injectionCoordinator)),
 			application.NewService(services.NewOptiScalerService(store, logger, injectionCoordinator)),
 			application.NewService(gamesService),
@@ -134,6 +135,13 @@ func main() {
 	})
 	devlog.Logf("dev mode enabled — data root: %s", appmode.DataRoot())
 	devlog.Logf("using database: %s", store.Path())
+
+	if err := updater.Init(app, store); err != nil {
+		closeStoreWithLog(store, logger, "Failed to close storage after updater init error")
+		logger.Error("Failed to initialize updater", diagnostics.ErrorAttr(err))
+		_ = diagnosticsManager.Close()
+		os.Exit(1)
+	}
 
 	err = app.Run()
 

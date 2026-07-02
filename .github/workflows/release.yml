@@ -16,7 +16,7 @@ permissions:
 
 env:
   BUN_VERSION: 1.3.13
-  WAILS_VERSION: v3.0.0-alpha2.106
+  WAILS_VERSION: v3.0.0-alpha2.108
   APP_NAME: fiach
 
 jobs:
@@ -116,8 +116,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/windows | Out-Null
-          Copy-Item "bin/${{ env.APP_NAME }}.exe" "artifacts/windows/${{ env.APP_NAME }}-windows-x64-portable.exe"
-          Copy-Item "bin/${{ env.APP_NAME }}-amd64-installer.exe" "artifacts/windows/${{ env.APP_NAME }}-windows-x64-installer.exe"
+          Copy-Item "bin/${{ env.APP_NAME }}.exe" "artifacts/windows/${{ env.APP_NAME }}_windows_amd64.exe"
+          Copy-Item "bin/${{ env.APP_NAME }}-amd64-installer.exe" "artifacts/windows/${{ env.APP_NAME }}_windows_amd64_installer.exe"
 
       - name: Upload Windows release assets
         env:
@@ -125,9 +125,15 @@ jobs:
         shell: bash
         run: |
           gh release upload "${{ needs.release-init.outputs.tag }}" \
-            "artifacts/windows/${{ env.APP_NAME }}-windows-x64-portable.exe" \
-            "artifacts/windows/${{ env.APP_NAME }}-windows-x64-installer.exe" \
+            "artifacts/windows/${{ env.APP_NAME }}_windows_amd64.exe" \
+            "artifacts/windows/${{ env.APP_NAME }}_windows_amd64_installer.exe" \
             --clobber
+
+      - name: Upload Windows checksum inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: artifacts/windows/${{ env.APP_NAME }}_windows_amd64.exe
 
   macos:
     name: macOS
@@ -159,15 +165,25 @@ jobs:
       - name: Archive macOS app
         run: |
           mkdir -p artifacts/macos
-          ditto -c -k --sequesterRsrc --keepParent "bin/${APP_NAME}.app" "artifacts/macos/${APP_NAME}-macos-universal.zip"
+          ditto -c -k --sequesterRsrc --keepParent "bin/${APP_NAME}.app" "artifacts/macos/${APP_NAME}_darwin_arm64.zip"
+          cp "artifacts/macos/${APP_NAME}_darwin_arm64.zip" "artifacts/macos/${APP_NAME}_darwin_amd64.zip"
 
       - name: Upload macOS release assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${{ needs.release-init.outputs.tag }}" \
-            "artifacts/macos/${APP_NAME}-macos-universal.zip" \
+            "artifacts/macos/${APP_NAME}_darwin_arm64.zip" \
+            "artifacts/macos/${APP_NAME}_darwin_amd64.zip" \
             --clobber
+
+      - name: Upload macOS checksum inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: |
+            artifacts/macos/${{ env.APP_NAME }}_darwin_arm64.zip
+            artifacts/macos/${{ env.APP_NAME }}_darwin_amd64.zip
 
   linux:
     name: Linux
@@ -219,18 +235,76 @@ jobs:
       - name: Collect Linux artifacts
         run: |
           mkdir -p artifacts/linux
-          cp "bin/${APP_NAME}" "artifacts/linux/${APP_NAME}-linux-x64"
-          cp bin/*.AppImage "artifacts/linux/${APP_NAME}-linux-x64.AppImage"
-          cp bin/*.deb "artifacts/linux/${APP_NAME}-linux-amd64.deb"
-          cp bin/*.rpm "artifacts/linux/${APP_NAME}-linux-x86_64.rpm"
+          cp "bin/${APP_NAME}" "artifacts/linux/${APP_NAME}_linux_amd64"
+          cp bin/*.AppImage "artifacts/linux/${APP_NAME}_linux_amd64.AppImage"
+          cp bin/*.deb "artifacts/linux/${APP_NAME}_linux_amd64.deb"
+          cp bin/*.rpm "artifacts/linux/${APP_NAME}_linux_amd64.rpm"
 
       - name: Upload Linux release assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${{ needs.release-init.outputs.tag }}" \
-            "artifacts/linux/${APP_NAME}-linux-x64" \
-            "artifacts/linux/${APP_NAME}-linux-x64.AppImage" \
-            "artifacts/linux/${APP_NAME}-linux-amd64.deb" \
-            "artifacts/linux/${APP_NAME}-linux-x86_64.rpm" \
+            "artifacts/linux/${APP_NAME}_linux_amd64" \
+            "artifacts/linux/${APP_NAME}_linux_amd64.AppImage" \
+            "artifacts/linux/${APP_NAME}_linux_amd64.deb" \
+            "artifacts/linux/${APP_NAME}_linux_amd64.rpm" \
+            --clobber
+
+      - name: Upload Linux checksum inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: artifacts/linux/${{ env.APP_NAME }}_linux_amd64
+
+  checksums:
+    name: Generate SHA256SUMS
+    runs-on: ubuntu-latest
+    needs:
+      - release-init
+      - windows
+      - macos
+      - linux
+
+    steps:
+      - name: Download updater artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: artifacts
+
+      - name: Generate SHA256SUMS
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          files=(
+            artifacts/**/${APP_NAME}_windows_amd64.exe
+            artifacts/**/${APP_NAME}_darwin_arm64.zip
+            artifacts/**/${APP_NAME}_darwin_amd64.zip
+            artifacts/**/${APP_NAME}_linux_amd64
+          )
+          if [ "${#files[@]}" -ne 4 ]; then
+            echo "Expected 4 updater artifacts, found ${#files[@]}:"
+            printf '  %s\n' "${files[@]}"
+            exit 1
+          fi
+          mkdir -p dist
+          cp "${files[@]}" dist/
+          (
+            cd dist
+            sha256sum \
+              "${APP_NAME}_windows_amd64.exe" \
+              "${APP_NAME}_darwin_arm64.zip" \
+              "${APP_NAME}_darwin_amd64.zip" \
+              "${APP_NAME}_linux_amd64" \
+              > SHA256SUMS
+          )
+
+      - name: Upload SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ needs.release-init.outputs.tag }}" \
+            dist/SHA256SUMS \
             --clobber

@@ -8,21 +8,27 @@ import (
 	"os"
 	"strings"
 
+	"github.com/phergul/fiach/internal/apperror"
+	"github.com/phergul/fiach/internal/appmode"
 	"github.com/phergul/fiach/internal/diagnostics"
 	"github.com/phergul/fiach/internal/services/dto"
 	"github.com/phergul/fiach/internal/services/dto/mappers"
 	"github.com/phergul/fiach/internal/storage"
+	"github.com/phergul/fiach/internal/version"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 type SettingsService struct {
 	store  *storage.Store
 	logger *slog.Logger
+	app    **application.App
 }
 
-func NewSettingsService(store *storage.Store, logger *slog.Logger) *SettingsService {
+func NewSettingsService(store *storage.Store, logger *slog.Logger, app **application.App) *SettingsService {
 	return &SettingsService{
 		store:  store,
 		logger: logger,
+		app:    app,
 	}
 }
 
@@ -145,4 +151,34 @@ func (s *SettingsService) EnsureGameModStoragePath(ctx context.Context, gameID i
 	}
 
 	return path, nil
+}
+
+func (s *SettingsService) CurrentVersion(context.Context) string {
+	return version.Version
+}
+
+func (s *SettingsService) CheckForUpdates(ctx context.Context) (err error) {
+	defer func() {
+		if err == nil || apperror.IsUserError(err) {
+			return
+		}
+		err = shellUserError(fmt.Errorf("check for updates: %w", err))
+	}()
+
+	if appmode.IsDev() {
+		return apperror.New("Updates are not available in development builds.")
+	}
+
+	if s.app == nil || *s.app == nil {
+		return apperror.New("The application is not configured.")
+	}
+
+	app := *s.app
+	go func() {
+		if err := app.Updater.CheckAndInstall(context.Background()); err != nil {
+			slog.Error("Update check failed", diagnostics.ErrorAttr(err))
+		}
+	}()
+
+	return nil
 }

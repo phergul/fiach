@@ -9,6 +9,14 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 // @ts-ignore: Unused imports
 import * as dto$0 from "./dto/models.js";
 
+export function CheckForUpdates(): $CancellablePromise<void> {
+    return $Call.ByID(2482572345);
+}
+
+export function CurrentVersion(): $CancellablePromise<string> {
+    return $Call.ByID(2755764701);
+}
+
 export function EnsureGameModStoragePath(gameID: number): $CancellablePromise<string> {
     return $Call.ByID(2284468152, gameID);
 }
