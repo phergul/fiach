@@ -374,6 +374,12 @@ export const useGameModImportQueue = ({ gameID, refreshMods }: UseGameModImportQ
           pendingItems.push(queueItem);
         }
 
+        const numDuplicates = duplicateResult.Items.filter((item) => item.IsDuplicate).length;
+        addToast({
+          message: `Skipped ${numDuplicates} duplicates.`,
+          tone: 'info'
+        });
+
         if (pendingItems.length === 0) {
           const showSummary = nextItems.filter(isActionableQueueItem).length > 1;
           setItems(nextItems);
