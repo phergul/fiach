@@ -13,6 +13,7 @@ export default defineConfig({
       '@hooks': fileURLToPath(new URL('./src/hooks/index.ts', import.meta.url)),
       '@pages': fileURLToPath(new URL('./src/pages/index.ts', import.meta.url)),
       '@styles': fileURLToPath(new URL('./src/styles', import.meta.url)),
+      '@wailsio/runtime': fileURLToPath(new URL('./src/test/wailsRuntimeMock.ts', import.meta.url)),
       '@utils': fileURLToPath(new URL('./src/utils/index.ts', import.meta.url)),
     },
   },
