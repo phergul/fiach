@@ -5,39 +5,39 @@ import (
 	"testing"
 )
 
-func TestResolveDefaultsToAsh(t *testing.T) {
+func TestResolveDefaultsToDark(t *testing.T) {
 	definition := Resolve("")
-	if definition.ID != "ash" {
-		t.Fatalf("Resolve(\"\") id = %q, want ash", definition.ID)
+	if definition.ID != "dark" {
+		t.Fatalf("Resolve(\"\") id = %q, want dark", definition.ID)
 	}
 
 	definition = Resolve("unknown-theme")
-	if definition.ID != "ash" {
-		t.Fatalf("Resolve(unknown) id = %q, want ash", definition.ID)
+	if definition.ID != "dark" {
+		t.Fatalf("Resolve(unknown) id = %q, want dark", definition.ID)
 	}
 }
 
 func TestResolveUsesStoredTheme(t *testing.T) {
-	definition := Resolve("midnight")
-	if definition.ID != "midnight" {
-		t.Fatalf("Resolve(midnight) id = %q, want midnight", definition.ID)
+	definition := Resolve("lavender")
+	if definition.ID != "lavender" {
+		t.Fatalf("Resolve(lavender) id = %q, want lavender", definition.ID)
 	}
 }
 
 func TestDefinitionsLoadsAllThemes(t *testing.T) {
 	definitions := Definitions()
-	if len(definitions) != 6 {
-		t.Fatalf("len(Definitions()) = %d, want 6", len(definitions))
+	if len(definitions) != 10 {
+		t.Fatalf("len(Definitions()) = %d, want 10", len(definitions))
 	}
 }
 
 func TestUpdaterCSSMapsUpdaterVariables(t *testing.T) {
-	css := UpdaterCSS("ash")
+	css := UpdaterCSS("dark")
 
 	for _, variable := range []string{
-		"--bg: #222120",
-		"--surface: #272624",
-		"--accent: #588b8b",
+		"--bg: #111315",
+		"--surface: #16191c",
+		"--accent: #72a17d",
 		"--radius: 0",
 		"color-scheme: dark",
 	} {
@@ -48,7 +48,7 @@ func TestUpdaterCSSMapsUpdaterVariables(t *testing.T) {
 }
 
 func TestCSSColorStripsAlpha(t *testing.T) {
-	if got := CSSColor("#222120ff"); got != "#222120" {
-		t.Fatalf("CSSColor() = %q, want #222120", got)
+	if got := CSSColor("#111315ff"); got != "#111315" {
+		t.Fatalf("CSSColor() = %q, want #111315", got)
 	}
 }
