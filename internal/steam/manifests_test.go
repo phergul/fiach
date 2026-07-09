@@ -144,6 +144,8 @@ func TestScanInstalledGamesReturnsGamesFromMultipleLibraries(t *testing.T) {
 
 	libraryOne := t.TempDir()
 	libraryTwo := t.TempDir()
+	createInstallDir(t, libraryOne, "GameOne")
+	createInstallDir(t, libraryTwo, "GameTwo")
 	writeAppManifest(t, libraryOne, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
 	writeAppManifest(t, libraryTwo, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
 
@@ -179,6 +181,7 @@ func TestScanInstalledGamesIgnoresInvalidAndNonMatchingFiles(t *testing.T) {
 	t.Parallel()
 
 	libraryPath := t.TempDir()
+	createInstallDir(t, libraryPath, "GameOne")
 	writeAppManifest(t, libraryPath, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
 	writeAppManifest(t, libraryPath, "appmanifest_2.acf", `"AppState"`)
 	writeAppManifest(t, libraryPath, "appmanifest_3.acf", `
@@ -204,6 +207,27 @@ func TestScanInstalledGamesIgnoresInvalidAndNonMatchingFiles(t *testing.T) {
 	}
 }
 
+func TestScanInstalledGamesIgnoresManifestsWithoutInstallDirectories(t *testing.T) {
+	t.Parallel()
+
+	libraryPath := t.TempDir()
+	createInstallDir(t, libraryPath, "InstalledGame")
+	writeAppManifest(t, libraryPath, "appmanifest_1.acf", validManifest("1", "Installed Game", "InstalledGame"))
+	writeAppManifest(t, libraryPath, "appmanifest_2.acf", validManifest("2", "Missing Game", "MissingGame"))
+
+	got, err := ScanInstalledGames([]string{libraryPath})
+	if err != nil {
+		t.Fatalf("ScanInstalledGames() error = %v", err)
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("ScanInstalledGames() returned %d games, want 1: %#v", len(got), got)
+	}
+	if got[0].AppID != "1" {
+		t.Fatalf("AppID = %q, want only installed game 1", got[0].AppID)
+	}
+}
+
 func TestScanInstalledGamesReturnsEmptyForLibrariesWithoutManifests(t *testing.T) {
 	t.Parallel()
 
@@ -223,6 +247,12 @@ func writeAppManifest(t *testing.T, libraryPath string, name string, content str
 	t.Helper()
 
 	return writeSteamAppsFile(t, libraryPath, name, content)
+}
+
+func createInstallDir(t *testing.T, libraryPath string, installDir string) {
+	t.Helper()
+
+	mkdirAll(t, filepath.Join(libraryPath, "steamapps", "common", installDir))
 }
 
 func writeSteamAppsFile(t *testing.T, libraryPath string, name string, content string) string {

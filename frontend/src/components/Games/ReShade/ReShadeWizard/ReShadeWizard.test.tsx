@@ -385,6 +385,50 @@ describe('ReShadeWizard', () => {
     expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument();
   });
 
+  it('resets wizard state when target rendering API changes for the same target', () => {
+    const baseTarget = configureSelection(BuildVariant.BuildVariantStandard).target!;
+    const { rerender } = render(
+      <ReShadeWizard
+        catalogue={contentCatalogue()}
+        chainTargets={[]}
+        gameID={1}
+        onClose={vi.fn()}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={{
+          action: Action.ActionConfigureContent,
+          candidate: null,
+          target: baseTarget,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Standard effects' }));
+    expect(screen.getByRole('checkbox', { name: 'Select Standard effects' })).toBeChecked();
+
+    rerender(
+      <ReShadeWizard
+        catalogue={contentCatalogue()}
+        chainTargets={[]}
+        gameID={1}
+        onClose={vi.fn()}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={{
+          action: Action.ActionConfigureContent,
+          candidate: null,
+          target: {
+            ...baseTarget,
+            ProxyFilename: 'd3d12.dll',
+            RenderingAPI: RenderingAPI.RenderingAPID3D12,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: 'Select Standard effects' })).not.toBeChecked();
+  });
+
   it('keeps the content step visible when catalogue props refresh during selection', () => {
     const onClose = vi.fn();
     const { rerender } = render(

@@ -18,8 +18,14 @@ type Game struct {
 	ManifestPath string
 }
 
-func ScanInstalledGames(libraryPaths []string) ([]Game, error) {
-	games := make([]Game, 0)
+func ScanInstalledGames(libraryPaths []string) (games []Game, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("scan installed Steam games: %w", err)
+		}
+	}()
+
+	games = make([]Game, 0)
 
 	for _, libraryPath := range uniqueCleanPaths(libraryPaths) {
 		steamAppsPath := filepath.Join(libraryPath, "steamapps")
@@ -29,7 +35,7 @@ func ScanInstalledGames(libraryPaths []string) ([]Game, error) {
 				continue
 			}
 
-			return nil, fmt.Errorf("scan installed Steam games: read steamapps directory %q: %w", steamAppsPath, err)
+			return nil, fmt.Errorf("read steamapps directory %q: %w", steamAppsPath, err)
 		}
 
 		for _, entry := range entries {
@@ -43,11 +49,32 @@ func ScanInstalledGames(libraryPaths []string) ([]Game, error) {
 				continue
 			}
 
+			installed, err := hasInstalledGameDirectory(*game)
+			if err != nil {
+				return nil, err
+			}
+			if !installed {
+				continue
+			}
+
 			games = append(games, *game)
 		}
 	}
 
 	return games, nil
+}
+
+func hasInstalledGameDirectory(game Game) (bool, error) {
+	info, err := os.Stat(game.InstallPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("stat install directory %q: %w", game.InstallPath, err)
+	}
+
+	return info.IsDir(), nil
 }
 
 func ParseAppManifest(manifestPath string, libraryPath string) (game *Game, err error) {

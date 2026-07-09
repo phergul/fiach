@@ -36,6 +36,8 @@ func TestGamesServiceScansAndSavesGames(t *testing.T) {
 	}
 }
 `)
+	createInstallDir(t, steamRoot, "GameOne")
+	createInstallDir(t, extraLibrary, "GameTwo")
 	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
 	writeAppManifest(t, extraLibrary, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
 	if err := store.SetSetting(context.Background(), gamesource.SteamInstallPathSettingKey, steamRoot); err != nil {
@@ -54,6 +56,54 @@ func TestGamesServiceScansAndSavesGames(t *testing.T) {
 	}
 	if len(result.Games) != 2 {
 		t.Fatalf("Games length = %d, want 2", len(result.Games))
+	}
+}
+
+func TestGamesServiceScanMarksManifestWithoutInstallDirectoryUnavailable(t *testing.T) {
+	t.Parallel()
+
+	store := openMigratedStore(t)
+	defer closeStore(t, store)
+
+	steamRoot := createSteamRoot(t)
+	writeLibraryFoldersVDF(t, steamRoot, `
+"libraryfolders"
+{
+	"0"
+	{
+		"path"		"`+steamRoot+`"
+	}
+}
+`)
+	writeAppManifest(t, steamRoot, "appmanifest_1265940.acf", validManifest("1265940", "appid_1265940", "MissingGame"))
+	if err := store.SetSetting(context.Background(), gamesource.SteamInstallPathSettingKey, steamRoot); err != nil {
+		t.Fatalf("SetSetting() error = %v", err)
+	}
+	if _, err := store.SaveSourceScan(context.Background(), dbtypes.GameSourceSteam, []dbtypes.SourceGame{
+		{
+			SourceID:    "1265940",
+			Name:        "appid_1265940",
+			InstallPath: filepath.Join(steamRoot, "steamapps", "common", "MissingGame"),
+		},
+	}); err != nil {
+		t.Fatalf("seed SaveSourceScan() error = %v", err)
+	}
+
+	service := NewGamesService(store, testLogger(), gamesource.NewSteamSource(store))
+	result, err := service.ScanAndSaveGames(context.Background())
+	if err != nil {
+		t.Fatalf("ScanAndSaveGames() error = %v", err)
+	}
+
+	if result.Inserted != 0 || result.Updated != 0 || result.MarkedUnavailable != 1 {
+		t.Fatalf("result = %+v, want one unavailable game", result)
+	}
+	games, err := service.GetStoredGames(context.Background())
+	if err != nil {
+		t.Fatalf("GetStoredGames() error = %v", err)
+	}
+	if len(games) != 0 {
+		t.Fatalf("GetStoredGames() length = %d, want 0", len(games))
 	}
 }
 
@@ -189,6 +239,12 @@ func writeAppManifest(t *testing.T, libraryPath string, name string, content str
 	path := filepath.Join(steamAppsPath, name)
 	writeFile(t, path, content)
 	return path
+}
+
+func createInstallDir(t *testing.T, libraryPath string, installDir string) {
+	t.Helper()
+
+	mkdirAll(t, filepath.Join(libraryPath, "steamapps", "common", installDir))
 }
 
 func validManifest(appID string, name string, installDir string) string {

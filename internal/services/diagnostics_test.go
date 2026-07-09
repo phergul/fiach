@@ -33,6 +33,7 @@ func TestGamesServiceScanWritesDiagnostics(t *testing.T) {
 	}
 }
 `)
+	createInstallDir(t, steamRoot, "GameOne")
 	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
 	if err := store.SetSetting(context.Background(), gamesource.SteamInstallPathSettingKey, steamRoot); err != nil {
 		t.Fatalf("SetSetting() error = %v", err)

@@ -141,6 +141,8 @@ func TestSteamSourceGetsInstalledSteamGames(t *testing.T) {
 	}
 }
 `)
+	createInstallDir(t, steamRoot, "GameOne")
+	createInstallDir(t, extraLibrary, "GameTwo")
 	writeAppManifest(t, steamRoot, "appmanifest_1.acf", validManifest("1", "Game One", "GameOne"))
 	writeAppManifest(t, extraLibrary, "appmanifest_2.acf", validManifest("2", "Game Two", "GameTwo"))
 	if err := store.SetSetting(context.Background(), SteamInstallPathSettingKey, steamRoot); err != nil {
@@ -496,6 +498,12 @@ func writeAppManifest(t *testing.T, libraryPath string, name string, content str
 	path := filepath.Join(steamAppsPath, name)
 	writeFile(t, path, content)
 	return path
+}
+
+func createInstallDir(t *testing.T, libraryPath string, installDir string) {
+	t.Helper()
+
+	mkdirAll(t, filepath.Join(libraryPath, "steamapps", "common", installDir))
 }
 
 func validManifest(appID string, name string, installDir string) string {

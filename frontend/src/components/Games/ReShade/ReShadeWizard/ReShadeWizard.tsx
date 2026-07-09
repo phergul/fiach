@@ -116,12 +116,20 @@ const stepsFor = (action: Action, buildVariant: BuildVariant): WizardStep[] => {
 const hasContent = (content: ContentRequest) =>
   (content.effectPackages?.length ?? 0) > 0 || (content.addons?.length ?? 0) > 0;
 
-const selectionIdentity = (selection: ReShadeOperationSelection) =>
-  selection.target !== null
-    ? `target:${selection.target.ID}:${selection.action}:${selection.target.BuildVariant}`
-    : selection.candidate !== null
-      ? `candidate:${selection.candidate.targetRelativePath}:${selection.candidate.executableRelativePath}:${selection.action}`
-      : `action:${selection.action}`;
+const selectionIdentity = (selection: ReShadeOperationSelection) => {
+  if (selection.target !== null) {
+    return `target:${selection.target.ID}:${selection.action}:${selection.target.BuildVariant}:${selection.target.RenderingAPI}:${selection.target.ProxyFilename}`;
+  }
+  if (selection.candidate !== null) {
+    const firstAPI = selection.candidate.apiOptions[0];
+    const apiIdentity =
+      firstAPI !== undefined
+        ? `${firstAPI.renderingApi}:${firstAPI.proxies[0] ?? ''}`
+        : '';
+    return `candidate:${selection.candidate.targetRelativePath}:${selection.candidate.executableRelativePath}:${selection.action}:${apiIdentity}`;
+  }
+  return `action:${selection.action}`;
+};
 
 export const ReShadeWizard = ({
   catalogue,
