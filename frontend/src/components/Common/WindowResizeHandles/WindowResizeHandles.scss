@@ -1,0 +1,96 @@
+@use '@styles' as *;
+
+$window-resize-edge-size: $spacing-xs;
+$window-resize-corner-size: $spacing-sm;
+
+.window-resize-handles {
+  position: fixed;
+  inset: 0;
+  z-index: $z-index-toast + 1;
+  pointer-events: none;
+}
+
+.window-resize-handle {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.window-resize-handle-top,
+.window-resize-handle-bottom {
+  right: $window-resize-corner-size;
+  left: $window-resize-corner-size;
+  height: $window-resize-edge-size;
+  cursor: ns-resize;
+}
+
+.window-resize-handle-top {
+  --wails-resize: top;
+
+  top: 0;
+}
+
+.window-resize-handle-bottom {
+  --wails-resize: bottom;
+
+  bottom: 0;
+}
+
+.window-resize-handle-left,
+.window-resize-handle-right {
+  top: $window-resize-corner-size;
+  bottom: $window-resize-corner-size;
+  width: $window-resize-edge-size;
+  cursor: ew-resize;
+}
+
+.window-resize-handle-left {
+  --wails-resize: left;
+
+  left: 0;
+}
+
+.window-resize-handle-right {
+  --wails-resize: right;
+
+  right: 0;
+}
+
+.window-resize-handle-top-left,
+.window-resize-handle-top-right,
+.window-resize-handle-bottom-right,
+.window-resize-handle-bottom-left {
+  width: $window-resize-corner-size;
+  height: $window-resize-corner-size;
+}
+
+.window-resize-handle-top-left {
+  --wails-resize: top-left;
+
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.window-resize-handle-top-right {
+  --wails-resize: top-right;
+
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.window-resize-handle-bottom-right {
+  --wails-resize: bottom-right;
+
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
+.window-resize-handle-bottom-left {
+  --wails-resize: bottom-left;
+
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
