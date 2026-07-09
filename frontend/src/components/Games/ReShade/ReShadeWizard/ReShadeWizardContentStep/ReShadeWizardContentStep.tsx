@@ -24,10 +24,9 @@ interface ReShadeWizardContentStepProps {
   inspection: ReShadePresetInspectionResult | null;
   isInspectingPreset: boolean;
   onContentChange: (content: ContentRequest) => void;
-  onInspectPreset: (path: string) => void;
+  onSelectPreset: () => void;
   onRefreshCatalogue: () => void;
   presetPath: string;
-  setPresetPath: (path: string) => void;
 }
 
 const selectedPackage = (content: ContentRequest, id: string) =>
@@ -157,10 +156,9 @@ export const ReShadeWizardContentStep = ({
   inspection,
   isInspectingPreset,
   onContentChange,
-  onInspectPreset,
+  onSelectPreset,
   onRefreshCatalogue,
   presetPath,
-  setPresetPath,
 }: ReShadeWizardContentStepProps) => {
   const effects = catalogue?.effects ?? [];
   const addons = catalogue?.addons ?? [];
@@ -428,18 +426,15 @@ export const ReShadeWizardContentStep = ({
                 {isPresetHelperOpen && (
                   <section className="reshade-wizard-preset-helper" aria-label="Preset helper">
                     <div className="reshade-wizard-preset-form">
-                      <input
-                        aria-label="Preset path"
-                        onChange={(event) => setPresetPath(event.target.value)}
-                        placeholder="ReShadePreset.ini"
-                        value={presetPath}
-                      />
+                      <span className="reshade-wizard-preset-path">
+                        {presetPath.trim() === '' ? 'No preset selected' : presetPath}
+                      </span>
                       <button
-                        disabled={isInspectingPreset || presetPath.trim() === ''}
-                        onClick={() => onInspectPreset(presetPath)}
+                        disabled={isInspectingPreset}
+                        onClick={onSelectPreset}
                         type="button"
                       >
-                        {isInspectingPreset ? 'Inspecting' : 'Inspect'}
+                        {isInspectingPreset ? 'Inspecting' : 'Select preset'}
                       </button>
                     </div>
                     {inspection !== null && (

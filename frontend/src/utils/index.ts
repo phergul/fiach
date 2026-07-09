@@ -17,7 +17,13 @@ export {
 } from './deployment';
 
 // dialogs
-export { openArchive, openArchives, openDirectories, openDirectory } from './dialogs';
+export {
+  openArchive,
+  openArchives,
+  openDirectories,
+  openDirectory,
+  openReShadePreset,
+} from './dialogs';
 
 // import
 export { inferImportSourceType, isArchiveImportPath } from './import/inferImportSourceType';

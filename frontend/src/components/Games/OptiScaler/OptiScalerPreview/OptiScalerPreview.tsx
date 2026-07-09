@@ -16,10 +16,7 @@ interface PreviewGroupProps {
 const filename = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
 const operationDescription = (operation: OptiScalerOperation) => {
-  if (operation.type === 'move') {
-    return `${filename(operation.sourcePath ?? '')} → ${filename(operation.targetPath)}`;
-  }
-  if (operation.type === 'restore') {
+  if (operation.type === 'move' || operation.type === 'restore') {
     return `${filename(operation.sourcePath ?? '')} → ${filename(operation.targetPath)}`;
   }
   return filename(operation.targetPath);

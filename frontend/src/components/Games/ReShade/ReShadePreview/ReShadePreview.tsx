@@ -20,11 +20,41 @@ interface PreviewGroupProps {
 
 const filename = (path: string) => path.split(/[\\/]/).pop() ?? path;
 
-const operationDescription = (operation: ReShadeOperation) => {
-  if (operation.type === 'copy' || operation.type === 'restore' || operation.type === 'move') {
-    return `${filename(operation.sourcePath ?? '')} -> ${filename(operation.targetPath)}`;
+const normalizeSeparators = (path: string) => path.replace(/\\/g, '/');
+
+const displayPath = (path: string, targetRelativePath: string) => {
+  const normalizedPath = normalizeSeparators(path);
+  const normalizedTarget = normalizeSeparators(targetRelativePath).replace(/^\/+|\/+$/g, '');
+
+  if (normalizedTarget === '') {
+    return normalizedPath;
   }
-  return filename(operation.targetPath);
+
+  if (normalizedPath === normalizedTarget) {
+    return filename(normalizedPath);
+  }
+
+  const targetPrefix = `${normalizedTarget}/`;
+  if (normalizedPath.startsWith(targetPrefix)) {
+    return normalizedPath.slice(targetPrefix.length);
+  }
+
+  const embeddedTargetPrefix = `/${targetPrefix}`;
+  const embeddedTargetIndex = normalizedPath.toLowerCase().lastIndexOf(embeddedTargetPrefix.toLowerCase());
+  if (embeddedTargetIndex >= 0) {
+    return normalizedPath.slice(embeddedTargetIndex + embeddedTargetPrefix.length);
+  }
+
+  return filename(normalizedPath);
+};
+
+const operationDescription = (operation: ReShadeOperation, targetRelativePath: string) => {
+  const targetPath = displayPath(operation.targetPath, targetRelativePath);
+
+  if (operation.type === 'restore' || operation.type === 'move') {
+    return `${displayPath(operation.sourcePath ?? '', targetRelativePath)} -> ${targetPath}`;
+  }
+  return targetPath;
 };
 
 const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
@@ -49,8 +79,21 @@ const PreviewGroup = ({ items, title, tone }: PreviewGroupProps) => {
   );
 };
 
-const pathImpactLabel = (impact: PathImpact) =>
-  `${impact.action}: ${impact.path}${impact.preservationOnly ? ' (preserve)' : ''}`;
+const pathImpactAction = (impact: PathImpact) => {
+  if (impact.action === 'replace' && !impact.exists) {
+    return 'add';
+  }
+  if (impact.action === 'create') {
+    return 'add';
+  }
+  if (impact.action === 'update search paths') {
+    return 'update';
+  }
+  return impact.action;
+};
+
+const pathImpactLabel = (targetRelativePath: string) => (impact: PathImpact) =>
+  `${pathImpactAction(impact)}: ${displayPath(impact.path, targetRelativePath)}`;
 
 const filesToAdd = (operations: ReShadeOperation[]) =>
   operations.filter((operation) => operation.type === 'copy' || operation.type === 'adopt');
@@ -80,13 +123,12 @@ const impactsByRole = (impacts: PathImpact[], roles: string[]) =>
   impacts.filter((impact) => roles.includes(impact.role));
 
 export const ReShadePreview = ({ chainTarget, preview }: ReShadePreviewProps) => {
-  const visibleImpacts = preview.pathImpacts.filter(
-    (impact) => !(impact.preservationOnly && !impact.exists),
-  );
+  const visibleImpacts = preview.pathImpacts.filter((impact) => !impact.preservationOnly);
   const runtimeImpacts = impactsByRole(visibleImpacts, ['runtime']);
   const configurationImpacts = impactsByRole(visibleImpacts, ['configuration', 'preset']);
   const contentImpacts = impactsByRole(visibleImpacts, ['effects', 'textures', 'addons']);
   const backupImpacts = impactsByRole(visibleImpacts, ['backup']);
+  const formatPathImpact = pathImpactLabel(preview.request.targetRelativePath);
 
   return (
     <div className="reshade-preview">
@@ -106,31 +148,31 @@ export const ReShadePreview = ({ chainTarget, preview }: ReShadePreviewProps) =>
         tone="warning"
       />
       <PreviewGroup items={preview.warnings} title="Warnings" tone="warning" />
-      <PreviewGroup items={runtimeImpacts.map(pathImpactLabel)} title="Runtime files" />
+      <PreviewGroup items={runtimeImpacts.map(formatPathImpact)} title="Runtime files" />
       <PreviewGroup
-        items={configurationImpacts.map(pathImpactLabel)}
+        items={configurationImpacts.map(formatPathImpact)}
         title="Configuration and presets"
       />
       <PreviewGroup
-        items={contentImpacts.map(pathImpactLabel)}
+        items={contentImpacts.map(formatPathImpact)}
         title="Effects, textures, and add-ons"
       />
-      <PreviewGroup items={backupImpacts.map(pathImpactLabel)} title="Backups" tone="warning" />
+      <PreviewGroup items={backupImpacts.map(formatPathImpact)} title="Backups" tone="warning" />
       <PreviewGroup
         items={filesToAdd(preview.operations).map((operation) => (
           <>
             <span className="reshade-preview-symbol">+</span>
-            {operationDescription(operation)}
+            {operationDescription(operation, preview.request.targetRelativePath)}
           </>
         ))}
-        title="Files to add or replace"
+        title="Files to add or update"
         tone="success"
       />
       <PreviewGroup
         items={filesToRemove(preview.operations).map((operation) => (
           <>
             <span className="reshade-preview-symbol">-</span>
-            {operationDescription(operation)}
+            {operationDescription(operation, preview.request.targetRelativePath)}
           </>
         ))}
         title="Files to remove or restore"

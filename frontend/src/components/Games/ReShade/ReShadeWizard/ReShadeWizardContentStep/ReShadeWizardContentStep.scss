@@ -50,10 +50,18 @@ $reshade-content-meta-label-width: 8rem;
   gap: $spacing-sm;
 }
 
-.reshade-wizard-preset-form input {
+.reshade-wizard-preset-path {
+  display: flex;
+  min-width: 0;
   min-height: $input-height;
+  align-items: center;
   padding: 0 $spacing-sm;
+  overflow: hidden;
   background: $color-background;
+  color: $color-text-subtle;
+  font-size: $font-size-sm;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reshade-wizard-preset-result {

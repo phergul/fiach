@@ -31,7 +31,7 @@ import { ReShadeWizardContentStep } from './ReShadeWizardContentStep/ReShadeWiza
 import { ReShadeWizardRuntimeStep } from './ReShadeWizardRuntimeStep/ReShadeWizardRuntimeStep';
 import { ReShadeWizardSafetyStep } from './ReShadeWizardSafetyStep/ReShadeWizardSafetyStep';
 import { ReShadeWizardTargetStep } from './ReShadeWizardTargetStep/ReShadeWizardTargetStep';
-import { getErrorMessage } from '@utils';
+import { getErrorMessage, openReShadePreset } from '@utils';
 
 import './ReShadeWizard.scss';
 
@@ -317,6 +317,26 @@ export const ReShadeWizard = ({
     }
   };
 
+  const selectPreset = async () => {
+    setError(null);
+    try {
+      const selectedPath = await openReShadePreset({
+        buttonText: 'Select preset',
+        title: 'Select ReShade preset',
+      });
+      if (selectedPath === null) {
+        return;
+      }
+      setPresetPath(selectedPath);
+      await inspectPreset(selectedPath);
+    } catch (dialogError) {
+      setError({
+        details: getErrorMessage(dialogError),
+        summary: 'Could not select the ReShade preset.',
+      });
+    }
+  };
+
   const rebuildPreviewWithBackup = async () => {
     setBackupAndContinue(true);
     if (request !== null) {
@@ -469,10 +489,9 @@ export const ReShadeWizard = ({
                 inspection={inspection}
                 isInspectingPreset={phase === 'inspecting'}
                 onContentChange={(content) => updateValues({ content })}
-                onInspectPreset={(path) => void inspectPreset(path)}
                 onRefreshCatalogue={() => void refreshCatalogue()}
+                onSelectPreset={() => void selectPreset()}
                 presetPath={presetPath}
-                setPresetPath={setPresetPath}
               />
             )}
             {step === 'safety' && (

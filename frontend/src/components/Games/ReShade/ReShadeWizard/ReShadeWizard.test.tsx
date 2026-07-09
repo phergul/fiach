@@ -16,6 +16,7 @@ import {
   ListReShadeContentCatalogue,
   PreviewReShadeAction,
 } from '@bindings/github.com/phergul/fiach/internal/services/reshadeservice';
+import { openReShadePreset } from '@utils';
 
 import { ReShadeWizard } from './ReShadeWizard';
 import type { ReShadeOperationSelection } from '../ReShadeTargetTable/ReShadeTargetTable';
@@ -27,6 +28,15 @@ vi.mock('@bindings/github.com/phergul/fiach/internal/services/reshadeservice', (
   ListReShadeContentCatalogue: vi.fn(),
   PreviewReShadeAction: vi.fn(),
 }));
+
+vi.mock('@utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@utils')>();
+
+  return {
+    ...actual,
+    openReShadePreset: vi.fn(),
+  };
+});
 
 const emptyCatalogue = (cached: boolean): ReShadeContentCatalogue => ({
   addons: [],
@@ -138,6 +148,7 @@ const mockPreview = () => {
 describe('ReShadeWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(openReShadePreset).mockResolvedValue(null);
   });
 
   it('keeps the success result visible when refreshed catalogue props arrive after apply', async () => {
@@ -324,6 +335,7 @@ describe('ReShadeWizard', () => {
 
   it('opens the preset helper and applies package recommendations', async () => {
     mockPreview();
+    vi.mocked(openReShadePreset).mockResolvedValue('ReShadePreset.ini');
     vi.mocked(InspectReShadePreset).mockResolvedValue({
       missingEffects: [],
       recommendations: [
@@ -350,12 +362,10 @@ describe('ReShadeWizard', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Preset helper' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Preset path' }), {
-      target: { value: 'ReShadePreset.ini' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select preset' }));
 
     expect(await screen.findByText('1 referenced effects')).toBeInTheDocument();
+    expect(InspectReShadePreset).toHaveBeenCalledWith(1, 'Bin', 'ReShadePreset.ini');
     fireEvent.click(screen.getByRole('button', { name: 'Add Standard effects' }));
     fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
 
