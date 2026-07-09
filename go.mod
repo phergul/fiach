@@ -10,7 +10,7 @@ require (
 	github.com/nwaples/rardecode/v2 v2.2.0
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/sergi/go-diff v1.4.0
-	github.com/wailsapp/wails/v3 v3.0.0-alpha2.111
+	github.com/wailsapp/wails/v3 v3.0.0-alpha2.113
 	golang.org/x/mod v0.35.0
 	golang.org/x/sys v0.43.0
 	modernc.org/sqlite v1.49.1
@@ -44,7 +44,7 @@ require (
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
-	github.com/wailsapp/wails/webview2 v1.0.27 // indirect
+	github.com/wailsapp/wails/webview2 v1.0.28 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/sync v0.20.0 // indirect

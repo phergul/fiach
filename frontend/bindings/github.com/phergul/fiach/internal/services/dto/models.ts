@@ -14,9 +14,6 @@ import * as optiscaler$0 from "../../optiscaler/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as reshade$0 from "../../reshade/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as time$0 from "../../../../../../time/models.js";
 
 export class AppliedProfileSummary {
     "GameID": number;
@@ -166,7 +163,7 @@ export class DeploymentFileDetail {
     "DriftKind": string;
     "DriftExplanation": string;
     "Comparison": StateComparison;
-    "LastAppliedAt": time$0.Time | null;
+    "LastAppliedAt": string | null;
 
     /** Creates a new DeploymentFileDetail instance. */
     constructor($$source: Partial<DeploymentFileDetail> = {}) {
@@ -421,14 +418,14 @@ export class DeploymentSummary {
     "GameID": number;
     "ProfileID": number;
     "ProfileName": string;
-    "AppliedAt": time$0.Time | null;
+    "AppliedAt": string | null;
     "PlanMode": string;
     "StatusCounts": { [_ in string]?: number };
     "CanApply": boolean;
     "PreviewHash": string;
     "BlockingCount": number;
     "WarningCount": number;
-    "PreviousApplyAt": time$0.Time | null;
+    "PreviousApplyAt": string | null;
 
     /** Creates a new DeploymentSummary instance. */
     constructor($$source: Partial<DeploymentSummary> = {}) {

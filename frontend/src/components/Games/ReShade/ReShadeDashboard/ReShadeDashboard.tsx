@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
@@ -40,6 +40,16 @@ export const ReShadeDashboard = () => {
   const [operationSelection, setOperationSelection] = useState<ReShadeOperationSelection | null>(
     null,
   );
+  const contentRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (content === null) {
+      return;
+    }
+    content.scrollTop = 0;
+    content.scrollLeft = 0;
+  }, [operationSelection]);
   const { artworkSource: heroArtworkSource, handleArtworkError: handleHeroArtworkError } =
     useGameArtwork(game?.Source === 'steam' && game.SourceID ? game.SourceID : '', 'hero');
   const { artworkSource: logoArtworkSource, handleArtworkError: handleLogoArtworkError } =
@@ -131,7 +141,17 @@ export const ReShadeDashboard = () => {
             />
           )}
 
-          <main className="reshade-dashboard-content">
+          <main
+            className="reshade-dashboard-content"
+            onFocusCapture={() => {
+              const content = contentRef.current;
+              if (content !== null && content.scrollTop !== 0) {
+                content.scrollTop = 0;
+                content.scrollLeft = 0;
+              }
+            }}
+            ref={contentRef}
+          >
             {reShade.isRefreshing && (
               <InlineLoading
                 className="reshade-dashboard-inline-loading"

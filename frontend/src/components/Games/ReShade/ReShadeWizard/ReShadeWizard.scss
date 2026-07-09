@@ -9,6 +9,7 @@ $reshade-wizard-label-width: 10rem;
   min-height: 0;
   height: 100%;
   flex-direction: column;
+  overflow: hidden;
   background: $color-background;
 }
 
@@ -92,7 +93,9 @@ $reshade-wizard-label-width: 10rem;
 }
 
 .reshade-wizard-scroll-content-step {
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
 }
 
 .reshade-wizard-content {

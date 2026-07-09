@@ -365,6 +365,59 @@ describe('ReShadeWizard', () => {
     });
   });
 
+  it('keeps the content step visible after selecting a scrolled package', () => {
+    render(
+      <ReShadeWizard
+        catalogue={contentCatalogue()}
+        chainTargets={[]}
+        gameID={1}
+        onClose={vi.fn()}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={configureSelection(BuildVariant.BuildVariantStandard)}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Cinematic effects' }));
+
+    expect(screen.getByRole('searchbox', { name: 'Search ReShade content' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Cinematic effects' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument();
+  });
+
+  it('keeps the content step visible when catalogue props refresh during selection', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <ReShadeWizard
+        catalogue={contentCatalogue()}
+        chainTargets={[]}
+        gameID={1}
+        onClose={onClose}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={configureSelection(BuildVariant.BuildVariantStandard)}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Standard effects' }));
+
+    rerender(
+      <ReShadeWizard
+        catalogue={{ ...contentCatalogue(), cached: false }}
+        chainTargets={[]}
+        gameID={1}
+        onClose={onClose}
+        onRecoveryRequired={vi.fn()}
+        onRefresh={vi.fn()}
+        selection={configureSelection(BuildVariant.BuildVariantStandard)}
+      />,
+    );
+
+    expect(screen.getByRole('searchbox', { name: 'Search ReShade content' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Select Standard effects' })).toBeChecked();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('refreshes the content catalogue from the search header', async () => {
     vi.mocked(ListReShadeContentCatalogue).mockResolvedValue(contentCatalogue());
 

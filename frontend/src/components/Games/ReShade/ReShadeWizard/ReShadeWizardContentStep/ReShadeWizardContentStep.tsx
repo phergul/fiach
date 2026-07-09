@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, type MouseEvent, useEffect, useMemo, useState } from 'react';
 
 import { ChevronDown, ChevronRight, Search, RefreshCw } from 'lucide-react';
 
@@ -146,6 +146,10 @@ const selectedEffectCount = (content: ContentRequest, pkg: EffectPackage) => {
 
 const firstAvailableTab = (showAddons: boolean): ContentTab => (showAddons ? 'effects' : 'effects');
 
+const preventFocusScroll = (event: MouseEvent<HTMLElement>) => {
+  event.preventDefault();
+};
+
 export const ReShadeWizardContentStep = ({
   buildVariant,
   catalogue,
@@ -259,7 +263,7 @@ export const ReShadeWizardContentStep = ({
   };
 
   return (
-    <div className="reshade-wizard-content reshade-wizard-content-layout">
+    <div className="reshade-wizard-content-layout">
       <div className="reshade-wizard-content-step">
         <div className="reshade-wizard-content-browser">
           <aside className="reshade-wizard-content-sidebar" aria-label="ReShade content catalogue">
@@ -326,6 +330,7 @@ export const ReShadeWizardContentStep = ({
                       <label
                         className="reshade-wizard-content-option"
                         onClick={(event) => event.stopPropagation()}
+                        onMouseDown={preventFocusScroll}
                       >
                         <input
                           aria-label={`Select ${pkg.name}`}
@@ -371,6 +376,7 @@ export const ReShadeWizardContentStep = ({
                       <label
                         className="reshade-wizard-content-option"
                         onClick={(event) => event.stopPropagation()}
+                        onMouseDown={preventFocusScroll}
                       >
                         <input
                           aria-label={`Select ${addon.name}`}
@@ -536,6 +542,7 @@ export const ReShadeWizardContentStep = ({
                                     : undefined
                                 }
                                 key={effect}
+                                onMouseDown={isEffectDisabled ? undefined : preventFocusScroll}
                               >
                                 <input
                                   checked={currentSelectedEffects.includes(effect)}

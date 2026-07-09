@@ -15,17 +15,20 @@ $reshade-content-fold-icon-size: 1rem;
 $reshade-content-meta-label-width: 8rem;
 
 .reshade-wizard-content-layout {
-  height: 100%;
-  align-content: stretch;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
   padding: $spacing-md $spacing-xl;
   overflow: hidden;
 }
 
 .reshade-wizard-content-step {
-  display: grid;
+  display: flex;
   min-height: 0;
-  height: 100%;
-  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 .reshade-wizard-preset-form button,
@@ -71,7 +74,7 @@ $reshade-content-meta-label-width: 8rem;
 .reshade-wizard-content-browser {
   display: grid;
   min-height: 0;
-  height: 100%;
+  flex: 1 1 auto;
   grid-template-columns: $reshade-content-sidebar-width minmax(0, 1fr);
   gap: $spacing-separator;
   background: $color-background;
@@ -305,6 +308,7 @@ $reshade-content-meta-label-width: 8rem;
 
 .reshade-wizard-content-details {
   display: grid;
+  min-height: 0;
   align-content: start;
   gap: $spacing-md;
   padding: $spacing-lg;

@@ -116,6 +116,13 @@ const stepsFor = (action: Action, buildVariant: BuildVariant): WizardStep[] => {
 const hasContent = (content: ContentRequest) =>
   (content.effectPackages?.length ?? 0) > 0 || (content.addons?.length ?? 0) > 0;
 
+const selectionIdentity = (selection: ReShadeOperationSelection) =>
+  selection.target !== null
+    ? `target:${selection.target.ID}:${selection.action}:${selection.target.BuildVariant}`
+    : selection.candidate !== null
+      ? `candidate:${selection.candidate.targetRelativePath}:${selection.candidate.executableRelativePath}:${selection.action}`
+      : `action:${selection.action}`;
+
 export const ReShadeWizard = ({
   catalogue,
   chainTargets,
@@ -126,6 +133,7 @@ export const ReShadeWizard = ({
   selection,
 }: ReShadeWizardProps) => {
   const initial = useMemo(() => initialValues(selection), [selection]);
+  const activeSelectionIdentity = useMemo(() => selectionIdentity(selection), [selection]);
   const executableRelativePath =
     selection.candidate?.executableRelativePath ?? selection.target?.ExecutableRelativePath ?? '';
   const targetRelativePath =
@@ -162,8 +170,9 @@ export const ReShadeWizard = ({
   ];
 
   useEffect(() => {
-    setValues(initial);
-    setStep(stepsFor(selection.action, initial.buildVariant)[0]);
+    const nextInitial = initialValues(selection);
+    setValues(nextInitial);
+    setStep(stepsFor(selection.action, nextInitial.buildVariant)[0]);
     setBackupAndContinue(false);
     setPreview(null);
     setResult(null);
@@ -172,7 +181,7 @@ export const ReShadeWizard = ({
     setIsDiscardOpen(false);
     setPresetPath('');
     setInspection(null);
-  }, [initial, selection]);
+  }, [activeSelectionIdentity]);
 
   useEffect(() => {
     setCurrentCatalogue(catalogue);

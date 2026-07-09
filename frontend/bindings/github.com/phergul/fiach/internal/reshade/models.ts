@@ -8,9 +8,6 @@ import { Create as $Create } from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as filetxn$0 from "../filetxn/models.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
-import * as time$0 from "../../../../../time/models.js";
 
 export class APIProxyOptions {
     "renderingApi": RenderingAPI;
@@ -1081,7 +1078,7 @@ export class RecoveryState {
     "gameId"?: number;
     "targetPath"?: string;
     "action"?: Action;
-    "startedAt"?: time$0.Time;
+    "startedAt"?: string;
     "error"?: string;
 
     /** Creates a new RecoveryState instance. */
